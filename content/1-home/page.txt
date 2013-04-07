@@ -1,0 +1,7 @@
+---
+Title: Home
+---
+Yes, it works! Your Yellow installation was successful.  
+You can now [edit this page](wiki/) or use your favorite text editor.
+
+[Visit Yellow on Github](https://github.com/markseu/yellowcms).

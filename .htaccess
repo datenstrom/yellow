@@ -1,0 +1,13 @@
+# Yellow .htaccess
+<IfModule mod_rewrite.c>
+RewriteEngine on
+
+# RewriteBase /yellow
+
+RewriteRule ^content/(.*) error [R=301,L]
+RewriteRule ^system/(.*) error [R=301,L]
+
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.+) index.php [L]
+</IfModule>
