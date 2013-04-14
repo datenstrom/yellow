@@ -5,14 +5,15 @@
 // Raw HTML parser core plugin
 class Yellow_RawHtml
 {
-	var $html;      //generated HTML
+	const Version = "0.1.1";
+	var $html;				//generated HTML
 
-    // Parse text, dummy transformation
+	// Parse text, dummy transformation
 	function parse($text)
 	{
 		return $this->html = $text;
 	}
 }
 
-$yellow->registerPlugin("rawhtml", "Yellow_RawHtml", "0.1.0");
+$yellow->registerPlugin("rawhtml", "Yellow_RawHtml", Yellow_RawHtml::Version);
 ?>

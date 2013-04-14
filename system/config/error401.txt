@@ -1,0 +1,4 @@
+---
+Title: Unauthorised
+---
+You are not authorised on this server. Please log in.

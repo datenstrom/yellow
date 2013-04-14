@@ -4,10 +4,14 @@ RewriteEngine on
 
 # RewriteBase /yellow
 
-RewriteRule ^content/(.*) error [R=301,L]
-RewriteRule ^system/(.*) error [R=301,L]
+RewriteCond %{ENV:REDIRECT_STATUS} ^$
+RewriteRule ^(content|system)/ error404 [L]
+RewriteCond %{REQUEST_URI} \.(css|js|png)$
+RewriteRule ^media/plugins/(core_.+) system/core/$1 [L]
+RewriteCond %{REQUEST_URI} \.(css|js|png)$
+RewriteRule ^media/plugins/(.+) system/plugins/$1 [L]
 
-RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^(.+) index.php [L]
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [L]
 </IfModule>
