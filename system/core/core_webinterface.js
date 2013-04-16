@@ -22,9 +22,9 @@ yellow.webinterface =
 	// Initialise web interface
 	init: function()
 	{
-		this.intervalId = window.setInterval("yellow.webinterface.create()", 1);
+		this.intervalId = setInterval("yellow.webinterface.create()", 1);
 		window.onresize = yellow.onResize;
-		window.onclick = yellow.onClick;
+		document.onclick = yellow.onClick;
 	},
 	
 	// Create action bar and panes
@@ -68,13 +68,13 @@ yellow.webinterface =
 				"</form>";
 			body.insertBefore(element, body.firstChild);
 		}
-		window.clearInterval(this.intervalId);
+		clearInterval(this.intervalId);
 		this.created = true;
 		this.resizePanes(true);
 	},
 	
 	// Create pane
-	createPane: function (id, data)
+	createPane: function(id, data)
 	{
 		if(yellow.debug) console.log("yellow.webinterface.createPane id:"+id);
 		var outDiv = document.createElement("div");
@@ -150,7 +150,7 @@ yellow.webinterface =
 	},
 
 	// Hide all panes
-	hidePanes: function ()
+	hidePanes: function()
 	{
 		for(var element=document.getElementById("yellowbar"); element; element=element.nextSibling)
 		{
@@ -164,7 +164,7 @@ yellow.webinterface =
 	// Hide all panes on mouse click
 	hidePanesOnClick: function(e)
 	{
-		var element = e.target || e.srcElement;
+		var element = yellow.toolbox.getElementForEvent(e);
 		while(element = element.parentNode)
 		{
 			if(element.className)
@@ -178,7 +178,18 @@ yellow.webinterface =
 	// Resize panes, recalculate height and width where needed
 	resizePanes: function(force)
 	{
-		var interfaceHeight = Number(window.innerHeight);
+		var interfaceHeight;
+		if(window.innerHeight)
+		{
+			interfaceHeight = window.innerHeight;
+		} else {
+			if(window.document.documentElement && window.document.documentElement.clientHeight) 
+			{ 
+				interfaceHeight = window.document.documentElement.clientHeight; 
+			} else {
+				interfaceHeight = window.document.body.clientHeight; 
+			} 
+		}
 		if((interfaceHeight!=this.heightOld || force) && document.getElementById("yellowbar"))
 		{
 			this.heightOld = interfaceHeight;
@@ -197,10 +208,10 @@ yellow.webinterface =
 			var editTextHeight = interfaceHeight - panePadding*2 - editPadding*2 - 10
 								- (document.getElementById("yellowedittext").offsetTop-document.getElementById("yellowpaneedit").getElementsByTagName("p")[0].offsetTop)
 								- document.getElementById("yelloweditbuttons").offsetHeight;
-			document.getElementById("yellowpaneedit").style.width = (elementBar.offsetWidth - panePadding*2).toString()+"px";
-			document.getElementById("yellowedittext").style.height = editTextHeight.toString()+"px";
-			document.getElementById("yellowedittext").style.width = (document.getElementById("yellowpaneedit").offsetWidth - 2 - panePadding*2 - editPadding*2).toString()+"px";
-			document.getElementById("yellowpaneuser").style.marginLeft = (elementBar.offsetWidth - document.getElementById("yellowpaneuser").offsetWidth).toString()+"px";
+			document.getElementById("yellowpaneedit").style.width = Math.max(0, elementBar.offsetWidth - panePadding*2) + "px";
+			document.getElementById("yellowedittext").style.height = Math.max(0, editTextHeight) + "px";
+			document.getElementById("yellowedittext").style.width = Math.max(0, document.getElementById("yellowpaneedit").offsetWidth - 2 - panePadding*2 - editPadding*2) + "px";
+			document.getElementById("yellowpaneuser").style.marginLeft = Math.max(0, elementBar.offsetWidth - document.getElementById("yellowpaneuser").offsetWidth) + "px";
 		}
 	},
 
@@ -209,11 +220,11 @@ yellow.webinterface =
 	{
 		if(maxHeight)
 		{
-			element.style.maxHeight = maxHeight.toString()+"px"; 
+			element.style.maxHeight = Math.max(0, maxHeight) + "px";
 		} else if(height) {
-			element.style.height = height.toString()+"px";
+			element.style.height = Math.max(0, height) + "px";
 		}
-		element.style.top = top+"px";	
+		element.style.top = top + "px";
 	},
 	
 	// Return text string
@@ -237,6 +248,13 @@ yellow.toolbox =
 	insertAfter: function(newElement, referenceElement)
 	{
 		referenceElement.parentNode.insertBefore(newElement, referenceElement.nextSibling);
+	},
+	
+	// Return element for event
+	getElementForEvent: function(e)
+	{
+		e = e ? e : window.event;
+		return e.target ? e.target : e.srcElement;
 	}
 }
 
