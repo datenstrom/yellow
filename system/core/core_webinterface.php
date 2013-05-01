@@ -5,7 +5,7 @@
 // Web interface core plugin
 class Yellow_Webinterface
 {
-	const Version = "0.0.0";	//Hello web interface!
+	const Version = "0.1.0";
 	var $yellow;			//access to API
 	var $users;				//web interface users
 	var $activeLocation;	//web interface location? (boolean)
@@ -92,11 +92,10 @@ class Yellow_Webinterface
 	{
 		if($this->isWebinterfaceLocation() && $this->isUser())
 		{
-			$this->yellow->toolbox->timerStart($time);
 			$baseLocation = $this->yellow->config->get("baseLocation");
-			$webinterfaceLocation = rtrim($this->yellow->config->get("webinterfaceLocation"), '/');
-			$text = preg_replace("#<a(.*?)href=\"$baseLocation(?!$webinterfaceLocation)(.*?)\"(.*?)>#",
-								 "<a$1href=\"$baseLocation$webinterfaceLocation$2\"$3>", $text);
+			$webinterfaceLocation = trim($this->yellow->config->get("webinterfaceLocation"), '/');
+			$text = preg_replace("#<a(.*?)href=\"$baseLocation/(?!$webinterfaceLocation)(.*?)\"(.*?)>#",
+								 "<a$1href=\"$baseLocation/$webinterfaceLocation/$2\"$3>", $text);
 		}
 		return $text;
 	}
@@ -107,7 +106,7 @@ class Yellow_Webinterface
 		$statusCode = 0;
 		if($_POST["action"] == "edit")
 		{
-			if(strlen($_POST["rawdata"]))
+			if(!empty($_POST["rawdata"]))
 			{
 				$fileHandle = @fopen($fileName, "w");
 				if($fileHandle)
@@ -117,7 +116,12 @@ class Yellow_Webinterface
 				} else {
 					die("Configuration problem: Can't write page '$fileName'!");
 				}
+				$statusCode = 303;
+				$this->yellow->sendStatus($statusCode, "Location: http://$_SERVER[SERVER_NAME]$baseLocation$location");
 			}
+		} else if($_POST["action"]== "login") {
+			$statusCode = 303;
+			$this->yellow->sendStatus($statusCode, "Location: http://$_SERVER[SERVER_NAME]$baseLocation$location");
 		} else if($_POST["action"]== "logout") {
 			$this->users->destroyCookie("login");
 			$this->activeUserEmail = "";
@@ -143,8 +147,8 @@ class Yellow_Webinterface
 	// Check web interface location
 	function checkWebinterfaceLocation($location)
 	{
-		$locationLength = strlen($this->yellow->config->get("webinterfaceLocation"));
-		$this->activeLocation = substr($location, 0, $locationLength) == $this->yellow->config->get("webinterfaceLocation");
+		$locationLength = strlenu($this->yellow->config->get("webinterfaceLocation"));
+		$this->activeLocation = substru($location, 0, $locationLength) == $this->yellow->config->get("webinterfaceLocation");
 		return $this->isWebinterfaceLocation();
 	}
 	
@@ -193,7 +197,7 @@ class Yellow_Webinterface
 		return !empty($this->activeUserEmail);
 	}
 
-	// Return page tree with content/media information
+	// Return page tree with content information (2 levels)
 	function getPagesData()
 	{
 		$data = array();
@@ -201,7 +205,15 @@ class Yellow_Webinterface
 		{
 			$data[$page->fileName] = array();
 			$data[$page->fileName]["location"] = $page->getLocation();
+			$data[$page->fileName]["modified"] = $page->getModified();
 			$data[$page->fileName]["title"] = $page->getTitle();
+			foreach($page->getChildren(true) as $page)
+			{
+				$data[$page->fileName] = array();
+				$data[$page->fileName]["location"] = $page->getLocation();
+				$data[$page->fileName]["modified"] = $page->getModified();
+				$data[$page->fileName]["title"] = $page->getTitle();
+			}
 		}
 		return $data;
 	}
@@ -236,8 +248,8 @@ class Yellow_WebinterfaceUsers
 			foreach($fileData as $line)
 			{
 				if(preg_match("/^\//", $line)) continue;
-				preg_match("/^(.*?)\s*,(.*?),\s*(.*?),\s*(.*?)\s*$/", $line, $matches);
-				if($matches[1]!="" && $matches[2]!="" && $matches[3]!="" && $matches[4]!="")
+				preg_match("/^(.*?),\s*(.*?),\s*(.*?),\s*(.*?)\s*$/", $line, $matches);
+				if(!empty($matches[1]) && !empty($matches[2]) && !empty($matches[3]) && !empty($matches[4]))
 				{
 					$this->setUser($matches[1], $matches[2], $matches[3], $matches[4]);
 					if(defined("DEBUG") && DEBUG>=3) echo "Yellow_WebinterfaceUsers::load email:$matches[1] $matches[3]<br/>\n";
@@ -254,7 +266,7 @@ class Yellow_WebinterfaceUsers
 		$this->users[$email]["password"] = $password;
 		$this->users[$email]["name"] = $name;
 		$this->users[$email]["language"] = $language;
-		$this->users[$email]["session"] = hash("sha256", $email.$password.strrev($email.$password));
+		$this->users[$email]["session"] = hash("sha256", $email.$password.$password.$email);
 	}
 	
 	// Check user login

@@ -1,4 +1,4 @@
 ---
 Title: Page does not exist
 ---
-You can [create this page](javascript:yellow.onShow('yellowpaneedit');).
+You can [create this page](javascript:yellow.onShow('yellow-paneedit');).

@@ -9,7 +9,7 @@ How do I install this?
 Copy all files to your web server hosting.  
 Open your website in a browser, that's it!
 
-Installation requirements are Apache, mod_rewrite and PHP 5.3.
+Installation requirements are Apache, mod_rewrite, PHP 5.3 and multibyte support.
 
 Need help? Have a question?
 ---------------------------
