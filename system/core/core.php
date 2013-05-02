@@ -1,11 +1,11 @@
 <?php
-// Copyright (c) 2013 Datenstrom, http://www.datenstrom.se
+// Copyright (c) 2013 Datenstrom, http://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
-	
+
 // Yellow main class
 class Yellow
 {
-	const Version = "0.1.1";
+	const Version = "0.1.2";
 	var $page;				//current page data
 	var $pages;				//current page tree from file system
 	var $toolbox;			//toolbox with helpers
@@ -158,12 +158,19 @@ class Yellow
 	}
 
 	// Execute a template snippet
-	function snippet($snippet)
+	function snippet($name, $args = NULL)
 	{
-		$fileName = $this->config->get("snippetDir").$snippet.$this->config->get("systemExtension");
-		if(!is_file($fileName)) die("Snippet '$snippet' does not exist!");
+		$this->page->args = func_get_args();
+		$fileName = $this->config->get("snippetDir").$name.$this->config->get("systemExtension");
+		if(!is_file($fileName)) die("Snippet '$name' does not exist!");
 		global $yellow;
 		require($fileName);
+	}
+	
+	// Return template snippet arguments
+	function getSnippetArgs()
+	{
+		return $this->page->args;
 	}
 	
 	// Return extra HTML header lines generated from plugins
@@ -217,6 +224,7 @@ class Yellow_Page
 	var $metaData;				//meta data of page
 	var $rawData;				//raw data of page (unparsed)
 	var $rawTextOffsetBytes;	//raw text of page (unparsed)
+	var $args;					//arguments for template snippet
 	var $pages;					//access to file system
 	var $active;				//page is active?
 	var $hidden;				//page is hidden in navigation?

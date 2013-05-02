@@ -1,5 +1,5 @@
 <?php
-// Copyright (c) 2013 Datenstrom, http://www.datenstrom.se
+// Copyright (c) 2013 Datenstrom, http://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 // Raw HTML parser core plugin
