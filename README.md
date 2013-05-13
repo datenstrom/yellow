@@ -1,7 +1,7 @@
 Yellow
 ======
 
-Yellow is a CMS for people, it's web-based and flat-file.
+Yellow is a CMS for people who make websites.
 
 How do I install this?
 ----------------------

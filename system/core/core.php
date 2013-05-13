@@ -404,7 +404,7 @@ class Yellow_PageCollection extends ArrayObject
 		$this->baseLocation = $baseLocation;
 		$this->location = $location;
 		$this->toolbox = $toolbox;
-    }
+	}
 	
 	// Filter page collection by meta data
 	function filter($key, $value, $exactMatch = true)
@@ -635,8 +635,8 @@ class Yellow_Toolbox
 		}
 		if(!$found && !empty($args[1]) && !empty($args[2]))
 		{
-		   if(!empty($locationArgs)) $locationArgs .= '/';
-		   $locationArgs .= "$args[1]:$args[2]";
+			if(!empty($locationArgs)) $locationArgs .= '/';
+			$locationArgs .= "$args[1]:$args[2]";
 		}
 		if($encodeArgs)
 		{

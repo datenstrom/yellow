@@ -53,7 +53,7 @@ class Yellow_MarkdownExtraParser extends MarkdownExtra_Parser
 		$result = "<img src=\"".$this->encodeAttribute($src)."\"";
 		if($width && $height) $result .= " width=\"$width\" height=\"$height\"";
 		if(isset($alt)) $result .= " alt=\"".$this->encodeAttribute($alt)."\"";
-		if(isset($title)) $result .=  " title=\"".$this->encodeAttribute($title)."\"";
+		if(isset($title)) $result .= " title=\"".$this->encodeAttribute($title)."\"";
 		$result .= $this->empty_element_suffix;
 		
 		return $this->hashPart($result);
