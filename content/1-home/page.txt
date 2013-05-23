@@ -1,7 +1,7 @@
 ---
 Title: Home
 ---
-Yes, it works! Your Yellow installation was successful.  
+Yes, your Yellow installation works!  
 You can now [edit this page](@baselocation/wiki/) or use your favorite text editor.
 
 Visit [Yellow on Github](https://github.com/markseu/yellowcms).

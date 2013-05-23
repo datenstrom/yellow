@@ -4,7 +4,7 @@
 // Yellow main API
 var yellow =
 {
-	version: "0.1.0",
+	version: "0.1.1",
 	onClick: function(e) { yellow.webinterface.hidePanesOnClick(yellow.toolbox.getEventElement(e)); },
 	onKeydown: function(e) { yellow.webinterface.hidePanesOnKeydown(yellow.toolbox.getEventKeycode(e)); },
 	onResize: function() { yellow.webinterface.resizePanes(); },
@@ -16,8 +16,7 @@ var yellow =
 yellow.webinterface =
 {
 	created: false,		//interface created? (boolean)
-	timerId: 0,			//interface timer ID
-	heightOld: 0,		//height of big panes
+	intervalId: 0,		//interface timer interval ID
 
 	// Initialise web interface
 	init: function()
@@ -28,106 +27,120 @@ yellow.webinterface =
 		yellow.toolbox.addEvent(document, "keydown", yellow.onKeydown);
 	},
 	
-	// Create action bar and panes
+	// Create web interface
 	create: function()
 	{
 		var body = document.getElementsByTagName("body")[0];
-		if(!body || !body.firstChild || this.created) return;
-		if(yellow.debug) console.log("yellow.webinterface.create email:"+yellow.config.userEmail+" "+yellow.config.userName);		
-		if(yellow.config.userEmail)
+		if(body && body.firstChild && !this.created)
 		{
-			var location = yellow.config.baseLocation+yellow.config.pluginsLocation;
-			var element = document.createElement("div");
-			element.className = "yellow-bar";
-			element.setAttribute("id", "yellow-bar");
-			element.innerHTML =
+			this.created = true;
+			if(yellow.debug) console.log("yellow.webinterface.create email:"+yellow.config.userEmail+" "+yellow.config.userName);
+			if(yellow.config.userEmail)
+			{
+				yellow.toolbox.insertBefore(this.createBar("yellow-bar"), body.firstChild);
+				yellow.toolbox.insertAfter(this.createPane("yellow-paneedit"), body.firstChild);
+				yellow.toolbox.insertAfter(this.createPane("yellow-paneshow"), body.firstChild);
+				yellow.toolbox.insertAfter(this.createPane("yellow-paneuser"), body.firstChild);
+				yellow.toolbox.setText(document.getElementById("yellow-username"), yellow.config.userName);
+				yellow.toolbox.setText(document.getElementById("yellow-edittext"), yellow.page.rawData);
+			} else {
+				yellow.toolbox.insertBefore(this.createBar("yellow-bar", true), body.firstChild);
+				yellow.toolbox.insertAfter(this.createPane("yellow-panelogin", true), body.firstChild);
+				this.showPane("yellow-panelogin");
+			}
+			clearInterval(this.intervalId);
+		}
+	},
+	
+	// Create bar
+	createBar: function(id, simple)
+	{
+		if(yellow.debug) console.log("yellow.webinterface.createBar id:"+id);
+		var elementBar = document.createElement("div");
+		elementBar.className = "yellow-bar yellow";
+		elementBar.setAttribute("id", id);
+		if(!simple)
+		{
+			var location = yellow.config.baseLocation+yellow.config.pluginLocation;			
+			elementBar.innerHTML =
 				"<div class=\"yellow-barleft\">"+
-				"<img src=\""+location+"core_webinterface.png\" width=\"16\" height=\"16\"> Yellow"+
-				"<button class=\"yellow-barlink\" onclick=\"yellow.onShow('yellow-paneedit');\">"+this.getText("Edit")+"</button>"+
-				"<button class=\"yellow-barlink\" onclick=\"yellow.onShow('yellow-paneshow');\">"+this.getText("Show")+"</button>"+
+				"<a href=\"http://datenstrom.se/yellow/\" target=\"_blank\"><img src=\""+location+"core_webinterface.png\" width=\"16\" height=\"16\"> Yellow</a>"+
+				"<a href=\"#\" onclick=\"yellow.onShow('yellow-paneedit'); return false;\">"+this.getText("Edit")+"</a>"+
+				"<a href=\"#\" onclick=\"yellow.onShow('yellow-paneshow'); return false;\">"+this.getText("Show")+"</a>"+
 				"</div>"+
 				"<div class=\"yellow-barright\">"+
-				"<button class=\"yellow-barlink\" onclick=\"yellow.onShow('yellow-paneuser');\" id=\"yellow-username\">"+this.getText("User")+"</button>"+
+				"<a href=\"#\" onclick=\"yellow.onShow('yellow-paneuser'); return false;\" id=\"yellow-username\">"+this.getText("User")+"</a>"+
 				"</div>";
-			body.insertBefore(element, body.firstChild);
-			yellow.toolbox.insertAfter(this.createPane("yellow-paneedit"), body.firstChild);
-			yellow.toolbox.insertAfter(this.createPane("yellow-paneshow", yellow.pages), body.firstChild);
-			yellow.toolbox.insertAfter(this.createPane("yellow-paneuser"), body.firstChild);
-			yellow.toolbox.setText(document.getElementById("yellow-username"), yellow.config.userName+" ↓");
-			yellow.toolbox.setText(document.getElementById("yellow-edittext"), yellow.page.rawData);
-		} else {
-			var element = document.createElement("div");
-			element.className = "yellow-login";
-			element.setAttribute("id", "yellow-login");
-			element.innerHTML =
+		}
+		return elementBar;
+	},
+	
+	// Create pane
+	createPane: function(id, simple)
+	{
+		if(yellow.debug) console.log("yellow.webinterface.createPane id:"+id);
+		var elementPane = document.createElement("div");
+		elementPane.className = simple ? "yellow-pane" : "yellow-pane yellow-panebubble";
+		elementPane.setAttribute("id", id);
+		elementPane.style.display = "none";
+		var elementDiv = document.createElement("div");
+		elementDiv.setAttribute("id", id+"content");
+		if(id == "yellow-panelogin")
+		{
+			elementDiv.innerHTML =
+				"<h1>"+this.getText("LoginText")+"</h1>"+
 				"<form method=\"post\" name=\"formlogin\">"+
 				"<input type=\"hidden\" name=\"action\" value=\"login\"/>"+
-				"<h1>"+this.getText("LoginText")+"</h1>"+
 				"<p>"+this.getText("LoginEmail")+" <input name=\"email\" maxlength=\"64\" /></p>"+
 				"<p>"+this.getText("LoginPassword")+" <input type=\"password\" name=\"password\" maxlength=\"64\" /></p>"+
 				"<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("LoginButton")+"\"/></p>"+
 				"</form>";
-			body.insertBefore(element, body.firstChild);
-		}
-		clearInterval(this.intervalId);
-		this.created = true;
-		this.resizePanes(true);
-	},
-	
-	// Create pane
-	createPane: function(id, data)
-	{
-		if(yellow.debug) console.log("yellow.webinterface.createPane id:"+id);
-		var outDiv = document.createElement("div");
-		if(id == "yellow-paneedit")
-		{
-			outDiv.innerHTML =
+		} else if(id == "yellow-paneedit") {
+			elementDiv.innerHTML =
 				"<p>Editing page...</p>"+
 				"<form method=\"post\" name=\"formeditor\">"+
 				"<input type=\"hidden\" name=\"action\" value=\"edit\"/>"+
 				"<textarea id=\"yellow-edittext\" name=\"rawdata\"></textarea>"+
+				"<div id=\"yellow-editinfo\"/></div>"+
 				"<div id=\"yellow-editbuttons\">"+
 				"<input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("SaveButton")+"\"/>"+
 				"</div>"+
 				"</form>";
 		} else if(id == "yellow-paneshow") {
-			outDiv.innerHTML = "<p>Showing files...</p>";
-			for(var n in data)
+			elementDiv.innerHTML = "<p>Showing files...</p>";
+			var elementUl = document.createElement("ul");
+			for(var n in yellow.pages)
 			{
-				var outUl = document.createElement("ul");
-				var outLi = document.createElement("li");
-				var outA = document.createElement("a");
-				outA.setAttribute("href", data[n]["location"]);
-				yellow.toolbox.setText(outA, data[n]["title"]);
-				outLi.appendChild(outA);
-				outUl.appendChild(outLi);
-				outDiv.appendChild(outUl);
+				var elementLi = document.createElement("li");
+				var elementA = document.createElement("a");
+				elementA.setAttribute("href", yellow.pages[n]["location"]);
+				yellow.toolbox.setText(elementA, yellow.pages[n]["title"]);
+				elementLi.appendChild(elementA);
+				elementUl.appendChild(elementLi);
 			}
+			elementDiv.appendChild(elementUl);
 		} else if(id == "yellow-paneuser") {
-			outDiv.innerHTML =
+			elementDiv.innerHTML =
 				"<p>"+yellow.config.userEmail+"</p>"+
 				"<form method=\"post\" name=\"formlogout\">"+
 				"<input type=\"hidden\" name=\"action\" value=\"logout\"/>"+
 				"<p><a href=\"javascript:document.formlogout.submit();\">"+this.getText("UserLogout")+"</a></p> "+
 				"</form>";
 		}
-		var element = document.createElement("div");
-		element.className = "yellow-pane yellow-panebubble";
-		element.setAttribute("id", id);
-		element.style.display = "none";
-		element.appendChild(outDiv);
-		return element;
+
+		elementPane.appendChild(elementDiv);
+		return elementPane;
 	},
 	
-	// Show pane
+	// Show or hide pane
 	showPane: function(id)
 	{
-		if(document.getElementById(id).style.display != "block")
+		if(!yellow.toolbox.isVisible(document.getElementById(id)))
 		{
 			this.hidePanes();
 			if(yellow.debug) console.log("yellow.webinterface.showPane id:"+id);
 			document.getElementById(id).style.display = "block";
-			this.resizePanes(true);
+			this.resizePanes();
 		} else {
 			this.hidePane(id);
 		}
@@ -136,7 +149,7 @@ yellow.webinterface =
 	// Hide pane
 	hidePane: function(id)
 	{
-		if(document.getElementById(id).style.display != "none")
+		if(yellow.toolbox.isVisible(document.getElementById(id)))
 		{
 			if(yellow.debug) console.log("yellow.webinterface.hidePane id:"+id);
 			document.getElementById(id).style.display = "none";
@@ -174,56 +187,43 @@ yellow.webinterface =
 		if(keycode == 27) this.hidePanes();
 	},
 
-	// Resize panes, recalculate height and width where needed
-	resizePanes: function(force)
+	// Resize panes, recalculate width and height where needed
+	resizePanes: function()
 	{
-		var interfaceHeight;
-		if(window.innerHeight)
+		if(document.getElementById("yellow-bar"))
 		{
-			interfaceHeight = window.innerHeight;
-		} else {
-			if(window.document.documentElement && window.document.documentElement.clientHeight) 
-			{ 
-				interfaceHeight = window.document.documentElement.clientHeight; 
-			} else {
-				interfaceHeight = window.document.body.clientHeight; 
-			} 
-		}
-		if((interfaceHeight!=this.heightOld || force) && document.getElementById("yellow-bar"))
-		{
-			this.heightOld = interfaceHeight;
 			var elementBar = document.getElementById("yellow-bar");
-			var borderRadius = 6;
-			var panePadding = 5;
-			var editPadding = 5;
-			var interfaceTop = elementBar.offsetHeight + 1;
-			interfaceHeight -= interfaceTop + borderRadius*2;
-			if(yellow.debug) console.log("yellow.webinterface.resizePanes windowY:"+interfaceHeight+" actionbarY:"+document.getElementById("yellow-bar").offsetHeight+" buttonsY:"+document.getElementById("yellow-editbuttons").offsetHeight+" editorX:"+document.getElementById("yellow-paneedit").offsetWidth);
-
-			this.setPaneHeight(document.getElementById("yellow-paneedit"), interfaceHeight, null, interfaceTop);
-			this.setPaneHeight(document.getElementById("yellow-paneshow"), null, interfaceHeight, interfaceTop);
-			this.setPaneHeight(document.getElementById("yellow-paneuser"), null, null, interfaceTop);
-			
-			var editTextHeight = interfaceHeight - panePadding*2 - editPadding*2 - 10
-								- (document.getElementById("yellow-edittext").offsetTop-document.getElementById("yellow-paneedit").getElementsByTagName("p")[0].offsetTop)
-								- document.getElementById("yellow-editbuttons").offsetHeight;
-			document.getElementById("yellow-paneedit").style.width = Math.max(0, elementBar.offsetWidth - panePadding*2) + "px";
-			document.getElementById("yellow-edittext").style.height = Math.max(0, editTextHeight) + "px";
-			document.getElementById("yellow-edittext").style.width = Math.max(0, document.getElementById("yellow-paneedit").offsetWidth - 2 - panePadding*2 - editPadding*2) + "px";
-			document.getElementById("yellow-paneuser").style.marginLeft = Math.max(0, elementBar.offsetWidth - document.getElementById("yellow-paneuser").offsetWidth) + "px";
+			var paneTop = yellow.toolbox.getOuterTop(elementBar) + yellow.toolbox.getOuterHeight(elementBar);
+			var paneWidth = yellow.toolbox.getOuterWidth(elementBar, true);
+			var paneHeight = yellow.toolbox.getWindowHeight() - paneTop - yellow.toolbox.getOuterHeight(elementBar);
+			if(yellow.toolbox.isVisible(document.getElementById("yellow-panelogin")))
+			{
+				yellow.toolbox.setOuterWidth(document.getElementById("yellow-panelogin"), paneWidth);
+			}
+			if(yellow.toolbox.isVisible(document.getElementById("yellow-paneedit")))
+			{
+				yellow.toolbox.setOuterTop(document.getElementById("yellow-paneedit"), paneTop);
+				yellow.toolbox.setOuterHeight(document.getElementById("yellow-paneedit"), paneHeight);
+				yellow.toolbox.setOuterWidth(document.getElementById("yellow-paneedit"), paneWidth);
+				yellow.toolbox.setOuterWidth(document.getElementById("yellow-edittext"), yellow.toolbox.getWidth(document.getElementById("yellow-paneedit")));
+				var height1 = yellow.toolbox.getHeight(document.getElementById("yellow-paneedit"));
+				var height2 = yellow.toolbox.getOuterHeight(document.getElementById("yellow-paneeditcontent"));
+				var height3 = yellow.toolbox.getOuterHeight(document.getElementById("yellow-edittext"));
+				yellow.toolbox.setOuterHeight(document.getElementById("yellow-edittext"), height1 - height2 + height3);
+			}
+			if(yellow.toolbox.isVisible(document.getElementById("yellow-paneshow")))
+			{
+				yellow.toolbox.setOuterTop(document.getElementById("yellow-paneshow"), paneTop);
+				yellow.toolbox.setOuterHeight(document.getElementById("yellow-paneshow"), paneHeight, true);
+			}
+			if(yellow.toolbox.isVisible(document.getElementById("yellow-paneuser")))
+			{
+				yellow.toolbox.setOuterTop(document.getElementById("yellow-paneuser"), paneTop);
+				yellow.toolbox.setOuterHeight(document.getElementById("yellow-paneuser"), paneHeight, true);
+				yellow.toolbox.setOuterLeft(document.getElementById("yellow-paneuser"), paneWidth - yellow.toolbox.getOuterWidth(document.getElementById("yellow-paneuser")), true);
+			}
+			if(yellow.debug) console.log("yellow.webinterface.resizePanes bar:"+elementBar.offsetWidth+"/"+elementBar.offsetHeight);
 		}
-	},
-
-	// Set pane height
-	setPaneHeight: function(element, height, maxHeight, top)
-	{
-		if(maxHeight)
-		{
-			element.style.maxHeight = Math.max(0, maxHeight) + "px";
-		} else if(height) {
-			element.style.height = Math.max(0, height) + "px";
-		}
-		element.style.top = top + "px";
 	},
 	
 	// Return text string
@@ -239,8 +239,14 @@ yellow.toolbox =
 	// Set element text
 	setText: function(element, text)
 	{
-		while(element.firstChild!==null) element.removeChild(element.firstChild);
+		while(element.firstChild !== null) element.removeChild(element.firstChild);
 		element.appendChild(document.createTextNode(text));
+	},
+	
+	// Insert element before element
+	insertBefore: function(newElement, referenceElement)
+	{
+		referenceElement.parentNode.insertBefore(newElement, referenceElement);
 	},
 
 	// Insert element after element
@@ -268,6 +274,148 @@ yellow.toolbox =
 	{
 		e = e ? e : window.event;
 		return e.keyCode
+	},
+	
+	// Set element width/height in pixel, including padding and border
+	setOuterWidth: function(element, width, maxWidth)
+	{
+		width -= this.getBoxSize(element).width;
+		if(maxWidth)
+		{
+			element.style.maxWidth = Math.max(0, width) + "px";
+		} else {
+			element.style.width = Math.max(0, width) + "px";
+		}
+	},
+	
+	setOuterHeight: function(element, height, maxHeight)
+	{
+		height -=this.getBoxSize(element).height;
+		if(maxHeight)
+		{
+			element.style.maxHeight = Math.max(0, height) + "px";
+		} else {
+			element.style.height = Math.max(0, height) + "px";
+		}
+	},
+	
+	// Return element width/height in pixel, including padding and border
+	getOuterWidth: function(element, includeMargin)
+	{
+		width = element.offsetWidth;
+		if(includeMargin) width += this.getMarginSize(element).width;
+		return width;
+	},
+
+	getOuterHeight: function(element, includeMargin)
+	{
+		height = element.offsetHeight;
+		if(includeMargin) height += this.getMarginSize(element).height;
+		return height;
+	},
+	
+	// Return element width/height in pixel
+	getWidth: function(element)
+	{
+		return element.offsetWidth - this.getBoxSize(element).width;
+	},
+	
+	getHeight: function(element)
+	{
+		return element.offsetHeight - this.getBoxSize(element).height;
+	},
+	
+	// Set element top/left position in pixel
+	setOuterTop: function(element, top, marginTop)
+	{
+		if(marginTop)
+		{
+			element.style.marginTop = Math.max(0, top) + "px";
+		} else {
+			element.style.top = Math.max(0, top) + "px";
+		}
+	},
+	
+	setOuterLeft: function(element, left, marginLeft)
+	{
+		if(marginLeft)
+		{
+			element.style.marginLeft = Math.max(0, left) + "px";
+		} else {
+			element.style.left = Math.max(0, left) + "px";
+		}
+	},
+	
+	// Return element top/left position in pixel
+	getOuterTop: function(element)
+	{
+		var top = element.getBoundingClientRect().top;
+		return top + (window.pageYOffset || document.documentElement.scrollTop);
+	},
+	
+	getOuterLeft: function(element)
+	{
+		var left = element.getBoundingClientRect().left;
+		return left + (window.pageXOffset || document.documentElement.scrollLeft);
+	},
+	
+	// Return window width/height in pixel
+	getWindowWidth: function()
+	{
+		return window.innerWidth || document.documentElement.clientWidth;
+	},
+	
+	getWindowHeight: function()
+	{
+		return window.innerHeight || document.documentElement.clientHeight;
+	},
+	
+	// Return element CSS property
+	getStyle: function(element, property)
+	{
+		var string = "";
+		if(window.getComputedStyle)
+		{
+			string = window.getComputedStyle(element, null).getPropertyValue(property);
+		} else {
+			property = property.replace(/\-(\w)/g, function(match, m) { return m.toUpperCase(); });
+			string = element.currentStyle[property];
+		}
+		return string;
+	},
+	
+	// Return element CSS padding and border
+	getBoxSize: function(element)
+	{
+		var paddingLeft = parseFloat(this.getStyle(element, "padding-left")) || 0;
+		var paddingRight = parseFloat(this.getStyle(element, "padding-right")) || 0;
+		var borderLeft = parseFloat(this.getStyle(element, "border-left-width")) || 0;
+		var borderRight = parseFloat(this.getStyle(element, "border-right-width")) || 0;
+		var width = paddingLeft + paddingRight + borderLeft + borderRight;
+		var paddingTop = parseFloat(this.getStyle(element, "padding-top")) || 0;
+		var paddingBottom = parseFloat(this.getStyle(element, "padding-bottom")) || 0;
+		var borderTop = parseFloat(this.getStyle(element, "border-top-width")) || 0;
+		var borderBottom = parseFloat(this.getStyle(element, "border-bottom-width")) || 0;
+		var height = paddingTop + paddingBottom + borderTop + borderBottom;
+		return { "width":width, "height":height };
+	},
+	
+	// Return element CSS margin
+	getMarginSize: function(element)
+	{
+		var marginLeft = parseFloat(this.getStyle(element, "margin-left")) || 0;
+		var marginRight = parseFloat(this.getStyle(element, "margin-right")) || 0;
+		var width = marginLeft + marginRight;
+		var marginTop = parseFloat(this.getStyle(element, "margin-top")) || 0;
+		var marginBottom = parseFloat(this.getStyle(element, "margin-bottom")) || 0;
+		var height = marginTop + marginBottom;
+		return { "width":width, "height":height };
+	},
+	
+	// Check if element exists and is visible
+	isVisible: function(element)
+	{
+		return element && element.style.display != "none";
 	}
 }
 

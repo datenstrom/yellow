@@ -5,7 +5,7 @@
 // Web interface core plugin
 class Yellow_Webinterface
 {
-	const Version = "0.1.0";
+	const Version = "0.1.1";
 	var $yellow;			//access to API
 	var $users;				//web interface users
 	var $activeLocation;	//web interface location? (boolean)
@@ -50,9 +50,9 @@ class Yellow_Webinterface
 		$header = "";
 		if($this->isWebinterfaceLocation())
 		{
-			$location = $this->yellow->config->getHtml("baseLocation").$this->yellow->config->getHtml("pluginsLocation");
+			$location = $this->yellow->config->getHtml("baseLocation").$this->yellow->config->getHtml("pluginLocation");
 			$language = $this->isUser() ? $this->users->getLanguage($this->activeUserEmail) : $this->yellow->page->get("language");
-			$header .= "<link href=\"{$location}core_webinterface.css\" rel=\"styleSheet\" media=\"all\" type=\"text/css\" />\n";
+			$header .= "<link rel=\"styleSheet\" type=\"text/css\" media=\"all\" href=\"{$location}core_webinterface.css\" />\n";
 			$header .= "<script type=\"text/javascript\" src=\"{$location}core_webinterface.js\"></script>\n";
 			$header .= "<script type=\"text/javascript\">\n";
 			$header .= "// <![CDATA[\n";

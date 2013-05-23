@@ -5,7 +5,7 @@
 // Markdown parser core plugin
 class Yellow_Markdown
 {
-	const Version = "0.1.1";
+	const Version = "0.1.2";
 	var $markdown;			//markdown parser
 	var $html;				//generated HTML
 	
@@ -45,8 +45,8 @@ class Yellow_MarkdownExtraParser extends MarkdownExtra_Parser
 	function _doImages_inline_callback($matches)
 	{
 		$path = $matches[3]=="" ? $matches[4] : $matches[3];
-		$src = $this->yellow->config->get("baseLocation").$this->yellow->config->get("imagesLocation").$path;
-		list($width, $height) = $this->yellow->toolbox->detectImageDimensions(".".$this->yellow->config->get("imagesLocation").$path);
+		$src = $this->yellow->config->get("baseLocation").$this->yellow->config->get("imageLocation").$path;
+		list($width, $height) = $this->yellow->toolbox->detectImageDimensions($this->yellow->config->get("imageDir").$path);
 		$alt = $matches[2];
 		$title = $matches[7];
 		

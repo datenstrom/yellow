@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.1.2";
+	const Version = "0.1.3";
 	var $page;				//current page data
 	var $pages;				//current page tree from file system
 	var $toolbox;			//toolbox with helpers
@@ -24,22 +24,24 @@ class Yellow
 		$this->config->setDefault("language", "en");
 		$this->config->setDefault("parser", "markdown");
 		$this->config->setDefault("template", "default");
+		$this->config->setDefault("style", "default");
 		$this->config->setDefault("yellowVersion", Yellow::Version);
 		$this->config->setDefault("baseLocation", $this->toolbox->getBaseLocation());
-		$this->config->setDefault("stylesLocation", "/media/styles/");
-		$this->config->setDefault("imagesLocation", "/media/images/");
-		$this->config->setDefault("pluginsLocation", "media/plugins/");
+		$this->config->setDefault("styleLocation", "/media/styles/");
+		$this->config->setDefault("imageLocation", "/media/images/");
+		$this->config->setDefault("pluginLocation", "media/plugins/");
 		$this->config->setDefault("systemDir", "system/");
 		$this->config->setDefault("configDir", "system/config/");
 		$this->config->setDefault("pluginDir", "system/plugins/");
 		$this->config->setDefault("snippetDir", "system/snippets/");
 		$this->config->setDefault("templateDir", "system/templates/");
+		$this->config->setDefault("styleDir", "media/styles/");
+		$this->config->setDefault("imageDir", "media/images/");
 		$this->config->setDefault("contentDir", "content/");
 		$this->config->setDefault("contentHomeDir", "1-home/");
 		$this->config->setDefault("contentDefaultFile", "page.txt");
 		$this->config->setDefault("contentExtension", ".txt");
 		$this->config->setDefault("configExtension", ".ini");
-		$this->config->setDefault("systemExtension", ".php");
 		$this->config->setDefault("configFile", "config.ini");
 		$this->config->setDefault("errorPageFile", "error(.*).txt");
 		$this->config->setDefault("textStringFile", "text_(.*).ini");
@@ -151,7 +153,9 @@ class Yellow
 		$this->page = new Yellow_Page($baseLocation, $location, $fileName, $fileData, $this->pages, true);
 		$this->text->setLanguage($this->page->get("language"));
 		
-		$fileName = $this->config->get("templateDir").$this->page->get("template").$this->config->get("systemExtension");
+		$fileName = $this->config->get("styleDir").$this->page->get("style").".css";
+		if(!is_file($fileName)) die("Style '".$this->page->get("style")."' does not exist!");
+		$fileName = $this->config->get("templateDir").$this->page->get("template").".php";
 		if(!is_file($fileName)) die("Template '".$this->page->get("template")."' does not exist!");
 		global $yellow;
 		require($fileName);
@@ -161,7 +165,7 @@ class Yellow
 	function snippet($name, $args = NULL)
 	{
 		$this->page->args = func_get_args();
-		$fileName = $this->config->get("snippetDir").$name.$this->config->get("systemExtension");
+		$fileName = $this->config->get("snippetDir")."$name.php";
 		if(!is_file($fileName)) die("Snippet '$name' does not exist!");
 		global $yellow;
 		require($fileName);
@@ -252,6 +256,7 @@ class Yellow_Page
 		$this->set("language", $config->get("language"));
 		$this->set("parser", $config->get("parser"));
 		$this->set("template", $config->get("template"));
+		$this->set("style", $config->get("style"));
 		
 		if(preg_match("/^(\-\-\-[\r\n]+)(.+?)([\r\n]+\-\-\-[\r\n]+)/s", $rawData, $parsed))
 		{

@@ -10,6 +10,7 @@ Copy all files to your web server hosting.
 Open your website in a browser, that's it!
 
 Installation requirements are Apache, mod_rewrite, PHP 5.3 and multibyte support.
+There are extensions for Yellow, you can find them at [Yellow extension on Github](https://github.com/markseu/yellowcms-extensions).
 
 Need help? Have a question?
 ---------------------------
