@@ -1,4 +1,4 @@
-/* Yellow default style 0.1.0 */
+/* Yellow default style 0.1.1 */
 
 html, body, div, span { margin:0; padding:0; border:0; vertical-align:baseline; }
 body { 
@@ -11,6 +11,7 @@ body {
 }
 h1, h2, h3, h4, h5, h6 { color:#07d; font-weight:normal; }
 hr { height:1px; background:#ddd; border:0; }
+code { font-size:1.1em; }
 a, img { border:none; text-decoration:none; }
 a { color:#717171; }
 a:hover { color:#07d; }
@@ -25,7 +26,11 @@ a:hover { color:#07d; }
 .navigation ul { margin:0 -0.3em; padding:0; list-style:none; }
 .content a { color:#07d; }
 .content a:hover { color:#07d; text-decoration:underline; }
+.content img { max-width:100%; height:auto; }
 .footer { margin-top:0.5em; padding-top:0.5em; border-top:1px solid #ddd; }
+.left { float:left; margin:0 1em 0 0; }
+.center { display:block; margin:0 auto; }
+.right { float:right; margin:0 0 0 1em; }
 
 /* Responsive and print */
 

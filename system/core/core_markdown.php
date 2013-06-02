@@ -5,7 +5,7 @@
 // Markdown parser core plugin
 class Yellow_Markdown
 {
-	const Version = "0.1.2";
+	const Version = "0.1.3";
 	var $markdown;			//markdown parser
 	var $html;				//generated HTML
 	
@@ -49,11 +49,13 @@ class Yellow_MarkdownExtraParser extends MarkdownExtra_Parser
 		list($width, $height) = $this->yellow->toolbox->detectImageDimensions($this->yellow->config->get("imageDir").$path);
 		$alt = $matches[2];
 		$title = $matches[7];
+		$attr  = $this->doExtraAttributes("img", $dummy =& $matches[8]);
 		
 		$result = "<img src=\"".$this->encodeAttribute($src)."\"";
 		if($width && $height) $result .= " width=\"$width\" height=\"$height\"";
-		if(isset($alt)) $result .= " alt=\"".$this->encodeAttribute($alt)."\"";
-		if(isset($title)) $result .= " title=\"".$this->encodeAttribute($title)."\"";
+		if(!empty($alt)) $result .= " alt=\"".$this->encodeAttribute($alt)."\"";
+		if(!empty($title)) $result .= " title=\"".$this->encodeAttribute($title)."\"";
+		$result .= $attr;
 		$result .= $this->empty_element_suffix;
 		
 		return $this->hashPart($result);

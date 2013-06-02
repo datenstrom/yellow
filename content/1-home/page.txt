@@ -2,6 +2,7 @@
 Title: Home
 ---
 Yes, your Yellow installation works!  
-You can now [edit this page](@baselocation/wiki/) or use your favorite text editor.
+You can now [edit this page](@baselocation/wiki/) or use your favorite text editor.  
+See [Yellow documentation](https://github.com/markseu/yellowcms-extensions/tree/master/documentation) for more.
 
-Visit [Yellow on Github](https://github.com/markseu/yellowcms).
+Have fun making your website.
