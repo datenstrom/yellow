@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.1.3";
+	const Version = "0.1.4";
 	var $page;				//current page data
 	var $pages;				//current page tree from file system
 	var $toolbox;			//toolbox with helpers
@@ -26,7 +26,8 @@ class Yellow
 		$this->config->setDefault("template", "default");
 		$this->config->setDefault("style", "default");
 		$this->config->setDefault("yellowVersion", Yellow::Version);
-		$this->config->setDefault("baseLocation", $this->toolbox->getBaseLocation());
+		$this->config->setDefault("serverName", $this->toolbox->getServerName());
+		$this->config->setDefault("baseLocation", $this->toolbox->getServerBase());
 		$this->config->setDefault("styleLocation", "/media/styles/");
 		$this->config->setDefault("imageLocation", "/media/images/");
 		$this->config->setDefault("pluginLocation", "media/plugins/");
@@ -48,12 +49,11 @@ class Yellow
 		$this->config->load($this->config->get("configDir").$this->config->get("configFile"));
 		$this->text->load($this->config->get("configDir").$this->config->get("textStringFile"), $this->toolbox);
 	}
-
+	
 	// Start and handle request
 	function request()
 	{
 		$this->toolbox->timerStart($time);
-		$this->plugins->load();
 		$this->processRequest();
 		$this->toolbox->timerStop($time);
 		if(defined("DEBUG") && DEBUG>=1) echo "Yellow::request time:$time ms<br>\n";
@@ -114,7 +114,8 @@ class Yellow
 				if($this->toolbox->isFileLocation($location) && is_dir($this->getContentDirectory("$location/")))
 				{
 					$statusCode = 301;
-					$this->sendStatus($statusCode, "Location: http://$_SERVER[SERVER_NAME]$baseLocation$location/");
+					$serverName = $this->config->get("serverName");
+					$this->sendStatus($statusCode, "Location: http://$serverName$baseLocation$location/");
 				} else {
 					$statusCode = 404;
 				}
@@ -209,6 +210,16 @@ class Yellow
 	{
 		return $this->toolbox->findFileFromLocation($location,
 			$this->config->get("contentDir"), $this->config->get("contentHomeDir"), "", "");
+	}
+	
+	// Execute a plugin command
+	function plugin($name, $args = NULL)
+	{
+		$statusCode = 0;
+		if(!$this->plugins->isExisting($name)) die("Pluggin '$name' does not exist!");
+		$plugin = $this->plugins->plugins[$name];
+		if(method_exists($plugin["obj"], "onCommand")) $statusCode = $plugin["obj"]->onCommand(func_get_args());
+		return $statusCode;
 	}
 	
 	// Register plugin
@@ -606,12 +617,18 @@ class Yellow_Pages
 // Yellow toolbox with helpers
 class Yellow_Toolbox
 {
-	// Return base location from current HTTP request
-	static function getBaseLocation()
+	// Return server name from current HTTP request
+	static function getServerName()
 	{
-		$baseLocation = "/";
-		if(preg_match("/^(.*)\//", $_SERVER["SCRIPT_NAME"], $matches)) $baseLocation = $matches[1];
-		return $baseLocation;
+		return $_SERVER["SERVER_NAME"];
+	}
+	
+	// Return server base from current HTTP request
+	static function getServerBase()
+	{
+		$serverBase = "/";
+		if(preg_match("/^(.*)\//", $_SERVER["SCRIPT_NAME"], $matches)) $serverBase = $matches[1];
+		return $serverBase;
 	}
 	
 	// Return location from current HTTP request
@@ -1137,6 +1154,7 @@ class Yellow_Plugins
 		global $yellow;
 		require_once("core_markdown.php");
 		require_once("core_rawhtml.php");
+		require_once("core_commandline.php");
 		require_once("core_webinterface.php");
 		foreach($yellow->toolbox->getDirectoryEntries($yellow->config->get("pluginDir"), "/.*\.php/", true, false) as $entry)
 		{
@@ -1183,4 +1201,7 @@ function substru() { return call_user_func_array("mb_substr", func_get_args()); 
 function strlenb() { return call_user_func_array("strlen", func_get_args()); }
 function strposb() { return call_user_func_array("strpos", func_get_args()); }
 function substrb() { return call_user_func_array("substr", func_get_args()); }
+
+// Error reporting for PHP 5
+error_reporting(E_ALL ^ E_NOTICE);
 ?>
