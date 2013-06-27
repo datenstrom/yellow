@@ -15,9 +15,10 @@ With Yellow you don't get a lot of extra stuff, there are [Yellow extensions on 
 How to make a website?
 ----------------------
 You already have everything you need, start by editing the default pages.  
-For more information please see [Yellow documentation](https://github.com/markseu/yellowcms-extensions/tree/master/documentation).
+For more information please see [Yellow documentation](https://github.com/markseu/yellowcms-extensions/blob/master/documentation/README.md).
 
 Need help? Have a question?
 ---------------------------
+Looking for something, then get in touch with others.  
 Visit [Yellow on Reddit](http://www.reddit.com/r/yellowcms/), 
 follow [Yellow on Twitter](https://twitter.com/yellowcms).

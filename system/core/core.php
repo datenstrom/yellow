@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.1.4";
+	const Version = "0.1.5";
 	var $page;				//current page data
 	var $pages;				//current page tree from file system
 	var $toolbox;			//toolbox with helpers
@@ -62,6 +62,7 @@ class Yellow
 	// Process request
 	function processRequest()
 	{
+		ob_start();
 		$statusCode = 0;
 		$baseLocation = $this->config->get("baseLocation");
 		$location = $this->getRelativeLocation($baseLocation);
@@ -76,8 +77,9 @@ class Yellow
 		}
 		if($statusCode == 0) $statusCode = $this->processRequestFile($baseLocation, $location, $fileName, $statusCode);
 		if(defined("DEBUG") && DEBUG>=1) echo "Yellow::processRequest status:$statusCode location:$location<br>\n";
+		ob_end_flush();
 	}
-
+	
 	// Process request for a file
 	function processRequestFile($baseLocation, $location, $fileName, $statusCode, $cache = true)
 	{
@@ -85,91 +87,104 @@ class Yellow
 		{
 			if(is_readable($fileName))
 			{
-				$time = gmdate("D, d M Y H:i:s", filemtime($fileName))." GMT";
-				if(isset($_SERVER["HTTP_IF_MODIFIED_SINCE"]) && $_SERVER["HTTP_IF_MODIFIED_SINCE"]==$time && $cache)
-				{
-					$statusCode = 304;
-					$this->sendStatus($statusCode);
-				} else {
-					$statusCode = 200;
-					header("Content-Type: text/html; charset=UTF-8");
-					if($cache)
-					{
-						header("Last-Modified: ".$time);
-					} else {
-						header("Cache-Control: no-cache");
-						header("Pragma: no-cache");
-						header("Expires: 0");
-					}
-					$fileHandle = @fopen($fileName, "r");
-					if($fileHandle)
-					{
-						$fileData = fread($fileHandle, filesize($fileName));
-						fclose($fileHandle);
-					} else {
-						die("Server problem: Can't read file '$fileName'!");
-					}
-				}
+				$statusCode = 200;
+				$fileName = $this->readPage($baseLocation, $location, $fileName, $statusCode);
 			} else {
 				if($this->toolbox->isFileLocation($location) && is_dir($this->getContentDirectory("$location/")))
 				{
 					$statusCode = 301;
-					$serverName = $this->config->get("serverName");
-					$this->sendStatus($statusCode, "Location: http://$serverName$baseLocation$location/");
+					$this->sendStatus($statusCode, "Location: http://".$this->config->get("serverName")."$baseLocation$location/");
 				} else {
 					$statusCode = 404;
+					$fileName = $this->readPage($baseLocation, $location, $fileName, $statusCode);
 				}
 			}
+		} else if($statusCode >= 400) {
+			$fileName = $this->readPage($baseLocation, $location, $fileName, $statusCode);
 		}
-		if($statusCode >= 400)
+		if(is_object($this->page))
 		{
-			header($this->toolbox->getHttpStatusFormated($statusCode));
-			header("Content-Type: text/html; charset=UTF-8");
-			$fileName = strreplaceu("(.*)", $statusCode, $this->config->get("configDir").$this->config->get("errorPageFile"));
-			$fileHandle = @fopen($fileName, "r");
-			if($fileHandle)
+			$statusCode = $this->sendPage($statusCode, $cache);
+		}
+		if(defined("DEBUG") && DEBUG>=1) echo "Yellow::processRequestFile base:$baseLocation file:$fileName<br>\n";
+		return $statusCode;
+	}
+	
+	// Read page
+	function readPage($baseLocation, $location, $fileName, $statusCode)
+	{
+		if($statusCode >= 400) $fileName = strreplaceu("(.*)", $statusCode, $this->config->get("configDir").$this->config->get("errorPageFile"));
+		$fileHandle = @fopen($fileName, "r");
+		if($fileHandle)
+		{
+			$fileData = fread($fileHandle, filesize($fileName));
+			fclose($fileHandle);
+		} else {
+			die("Server problem: Can't read file '$fileName'!");
+		}
+		$this->pages = new Yellow_Pages($baseLocation, $this->toolbox, $this->config, $this->plugins);
+		$this->page = new Yellow_Page($baseLocation, $location, $fileName, $fileData, $this->pages, true);
+		$this->text->setLanguage($this->page->get("language"));
+		return $fileName;
+	}
+	
+	// Send page response
+	function sendPage($statusCode, $cache)
+	{
+		$fileNameStyle = $this->config->get("styleDir").$this->page->get("style").".css";
+		if(!is_file($fileNameStyle)) die("Style '".$this->page->get("style")."' does not exist!");
+		$fileNameTemplate = $this->config->get("templateDir").$this->page->get("template").".php";
+		if(!is_file($fileNameTemplate)) die("Template '".$this->page->get("template")."' does not exist!");
+		global $yellow;
+		require($fileNameTemplate);
+		
+		$pageHeaders["last-modified"] = $this->page->getModified(true);
+		$pageHeaders["content-type"] = "text/html; charset=UTF-8";
+		foreach(headers_list() as $header)
+		{
+			$tokens = explode(':', $header, 2);
+			$key = strtoloweru($tokens[0]);
+			if(!is_null($pageHeaders[$key]))
 			{
-				$fileData = fread($fileHandle, filesize($fileName));
-				fclose($fileHandle);
-			} else {
-				die("Configuration problem: Can't open file '$fileName'!");
+				$pageHeaders[$key] = trim($tokens[1]);
+				header_remove($tokens[0]);
 			}
 		}
-		if(!empty($fileData)) $this->sendPage($baseLocation, $location, $fileName, $fileData, $statusCode);
-		if(defined("DEBUG") && DEBUG>=1) echo "Yellow::processRequestFile base:$baseLocation file:$fileName<br>\n";
+		if($statusCode==200 && $cache && isset($_SERVER["HTTP_IF_MODIFIED_SINCE"]) &&
+		   $_SERVER["HTTP_IF_MODIFIED_SINCE"]==$pageHeaders["last-modified"])
+		{
+			$statusCode = 304;
+			$this->sendStatus($statusCode);
+		} else {
+			header("Content-Type: ".$pageHeaders["content-type"]);
+			if($cache)
+			{
+				header("Last-Modified:". $pageHeaders["last-modified"]);
+			} else {
+				header("Cache-Control: no-cache");
+				header("Pragma: no-cache");
+				header("Expires: 0");
+			}
+		}
+		if(defined("DEBUG") && DEBUG>=1) echo "Yellow::sendFile template:$fileNameTemplate style:$fileNameStyle<br>\n";
 		return $statusCode;
 	}
 	
 	// Send status response
 	function sendStatus($statusCode, $text = "")
 	{
-		header($this->toolbox->getHttpStatusFormated($statusCode));
+		header($this->toolbox->getHttpStatusFormatted($statusCode));
 		if(!empty($text)) header($text);
-	}
-	
-	// Send page response
-	function sendPage($baseLocation, $location, $fileName, $fileData, $statusCode)
-	{
-		$this->pages = new Yellow_Pages($baseLocation, $this->toolbox, $this->config, $this->plugins);
-		$this->page = new Yellow_Page($baseLocation, $location, $fileName, $fileData, $this->pages, true);
-		$this->text->setLanguage($this->page->get("language"));
-		
-		$fileName = $this->config->get("styleDir").$this->page->get("style").".css";
-		if(!is_file($fileName)) die("Style '".$this->page->get("style")."' does not exist!");
-		$fileName = $this->config->get("templateDir").$this->page->get("template").".php";
-		if(!is_file($fileName)) die("Template '".$this->page->get("template")."' does not exist!");
-		global $yellow;
-		require($fileName);
 	}
 
 	// Execute a template snippet
 	function snippet($name, $args = NULL)
 	{
 		$this->page->args = func_get_args();
-		$fileName = $this->config->get("snippetDir")."$name.php";
-		if(!is_file($fileName)) die("Snippet '$name' does not exist!");
+		$fileNameSnippet = $this->config->get("snippetDir")."$name.php";
+		if(!is_file($fileNameSnippet)) die("Snippet '$name' does not exist!");
 		global $yellow;
-		require($fileName);
+		require($fileNameSnippet);
 	}
 	
 	// Return template snippet arguments
@@ -211,7 +226,7 @@ class Yellow
 		return $this->toolbox->findFileFromLocation($location,
 			$this->config->get("contentDir"), $this->config->get("contentHomeDir"), "", "");
 	}
-	
+		
 	// Execute a plugin command
 	function plugin($name, $args = NULL)
 	{
@@ -237,13 +252,13 @@ class Yellow_Page
 	var $fileName;				//content file name
 	var $parser;				//content parser
 	var $metaData;				//meta data of page
-	var $rawData;				//raw data of page (unparsed)
-	var $rawTextOffsetBytes;	//raw text of page (unparsed)
+	var $rawData;				//raw data of page
+	var $rawTextOffsetBytes;	//raw text of page
 	var $args;					//arguments for template snippet
 	var $pages;					//access to file system
-	var $active;				//page is active?
-	var $hidden;				//page is hidden in navigation?
-
+	var $active;				//page is active? (boolean)
+	var $hidden;				//page is hidden in navigation? (boolean)
+	
 	function __construct($baseLocation, $location, $fileName, $rawData, $pages, $parseContent = false)
 	{
 		$this->baseLocation = $baseLocation;
@@ -354,16 +369,18 @@ class Yellow_Page
 		return substrb($this->rawData, $this->rawTextOffsetBytes);
 	}
 	
-	// Return absolut page location
+	// Return absolute page location
 	function getLocation()
 	{
 		return $this->baseLocation.$this->location;
 	}
 	
-	// Return page modification time (Unix time UTC)
-	function getModified()
+	// Return page modification time, Unix time
+	function getModified($httpFormat = false)
 	{
-		return filemtime($this->fileName);
+		$modified = is_readable($this->fileName) ? filemtime($this->fileName) : "";
+		if($this->IsExisting("modified")) $modified = strtotime($this->get("modified"));
+		return $httpFormat ? $this->pages->toolbox->getHttpTimeFormatted($modified) : $modified;
 	}
 	
 	// Return child pages relative to current page
@@ -477,7 +494,7 @@ class Yellow_PageCollection extends ArrayObject
 		return $this->paginationCount;
 	}
 	
-	// Return absolut location for a page in pagination
+	// Return absolute location for a page in pagination
 	function getLocationPage($pageNumber)
 	{
 		if($pageNumber>=1 && $pageNumber<=$this->paginationCount)
@@ -488,7 +505,7 @@ class Yellow_PageCollection extends ArrayObject
 		return $location;
 	}
 	
-	// Return absolut location for previous page in pagination
+	// Return absolute location for previous page in pagination
 	function getLocationPrevious()
 	{
 		$pageNumber = $this->paginationPage;
@@ -496,12 +513,20 @@ class Yellow_PageCollection extends ArrayObject
 		return $this->getLocationPage($pageNumber);
 	}
 	
-	// Return absolut location for next page in pagination
+	// Return absolute location for next page in pagination
 	function getLocationNext()
 	{
 		$pageNumber = $this->paginationPage;
 		$pageNumber = ($pageNumber>=1 && $pageNumber<$this->paginationCount) ? $pageNumber+1 : 0;
 		return $this->getLocationPage($pageNumber);
+	}
+	
+	// Return last modification time for page collection, Unix time
+	function getModified($httpFormat = false)
+	{
+		$modified = 0;
+		foreach($this->getIterator() as $page) $modified = max($modified, $page->getModified());
+		return $httpFormat ? $this->toolbox->getHttpTimeFormatted($modified) : $modified;
 	}
 
 	// Check if there is an active pagination
@@ -789,7 +814,7 @@ class Yellow_Toolbox
 	}
 	
 	// Return human readable HTTP server status
-	static function getHttpStatusFormated($statusCode)
+	static function getHttpStatusFormatted($statusCode)
 	{
 		switch($statusCode)
 		{
@@ -800,9 +825,16 @@ class Yellow_Toolbox
 			case 401: $text = "$_SERVER[SERVER_PROTOCOL] $statusCode Unauthorised"; break;
 			case 404: $text = "$_SERVER[SERVER_PROTOCOL] $statusCode Not found"; break;
 			case 424: $text = "$_SERVER[SERVER_PROTOCOL] $statusCode Does not exist"; break;
+			case 500: $text = "$_SERVER[SERVER_PROTOCOL] $statusCode Server error"; break;
 			default: die("Unknown HTTP status $statusCode!");
 		}
 		return $text;
+	}
+							  
+	// Return human readable HTTP time
+	static function getHttpTimeFormatted($timestamp)
+	{
+		return gmdate("D, d M Y H:i:s", $timestamp)." GMT";
 	}
 	
 	// Return files and directories
@@ -1158,8 +1190,8 @@ class Yellow_Plugins
 		require_once("core_webinterface.php");
 		foreach($yellow->toolbox->getDirectoryEntries($yellow->config->get("pluginDir"), "/.*\.php/", true, false) as $entry)
 		{
-			$fileName = $yellow->config->get("pluginDir")."/$entry";
-			require_once($fileName);
+			$fileNamePlugin = $yellow->config->get("pluginDir")."/$entry";
+			require_once($fileNamePlugin);
 		}
 		foreach($this->plugins as $key=>$value)
 		{
