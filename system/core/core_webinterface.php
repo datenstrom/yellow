@@ -5,18 +5,18 @@
 // Web interface core plugin
 class Yellow_Webinterface
 {
-	const Version = "0.1.1";
+	const Version = "0.1.2";
 	var $yellow;			//access to API
 	var $users;				//web interface users
 	var $activeLocation;	//web interface location? (boolean)
-	var $activeUserFail;	//web interface login failed (boolean)
+	var $activeUserFail;	//web interface login failed? (boolean)
 	var $activeUserEmail;	//web interface user currently logged in
 
 	// Initialise plugin
 	function initPlugin($yellow)
 	{
 		$this->yellow = $yellow;
-		$this->yellow->config->setDefault("webinterfaceLocation", "/wiki/");
+		$this->yellow->config->setDefault("webinterfaceLocation", "/edit/");
 		$this->yellow->config->setDefault("webinterfaceUserFile", "user.ini");
 		$this->users = new Yellow_WebinterfaceUsers();
 		$this->users->load($this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile"));
@@ -38,7 +38,8 @@ class Yellow_Webinterface
 			if($this->yellow->config->get("webinterfaceLocation") == "$location/")
 			{
 				$statusCode = 301;
-				$this->yellow->sendStatus($statusCode, "Location: http://$_SERVER[SERVER_NAME]$baseLocation$location/");
+				$serverName = $this->yellow->config->get("serverName");
+				$this->yellow->sendStatus($statusCode, "Location: http://$serverName$baseLocation$location/");
 			}
 		}
 		return $statusCode;
@@ -104,6 +105,7 @@ class Yellow_Webinterface
 	function processRequestAction($baseLocation, $location, $fileName)
 	{
 		$statusCode = 0;
+		$serverName = $this->yellow->config->get("serverName");
 		if($_POST["action"] == "edit")
 		{
 			if(!empty($_POST["rawdata"]))
@@ -117,24 +119,24 @@ class Yellow_Webinterface
 					die("Configuration problem: Can't write page '$fileName'!");
 				}
 				$statusCode = 303;
-				$this->yellow->sendStatus($statusCode, "Location: http://$_SERVER[SERVER_NAME]$baseLocation$location");
+				$this->yellow->sendStatus($statusCode, "Location: http://$serverName$baseLocation$location");
 			}
 		} else if($_POST["action"]== "login") {
 			$statusCode = 303;
-			$this->yellow->sendStatus($statusCode, "Location: http://$_SERVER[SERVER_NAME]$baseLocation$location");
+			$this->yellow->sendStatus($statusCode, "Location: http://$serverName$baseLocation$location");
 		} else if($_POST["action"]== "logout") {
 			$this->users->destroyCookie("login");
 			$this->activeUserEmail = "";
 			$statusCode = 302;
 			$newLocation = $this->yellow->config->getHtml("baseLocation").$location;
-			$this->yellow->sendStatus($statusCode, "Location: http://$_SERVER[SERVER_NAME]$newLocation");
+			$this->yellow->sendStatus($statusCode, "Location: http://$serverName$newLocation");
 		} else {
 			if(!is_readable($fileName))
 			{
 				if($this->yellow->toolbox->isFileLocation($location) && is_dir($this->yellow->getContentDirectory("$location/")))
 				{
 					$statusCode = 301;
-					$this->yellow->sendStatus($statusCode, "Location: http://$_SERVER[SERVER_NAME]$baseLocation$location/");
+					$this->yellow->sendStatus($statusCode, "Location: http://$serverName$baseLocation$location/");
 				} else {
 					$statusCode = $this->checkUserPermissions($location, $fileName) ? 424 : 404;
 					$this->yellow->processRequestFile($baseLocation, $location, $fileName, $statusCode, false);
