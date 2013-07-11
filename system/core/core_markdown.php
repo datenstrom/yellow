@@ -5,7 +5,7 @@
 // Markdown parser core plugin
 class Yellow_Markdown
 {
-	const Version = "0.1.3";
+	const Version = "0.1.4";
 	var $markdown;			//markdown parser
 	var $html;				//generated HTML
 	
@@ -36,8 +36,8 @@ class Yellow_MarkdownExtraParser extends MarkdownExtra_Parser
 	// Transform text
 	function transform($text)
 	{
-		$baseLocation = $this->yellow->config->get("baseLocation");
-		$text = preg_replace("/@baseLocation/i", $baseLocation, $text);
+		$text = preg_replace("/@pageEdit/i", $this->yellow->config->get("baseLocation").$this->yellow->config->get("webinterfaceLocation"), $text);
+		$text = preg_replace("/@pageError/i", $this->yellow->page->get("pageError"), $text);
 		return parent::transform($text);
 	}
 	
@@ -57,7 +57,6 @@ class Yellow_MarkdownExtraParser extends MarkdownExtra_Parser
 		if(!empty($title)) $result .= " title=\"".$this->encodeAttribute($title)."\"";
 		$result .= $attr;
 		$result .= $this->empty_element_suffix;
-		
 		return $this->hashPart($result);
 	}
 }
