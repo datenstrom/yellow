@@ -5,12 +5,13 @@
 // Web interface core plugin
 class Yellow_Webinterface
 {
-	const Version = "0.1.2";
-	var $yellow;			//access to API
-	var $users;				//web interface users
-	var $activeLocation;	//web interface location? (boolean)
-	var $activeUserFail;	//web interface login failed? (boolean)
-	var $activeUserEmail;	//web interface user currently logged in
+	const Version = "0.1.3";
+	var $yellow;				//access to API
+	var $users;					//web interface users
+	var $activeLocation;		//web interface location? (boolean)
+	var $activeUserFail;		//web interface login failed? (boolean)
+	var $activeUserEmail;		//web interface user currently logged in
+	var $rawDataOriginal;		//raw data of page in case of errors
 
 	// Initialise plugin
 	function initPlugin($yellow)
@@ -45,6 +46,31 @@ class Yellow_Webinterface
 		return $statusCode;
 	}
 	
+	// Handle web content parsing
+	function onParseContent($text, $statusCode)
+	{
+		if($this->isWebinterfaceLocation() && $this->isUser())
+		{
+			$baseLocation = $this->yellow->config->get("baseLocation");
+			$webinterfaceLocation = trim($this->yellow->config->get("webinterfaceLocation"), '/');
+			$text = preg_replace("#<a(.*?)href=\"$baseLocation/(?!$webinterfaceLocation)(.*?)\"(.*?)>#",
+								 "<a$1href=\"$baseLocation/$webinterfaceLocation/$2\"$3>", $text);
+			switch($statusCode)
+			{
+				case 200:	$this->rawDataOriginal = $this->yellow->page->rawData; break;
+				case 424:	$language = $this->isUser() ? $this->users->getLanguage($this->activeUserEmail) : $this->yellow->page->get("language");
+							$this->yellow->page->rawData = "---\r\n";
+							$this->yellow->page->rawData .= "Title: ".$this->yellow->text->getLanguageText($language, "webinterface424Title")."\r\n";
+							$this->yellow->page->rawData .= "Author: ".$this->users->getName($this->activeUserEmail)."\r\n";
+							$this->yellow->page->rawData .= "---\r\n";
+							$this->yellow->page->rawData .= $this->yellow->text->getLanguageText($language, "webinterface424Text");
+							break;
+				case 500:	$this->yellow->page->rawData = $this->rawDataOriginal; break;
+			}
+		}
+		return $text;
+	}
+	
 	// Handle extra HTML header lines
 	function onHeaderExtra()
 	{
@@ -71,36 +97,6 @@ class Yellow_Webinterface
 		return $header;
 	}
 	
-	// Handle page before parser
-	function onParseBefore($text, $statusCode)
-	{
-		if($this->isWebinterfaceLocation() && $this->isUser())
-		{
-			if($statusCode == 424)
-			{
-				$this->yellow->page->rawData = "---\r\n";
-				$this->yellow->page->rawData .= "Title: ".$this->yellow->text->get("webinterface424Title")."\r\n";
-				$this->yellow->page->rawData .= "Author: ".$this->users->getName($this->activeUserEmail)."\r\n";
-				$this->yellow->page->rawData .= "---\r\n";
-				$this->yellow->page->rawData .= $this->yellow->text->get("webinterface424Text");
-			}
-		}
-		return $text;
-	}
-	
-	// Handle page after parser
-	function onParseAfter($text, $statusCode)
-	{
-		if($this->isWebinterfaceLocation() && $this->isUser())
-		{
-			$baseLocation = $this->yellow->config->get("baseLocation");
-			$webinterfaceLocation = trim($this->yellow->config->get("webinterfaceLocation"), '/');
-			$text = preg_replace("#<a(.*?)href=\"$baseLocation/(?!$webinterfaceLocation)(.*?)\"(.*?)>#",
-								 "<a$1href=\"$baseLocation/$webinterfaceLocation/$2\"$3>", $text);
-		}
-		return $text;
-	}
-	
 	// Process request for an action
 	function processRequestAction($baseLocation, $location, $fileName)
 	{
@@ -116,7 +112,7 @@ class Yellow_Webinterface
 					fwrite($fileHandle, $_POST["rawdata"]);
 					fclose($fileHandle);
 				} else {
-					die("Configuration problem: Can't write page '$fileName'!");
+					die("Server error: Can't save page '$fileName'!");
 				}
 				$statusCode = 303;
 				$this->yellow->sendStatus($statusCode, "Location: http://$serverName$baseLocation$location");
@@ -284,7 +280,7 @@ class Yellow_WebinterfaceUsers
 		{
 			$salt = hash("sha256", uniqid(mt_rand(), true));
 			$text = $email.";".$salt.";".hash("sha256", $salt.$this->users[$email]["session"]);
-			setcookie($cookieName, $text, time()+60*60*24*30*365*10, "/") || die("Server problem: Can't create '$cookieName' cookie!");
+			setcookie($cookieName, $text, time()+60*60*24*30*365*10, "/");
 		}
 	}
 	
