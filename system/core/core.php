@@ -177,7 +177,7 @@ class Yellow
 			if(!is_null($pageHeader[$key])) $pageHeader[$key] = trim($tokens[1]);
 		}
 		$statusCode = $this->page->statusCode;
-		if($statusCode==200 && $this->page->IsCacheable() && $this->toolbox->IsFileNotModified($pageHeader["last-modified"]))
+		if($statusCode==200 && $this->page->isCacheable() && $this->toolbox->isFileNotModified($pageHeader["last-modified"]))
 		{
 			$statusCode = 304;
 			header_remove();
@@ -186,11 +186,11 @@ class Yellow
 			header($this->toolbox->getHttpStatusFormatted($statusCode));
 			header("Content-Type: ".$pageHeader["content-type"]);
 			header("Last-Modified: ".$pageHeader["last-modified"]);
-			if(!$this->page->IsCacheable()) header("Cache-Control: no-cache, must-revalidate");
+			if(!$this->page->isCacheable()) header("Cache-Control: no-cache, must-revalidate");
 		}
 		if(defined("DEBUG") && DEBUG>=1)
 		{
-			$cacheable = intval($this->page->IsCacheable());
+			$cacheable = intval($this->page->isCacheable());
 			echo "Yellow::sendPage template:$fileNameTemplate style:$fileNameStyle cacheable:$cacheable<br>\n";			
 		}
 		return $statusCode;
@@ -279,7 +279,7 @@ class Yellow
 			$plugin = $this->plugins->plugins[$name];
 			if(method_exists($plugin["obj"], "onCommand")) $statusCode = $plugin["obj"]->onCommand(func_get_args());
 		} else {
-			$this->page->error(500, "Pluggin '$name' does not exist!");
+			$this->page->error(500, "Plugin '$name' does not exist!");
 		}
 		return $statusCode;
 	}
@@ -493,9 +493,9 @@ class Yellow_PageCollection extends ArrayObject
 	var $paginationPage;		//current page number in pagination
 	var $paginationCount;		//highest page number in pagination
 	
-	function __construct($input, $yellow, $location)
+	function __construct($yellow, $location)
 	{
-		parent::__construct($input);
+		parent::__construct(array());
 		$this->yellow = $yellow;
 		$this->location = $location;
 	}
@@ -643,7 +643,7 @@ class Yellow_Pages
 	// Find child pages
 	function findChildren($location, $showHidden = false)
 	{
-		$pages = new Yellow_PageCollection(array(), $this->yellow, $location);
+		$pages = new Yellow_PageCollection($this->yellow, $location);
 		$this->scanChildren($location);
 		foreach($this->pages[$location] as $page) if($page->isVisible() || $showHidden) $pages->append($page);
 		return $pages;
@@ -653,7 +653,7 @@ class Yellow_Pages
 	function findChildrenRecursive($location, $showHidden, $levelMax)
 	{
 		--$levelMax;
-		$pages = new Yellow_PageCollection(array(), $this->yellow, $location);
+		$pages = new Yellow_PageCollection($this->yellow, $location);
 		$this->scanChildren($location);
 		foreach($this->pages[$location] as $page)
 		{
@@ -690,8 +690,7 @@ class Yellow_Pages
 			$fileRegex = "/.*\\".$this->yellow->config->get("contentExtension")."/";
 			foreach($this->yellow->toolbox->getDirectoryEntries($path, $fileRegex, true, false) as $entry)
 			{
-				if($entry == $this->yellow->config->get("contentDefaultFile")) continue;
-				array_push($fileNames, $path.$entry);
+				if($entry != $this->yellow->config->get("contentDefaultFile")) array_push($fileNames, $path.$entry);
 			}
 			foreach($fileNames as $fileName)
 			{
@@ -816,7 +815,7 @@ class Yellow_Toolbox
 	}
 	
 	// Check if file has been unmodified since last HTTP request
-	static function IsFileNotModified($lastModified)
+	static function isFileNotModified($lastModified)
 	{
 		return isset($_SERVER["HTTP_IF_MODIFIED_SINCE"]) && $_SERVER["HTTP_IF_MODIFIED_SINCE"]==$lastModified;
 	}
