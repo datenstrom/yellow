@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.1.6";
+	const Version = "0.1.7";
 	var $page;				//current page data
 	var $pages;				//current page tree from file system
 	var $toolbox;			//toolbox with helpers
@@ -15,6 +15,7 @@ class Yellow
 
 	function __construct()
 	{
+		$this->pages = new Yellow_Pages($this);
 		$this->toolbox = new Yellow_Toolbox();
 		$this->config = new Yellow_Config();
 		$this->text = new Yellow_Text();
@@ -138,14 +139,14 @@ class Yellow
 			$fileData = fread($fileHandle, filesize($fileName));
 			fclose($fileHandle);
 		}
+		$this->pages->baseLocation = $baseLocation;
 		if(is_object($this->page) && $this->page->isError())
 		{
 			$text = $this->page->get("pageError");
-			$this->page = new Yellow_Page($baseLocation, $location, $this, $fileName, $fileData, $statusCode, $cacheable);
+			$this->page = new Yellow_Page($this, $location, $fileName, $fileData, $statusCode, $cacheable);
 			$this->page->error($statusCode, $text);
 		} else {
-			$this->pages = new Yellow_Pages($baseLocation, $this);
-			$this->page = new Yellow_Page($baseLocation, $location, $this, $fileName, $fileData, $statusCode, $cacheable);
+			$this->page = new Yellow_Page($this, $location, $fileName, $fileData, $statusCode, $cacheable);
 		}
 		$this->page->parseContent();
 		$this->text->setLanguage($this->page->get("language"));
@@ -218,7 +219,7 @@ class Yellow
 	// Execute a template snippet
 	function snippet($name, $args = NULL)
 	{
-		$this->page->args = func_get_args();
+		$this->pages->snippetArgs = func_get_args();
 		$fileNameSnippet = $this->config->get("snippetDir")."$name.php";
 		if(is_file($fileNameSnippet))
 		{
@@ -232,7 +233,7 @@ class Yellow
 	// Return template snippet arguments
 	function getSnippetArgs()
 	{
-		return $this->page->args;
+		return $this->pages->snippetArgs;
 	}
 	
 	// Return extra HTML header lines
@@ -293,32 +294,29 @@ class Yellow
 // Yellow page data
 class Yellow_Page
 {
-	var $baseLocation;			//base location
-	var $location;				//page location
 	var $yellow;				//access to API
+	var $location;				//page location
 	var $fileName;				//content file name
 	var $rawData;				//raw data of page
 	var $metaData;				//meta data of page
 	var $metaDataOffsetBytes;	//meta data offset
 	var $parser;				//parser for page content
-	var $args;					//arguments for template snippet
 	var $statusCode;			//status code of page
 	var $error;					//page error happened? (boolean)
 	var $active;				//page is active location? (boolean)
 	var $visible;				//page is visible location? (boolean)
 	var $cacheable;				//page is cacheable? (boolean)
 	
-	function __construct($baseLocation, $location, $yellow, $fileName, $rawData, $statusCode, $cacheable)
+	function __construct($yellow, $location, $fileName, $rawData, $statusCode, $cacheable)
 	{
-		$this->baseLocation = $baseLocation;
-		$this->location = $location;
 		$this->yellow = $yellow;
+		$this->location = $location;
 		$this->fileName = $fileName;
 		$this->rawData = $rawData;
 		$this->parseMeta();
 		$this->statusCode = $statusCode;
-		$this->active = $yellow->toolbox->isActiveLocation($baseLocation, $location);
-		$this->visible = $yellow->toolbox->isVisibleLocation($baseLocation, $location, $fileName, $yellow->config->get("contentDir"));
+		$this->active = $yellow->toolbox->isActiveLocation($yellow->pages->baseLocation, $location);
+		$this->visible = $yellow->toolbox->isVisibleLocation($fyellow->pages->baseLocation, $location, $fileName, $yellow->config->get("contentDir"));
 		$this->cacheable = $cacheable;
 	}
 	
@@ -332,7 +330,9 @@ class Yellow_Page
 		$this->set("template", $this->yellow->config->get("template"));
 		$this->set("style", $this->yellow->config->get("style"));
 		$this->set("parser", $this->yellow->config->get("parser"));
-		
+		$location = $this->yellow->config->get("baseLocation").rtrim($this->yellow->config->get("webinterfaceLocation"), '/').$this->location;
+		$this->set("pageEdit", $location);
+
 		if(preg_match("/^(\-\-\-[\r\n]+)(.+?)([\r\n]+\-\-\-[\r\n]+)/s", $this->rawData, $parsed))
 		{
 			$this->metaDataOffsetBytes = strlenb($parsed[0]);
@@ -423,7 +423,7 @@ class Yellow_Page
 	// Return absolute page location
 	function getLocation()
 	{
-		return $this->baseLocation.$this->location;
+		return $this->yellow->pages->baseLocation.$this->location;
 	}
 	
 	// Return page modification time, Unix time
@@ -451,7 +451,7 @@ class Yellow_Page
 	function getParent()
 	{
 		$parentLocation = $this->yellow->pages->getParentLocation($this->location);
-		return $this->yellow->pages->findPage($parentLocation);
+		return $this->yellow->pages->find($parentLocation, false);
 	}
 
 	// Check if meta data exists
@@ -488,18 +488,16 @@ class Yellow_Page
 // Yellow page collection as array
 class Yellow_PageCollection extends ArrayObject
 {
-	var $baseLocation;			//base location
-	var $location;				//collection location
+	var $yellow;				//access to API
+	var $location;				//common location
 	var $paginationPage;		//current page number in pagination
 	var $paginationCount;		//highest page number in pagination
-	var $toolbox;				//access to toolbox
 	
-	function __construct($input, $baseLocation, $location, $toolbox)
+	function __construct($input, $yellow, $location)
 	{
 		parent::__construct($input);
-		$this->baseLocation = $baseLocation;
+		$this->yellow = $yellow;
 		$this->location = $location;
-		$this->toolbox = $toolbox;
 	}
 	
 	// Filter page collection by meta data
@@ -526,6 +524,13 @@ class Yellow_PageCollection extends ArrayObject
 		return $this;
 	}
 
+	// Merge page collection
+	function merge($input)
+	{
+		$this->exchangeArray(array_merge($this->getArrayCopy(), (array)$input));
+		return $this;
+	}
+	
 	// Reverse page collection
 	function reverse($entriesMax = 0)
 	{
@@ -562,8 +567,8 @@ class Yellow_PageCollection extends ArrayObject
 	{
 		if($pageNumber>=1 && $pageNumber<=$this->paginationCount)
 		{
-			$locationArgs = $this->toolbox->getRequestLocationArgs($pageNumber>1 ? "page:$pageNumber" : "page:");
-			$location = $this->baseLocation.$this->location.$locationArgs;
+			$locationArgs = $this->yellow->toolbox->getRequestLocationArgs($pageNumber>1 ? "page:$pageNumber" : "page:");
+			$location = $this->yellow->pages->baseLocation.$this->location.$locationArgs;
 		}
 		return $location;
 	}
@@ -589,7 +594,7 @@ class Yellow_PageCollection extends ArrayObject
 	{
 		$modified = 0;
 		foreach($this->getIterator() as $page) $modified = max($modified, $page->getModified());
-		return $httpFormat ? $this->toolbox->getHttpTimeFormatted($modified) : $modified;
+		return $httpFormat ? $this->yellow->toolbox->getHttpTimeFormatted($modified) : $modified;
 	}
 
 	// Check if there is an active pagination
@@ -602,15 +607,21 @@ class Yellow_PageCollection extends ArrayObject
 // Yellow page tree from file system
 class Yellow_Pages
 {
-	var $baseLocation;	//base location
-	var $pages;			//scanned pages
 	var $yellow;		//access to API
+	var $pages;			//scanned pages
+	var $baseLocation;	//requested base location
+	var $snippetArgs;	//requested snippet arguments
 	
-	function __construct($baseLocation, $yellow)
+	function __construct($yellow)
 	{
-		$this->baseLocation = $baseLocation;
 		$this->pages = array();
 		$this->yellow = $yellow;
+	}
+		
+	// Return pages from file system
+	function index($showHidden = false, $levelMax = 0)
+	{
+		return $this->findChildrenRecursive("", $showHidden, $levelMax);
 	}
 	
 	// Return top-level navigation pages
@@ -618,23 +629,44 @@ class Yellow_Pages
 	{
 		return $this->findChildren("", $showHidden);
 	}
+
+	// Find a specific page
+	function find($location, $absoluteLocation = false)
+	{
+		if($absoluteLocation) $location = substru($location, strlenu($this->baseLocation));
+		$parentLocation = $this->getParentLocation($location);
+		$this->scanChildren($parentLocation);
+		foreach($this->pages[$parentLocation] as $page) if($page->location == $location) return $page;
+		return false;
+	}
 	
-	// Return child pages for a location
+	// Find child pages
 	function findChildren($location, $showHidden = false)
 	{
-		$pages = new Yellow_PageCollection(array(), $this->baseLocation, $location, $this->yellow->toolbox);
+		$pages = new Yellow_PageCollection(array(), $this->yellow, $location);
 		$this->scanChildren($location);
 		foreach($this->pages[$location] as $page) if($page->isVisible() || $showHidden) $pages->append($page);
 		return $pages;
 	}
-
-	// Return page for a location, false if not found
-	function findPage($location)
+	
+	// Find child pages recursively
+	function findChildrenRecursive($location, $showHidden, $levelMax)
 	{
-		$parentLocation = $this->getParentLocation($location);
-		$this->scanChildren($parentLocation);
-		foreach($this->pages[$parentLocation] as $page) if($page->getLocation() == $this->baseLocation.$location) return $page;
-		return false;
+		--$levelMax;
+		$pages = new Yellow_PageCollection(array(), $this->yellow, $location);
+		$this->scanChildren($location);
+		foreach($this->pages[$location] as $page)
+		{
+			if($page->isVisible() || $showHidden)
+			{
+				$pages->append($page);
+				if(!$this->yellow->toolbox->isFileLocation($page->location) && $levelMax!=0)
+				{
+					$pages->merge($this->findChildrenRecursive($page->location, $showHidden, $levelMax));
+				}
+			}
+		}
+		return $pages;
 	}
 	
 	// Scan child pages on demand
@@ -674,13 +706,13 @@ class Yellow_Pages
 				} else {
 					$fileData = "";
 				}
-				$page = new Yellow_Page($this->baseLocation, $childLocation, $this->yellow, $fileName, $fileData, 0, false);
+				$page = new Yellow_Page($this->yellow, $childLocation, $fileName, $fileData, 0, false);
 				array_push($this->pages[$location], $page);
 			}
 		}
 	}
 	
-	// Return parent navigation location
+	// Return parent location
 	function getParentLocation($location)
 	{
 		$parentLocation = "";
@@ -873,6 +905,7 @@ class Yellow_Toolbox
 	{
 		switch($statusCode)
 		{
+			case 200: $text = "$_SERVER[SERVER_PROTOCOL] $statusCode OK"; break;
 			case 301: $text = "$_SERVER[SERVER_PROTOCOL] $statusCode Moved permanently"; break;
 			case 302: $text = "$_SERVER[SERVER_PROTOCOL] $statusCode Moved temporarily"; break;
 			case 303: $text = "$_SERVER[SERVER_PROTOCOL] $statusCode Reload please"; break;
@@ -985,7 +1018,7 @@ class Yellow_Toolbox
 	// Create title from text string
 	static function createTextTitle($text)
 	{
-		if(preg_match("/^.*\/(\w*)/", $text, $matches)) $text = ucfirst($matches[1]);
+		if(preg_match("/^.*\/([\w\-]+)/", $text, $matches)) $text = ucfirst($matches[1]);
 		return $text;
 	}
 	
@@ -1204,7 +1237,7 @@ class Yellow_Text
 		return htmlspecialchars($this->get($key)); 
 	}
 	
-	// Return text strings
+	// Return text strings for specific language
 	function getData($language, $filterStart = "")
 	{
 		$text = array();

@@ -36,7 +36,7 @@ class Yellow_MarkdownExtraParser extends MarkdownExtra_Parser
 	// Transform text
 	function transform($text)
 	{
-		$text = preg_replace("/@pageEdit/i", $this->yellow->config->get("baseLocation").$this->yellow->config->get("webinterfaceLocation"), $text);
+		$text = preg_replace("/@pageEdit/i", $this->yellow->page->get("pageEdit"), $text);
 		$text = preg_replace("/@pageError/i", $this->yellow->page->get("pageError"), $text);
 		return parent::transform($text);
 	}

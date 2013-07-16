@@ -5,7 +5,7 @@
 // Web interface core plugin
 class Yellow_Webinterface
 {
-	const Version = "0.1.3";
+	const Version = "0.1.4";
 	var $yellow;				//access to API
 	var $users;					//web interface users
 	var $activeLocation;		//web interface location? (boolean)
@@ -195,23 +195,16 @@ class Yellow_Webinterface
 		return !empty($this->activeUserEmail);
 	}
 
-	// Return page tree with content information (2 levels)
+	// Return page tree with content information, two levels
 	function getPagesData()
 	{
 		$data = array();
-		foreach($this->yellow->pages->root(true) as $page)
+		foreach($this->yellow->pages->index(true, 2) as $page)
 		{
 			$data[$page->fileName] = array();
 			$data[$page->fileName]["location"] = $page->getLocation();
 			$data[$page->fileName]["modified"] = $page->getModified();
 			$data[$page->fileName]["title"] = $page->getTitle();
-			foreach($page->getChildren(true) as $page)
-			{
-				$data[$page->fileName] = array();
-				$data[$page->fileName]["location"] = $page->getLocation();
-				$data[$page->fileName]["modified"] = $page->getModified();
-				$data[$page->fileName]["title"] = $page->getTitle();
-			}
 		}
 		return $data;
 	}
