@@ -91,8 +91,8 @@ yellow.webinterface =
 				"<h1>"+this.getText("LoginText")+"</h1>"+
 				"<form method=\"post\" name=\"formlogin\">"+
 				"<input type=\"hidden\" name=\"action\" value=\"login\"/>"+
-				"<p>"+this.getText("LoginEmail")+" <input name=\"email\" maxlength=\"64\" /></p>"+
-				"<p>"+this.getText("LoginPassword")+" <input type=\"password\" name=\"password\" maxlength=\"64\" /></p>"+
+				"<p><label for=\"email\">"+this.getText("LoginEmail")+"</label> <input name=\"email\" id=\"email\" maxlength=\"64\" /></p>"+
+				"<p><label for=\"password\">"+this.getText("LoginPassword")+"</label> <input type=\"password\" name=\"password\" id=\"password\" maxlength=\"64\" /></p>"+
 				"<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("LoginButton")+"\"/></p>"+
 				"</form>";
 		} else if(id == "yellow-paneedit") {
