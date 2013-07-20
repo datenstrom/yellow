@@ -741,7 +741,7 @@ class Yellow_Toolbox
 	static function getRequestLocation()
 	{
 		$uri = $_SERVER["REQUEST_URI"];
-		return ($pos = strposu($uri, '?')) ? substru($uri, 0, $pos) : $uri;
+		return self::normaliseLocation(($pos = strposu($uri, '?')) ? substru($uri, 0, $pos) : $uri);
 	}
 	
 	// Return arguments from current HTTP request
