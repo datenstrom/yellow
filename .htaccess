@@ -15,4 +15,7 @@ RewriteRule ^$ yellow.php [L]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ yellow.php [L]
+
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^[^\.]+$ - [T=text/html,L]
 </IfModule>

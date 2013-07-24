@@ -5,7 +5,7 @@
 // Web interface core plugin
 class Yellow_Webinterface
 {
-	const Version = "0.1.4";
+	const Version = "0.1.5";
 	var $yellow;				//access to API
 	var $users;					//web interface users
 	var $activeLocation;		//web interface location? (boolean)
@@ -33,8 +33,8 @@ class Yellow_Webinterface
 			$location = $this->yellow->getRelativeLocation($baseLocation);
 			$fileName = $this->yellow->getContentFileName($location);
 			if($this->checkUser()) $statusCode = $this->processRequestAction($baseLocation, $location, $fileName);
-			if($statusCode == 0) $statusCode = $this->yellow->processRequestFile($baseLocation, $location, $fileName,
-													$this->activeUserFail ? 401 : 0, false);
+			if($statusCode == 0) $statusCode = $this->yellow->processRequest($baseLocation, $location, $fileName,
+													false, $this->activeUserFail ? 401 : 0);
 		} else {
 			if($this->yellow->config->get("webinterfaceLocation") == "$location/")
 			{
@@ -106,16 +106,16 @@ class Yellow_Webinterface
 		{
 			if(!empty($_POST["rawdata"]))
 			{
-				$fileHandle = @fopen($fileName, "w");
-				if($fileHandle)
+				$this->rawDataOriginal = $_POST["rawdata"];
+				if($this->yellow->toolbox->makeFile($fileName, $_POST["rawdata"]))
 				{
-					fwrite($fileHandle, $_POST["rawdata"]);
-					fclose($fileHandle);
+					$statusCode = 303;
+					$this->yellow->sendStatus($statusCode, "Location: http://$serverName$baseLocation$location");
 				} else {
-					die("Server error: Can't save page '$fileName'!");
+					$statusCode = 500;
+					$this->yellow->processRequest($baseLocation, $location, $fileName, false, $statusCode);
+					$this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
 				}
-				$statusCode = 303;
-				$this->yellow->sendStatus($statusCode, "Location: http://$serverName$baseLocation$location");
 			}
 		} else if($_POST["action"]== "login") {
 			$statusCode = 303;
@@ -135,7 +135,7 @@ class Yellow_Webinterface
 					$this->yellow->sendStatus($statusCode, "Location: http://$serverName$baseLocation$location/");
 				} else {
 					$statusCode = $this->checkUserPermissions($location, $fileName) ? 424 : 404;
-					$this->yellow->processRequestFile($baseLocation, $location, $fileName, $statusCode, false);
+					$this->yellow->processRequest($baseLocation, $location, $fileName, false, $statusCode);
 				}
 			}
 		}
