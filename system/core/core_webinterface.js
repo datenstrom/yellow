@@ -4,7 +4,7 @@
 // Yellow main API
 var yellow =
 {
-	version: "0.1.1",
+	version: "0.1.2",
 	onClick: function(e) { yellow.webinterface.hidePanesOnClick(yellow.toolbox.getEventElement(e)); },
 	onKeydown: function(e) { yellow.webinterface.hidePanesOnKeydown(yellow.toolbox.getEventKeycode(e)); },
 	onResize: function() { yellow.webinterface.resizePanes(); },
@@ -61,7 +61,7 @@ yellow.webinterface =
 		elementBar.setAttribute("id", id);
 		if(!simple)
 		{
-			var location = yellow.config.baseLocation+yellow.config.pluginLocation;			
+			var location = yellow.config.serverBase+yellow.config.pluginLocation;			
 			elementBar.innerHTML =
 				"<div class=\"yellow-barleft\">"+
 				"<a href=\"http://datenstrom.se/yellow/\" target=\"_blank\"><img src=\""+location+"core_webinterface.png\" width=\"16\" height=\"16\"> Yellow</a>"+

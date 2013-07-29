@@ -5,7 +5,7 @@
 // Web interface core plugin
 class Yellow_Webinterface
 {
-	const Version = "0.1.5";
+	const Version = "0.1.6";
 	var $yellow;				//access to API
 	var $users;					//web interface users
 	var $activeLocation;		//web interface location? (boolean)
@@ -24,23 +24,23 @@ class Yellow_Webinterface
 	}
 
 	// Handle web interface location
-	function onRequest($baseLocation, $location, $fileName)
+	function onRequest($serverName, $serverBase, $location, $fileName)
 	{
 		$statusCode = 0;
 		if($this->checkWebinterfaceLocation($location))
 		{
-			$baseLocation .= rtrim($this->yellow->config->get("webinterfaceLocation"), '/');
-			$location = $this->yellow->getRelativeLocation($baseLocation);
+			$serverBase .= rtrim($this->yellow->config->get("webinterfaceLocation"), '/');
+			$location = $this->yellow->getRelativeLocation($serverBase);
 			$fileName = $this->yellow->getContentFileName($location);
-			if($this->checkUser()) $statusCode = $this->processRequestAction($baseLocation, $location, $fileName);
-			if($statusCode == 0) $statusCode = $this->yellow->processRequest($baseLocation, $location, $fileName,
+			if($this->checkUser()) $statusCode = $this->processRequestAction($serverName, $serverBase, $location, $fileName);
+			if($statusCode == 0) $statusCode = $this->yellow->processRequest($serverName, $serverBase, $location, $fileName,
 													false, $this->activeUserFail ? 401 : 0);
 		} else {
 			if($this->yellow->config->get("webinterfaceLocation") == "$location/")
 			{
 				$statusCode = 301;
-				$serverName = $this->yellow->config->get("serverName");
-				$this->yellow->sendStatus($statusCode, "Location: http://$serverName$baseLocation$location/");
+				$locationHeader = $this->yellow->toolbox->getHttpLocationHeader($serverName, $serverBase, "$location/");
+				$this->yellow->sendStatus($statusCode, $locationHeader);
 			}
 		}
 		return $statusCode;
@@ -51,10 +51,10 @@ class Yellow_Webinterface
 	{
 		if($this->isWebinterfaceLocation() && $this->isUser())
 		{
-			$baseLocation = $this->yellow->config->get("baseLocation");
+			$serverBase = $this->yellow->config->get("serverBase");
 			$webinterfaceLocation = trim($this->yellow->config->get("webinterfaceLocation"), '/');
-			$text = preg_replace("#<a(.*?)href=\"$baseLocation/(?!$webinterfaceLocation)(.*?)\"(.*?)>#",
-								 "<a$1href=\"$baseLocation/$webinterfaceLocation/$2\"$3>", $text);
+			$text = preg_replace("#<a(.*?)href=\"$serverBase/(?!$webinterfaceLocation)(.*?)\"(.*?)>#",
+								 "<a$1href=\"$serverBase/$webinterfaceLocation/$2\"$3>", $text);
 			switch($statusCode)
 			{
 				case 200:	$this->rawDataOriginal = $this->yellow->page->rawData; break;
@@ -77,7 +77,7 @@ class Yellow_Webinterface
 		$header = "";
 		if($this->isWebinterfaceLocation())
 		{
-			$location = $this->yellow->config->getHtml("baseLocation").$this->yellow->config->getHtml("pluginLocation");
+			$location = $this->yellow->config->getHtml("serverBase").$this->yellow->config->getHtml("pluginLocation");
 			$language = $this->isUser() ? $this->users->getLanguage($this->activeUserEmail) : $this->yellow->page->get("language");
 			$header .= "<link rel=\"styleSheet\" type=\"text/css\" media=\"all\" href=\"{$location}core_webinterface.css\" />\n";
 			$header .= "<script type=\"text/javascript\" src=\"{$location}core_webinterface.js\"></script>\n";
@@ -98,44 +98,46 @@ class Yellow_Webinterface
 	}
 	
 	// Process request for an action
-	function processRequestAction($baseLocation, $location, $fileName)
+	function processRequestAction($serverName, $serverBase, $location, $fileName)
 	{
 		$statusCode = 0;
-		$serverName = $this->yellow->config->get("serverName");
 		if($_POST["action"] == "edit")
 		{
-			if(!empty($_POST["rawdata"]))
+			if(!empty($_POST["rawdata"]) && $this->checkUserPermissions($location, $fileName))
 			{
 				$this->rawDataOriginal = $_POST["rawdata"];
 				if($this->yellow->toolbox->makeFile($fileName, $_POST["rawdata"]))
 				{
 					$statusCode = 303;
-					$this->yellow->sendStatus($statusCode, "Location: http://$serverName$baseLocation$location");
+					$locationHeader = $this->yellow->toolbox->getHttpLocationHeader($serverName, $serverBase, $location);
+					$this->yellow->sendStatus($statusCode, $locationHeader);
 				} else {
 					$statusCode = 500;
-					$this->yellow->processRequest($baseLocation, $location, $fileName, false, $statusCode);
+					$this->yellow->processRequest($serverName, $serverBase, $location, $fileName, false, $statusCode);
 					$this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
 				}
 			}
 		} else if($_POST["action"]== "login") {
 			$statusCode = 303;
-			$this->yellow->sendStatus($statusCode, "Location: http://$serverName$baseLocation$location");
+			$locationHeader = $this->yellow->toolbox->getHttpLocationHeader($serverName, $serverBase, $location);
+			$this->yellow->sendStatus($statusCode, $locationHeader);
 		} else if($_POST["action"]== "logout") {
 			$this->users->destroyCookie("login");
 			$this->activeUserEmail = "";
 			$statusCode = 302;
-			$newLocation = $this->yellow->config->getHtml("baseLocation").$location;
-			$this->yellow->sendStatus($statusCode, "Location: http://$serverName$newLocation");
+			$locationHeader = $this->yellow->toolbox->getHttpLocationHeader($serverName, $this->yellow->config->get("serverBase"), $location);
+			$this->yellow->sendStatus($statusCode, $locationHeader);
 		} else {
 			if(!is_readable($fileName))
 			{
 				if($this->yellow->toolbox->isFileLocation($location) && is_dir($this->yellow->getContentDirectory("$location/")))
 				{
 					$statusCode = 301;
-					$this->yellow->sendStatus($statusCode, "Location: http://$serverName$baseLocation$location/");
+					$locationHeader = $this->yellow->toolbox->getHttpLocationHeader($serverName, $serverBase, "$location/");
+					$this->yellow->sendStatus($statusCode, $locationHeader);
 				} else {
 					$statusCode = $this->checkUserPermissions($location, $fileName) ? 424 : 404;
-					$this->yellow->processRequest($baseLocation, $location, $fileName, false, $statusCode);
+					$this->yellow->processRequest($serverName, $serverBase, $location, $fileName, false, $statusCode);
 				}
 			}
 		}
@@ -215,7 +217,8 @@ class Yellow_Webinterface
 		$data = array("userEmail" => $email,
 					  "userName" => $this->users->getName($email),
 					  "userLanguage" => $this->users->getLanguage($email),
-					  "baseLocation" => $this->yellow->config->get("baseLocation"));
+					  "serverName" => $this->yellow->config->get("serverName"),
+					  "serverBase" => $this->yellow->config->get("serverBase"));
 		return array_merge($data, $this->yellow->config->getData("Location"));
 	}
 }
