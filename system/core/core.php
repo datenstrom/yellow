@@ -878,10 +878,9 @@ class Yellow_Toolbox
 	// Check if location is valid
 	static function isValidLocation($location)
 	{
-		$string = "/";
+		$string = "";
 		$tokens = explode('/', $location);
-		for($i=1; $i<count($tokens)-1; ++$i) $string .= self::normaliseName($tokens[$i]).'/';
-		$string .= self::normaliseName($tokens[$i]);
+		for($i=1; $i<count($tokens); ++$i) $string .= '/'.self::normaliseName($tokens[$i]);
 		return $location == $string;
 	}
 	

@@ -54,12 +54,9 @@ class Yellow_Commandline
 		{
 			if($this->yellow->config->isExisting("serverName") && $this->yellow->config->isExisting("serverBase"))
 			{
-				$this->yellow->toolbox->timerStart($time);
 				$serverName = $this->yellow->config->get("serverName");
 				$serverBase = $this->yellow->config->get("serverBase");
 				list($statusCode, $contentCount, $mediaCount, $errorCount) = $this->buildStatic($serverName, $serverBase, $location, $path);
-				$this->yellow->toolbox->timerStop($time);
-				if(defined("DEBUG") && DEBUG>=1) echo "Yellow_Commandline::build time:$time ms\n";
 			} else {
 				list($statusCode, $contentCount, $mediaCount, $errorCount) = array(500, 0, 0, 1);
 				$fileName = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
@@ -77,6 +74,7 @@ class Yellow_Commandline
 	// Build static files
 	function buildStatic($serverName, $serverBase, $location, $path)
 	{
+		$this->yellow->toolbox->timerStart($time);
 		$statusCodeMax = $errorCount = 0;
 		if(empty($location))
 		{
@@ -109,6 +107,8 @@ class Yellow_Commandline
 			}
 			if(defined("DEBUG") && DEBUG>=1) echo "Yellow_Commandline::buildStatic status:$statusCode file:$fileName\n";
 		}
+		$this->yellow->toolbox->timerStop($time);
+		if(defined("DEBUG") && DEBUG>=1) echo "Yellow_Commandline::buildStatic time:$time ms\n";
 		return array($statusCodeMax, count($pages), count($fileNames), $errorCount);
 	}
 	
@@ -123,7 +123,7 @@ class Yellow_Commandline
 		$statusCode = $this->yellow->request();
 		if($statusCode != 404)
 		{
-			$ok = true;
+			$ok = false;
 			$modified = strtotime($this->yellow->page->getHeader("Last-Modified"));
 			if(preg_match("/^(\w+)\/(\w+)/", $this->yellow->page->getHeader("Content-Type"), $matches)) 
 			{
