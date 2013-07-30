@@ -5,7 +5,7 @@
 // Command line core plugin
 class Yellow_Commandline
 {
-	const Version = "0.1.2";
+	const Version = "0.1.3";
 	var $yellow;			//access to API
 
 	// Initialise plugin
@@ -13,6 +13,8 @@ class Yellow_Commandline
 	{
 		$this->yellow = $yellow;
 		$this->yellow->config->setDefault("commandBuildDefaultFile", "index.html");
+		$this->yellow->config->setDefault("commandBuildCustomMediaExtension", ".txt");
+		$this->yellow->config->setDefault("commandBuildCustomErrorFile", "error404.html");
 	}
 	
 	// Handle command
@@ -56,14 +58,14 @@ class Yellow_Commandline
 			{
 				$serverName = $this->yellow->config->get("serverName");
 				$serverBase = $this->yellow->config->get("serverBase");
-				list($statusCode, $contentCount, $mediaCount, $errorCount) = $this->buildStatic($serverName, $serverBase, $location, $path);
+				list($statusCode, $content, $media, $system, $error) = $this->buildStatic($serverName, $serverBase, $location, $path);
 			} else {
-				list($statusCode, $contentCount, $mediaCount, $errorCount) = array(500, 0, 0, 1);
+				list($statusCode, $content, $media, $system, $error) = array(500, 0, 0, 0, 1);
 				$fileName = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
 				echo "ERROR bulding website: Please configure serverName and serverBase in file '$fileName'!\n";
 			}
-			echo "Yellow build: $contentCount content, $mediaCount media";
-			echo ", $errorCount error".($errorCount!=1 ? 's' : '');
+			echo "Yellow build: $content content, $media media, $system system";
+			echo ", $error error".($error!=1 ? 's' : '');
 			echo ", status $statusCode\n";
 		} else {
 			echo "Yellow build: Invalid arguments\n";
@@ -75,45 +77,61 @@ class Yellow_Commandline
 	function buildStatic($serverName, $serverBase, $location, $path)
 	{
 		$this->yellow->toolbox->timerStart($time);
-		$statusCodeMax = $errorCount = 0;
+		$statusCodeMax = $error = 0;
 		if(empty($location))
 		{
 			$pages = $this->yellow->pages->index(true);
-			$fileNames = $this->yellow->toolbox->getDirectoryEntriesrecursive($this->yellow->config->get("mediaDir"), "/.*/", false, false);
+			$fileNamesMedia = $this->yellow->toolbox->getDirectoryEntriesrecursive(
+				$this->yellow->config->get("mediaDir"), "/.*/", false, false);
+			$fileNamesMedia = array_merge($fileNamesMedia, $this->yellow->toolbox->getDirectoryEntries(
+				".", "/.*\\".$this->yellow->config->get("commandBuildCustomMediaExtension")."/", false, false));
+			$fileNamesSystem = array($this->yellow->config->get("commandBuildCustomErrorFile"));
 		} else {
 			$pages = new Yellow_PageCollection($this->yellow, $location);
 			$pages->append(new Yellow_Page($this->yellow, $location));
-			$fileNames = array();
+			$fileNamesMedia = array();
+			$fileNamesSystem = array();
 		}
 		foreach($pages as $page)
 		{
-			$statusCode = $this->buildStaticFile($serverName, $serverBase, $page->location, $path);
+			$statusCode = $this->buildStaticLocation($serverName, $serverBase, $page->location, $path);
 			$statusCodeMax = max($statusCodeMax, $statusCode);
 			if($statusCode >= 400)
 			{
-				++$errorCount;
+				++$error;
 				echo "ERROR building location '".$page->location."', ".$this->yellow->page->getStatusCode(true)."\n";
 			}
 			if(defined("DEBUG") && DEBUG>=1) echo "Yellow_Commandline::buildStatic status:$statusCode location:".$page->location."\n";
 		}
-		foreach($fileNames as $fileName)
+		foreach($fileNamesMedia as $fileName)
 		{
 			$statusCode = $this->copyStaticFile($fileName, "$path/$fileName") ? 200 : 500;
 			$statusCodeMax = max($statusCodeMax, $statusCode);
 			if($statusCode >= 400)
 			{
-				++$errorCount;
-				echo "ERROR building file '$path/$fileName', ".$this->yellow->toolbox->getHttpStatusFormatted($statusCode)."\n";
+				++$error;
+				echo "ERROR building media file '$path/$fileName', ".$this->yellow->toolbox->getHttpStatusFormatted($statusCode)."\n";
 			}
 			if(defined("DEBUG") && DEBUG>=1) echo "Yellow_Commandline::buildStatic status:$statusCode file:$fileName\n";
 		}
+		foreach($fileNamesSystem as $fileName)
+		{
+			$statusCode = $this->buildStaticError($serverName, $serverBase, "$path/$fileName", 404) ? 200 : 500;
+			$statusCodeMax = max($statusCodeMax, $statusCode);
+			if($statusCode >= 400)
+			{
+				++$error;
+				echo "ERROR building system file '$path/$fileName', ".$this->yellow->toolbox->getHttpStatusFormatted($statusCode)."\n";
+			}
+			if(defined("DEBUG") && DEBUG>=1) echo "Yellow_Commandline::buildStatic status:$statusCode file:$fileName\n";	
+		}
 		$this->yellow->toolbox->timerStop($time);
 		if(defined("DEBUG") && DEBUG>=1) echo "Yellow_Commandline::buildStatic time:$time ms\n";
-		return array($statusCodeMax, count($pages), count($fileNames), $errorCount);
+		return array($statusCodeMax, count($pages), count($fileNamesMedia), count($fileNamesSystem), $error);
 	}
 	
-	// Build static file
-	function buildStaticFile($serverName, $serverBase, $location, $path)
+	// Build static location as file
+	function buildStaticLocation($serverName, $serverBase, $location, $path)
 	{		
 		ob_start();
 		$_SERVER["SERVER_PROTOCOL"] = "HTTP/1.1";
@@ -157,6 +175,30 @@ class Yellow_Commandline
 		return $statusCode;
 	}
 	
+	// Build static error as file
+	function buildStaticError($serverName, $serverBase, $fileName, $statusCodeRequest)
+	{
+		ob_start();
+		$_SERVER["SERVER_PROTOCOL"] = "HTTP/1.1";
+		$_SERVER["SERVER_NAME"] = $serverName;
+		$_SERVER["REQUEST_URI"] = $serverBase."/";
+		$_SERVER["SCRIPT_NAME"] = $serverBase."yellow.php";
+		$statusCode = $this->yellow->request($statusCodeRequest);
+		if($statusCode == $statusCodeRequest)
+		{
+			$fileData = ob_get_contents();
+			$modified = strtotime($this->yellow->page->getHeader("Last-Modified"));			
+			$ok = $this->makeStaticFile($fileName, $fileData, $modified);
+			if(!$ok)
+			{
+				$statusCode = 500;
+				$this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
+			}
+		}
+		ob_end_clean();
+		return $statusCode == $statusCodeRequest;
+	}
+	
 	// Create static file
 	function makeStaticFile($fileName, $fileData, $modified)
 	{
@@ -167,7 +209,7 @@ class Yellow_Commandline
 	// Copy static file
 	function copyStaticFile($fileNameSource, $fileNameDest)
 	{
-		return  $this->yellow->toolbox->copyFile($fileNameSource, $fileNameDest, true) &&
+		return $this->yellow->toolbox->copyFile($fileNameSource, $fileNameDest, true) &&
 			$this->yellow->toolbox->modifyFile($fileNameDest, filemtime($fileNameSource));
 	}
 	

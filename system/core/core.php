@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.1.9";
+	const Version = "0.1.10";
 	var $page;				//current page data
 	var $pages;				//current page tree from file system
 	var $toolbox;			//toolbox with helpers
@@ -53,7 +53,7 @@ class Yellow
 	}
 	
 	// Handle request
-	function request()
+	function request($statusCodeRequest = 200)
 	{
 		$this->toolbox->timerStart($time);
 		ob_start();
@@ -72,6 +72,7 @@ class Yellow
 			}
 		}
 		if($statusCode == 0) $statusCode = $this->processRequest($serverName, $serverBase, $location, $fileName, true, $statusCode);
+		if($statusCodeRequest > 200) $this->page->error($statusCodeRequest, "Request error");
 		if($this->isRequestError())
 		{
 			ob_clean();
