@@ -7,7 +7,7 @@ class Yellow_Markdown
 {
 	const Version = "0.1.5";
 	var $markdown;			//markdown parser
-	var $html;				//generated HTML
+	var $textHtml;			//generated text (HTML format)
 	
 	// Initialise plugin
 	function initPlugin($yellow)
@@ -18,7 +18,7 @@ class Yellow_Markdown
 	// Parse text
 	function parse($text)
 	{
-		return $this->html = $this->markdown->transform($text);
+		return $this->textHtml = $this->markdown->transform($text);
 	}
 }
 

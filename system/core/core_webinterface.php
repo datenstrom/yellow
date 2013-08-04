@@ -5,7 +5,7 @@
 // Web interface core plugin
 class Yellow_Webinterface
 {
-	const Version = "0.1.6";
+	const Version = "0.1.7";
 	var $yellow;				//access to API
 	var $users;					//web interface users
 	var $activeLocation;		//web interface location? (boolean)
@@ -182,7 +182,7 @@ class Yellow_Webinterface
 	function checkUserPermissions($location, $fileName)
 	{
 		$path = dirname($fileName);
-		return is_dir($path);
+		return is_dir($path) && strlenu(basename($fileName))<128;
 	}
 	
 	// Check if web interface location

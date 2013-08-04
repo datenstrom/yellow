@@ -5,7 +5,7 @@
 // Command line core plugin
 class Yellow_Commandline
 {
-	const Version = "0.1.3";
+	const Version = "0.1.4";
 	var $yellow;			//access to API
 
 	// Initialise plugin
@@ -141,31 +141,34 @@ class Yellow_Commandline
 		$statusCode = $this->yellow->request();
 		if($statusCode != 404)
 		{
-			$ok = false;
+			$fileOk = true;
 			$modified = strtotime($this->yellow->page->getHeader("Last-Modified"));
-			if(preg_match("/^(\w+)\/(\w+)/", $this->yellow->page->getHeader("Content-Type"), $matches)) 
-			{
-				$contentType = "$matches[1]/$matches[2]";
-				$locationExtension = $this->getStaticLocation($location, ".$matches[2]");
-			}
-			if(empty($contentType) || $contentType=="text/html")
+			list($contentType, $contentEncoding) = explode(';', $this->yellow->page->getHeader("Content-Type"), 2);
+			$staticLocation = $this->getStaticLocation($location, $contentType);
+			if($location == $staticLocation)
 			{
 				$fileName = $this->getStaticFileName($location, $path);
 				$fileData = ob_get_contents();
 				if($statusCode == 301) $fileData = $this->getStaticRedirect($this->yellow->page->getHeader("Location"));
-				$ok = $this->makeStaticFile($fileName, $fileData, $modified);
+				$fileOk = $this->makeStaticFile($fileName, $fileData, $modified);
 			} else {
-				$fileName = $this->getStaticFileName($location, $path);
-				$fileData = $this->getStaticRedirect("http://$serverName$serverBase$locationExtension");
-				$ok = $this->makeStaticFile($fileName, $fileData, $modified);
-				if($ok)
+				if(!$this->yellow->toolbox->isFileLocation($location))
 				{
-					$fileName = $this->getStaticFileName($locationExtension, $path);
-					$fileData = ob_get_contents();
-					$ok = $this->makeStaticFile($fileName, $fileData, $modified);
+					$fileName = $this->getStaticFileName($location, $path);
+					$fileData = $this->getStaticRedirect("http://$serverName$serverBase$staticLocation");
+					$fileOk = $this->makeStaticFile($fileName, $fileData, $modified);
+					if($fileOk)
+					{
+						$fileName = $this->getStaticFileName($staticLocation, $path);
+						$fileData = ob_get_contents();
+						$fileOk = $this->makeStaticFile($fileName, $fileData, $modified);
+					}
+				} else {
+					$statusCode = 500;
+					$this->yellow->page->error($statusCode, "Invalid file name for type '$contentType'!");
 				}
 			}
-			if(!$ok)
+			if(!$fileOk)
 			{
 				$statusCode = 500;
 				$this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
@@ -186,10 +189,8 @@ class Yellow_Commandline
 		$statusCode = $this->yellow->request($statusCodeRequest);
 		if($statusCode == $statusCodeRequest)
 		{
-			$fileData = ob_get_contents();
 			$modified = strtotime($this->yellow->page->getHeader("Last-Modified"));			
-			$ok = $this->makeStaticFile($fileName, $fileData, $modified);
-			if(!$ok)
+			if(!$this->makeStaticFile($fileName, ob_get_contents(), $modified))
 			{
 				$statusCode = 500;
 				$this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
@@ -213,6 +214,28 @@ class Yellow_Commandline
 			$this->yellow->toolbox->modifyFile($fileNameDest, filemtime($fileNameSource));
 	}
 	
+	// Return static location corresponding to content type
+	function getStaticLocation($location, $contentType)
+	{
+		$extension = ($pos = strrposu($location, '.')) ? substru($location, $pos) : "";
+		if($contentType == "text/html")
+		{
+			if($this->yellow->toolbox->isFileLocation($location))
+			{
+				if(!empty($extension) && $extension!=".html") $location .= ".html";
+			}
+		} else {
+			if($this->yellow->toolbox->isFileLocation($location))
+			{
+				if(empty($extension)) $location .= ".unknown";
+			} else {
+				if(preg_match("/^(\w+)\/(\w+)/", $contentType, $matches)) $extension = ".$matches[2]";
+				$location .= "index$extension";
+			}
+		}
+		return $location;
+	}
+	
 	// Return static file name from location
 	function getStaticFileName($location, $path)
 	{
@@ -222,13 +245,6 @@ class Yellow_Commandline
 			$fileName .= $this->yellow->config->get("commandBuildDefaultFile");
 		}
 		return $fileName;
-	}
-	
-	// Return static location with file extension
-	function getStaticLocation($location, $extension)
-	{
-		if(!$this->yellow->toolbox->isFileLocation($location)) $location .= "index";
-		return $location.$extension;
 	}
 	
 	// Return static redirect data

@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.1.10";
+	const Version = "0.1.11";
 	var $page;				//current page data
 	var $pages;				//current page tree from file system
 	var $toolbox;			//toolbox with helpers
@@ -26,7 +26,6 @@ class Yellow
 		$this->config->setDefault("template", "default");
 		$this->config->setDefault("style", "default");
 		$this->config->setDefault("parser", "markdown");
-		$this->config->setDefault("yellowVersion", Yellow::Version);
 		$this->config->setDefault("serverName", $this->toolbox->getServerName());
 		$this->config->setDefault("serverBase", $this->toolbox->getServerBase());
 		$this->config->setDefault("styleLocation", "/media/styles/");
@@ -57,21 +56,26 @@ class Yellow
 	{
 		$this->toolbox->timerStart($time);
 		ob_start();
+		$statusCode = 0;
 		$serverName = $this->config->get("serverName");
 		$serverBase = $this->config->get("serverBase");
 		$location = $this->getRelativeLocation($serverBase);
 		$fileName = $this->getContentFileName($location);
-		$statusCode = 0;
 		$this->page = new Yellow_Page($this, $location);
 		foreach($this->plugins->plugins as $key=>$value)
 		{
 			if(method_exists($value["obj"], "onRequest"))
 			{
+				$this->pages->requestHandler = $key;
 				$statusCode = $value["obj"]->onRequest($serverName, $serverBase, $location, $fileName);
-				if($statusCode) break;
+				if($statusCode != 0) break;
 			}
 		}
-		if($statusCode == 0) $statusCode = $this->processRequest($serverName, $serverBase, $location, $fileName, true, $statusCode);
+		if($statusCode == 0)
+		{
+			$this->pages->requestHandler = "core";
+			$statusCode = $this->processRequest($serverName, $serverBase, $location, $fileName, true, $statusCode);
+		}
 		if($statusCodeRequest > 200) $this->page->error($statusCodeRequest, "Request error");
 		if($this->isRequestError())
 		{
@@ -88,13 +92,14 @@ class Yellow
 	// Process request
 	function processRequest($serverName, $serverBase, $location, $fileName, $cacheable, $statusCode)
 	{
+		$handler = $this->getRequestHandler();
 		if($statusCode == 0)
 		{
 			if(is_readable($fileName))
 			{
 				$statusCode = 200;
 				$fileName = $this->readPage($serverBase, $location, $fileName, $cacheable, $statusCode);
-				if($this->page->isExisting("redirect") && $cacheable)
+				if($this->page->isExisting("redirect") && $handler=="core")
 				{
 					$statusCode = 301;
 					$locationHeader = $this->toolbox->getHttpLocationHeader($serverName, $serverBase, $this->page->get("redirect"));
@@ -116,18 +121,19 @@ class Yellow
 			$fileName = $this->readPage($serverBase, $location, $fileName, $cacheable, $statusCode);
 		}
 		if($this->page->statusCode != 0) $statusCode = $this->sendPage();
-		if(defined("DEBUG") && DEBUG>=1) echo "Yellow::processRequest base:$serverBase file:$fileName<br>\n";
+		if(defined("DEBUG") && DEBUG>=1) echo "Yellow::processRequest handler:$handler base:$serverBase file:$fileName<br>\n";
 		return $statusCode;
 	}
 	
 	// Process request with error
 	function processRequestError()
 	{
+		$handler = $this->getRequestHandler();
 		$serverBase = $this->pages->serverBase;
 		$fileName = $this->readPage($serverBase, $this->page->location, $this->page->fileName, $this->page->cacheable,
 			$this->page->statusCode, $this->page->get("pageError"));
 		$statusCode = $this->sendPage();
-		if(defined("DEBUG") && DEBUG>=1) echo "Yellow::processRequestError base:$serverBase file:$fileName<br>\n";
+		if(defined("DEBUG") && DEBUG>=1) echo "Yellow::processRequestError handler:$handler base:$serverBase file:$fileName<br>\n";
 		return $statusCode;		
 	}
 	
@@ -197,6 +203,12 @@ class Yellow
 			@header($this->toolbox->getHttpStatusFormatted($statusCode));
 			if(!empty($text)) @header($text);
 		}
+	}
+	
+	// Return name of request handler
+	function getRequestHandler()
+	{
+		return $this->pages->requestHandler;
 	}
 	
 	// Check for request error
@@ -391,7 +403,7 @@ class Yellow_Page
 			{
 				if(method_exists($value["obj"], "onParseContent")) $text = $value["obj"]->onParseContent($text, $this->statusCode);
 			}
-			$this->setContent($text);
+			$this->parser->textHtml = $text;
 			if(!$this->isExisting("description"))
 			{
 				$this->set("description", $this->yellow->toolbox->createTextDescription($this->getContent(), 150));
@@ -449,18 +461,12 @@ class Yellow_Page
 	{
 		return $this->getHtml("title");
 	}
-	
-	// Set page content, HTML encoded
-	function setContent($html)
-	{
-		$this->parser->html = $html;
-	}
-	
+
 	// Return page content, HTML encoded
 	function getContent()
 	{
 		$this->parseContent();
-		return $this->parser->html;
+		return $this->parser->textHtml;
 	}
 	
 	// Return absolute page location
@@ -662,10 +668,11 @@ class Yellow_PageCollection extends ArrayObject
 // Yellow page tree from file system
 class Yellow_Pages
 {
-	var $yellow;		//access to API
-	var $pages;			//scanned pages
-	var $serverBase;	//requested server base
-	var $snippetArgs;	//requested snippet arguments
+	var $yellow;			//access to API
+	var $pages;				//scanned pages
+	var $requestHandler;	//request handler
+	var $serverBase;		//requested server base
+	var $snippetArgs;		//requested snippet arguments
 	
 	function __construct($yellow)
 	{
@@ -923,14 +930,14 @@ class Yellow_Toolbox
 		{
 			for($i=1; $i<count($tokens)-1; ++$i)
 			{
-				$tokenFound = $tokens[$i];
-				if(self::normaliseName($tokens[$i]) != $tokens[$i]) $invalid = true;
-				$regex = "/^[\d\-\_\.]*".strreplaceu('-', '.', $tokens[$i])."$/";
+				$token = $tokens[$i];
+				if(self::normaliseName($token) != $token) $invalid = true;
+				$regex = "/^[\d\-\_\.]*".strreplaceu('-', '.', $token)."$/";
 				foreach(self::getDirectoryEntries($path, $regex) as $entry)
 				{
-					if(self::normaliseName($entry) == $tokens[$i]) { $tokenFound = $entry; break; }
+					if(self::normaliseName($entry) == $tokens[$i]) { $token = $entry; break; }
 				}
-				$path .= "$tokenFound/";
+				$path .= "$token/";
 			}
 			if($path == $pathBase.$pathHome) $invalid = true;
 		} else {
@@ -939,14 +946,14 @@ class Yellow_Toolbox
 		}
 		if($tokens[$i] != "")
 		{
-			$tokenFound = $tokens[$i];
-			if(self::normaliseName($tokens[$i]) != $tokens[$i]) $invalid = true;
-			$regex = "/^[\d\-\_\.]*".strreplaceu('-', '.', $tokens[$i]).$fileExtension."$/";
+			$token = $tokens[$i].$fileExtension;
+			if(self::normaliseName($token) != $token) $invalid = true;
+			$regex = "/^[\d\-\_\.]*".strreplaceu('-', '.', $token)."$/";
 			foreach(self::getDirectoryEntries($path, $regex, false, false) as $entry)
 			{
-				if(self::normaliseName($entry, true) == $tokens[$i]) { $tokenFound = $entry; break; }
+				if(self::normaliseName($entry, true) == $tokens[$i]) { $token = $entry; break; }
 			}
-			$path .= $tokenFound;
+			$path .= $token;
 		} else {
 			$path .= $fileDefault;
 		}
@@ -970,7 +977,7 @@ class Yellow_Toolbox
 	{
 		if(preg_match("/^[\d\-\_\.]+(.*)$/", $text, $matches)) $text = $matches[1];
 		if($removeExtension) $text = ($pos = strrposu($text, '.')) ? substru($text, 0, $pos) : $text;
-		$text = preg_replace("/[^\pL\d\-\_]/u", "-", $text);
+		$text = preg_replace("/[^\pL\d\-\_\.]/u", "-", $text);
 		return $text;
 	}
 	
@@ -1061,7 +1068,7 @@ class Yellow_Toolbox
 		if($mkdir)
 		{
 			$path = dirname($fileName);
-			if(!empty($path) && !is_dir($path)) mkdir($path, 0777, true);
+			if(!empty($path) && !is_dir($path)) @mkdir($path, 0777, true);
 		}
 		$fileHandle = @fopen($fileName, "w");
 		if($fileHandle)
@@ -1079,7 +1086,7 @@ class Yellow_Toolbox
 		if($mkdir)
 		{
 			$path = dirname($fileNameDest);
-			if(!empty($path) && !is_dir($path)) mkdir($path, 0777, true);
+			if(!empty($path) && !is_dir($path)) @mkdir($path, 0777, true);
 		}
 		return @copy($fileNameSource, $fileNameDest);
 	}
@@ -1424,7 +1431,7 @@ class Yellow_Plugins
 	{
 		global $yellow;
 		require_once("core_markdown.php");
-		require_once("core_rawhtml.php");
+		require_once("core_plaintext.php");
 		require_once("core_commandline.php");
 		require_once("core_webinterface.php");
 		foreach($yellow->toolbox->getDirectoryEntries($yellow->config->get("pluginDir"), "/.*\.php/", true, false) as $entry)
