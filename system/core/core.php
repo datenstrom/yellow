@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.1.11";
+	const Version = "0.1.12";
 	var $page;				//current page data
 	var $pages;				//current page tree from file system
 	var $toolbox;			//toolbox with helpers
@@ -495,10 +495,18 @@ class Yellow_Page
 		return $statusCode;
 	}
 	
-	// Return child pages relative to current page
-	function getChildren($showHidden = false)
+	// Return parent page relative to current page
+	function getParent()
 	{
-		return $this->yellow->pages->findChildren($this->location, $showHidden);
+		$parentLocation = $this->yellow->pages->getParentLocation($this->location);
+		return $this->yellow->pages->find($parentLocation, false)->first();
+	}
+
+	// Return top-level parent page of current page
+	function getParentTop()
+	{
+		$parentTopLocation = $this->yellow->pages->getParentTopLocation($this->location);
+		return $this->yellow->pages->find($parentTopLocation, false)->first();
 	}
 
 	// Return pages on the same level as current page
@@ -508,11 +516,10 @@ class Yellow_Page
 		return $this->yellow->pages->findChildren($parentLocation, $showHidden);
 	}
 
-	// Return parent page relative to current page
-	function getParent()
+	// Return child pages relative to current page
+	function getChildren($showHidden = false)
 	{
-		$parentLocation = $this->yellow->pages->getParentLocation($this->location);
-		return $this->yellow->pages->find($parentLocation, false);
+		return $this->yellow->pages->findChildren($this->location, $showHidden);
 	}
 	
 	// Check if response header exists
@@ -657,7 +664,19 @@ class Yellow_PageCollection extends ArrayObject
 		foreach($this->getIterator() as $page) $modified = max($modified, $page->getModified());
 		return $httpFormat ? $this->yellow->toolbox->getHttpTimeFormatted($modified) : $modified;
 	}
+	
+	// Return first page in page collection
+	function first()
+	{
+		return $this->offsetGet(0);
+	}
 
+	// Return last page in page collection
+	function last()
+	{
+		return $this->offsetGet($this->count()-1);
+	}
+	
 	// Check if there is an active pagination
 	function isPagination()
 	{
@@ -686,27 +705,28 @@ class Yellow_Pages
 		return $this->findChildrenRecursive("", $showHidden, $levelMax);
 	}
 	
-	// Return top-level navigation pages
-	function root($showHidden = false)
+	// Return page collection with top-level navigation
+	function top($showHidden = false)
 	{
 		return $this->findChildren("", $showHidden);
 	}
-
-	// Find a specific page
+	
+	// Return page collection with a specific page
 	function find($location, $absoluteLocation = false)
 	{
 		if($absoluteLocation) $location = substru($location, strlenu($this->serverBase));
 		$parentLocation = $this->getParentLocation($location);
 		$this->scanChildren($parentLocation);
-		foreach($this->pages[$parentLocation] as $page) if($page->location == $location) return $page;
-		return false;
+		$pages = new Yellow_PageCollection($this->yellow, $parentLocation);
+		foreach($this->pages[$parentLocation] as $page) if($page->location == $location) $pages->append($page);
+		return $pages;
 	}
 	
 	// Find child pages
 	function findChildren($location, $showHidden = false)
 	{
-		$pages = new Yellow_PageCollection($this->yellow, $location);
 		$this->scanChildren($location);
+		$pages = new Yellow_PageCollection($this->yellow, $location);
 		foreach($this->pages[$location] as $page) if($page->isVisible() || $showHidden) $pages->append($page);
 		return $pages;
 	}
@@ -715,8 +735,8 @@ class Yellow_Pages
 	function findChildrenRecursive($location, $showHidden = false, $levelMax = 0)
 	{
 		--$levelMax;
-		$pages = new Yellow_PageCollection($this->yellow, $location);
 		$this->scanChildren($location);
+		$pages = new Yellow_PageCollection($this->yellow, $location);
 		foreach($this->pages[$location] as $page)
 		{
 			if($page->isVisible() || $showHidden)
@@ -780,6 +800,14 @@ class Yellow_Pages
 		$parentLocation = "";
 		if(preg_match("/^(.*\/)(.+?)$/", $location, $matches)) $parentLocation = $matches[1]!="/" ? $matches[1] : "";
 		return $parentLocation;
+	}
+	
+	// Return top-level parent location
+	function getParentTopLocation($location)
+	{
+		$parentTopLocation = "/";
+		if(preg_match("/^(.+?\/)/", $location, $matches)) $parentTopLocation = $matches[1];
+		return $parentTopLocation;
 	}
 }
 
