@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.1.12";
+	const Version = "0.1.13";
 	var $page;				//current page data
 	var $pages;				//current page tree from file system
 	var $toolbox;			//toolbox with helpers
@@ -40,7 +40,7 @@ class Yellow
 		$this->config->setDefault("styleDir", "media/styles/");
 		$this->config->setDefault("imageDir", "media/images/");
 		$this->config->setDefault("contentDir", "content/");
-		$this->config->setDefault("contentHomeDir", "1-home/");
+		$this->config->setDefault("contentHomeDir", "home/");
 		$this->config->setDefault("contentDefaultFile", "page.txt");
 		$this->config->setDefault("contentExtension", ".txt");
 		$this->config->setDefault("configExtension", ".ini");
@@ -362,6 +362,7 @@ class Yellow_Page
 	function parseMeta()
 	{
 		$this->set("title", $this->yellow->toolbox->createTextTitle($this->location));
+		$this->set("sitename", $this->yellow->config->get("sitename"));
 		$this->set("author", $this->yellow->config->get("author"));
 		$this->set("language", $this->yellow->config->get("language"));
 		$this->set("template", $this->yellow->config->get("template"));
@@ -478,7 +479,7 @@ class Yellow_Page
 	// Return page modification time, Unix time
 	function getModified($httpFormat = false)
 	{
-		$modified = is_readable($this->fileName) ? filemtime($this->fileName) : "";
+		$modified = is_readable($this->fileName) ? filemtime($this->fileName) : 0;
 		if($this->isExisting("modified")) $modified = strtotime($this->get("modified"));
 		return $httpFormat ? $this->yellow->toolbox->getHttpTimeFormatted($modified) : $modified;
 	}
@@ -767,18 +768,25 @@ class Yellow_Pages
 			$fileNames = array();
 			foreach($this->yellow->toolbox->getDirectoryEntries($path, "/.*/", true) as $entry)
 			{
-				array_push($fileNames, $path.$entry."/".$this->yellow->config->get("contentDefaultFile"));
+				$fileDefault = $this->yellow->config->get("contentDefaultFile");
+				if(!is_file($path.$entry."/".$fileDefault))
+				{
+					$regex = "/^[\d\-\_\.]*".strreplaceu('-', '.', $fileDefault)."$/";
+					foreach($this->yellow->toolbox->getDirectoryEntries($path.$entry, $regex, false, false) as $entry2)
+					{
+						if($this->yellow->toolbox->normaliseName($entry2) == $fileDefault) { $fileDefault = $entry2; break; }
+					}
+				}
+				array_push($fileNames, $path.$entry."/".$fileDefault);
 			}
 			$regex = "/.*\\".$this->yellow->config->get("contentExtension")."/";
 			foreach($this->yellow->toolbox->getDirectoryEntries($path, $regex, true, false) as $entry)
 			{
-				if($entry != $this->yellow->config->get("contentDefaultFile")) array_push($fileNames, $path.$entry);
+				$token = $this->yellow->toolbox->normaliseName($entry);
+				if($token != $this->yellow->config->get("contentDefaultFile")) array_push($fileNames, $path.$entry);
 			}
 			foreach($fileNames as $fileName)
 			{
-				$childLocation = $this->yellow->toolbox->findLocationFromFile($fileName,
-					$this->yellow->config->get("contentDir"), $this->yellow->config->get("contentHomeDir"),
-					$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
 				$fileHandle = @fopen($fileName, "r");
 				if($fileHandle)
 				{
@@ -787,7 +795,9 @@ class Yellow_Pages
 				} else {
 					$fileData = "";
 				}
-				$page = new Yellow_Page($this->yellow, $childLocation);
+				$page = new Yellow_Page($this->yellow, $this->yellow->toolbox->findLocationFromFile($fileName,
+					$this->yellow->config->get("contentDir"), $this->yellow->config->get("contentHomeDir"),
+					$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension")));
 				$page->parseData($fileName, $fileData, false, 0);
 				array_push($this->pages[$location], $page);
 			}
@@ -956,6 +966,7 @@ class Yellow_Toolbox
 		$tokens = explode('/', $location);
 		if(count($tokens) > 2)
 		{
+			if($tokens[1]."/" == $pathHome) $invalid = true;
 			for($i=1; $i<count($tokens)-1; ++$i)
 			{
 				$token = $tokens[$i];
@@ -963,28 +974,30 @@ class Yellow_Toolbox
 				$regex = "/^[\d\-\_\.]*".strreplaceu('-', '.', $token)."$/";
 				foreach(self::getDirectoryEntries($path, $regex) as $entry)
 				{
-					if(self::normaliseName($entry) == $tokens[$i]) { $token = $entry; break; }
+					if(self::normaliseName($entry) == $token) { $token = $entry; break; }
 				}
 				$path .= "$token/";
 			}
-			if($path == $pathBase.$pathHome) $invalid = true;
 		} else {
 			$i = 1;
-			$path .= $pathHome;
-		}
-		if($tokens[$i] != "")
-		{
-			$token = $tokens[$i].$fileExtension;
+			$token = rtrim($pathHome, '/');
 			if(self::normaliseName($token) != $token) $invalid = true;
 			$regex = "/^[\d\-\_\.]*".strreplaceu('-', '.', $token)."$/";
-			foreach(self::getDirectoryEntries($path, $regex, false, false) as $entry)
+			foreach(self::getDirectoryEntries($path, $regex) as $entry)
 			{
-				if(self::normaliseName($entry, true) == $tokens[$i]) { $token = $entry; break; }
+				if(self::normaliseName($entry) == $token) { $token = $entry; break; }
 			}
-			$path .= $token;
-		} else {
-			$path .= $fileDefault;
+			$path .= "$token/";
 		}
+		$token = !empty($tokens[$i]) ? $tokens[$i].$fileExtension : $fileDefault;
+		if(!empty($tokens[$i]) && $tokens[$i].$fileExtension==$fileDefault) $invalid = true;
+		if(self::normaliseName($token) != $token) $invalid = true;
+		$regex = "/^[\d\-\_\.]*".strreplaceu('-', '.', $token)."$/";
+		foreach(self::getDirectoryEntries($path, $regex, false, false) as $entry)
+		{
+			if(self::normaliseName($entry) == $token) { $token = $entry; break; }
+		}
+		$path .= $token;
 		return $invalid ? "" : $path;
 	}
 	
@@ -993,10 +1006,14 @@ class Yellow_Toolbox
 	{
 		$location = "/";
 		if(substru($fileName, 0, strlenu($pathBase)) == $pathBase) $fileName = substru($fileName, strlenu($pathBase));
-		if(substru($fileName, 0, strlenu($pathHome)) == $pathHome) $fileName = substru($fileName, strlenu($pathHome));
 		$tokens = explode('/', $fileName);
-		for($i=0; $i<count($tokens)-1; ++$i) $location .= self::normaliseName($tokens[$i]).'/';
-		if($tokens[$i] != $fileDefault) $location .= self::normaliseName($tokens[$i], true);
+		for($i=0; $i<count($tokens)-1; ++$i)
+		{
+			$token = self::normaliseName($tokens[$i]).'/';
+			if($i || $token!=$pathHome) $location .= $token;
+		}
+		$token = self::normaliseName($tokens[$i]);
+		if($token != $fileDefault) $location .= self::normaliseName($tokens[$i], true);
 		return $location;
 	}
 	
@@ -1225,21 +1242,27 @@ class Yellow_Toolbox
 			if(substru($fileName, -3) == "png")
 			{
 				$dataSignature = fread($fileHandle, 8);
-				$dataHeader = fread($fileHandle, 25);
+				$dataHeader = fread($fileHandle, 16);
 				if(!feof($fileHandle) && $dataSignature=="\x89PNG\r\n\x1a\n")
 				{
 					$width = (ord($dataHeader[10])<<8) + ord($dataHeader[11]);
 					$height = (ord($dataHeader[14])<<8) + ord($dataHeader[15]);
 				}
 			} else if(substru($fileName, -3) == "jpg") {
-				$dataSignature = fread($fileHandle, 11);
-				$dataHeader = fread($fileHandle, 147);
-				$dataHeader = fread($fileHandle, 16);
+				$dataBuffer = fread($fileHandle, 2048);
+				$dataSignature = substrb($dataBuffer, 0, 11);
 				if(!feof($fileHandle) && $dataSignature=="\xff\xd8\xff\xe0\x00\x10JFIF\0")
 				{
-					$width = (ord($dataHeader[7])<<8) + ord($dataHeader[8]);
-					$height = (ord($dataHeader[5])<<8) + ord($dataHeader[6]);
+					$marker = substrb($dataBuffer, 20, 2);
+					$length = (ord($dataBuffer[22])<<8) + ord($dataBuffer[23]) + 2;
+					$pos = 158 + ($marker=="\xff\xe1" ? $length : 0);
+					if($pos+8 < 2048)
+					{
+						$width = (ord($dataBuffer[$pos+7])<<8) + ord($dataBuffer[$pos+8]);
+						$height = (ord($dataBuffer[$pos+5])<<8) + ord($dataBuffer[$pos+6]);
+					}
 				}
+				
 			}
 			fclose($fileHandle);
 		}
