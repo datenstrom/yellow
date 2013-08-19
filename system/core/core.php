@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.1.13";
+	const Version = "0.1.14";
 	var $page;				//current page data
 	var $pages;				//current page tree from file system
 	var $toolbox;			//toolbox with helpers
@@ -362,6 +362,7 @@ class Yellow_Page
 	function parseMeta()
 	{
 		$this->set("title", $this->yellow->toolbox->createTextTitle($this->location));
+		$this->set("modified", date("c", is_readable($this->fileName) ? filemtime($this->fileName) : 0));
 		$this->set("sitename", $this->yellow->config->get("sitename"));
 		$this->set("author", $this->yellow->config->get("author"));
 		$this->set("language", $this->yellow->config->get("language"));
@@ -479,9 +480,8 @@ class Yellow_Page
 	// Return page modification time, Unix time
 	function getModified($httpFormat = false)
 	{
-		$modified = is_readable($this->fileName) ? filemtime($this->fileName) : 0;
-		if($this->isExisting("modified")) $modified = strtotime($this->get("modified"));
-		return $httpFormat ? $this->yellow->toolbox->getHttpTimeFormatted($modified) : $modified;
+	   $modified = strtotime($this->get("modified"));
+	   return $httpFormat ? $this->yellow->toolbox->getHttpTimeFormatted($modified) : $modified;
 	}
 	
 	// Return page status code
@@ -592,6 +592,21 @@ class Yellow_PageCollection extends ArrayObject
 		}
 		return $this;
 	}
+	
+	// Sort page collection by meta data
+	function sort($key, $ascendingOrder = true)
+	{
+		$callback = function($a, $b) use ($key, $ascendingOrder)
+		{
+			return $ascendingOrder ?
+				strnatcasecmp($a->get($key), $b->get($key)) :
+				strnatcasecmp($b->get($key), $a->get($key));
+		};
+		$array = $this->getArrayCopy();
+		usort($array, $callback);
+		$this->exchangeArray($array);
+		return $this;
+	}
 
 	// Merge page collection
 	function merge($input)
@@ -600,8 +615,15 @@ class Yellow_PageCollection extends ArrayObject
 		return $this;
 	}
 	
+	// Limit the number of pages in page collection
+	function limit($pagesMax)
+	{
+		$this->exchangeArray(array_slice($this->getArrayCopy(), 0, $pagesMax));
+		return $this;
+	}
+	
 	// Reverse page collection
-	function reverse($entriesMax = 0)
+	function reverse()
 	{
 		$this->exchangeArray(array_reverse($this->getArrayCopy()));
 		return $this;
@@ -1173,17 +1195,19 @@ class Yellow_Toolbox
 				$elementFound = preg_match("/&.*?\;|<\s*?(\/?\w*)\s*?(.*?)\s*?\>/s", $text, $matches, PREG_OFFSET_CAPTURE, $offsetBytes);
 				$element = $matches[0][0];
 				$elementName = $matches[1][0];
+				$elementText = $matches[2][0];
 				$elementOffsetBytes = $elementFound ? $matches[0][1] : strlenb($text);
 				$string = substrb($text, $offsetBytes, $elementOffsetBytes - $offsetBytes);
 				$length = strlenu($string);
 				$output .= substru($string, 0, $length < $lengthMax ? $length : $lengthMax-1);
 				$lengthMax -= $length + ($element[0]=='&' ? 1 : 0);
 				if($lengthMax<=0 || !$elementFound) break;
-				if(!empty($elementName))
+				if(!empty($elementName) && substru($elementText, -1)!='/' &&
+				   !preg_match("/^(area|br|col|hr|img|input|col|param)/i", $elementName))
 				{
-					if(!preg_match("/^(\/|area|br|col|hr|img|input|col|param)/i", $elementName))
+					if($elementName[0] != '/')
 					{
-						if(substru($matches[2][0], -1) != '/') array_push($elementsOpen, $elementName);
+						array_push($elementsOpen, $elementName);
 					} else {
 						array_pop($elementsOpen);
 					}
