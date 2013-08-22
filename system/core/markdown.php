@@ -13,207 +13,7 @@
 
 
 define( 'MARKDOWN_VERSION',  "1.0.1q" ); # 11 Apr 2013
-define( 'MARKDOWNEXTRA_VERSION',  "1.2.7" ); # 11 Apr 2013
-
-
-#
-# Global default settings:
-#
-
-# Change to ">" for HTML output
-@define( 'MARKDOWN_EMPTY_ELEMENT_SUFFIX',  " />");
-
-# Define the width of a tab for code blocks.
-@define( 'MARKDOWN_TAB_WIDTH',     4 );
-
-# Optional title attribute for footnote links and backlinks.
-@define( 'MARKDOWN_FN_LINK_TITLE',         "" );
-@define( 'MARKDOWN_FN_BACKLINK_TITLE',     "" );
-
-# Optional class attribute for footnote links and backlinks.
-@define( 'MARKDOWN_FN_LINK_CLASS',         "" );
-@define( 'MARKDOWN_FN_BACKLINK_CLASS',     "" );
-
-# Optional class prefix for fenced code block.
-@define( 'MARKDOWN_CODE_CLASS_PREFIX',     "" );
-
-# Class attribute for code blocks goes on the `code` tag;
-# setting this to true will put attributes on the `pre` tag instead.
-@define( 'MARKDOWN_CODE_ATTR_ON_PRE',   false );
-
-
-#
-# WordPress settings:
-#
-
-# Change to false to remove Markdown from posts and/or comments.
-@define( 'MARKDOWN_WP_POSTS',      true );
-@define( 'MARKDOWN_WP_COMMENTS',   true );
-
-
-
-### Standard Function Interface ###
-
-@define( 'MARKDOWN_PARSER_CLASS',  'MarkdownExtra_Parser' );
-
-function Markdown($text) {
-#
-# Initialize the parser and return the result of its transform method.
-#
-	# Setup static parser variable.
-	static $parser;
-	if (!isset($parser)) {
-		$parser_class = MARKDOWN_PARSER_CLASS;
-		$parser = new $parser_class;
-	}
-
-	# Transform text using parser.
-	return $parser->transform($text);
-}
-
-
-### WordPress Plugin Interface ###
-
-/*
-Plugin Name: Markdown Extra
-Plugin Name: Markdown
-Plugin URI: http://michelf.ca/projects/php-markdown/
-Description: <a href="http://daringfireball.net/projects/markdown/syntax">Markdown syntax</a> allows you to write using an easy-to-read, easy-to-write plain text format. Based on the original Perl version by <a href="http://daringfireball.net/">John Gruber</a>. <a href="http://michelf.ca/projects/php-markdown/">More...</a>
-Version: 1.2.7
-Author: Michel Fortin
-Author URI: http://michelf.ca/
-*/
-
-if (isset($wp_version)) {
-	# More details about how it works here:
-	# <http://michelf.ca/weblog/2005/wordpress-text-flow-vs-markdown/>
-	
-	# Post content and excerpts
-	# - Remove WordPress paragraph generator.
-	# - Run Markdown on excerpt, then remove all tags.
-	# - Add paragraph tag around the excerpt, but remove it for the excerpt rss.
-	if (MARKDOWN_WP_POSTS) {
-		remove_filter('the_content',     'wpautop');
-        remove_filter('the_content_rss', 'wpautop');
-		remove_filter('the_excerpt',     'wpautop');
-		add_filter('the_content',     'mdwp_MarkdownPost', 6);
-        add_filter('the_content_rss', 'mdwp_MarkdownPost', 6);
-		add_filter('get_the_excerpt', 'mdwp_MarkdownPost', 6);
-		add_filter('get_the_excerpt', 'trim', 7);
-		add_filter('the_excerpt',     'mdwp_add_p');
-		add_filter('the_excerpt_rss', 'mdwp_strip_p');
-		
-		remove_filter('content_save_pre',  'balanceTags', 50);
-		remove_filter('excerpt_save_pre',  'balanceTags', 50);
-		add_filter('the_content',  	  'balanceTags', 50);
-		add_filter('get_the_excerpt', 'balanceTags', 9);
-	}
-	
-	# Add a footnote id prefix to posts when inside a loop.
-	function mdwp_MarkdownPost($text) {
-		static $parser;
-		if (!$parser) {
-			$parser_class = MARKDOWN_PARSER_CLASS;
-			$parser = new $parser_class;
-		}
-		if (is_single() || is_page() || is_feed()) {
-			$parser->fn_id_prefix = "";
-		} else {
-			$parser->fn_id_prefix = get_the_ID() . ".";
-		}
-		return $parser->transform($text);
-	}
-	
-	# Comments
-	# - Remove WordPress paragraph generator.
-	# - Remove WordPress auto-link generator.
-	# - Scramble important tags before passing them to the kses filter.
-	# - Run Markdown on excerpt then remove paragraph tags.
-	if (MARKDOWN_WP_COMMENTS) {
-		remove_filter('comment_text', 'wpautop', 30);
-		remove_filter('comment_text', 'make_clickable');
-		add_filter('pre_comment_content', 'Markdown', 6);
-		add_filter('pre_comment_content', 'mdwp_hide_tags', 8);
-		add_filter('pre_comment_content', 'mdwp_show_tags', 12);
-		add_filter('get_comment_text',    'Markdown', 6);
-		add_filter('get_comment_excerpt', 'Markdown', 6);
-		add_filter('get_comment_excerpt', 'mdwp_strip_p', 7);
-	
-		global $mdwp_hidden_tags, $mdwp_placeholders;
-		$mdwp_hidden_tags = explode(' ',
-			'<p> </p> <pre> </pre> <ol> </ol> <ul> </ul> <li> </li>');
-		$mdwp_placeholders = explode(' ', str_rot13(
-			'pEj07ZbbBZ U1kqgh4w4p pre2zmeN6K QTi31t9pre ol0MP1jzJR '.
-			'ML5IjmbRol ulANi1NsGY J7zRLJqPul liA8ctl16T K9nhooUHli'));
-	}
-	
-	function mdwp_add_p($text) {
-		if (!preg_match('{^$|^<(p|ul|ol|dl|pre|blockquote)>}i', $text)) {
-			$text = '<p>'.$text.'</p>';
-			$text = preg_replace('{\n{2,}}', "</p>\n\n<p>", $text);
-		}
-		return $text;
-	}
-	
-	function mdwp_strip_p($t) { return preg_replace('{</?p>}i', '', $t); }
-
-	function mdwp_hide_tags($text) {
-		global $mdwp_hidden_tags, $mdwp_placeholders;
-		return str_replace($mdwp_hidden_tags, $mdwp_placeholders, $text);
-	}
-	function mdwp_show_tags($text) {
-		global $mdwp_hidden_tags, $mdwp_placeholders;
-		return str_replace($mdwp_placeholders, $mdwp_hidden_tags, $text);
-	}
-}
-
-
-### bBlog Plugin Info ###
-
-function identify_modifier_markdown() {
-	return array(
-		'name' => 'markdown',
-		'type' => 'modifier',
-		'nicename' => 'PHP Markdown Extra',
-		'description' => 'A text-to-HTML conversion tool for web writers',
-		'authors' => 'Michel Fortin and John Gruber',
-		'licence' => 'GPL',
-		'version' => MARKDOWNEXTRA_VERSION,
-		'help' => '<a href="http://daringfireball.net/projects/markdown/syntax">Markdown syntax</a> allows you to write using an easy-to-read, easy-to-write plain text format. Based on the original Perl version by <a href="http://daringfireball.net/">John Gruber</a>. <a href="http://michelf.ca/projects/php-markdown/">More...</a>',
-		);
-}
-
-
-### Smarty Modifier Interface ###
-
-function smarty_modifier_markdown($text) {
-	return Markdown($text);
-}
-
-
-### Textile Compatibility Mode ###
-
-# Rename this file to "classTextile.php" and it can replace Textile everywhere.
-
-if (strcasecmp(substr(__FILE__, -16), "classTextile.php") == 0) {
-	# Try to include PHP SmartyPants. Should be in the same directory.
-	@include_once 'smartypants.php';
-	# Fake Textile class. It calls Markdown instead.
-	class Textile {
-		function TextileThis($text, $lite='', $encode='') {
-			if ($lite == '' && $encode == '')    $text = Markdown($text);
-			if (function_exists('SmartyPants'))  $text = SmartyPants($text);
-			return $text;
-		}
-		# Fake restricted version: restrictions are not supported for now.
-		function TextileRestricted($text, $lite='', $noimage='') {
-			return $this->TextileThis($text, $lite);
-		}
-		# Workaround to ensure compatibility with TextPattern 4.0.3.
-		function blockLite($text) { return $text; }
-	}
-}
-
+define( 'MARKDOWNEXTRA_VERSION',  "1.2.7g" ); # 11 Apr 2013 + 22 Aug 2013 (Github style fenced code blocks)
 
 
 #
@@ -225,8 +25,8 @@ class Markdown_Parser {
 	### Configuration Variables ###
 
 	# Change to ">" for HTML output.
-	var $empty_element_suffix = MARKDOWN_EMPTY_ELEMENT_SUFFIX;
-	var $tab_width = MARKDOWN_TAB_WIDTH;
+	var $empty_element_suffix = " />";
+	var $tab_width = 4;
 	
 	# Change to `true` to disallow markup or entities.
 	var $no_markup = false;
@@ -252,7 +52,7 @@ class Markdown_Parser {
 	var $escape_chars_re;
 
 
-	function Markdown_Parser() {
+	function __construct() {
 	#
 	# Constructor function. Initialize appropriate member variables.
 	#
@@ -1701,18 +1501,18 @@ class MarkdownExtra_Parser extends Markdown_Parser {
 	var $fn_id_prefix = "";
 	
 	# Optional title attribute for footnote links and backlinks.
-	var $fn_link_title = MARKDOWN_FN_LINK_TITLE;
-	var $fn_backlink_title = MARKDOWN_FN_BACKLINK_TITLE;
+	var $fn_link_title = "";
+	var $fn_backlink_title = "";
 	
 	# Optional class attribute for footnote links and backlinks.
-	var $fn_link_class = MARKDOWN_FN_LINK_CLASS;
-	var $fn_backlink_class = MARKDOWN_FN_BACKLINK_CLASS;
+	var $fn_link_class = "";
+	var $fn_backlink_class = "";
 
 	# Optional class prefix for fenced code block.
-	var $code_class_prefix = MARKDOWN_CODE_CLASS_PREFIX;
+	var $code_class_prefix = "";
 	# Class attribute for code blocks goes on the `code` tag;
 	# setting this to true will put attributes on the `pre` tag instead.
-	var $code_attr_on_pre = MARKDOWN_CODE_ATTR_ON_PRE;
+	var $code_attr_on_pre = false;
 	
 	# Predefined abbreviations.
 	var $predef_abbr = array();
@@ -1720,7 +1520,7 @@ class MarkdownExtra_Parser extends Markdown_Parser {
 
 	### Parser Implementation ###
 
-	function MarkdownExtra_Parser() {
+	function __construct() {
 	#
 	# Constructor function. Initialize the parser object.
 	#
@@ -1746,7 +1546,7 @@ class MarkdownExtra_Parser extends Markdown_Parser {
 			"doAbbreviations"    => 70,
 			);
 		
-		parent::Markdown_Parser();
+		parent::__construct();
 	}
 	
 	
@@ -2010,7 +1810,7 @@ class MarkdownExtra_Parser extends Markdown_Parser {
 				|
 					# Fenced code block marker
 					(?<= ^ | \n )
-					[ ]{0,'.($indent+3).'}~{3,}
+					[ ]{0,'.($indent+3).'}`{3,}
 									[ ]*
 					(?:
 					\.?[-_:a-zA-Z0-9]+ # standalone class name
@@ -2064,7 +1864,7 @@ class MarkdownExtra_Parser extends Markdown_Parser {
 			#
 			# Check for: Code span marker
 			#
-			if ($tag{0} == "`") {
+			if ($tag{0} == "`" && strlen($tag)==1) {
 				# Find corresponding end marker.
 				$tag_re = preg_quote($tag);
 				if (preg_match('{^(?>.+?|\n(?!\n))*?(?<!`)'.$tag_re.'(?!`)}',
@@ -2082,7 +1882,7 @@ class MarkdownExtra_Parser extends Markdown_Parser {
 			#
 			# Check for: Fenced code block marker.
 			#
-			else if (preg_match('{^\n?([ ]{0,'.($indent+3).'})(~+)}', $tag, $capture)) {
+			else if (preg_match('{^\n?([ ]{0,'.($indent+3).'})(`+)}', $tag, $capture)) {
 				# Fenced code block marker: find matching end marker.
 				$fence_indent = strlen($capture[1]); # use captured indent in re
 				$fence_re = $capture[2]; # use captured fence in re
@@ -2909,9 +2709,9 @@ class MarkdownExtra_Parser extends Markdown_Parser {
 	#
 	# Adding the fenced code block syntax to regular Markdown:
 	#
-	# ~~~
+	# ```
 	# Code block
-	# ~~~
+	# ```
 	#
 		$less_than_tab = $this->tab_width;
 		
@@ -2919,7 +2719,7 @@ class MarkdownExtra_Parser extends Markdown_Parser {
 				(?:\n|\A)
 				# 1: Opening marker
 				(
-					~{3,} # Marker: three tilde or more.
+					`{3,} # Marker: three backtick or more.
 				)
 				[ ]*
 				(?:
