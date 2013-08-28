@@ -5,7 +5,7 @@
 // Web interface core plugin
 class Yellow_Webinterface
 {
-	const Version = "0.1.7";
+	const Version = "0.1.8";
 	var $yellow;				//access to API
 	var $users;					//web interface users
 	var $activeLocation;		//web interface location? (boolean)
@@ -47,15 +47,16 @@ class Yellow_Webinterface
 	}
 	
 	// Handle web content parsing
-	function onParseContent($text, $statusCode)
+	function onParseContent($text)
 	{
+		$output = NULL;
 		if($this->isWebinterfaceLocation() && $this->isUser())
 		{
 			$serverBase = $this->yellow->config->get("serverBase");
 			$webinterfaceLocation = trim($this->yellow->config->get("webinterfaceLocation"), '/');
-			$text = preg_replace("#<a(.*?)href=\"$serverBase/(?!$webinterfaceLocation)(.*?)\"(.*?)>#",
+			$output = preg_replace("#<a(.*?)href=\"$serverBase/(?!$webinterfaceLocation)(.*?)\"(.*?)>#",
 								 "<a$1href=\"$serverBase/$webinterfaceLocation/$2\"$3>", $text);
-			switch($statusCode)
+			switch($this->yellow->page->statusCode)
 			{
 				case 200:	$this->rawDataOriginal = $this->yellow->page->rawData; break;
 				case 424:	$language = $this->isUser() ? $this->users->getLanguage($this->activeUserEmail) : $this->yellow->page->get("language");
@@ -68,7 +69,7 @@ class Yellow_Webinterface
 				case 500:	$this->yellow->page->rawData = $this->rawDataOriginal; break;
 			}
 		}
-		return $text;
+		return $output;
 	}
 	
 	// Handle extra HTML header lines
@@ -289,14 +290,14 @@ class Yellow_WebinterfaceUsers
 	// Check user login from browser cookie
 	function checkCookie($cookie)
 	{
-		list($email, $salt, $session) = explode(";", $cookie);
+		list($email, $salt, $session) = explode(';', $cookie);
 		return $this->isExisting($email) && hash("sha256", $salt.$this->users[$email]["session"])==$session;
 	}
 	
 	// Return user email from browser cookie
 	function getCookieEmail($cookie)
 	{
-		list($email, $salt, $session) = explode(";", $cookie);
+		list($email, $salt, $session) = explode(';', $cookie);
 		return $email;
 	}
 	

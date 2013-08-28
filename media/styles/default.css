@@ -1,6 +1,6 @@
-/* Yellow default style 0.1.1 */
+/* Yellow default style 0.1.2 */
 
-html, body, div, span { margin:0; padding:0; border:0; vertical-align:baseline; }
+html, body, div, pre, span { margin:0; padding:0; border:0; vertical-align:baseline; }
 body { 
 	margin:1em;
 	background-color:#fff; color:#717171;
@@ -27,6 +27,8 @@ a:hover { color:#07d; }
 .content a { color:#07d; }
 .content a:hover { color:#07d; text-decoration:underline; }
 .content img { max-width:100%; height:auto; }
+.content .flexible { position:relative; padding-bottom:56.25%; padding-top:30px; }
+.content .flexible iframe { position:absolute; top:0; left:0; width:100%; height:100%; }
 .footer { margin-top:0.5em; padding-top:0.5em; border-top:1px solid #ddd; }
 .left { float:left; margin:0 1em 0 0; }
 .center { display:block; margin:0 auto; }
@@ -34,8 +36,11 @@ a:hover { color:#07d; }
 
 /* Responsive and print */
 
+.page { margin:0 auto; max-width:62em; }
+
 @media screen and (min-width:62em) { 
 	body { width:60em; margin:1em auto; }
+	.page{ margin:0; max-width:none; }
 }
 @media screen and (max-width:30em) { 
 	body { margin:0.5em; font-size:0.9em; }

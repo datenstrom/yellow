@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.1.14";
+	const Version = "0.1.16";
 	var $page;				//current page data
 	var $pages;				//current page tree from file system
 	var $toolbox;			//toolbox with helpers
@@ -393,22 +393,25 @@ class Yellow_Page
 	// Parse page content
 	function parseContent()
 	{
-		if(!is_object($this->parser))
+		if(!is_object($this->parser) && $this->yellow->plugins->isExisting($this->get("parser")))
 		{
-			$text = substrb($this->rawData, $this->metaDataOffsetBytes);
-			if($this->yellow->plugins->isExisting($this->get("parser")))
-			{
-				$this->parser = $this->yellow->plugins->plugins[$this->get("parser")]["obj"];
-				$text = $this->parser->parse($text);
-			}
+			$this->parser = $this->yellow->plugins->plugins[$this->get("parser")]["obj"];
+			$this->parser->parse(substrb($this->rawData, $this->metaDataOffsetBytes));
 			foreach($this->yellow->plugins->plugins as $key=>$value)
 			{
-				if(method_exists($value["obj"], "onParseContent")) $text = $value["obj"]->onParseContent($text, $this->statusCode);
+				if(method_exists($value["obj"], "onParseContent"))
+				{
+					$output = $value["obj"]->onParseContent($this->parser->textHtml);
+					if(!is_null($output))
+					{
+						$this->parser->textHtml = $output;
+						break;
+					}
+				}
 			}
-			$this->parser->textHtml = $text;
 			if(!$this->isExisting("description"))
 			{
-				$this->set("description", $this->yellow->toolbox->createTextDescription($this->getContent(), 150));
+				$this->set("description", $this->yellow->toolbox->createTextDescription($this->parser->textHtml, 150));
 			}
 			if(!$this->isExisting("keywords"))
 			{
@@ -416,6 +419,21 @@ class Yellow_Page
 			}
 			if(defined("DEBUG") && DEBUG>=2) echo "Yellow_Page::parseContent location:".$this->location."<br/>\n";
 		}
+	}
+	
+	// Parse custom type
+	function parseType($name, $text, $typeShortcut)
+	{
+		$output = NULL;
+		foreach($this->yellow->plugins->plugins as $key=>$value)
+		{
+			if(method_exists($value["obj"], "onParseType"))
+			{
+				$output = $value["obj"]->onParseType($name, $text, $typeShortcut);
+				if(!is_null($output)) break;
+			}
+		}
+		return $output;
 	}
 	
 	// Respond with error page
@@ -1506,7 +1524,6 @@ class Yellow_Plugins
 	{
 		global $yellow;
 		require_once("core_markdown.php");
-		require_once("core_plaintext.php");
 		require_once("core_commandline.php");
 		require_once("core_webinterface.php");
 		foreach($yellow->toolbox->getDirectoryEntries($yellow->config->get("pluginDir"), "/.*\.php/", true, false) as $entry)
