@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.1.16";
+	const Version = "0.1.17";
 	var $page;				//current page data
 	var $pages;				//current page tree from file system
 	var $toolbox;			//toolbox with helpers
@@ -375,13 +375,27 @@ class Yellow_Page
 		if(preg_match("/^(\-\-\-[\r\n]+)(.+?)([\r\n]+\-\-\-[\r\n]+)/s", $this->rawData, $parsed))
 		{
 			$this->metaDataOffsetBytes = strlenb($parsed[0]);
-			preg_match_all("/([^\:\r\n]+)\s*\:\s*([^\r\n]+)/s", $parsed[2], $matches, PREG_SET_ORDER);
-			foreach($matches as $match) $this->set(strtoloweru($match[1]), $match[2]);
+			foreach(preg_split("/[\r\n]+/", $parsed[2]) as $line)
+			{
+				preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
+				if(!empty($matches[1]) && !empty($matches[2])) $this->set(lcfirst($matches[1]), $matches[2]);
+			}
 		} else if(preg_match("/^([^\r\n]+)([\r\n]+=+[\r\n]+)/", $this->rawData, $parsed)) {
 			$this->metaDataOffsetBytes = strlenb($parsed[0]);
 			$this->set("title", $parsed[1]);
 		}
-
+		$titleHeader = $this->location!="/" ? $this->get("title")." - ".$this->get("sitename") : $this->get("sitename");
+		if(!$this->isExisting("titleHeader")) $this->set("titleHeader", $titleHeader);
+		if(!$this->isExisting("titleNavigation")) $this->set("titleNavigation", $this->get("title"));
+		foreach($this->yellow->plugins->plugins as $key=>$value)
+		{
+			if(method_exists($value["obj"], "onParseMeta"))
+			{
+				$output = $value["obj"]->onParseMeta($this, $this->rawData);
+				if(!is_null($output)) { $this->rawData = $output; break; }
+			}
+		}
+		
 		if($this == $this->yellow->page)
 		{
 			$this->setHeader("Content-Type", "text/html; charset=UTF-8");
@@ -393,20 +407,20 @@ class Yellow_Page
 	// Parse page content
 	function parseContent()
 	{
-		if(!is_object($this->parser) && $this->yellow->plugins->isExisting($this->get("parser")))
+		if(!is_object($this->parser))
 		{
-			$this->parser = $this->yellow->plugins->plugins[$this->get("parser")]["obj"];
-			$this->parser->parse(substrb($this->rawData, $this->metaDataOffsetBytes));
+			$this->parser = new stdClass;
+			if($this->yellow->plugins->isExisting($this->get("parser")))
+			{
+				$this->parser = $this->yellow->plugins->plugins[$this->get("parser")]["obj"];
+				$this->parser->parse(substrb($this->rawData, $this->metaDataOffsetBytes));
+			}
 			foreach($this->yellow->plugins->plugins as $key=>$value)
 			{
 				if(method_exists($value["obj"], "onParseContent"))
 				{
-					$output = $value["obj"]->onParseContent($this->parser->textHtml);
-					if(!is_null($output))
-					{
-						$this->parser->textHtml = $output;
-						break;
-					}
+					$output = $value["obj"]->onParseContent($this, $this->parser->textHtml);
+					if(!is_null($output)) { $this->parser->textHtml = $output; break; }
 				}
 			}
 			if(!$this->isExisting("description"))
@@ -474,12 +488,6 @@ class Yellow_Page
 	function getHtml($key)
 	{
 		return htmlspecialchars($this->get($key));
-	}
-
-	// Return page title, HTML encoded
-	function getTitle()
-	{
-		return $this->getHtml("title");
 	}
 
 	// Return page content, HTML encoded
@@ -633,6 +641,22 @@ class Yellow_PageCollection extends ArrayObject
 		return $this;
 	}
 	
+	// Append to end of page collection
+	function append($page)
+	{
+		parent::append($page);
+		return $this;
+	}
+	
+	// Prepend to start of page collection
+	function prepend($page)
+	{
+		$array = $this->getArrayCopy();
+		array_unshift($array, $page);
+		$this->exchangeArray($array);
+		return $this;
+	}
+	
 	// Limit the number of pages in page collection
 	function limit($pagesMax)
 	{
@@ -739,7 +763,13 @@ class Yellow_Pages
 		$this->pages = array();
 		$this->yellow = $yellow;
 	}
-		
+	
+	// Return empty page collection
+	function create()
+	{
+		return new Yellow_PageCollection($this->yellow, "");
+	}
+	
 	// Return pages from file system
 	function index($showHidden = false, $levelMax = 0)
 	{
@@ -752,6 +782,19 @@ class Yellow_Pages
 		return $this->findChildren("", $showHidden);
 	}
 	
+	// Return page collection with path ancestry
+	function path($location, $absoluteLocation = false)
+	{
+		if($absoluteLocation) $location = substru($location, strlenu($this->serverBase));
+		$pages = $this->find($location, false);
+		for($page=$pages->first(); $page; $page=$parent)
+		{
+			if($parent = $page->getParent()) $pages->prepend($parent);
+			else if($page->location!="/" && $home = $this->find("/", false)->first()) $pages->prepend($home);
+		}
+		return $pages;
+	}
+	
 	// Return page collection with a specific page
 	function find($location, $absoluteLocation = false)
 	{
@@ -759,7 +802,7 @@ class Yellow_Pages
 		$parentLocation = $this->getParentLocation($location);
 		$this->scanChildren($parentLocation);
 		$pages = new Yellow_PageCollection($this->yellow, $parentLocation);
-		foreach($this->pages[$parentLocation] as $page) if($page->location == $location) $pages->append($page);
+		foreach($this->pages[$parentLocation] as $page) if($page->location == $location) { $pages->append($page); break; }
 		return $pages;
 	}
 	
@@ -990,11 +1033,7 @@ class Yellow_Toolbox
 		$tokens = explode('/', $fileName);
 		for($i=0; $i<count($tokens)-1; ++$i)
 		{
-			if(!preg_match("/^[\d\-\_\.]+(.*)$/", $tokens[$i]))
-			{
-				$visible = false;
-				break;
-			}
+			if(!preg_match("/^[\d\-\_\.]+(.*)$/", $tokens[$i])) { $visible = false; break; }
 		}
 		return $visible;
 	}
@@ -1183,16 +1222,17 @@ class Yellow_Toolbox
 	}
 	
 	// Create description from text string
-	static function createTextDescription($text, $lengthMax, $removeHtml = true)
+	static function createTextDescription($text, $lengthMax, $removeHtml = true, $endMarker = "", $endMarkerText = "")
 	{
 		if(preg_match("/<h1>.*<\/h1>(.*)/si", $text, $matches)) $text = $matches[1];
 		if($removeHtml)
 		{
 			while(true)
 			{
-				$elementFound = preg_match("/<\s*?(\/?\w*).*?\>/s", $text, $matches, PREG_OFFSET_CAPTURE, $offsetBytes);
+				$elementFound = preg_match("/<\s*?([\/!]?\w*)(.*?)\s*?\>/s", $text, $matches, PREG_OFFSET_CAPTURE, $offsetBytes);
 				$element = $matches[0][0];
 				$elementName = $matches[1][0];
+				$elementText = $matches[2][0];
 				$elementOffsetBytes = $elementFound ? $matches[0][1] : strlenb($text);
 				$string = html_entity_decode(substrb($text, $offsetBytes, $elementOffsetBytes - $offsetBytes), ENT_QUOTES, "UTF-8");
 				if(preg_match("/^(blockquote|br|div|h\d|hr|li|ol|p|pre|ul)/i", $elementName)) $string .= ' ';
@@ -1201,16 +1241,17 @@ class Yellow_Toolbox
 				$length = strlenu($string);
 				$output .= substru($string, 0, $length < $lengthMax ? $length : $lengthMax-1);
 				$lengthMax -= $length;
+				if(!empty($element) && $element==$endMarker) { $lengthMax = 0; $endMarkerFound = true; }
 				if($lengthMax<=0 || !$elementFound) break;
 				$offsetBytes = $elementOffsetBytes + strlenb($element);
 			}
 			$output = rtrim($output);
-			if($lengthMax <= 0) $output .= '…';
+			if($lengthMax <= 0) $output .= $endMarkerFound ? $endMarkerText : "…";
 		} else {
 			$elementsOpen = array();
 			while(true)
 			{
-				$elementFound = preg_match("/&.*?\;|<\s*?(\/?\w*)\s*?(.*?)\s*?\>/s", $text, $matches, PREG_OFFSET_CAPTURE, $offsetBytes);
+				$elementFound = preg_match("/&.*?\;|<\s*?([\/!]?\w*)(.*?)\s*?\>/s", $text, $matches, PREG_OFFSET_CAPTURE, $offsetBytes);
 				$element = $matches[0][0];
 				$elementName = $matches[1][0];
 				$elementText = $matches[2][0];
@@ -1219,9 +1260,10 @@ class Yellow_Toolbox
 				$length = strlenu($string);
 				$output .= substru($string, 0, $length < $lengthMax ? $length : $lengthMax-1);
 				$lengthMax -= $length + ($element[0]=='&' ? 1 : 0);
+				if(!empty($element) && $element==$endMarker) { $lengthMax = 0; $endMarkerFound = true; }
 				if($lengthMax<=0 || !$elementFound) break;
 				if(!empty($elementName) && substru($elementText, -1)!='/' &&
-				   !preg_match("/^(area|br|col|hr|img|input|col|param)/i", $elementName))
+				   !preg_match("/^(area|br|col|hr|img|input|col|param|!)/i", $elementName))
 				{
 					if($elementName[0] != '/')
 					{
@@ -1234,7 +1276,7 @@ class Yellow_Toolbox
 				$offsetBytes = $elementOffsetBytes + strlenb($element);
 			}
 			$output = rtrim($output);
-			if($lengthMax <= 0) $output .= '…';
+			if($lengthMax <= 0) $output .= $endMarkerFound ? $endMarkerText : "…";
 			for($t=count($elementsOpen)-1; $t>=0; --$t) $output .= "</".$elementsOpen[$t].">";
 		}
 		return $output;
@@ -1264,11 +1306,7 @@ class Yellow_Toolbox
 			foreach(preg_split("/,\s*/", $_SERVER["HTTP_ACCEPT_LANGUAGE"]) as $string)
 			{
 				$tokens = explode(';', $string, 2);
-				if(in_array($tokens[0], $languagesAllowed))
-				{
-					$language = $tokens[0];
-					break;
-				}
+				if(in_array($tokens[0], $languagesAllowed)) { $language = $tokens[0]; break; }
 			}
 		}
 		return $language;

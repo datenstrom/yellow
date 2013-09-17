@@ -5,7 +5,7 @@
 // Web interface core plugin
 class Yellow_Webinterface
 {
-	const Version = "0.1.8";
+	const Version = "0.1.9";
 	var $yellow;				//access to API
 	var $users;					//web interface users
 	var $activeLocation;		//web interface location? (boolean)
@@ -46,8 +46,8 @@ class Yellow_Webinterface
 		return $statusCode;
 	}
 	
-	// Handle web content parsing
-	function onParseContent($text)
+	// Handle page content parsing
+	function onParseContent($page, $text)
 	{
 		$output = NULL;
 		if($this->isWebinterfaceLocation() && $this->isUser())
@@ -56,17 +56,20 @@ class Yellow_Webinterface
 			$webinterfaceLocation = trim($this->yellow->config->get("webinterfaceLocation"), '/');
 			$output = preg_replace("#<a(.*?)href=\"$serverBase/(?!$webinterfaceLocation)(.*?)\"(.*?)>#",
 								 "<a$1href=\"$serverBase/$webinterfaceLocation/$2\"$3>", $text);
-			switch($this->yellow->page->statusCode)
+			if($page == $this->yellow->page)
 			{
-				case 200:	$this->rawDataOriginal = $this->yellow->page->rawData; break;
-				case 424:	$language = $this->isUser() ? $this->users->getLanguage($this->activeUserEmail) : $this->yellow->page->get("language");
-							$this->yellow->page->rawData = "---\r\n";
-							$this->yellow->page->rawData .= "Title: ".$this->yellow->text->getLanguageText($language, "webinterface424Title")."\r\n";
-							$this->yellow->page->rawData .= "Author: ".$this->users->getName($this->activeUserEmail)."\r\n";
-							$this->yellow->page->rawData .= "---\r\n";
-							$this->yellow->page->rawData .= $this->yellow->text->getLanguageText($language, "webinterface424Text");
-							break;
-				case 500:	$this->yellow->page->rawData = $this->rawDataOriginal; break;
+				switch($page->statusCode)
+				{
+					case 200:	$this->rawDataOriginal = $page->rawData; break;
+					case 424:	$language = $this->isUser() ? $this->users->getLanguage($this->activeUserEmail) : $page->get("language");
+								$page->rawData = "---\r\n";
+								$page->rawData .= "Title: ".$this->yellow->text->getLanguageText($language, "webinterface424Title")."\r\n";
+								$page->rawData .= "Author: ".$this->users->getName($this->activeUserEmail)."\r\n";
+								$page->rawData .= "---\r\n";
+								$page->rawData .= $this->yellow->text->getLanguageText($language, "webinterface424Text");
+								break;
+					case 500:	$page->rawData = $this->rawDataOriginal; break;
+				}
 			}
 		}
 		return $output;
@@ -207,7 +210,7 @@ class Yellow_Webinterface
 			$data[$page->fileName] = array();
 			$data[$page->fileName]["location"] = $page->getLocation();
 			$data[$page->fileName]["modified"] = $page->getModified();
-			$data[$page->fileName]["title"] = $page->getTitle();
+			$data[$page->fileName]["title"] = $page->getHtml("title");
 		}
 		return $data;
 	}
