@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.1.17";
+	const Version = "0.1.18";
 	var $page;				//current page data
 	var $pages;				//current page tree from file system
 	var $toolbox;			//toolbox with helpers
@@ -369,9 +369,7 @@ class Yellow_Page
 		$this->set("template", $this->yellow->config->get("template"));
 		$this->set("style", $this->yellow->config->get("style"));
 		$this->set("parser", $this->yellow->config->get("parser"));
-		$location = $this->yellow->config->get("serverBase").rtrim($this->yellow->config->get("webinterfaceLocation"), '/').$this->location;
-		$this->set("pageEdit", $location);
-
+		
 		if(preg_match("/^(\-\-\-[\r\n]+)(.+?)([\r\n]+\-\-\-[\r\n]+)/s", $this->rawData, $parsed))
 		{
 			$this->metaDataOffsetBytes = strlenb($parsed[0]);
@@ -384,9 +382,13 @@ class Yellow_Page
 			$this->metaDataOffsetBytes = strlenb($parsed[0]);
 			$this->set("title", $parsed[1]);
 		}
+		
 		$titleHeader = $this->location!="/" ? $this->get("title")." - ".$this->get("sitename") : $this->get("sitename");
 		if(!$this->isExisting("titleHeader")) $this->set("titleHeader", $titleHeader);
 		if(!$this->isExisting("titleNavigation")) $this->set("titleNavigation", $this->get("title"));
+		$this->set("pageRead", $this->yellow->config->get("serverBase").$this->location);
+		$this->set("pageEdit", $this->yellow->config->get("serverBase").
+			rtrim($this->yellow->config->get("webinterfaceLocation"), '/').$this->location);
 		foreach($this->yellow->plugins->plugins as $key=>$value)
 		{
 			if(method_exists($value["obj"], "onParseMeta"))
@@ -414,6 +416,10 @@ class Yellow_Page
 			{
 				$this->parser = $this->yellow->plugins->plugins[$this->get("parser")]["obj"];
 				$this->parser->parse(substrb($this->rawData, $this->metaDataOffsetBytes));
+				$baseLocation = $this->yellow->pages->serverBase.$this->location;
+				$baseLocation = ($pos = strrposu($baseLocation, '/')) ? substru($baseLocation, 0, $pos) : $baseLocation;
+				$this->parser->textHtml = preg_replace("#<a(.*?)href=\"([^\/\"]+)\"(.*?)>#",
+													   "<a$1href=\"$baseLocation/$2\"$3>", $this->parser->textHtml);
 			}
 			foreach($this->yellow->plugins->plugins as $key=>$value)
 			{
@@ -506,8 +512,8 @@ class Yellow_Page
 	// Return page modification time, Unix time
 	function getModified($httpFormat = false)
 	{
-	   $modified = strtotime($this->get("modified"));
-	   return $httpFormat ? $this->yellow->toolbox->getHttpTimeFormatted($modified) : $modified;
+		$modified = strtotime($this->get("modified"));
+		return $httpFormat ? $this->yellow->toolbox->getHttpTimeFormatted($modified) : $modified;
 	}
 	
 	// Return page status code
@@ -891,7 +897,10 @@ class Yellow_Pages
 	function getParentLocation($location)
 	{
 		$parentLocation = "";
-		if(preg_match("/^(.*\/)(.+?)$/", $location, $matches)) $parentLocation = $matches[1]!="/" ? $matches[1] : "";
+		if(preg_match("/^(.*\/).+?$/", $location, $matches))
+		{
+			if($matches[1]!="/" || $this->yellow->toolbox->isFileLocation($location)) $parentLocation = $matches[1];
+		}
 		return $parentLocation;
 	}
 	

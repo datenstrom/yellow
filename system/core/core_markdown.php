@@ -5,7 +5,7 @@
 // Markdown parser core plugin
 class Yellow_Markdown
 {
-	const Version = "0.1.6";
+	const Version = "0.1.7";
 	var $yellow;		//access to API
 	var $textHtml;		//generated text (HTML format)
 	
@@ -38,6 +38,7 @@ class Yellow_MarkdownExtraParser extends MarkdownExtra_Parser
 	// Transform text
 	function transform($text)
 	{
+		$text = preg_replace("/@pageRead/i", $this->yellow->page->get("pageRead"), $text);
 		$text = preg_replace("/@pageEdit/i", $this->yellow->page->get("pageEdit"), $text);
 		$text = preg_replace("/@pageError/i", $this->yellow->page->get("pageError"), $text);
 		return parent::transform($text);
@@ -58,7 +59,7 @@ class Yellow_MarkdownExtraParser extends MarkdownExtra_Parser
 		$text = preg_replace("/\s+/s", " ", $matches[2]);
 		$output = $this->yellow->page->parseType($matches[1], $text, true);
 		if(is_null($output)) $output = $matches[0];
-		return  $this->hashBlock($output);
+		return $this->hashBlock($output);
 	}
 	
 	// Handle fenced code blocks
@@ -72,9 +73,23 @@ class Yellow_MarkdownExtraParser extends MarkdownExtra_Parser
 			$output = "<pre$attr><code>".htmlspecialchars($text, ENT_NOQUOTES)."</code></pre>";
 		}
 		return "\n\n".$this->hashBlock($output)."\n\n";
-	}	
+	}
 	
-	// Handle images
+	// Handle inline links
+	function _doAnchors_inline_callback($matches)
+	{
+		$url = $matches[3]=="" ? $matches[4] : $matches[3];
+		$text = $matches[2];
+		$title = $matches[7];
+		$attr = $this->doExtraAttributes("a", $dummy =& $matches[8]);
+		$output = "<a href=\"".$this->encodeAttribute($url)."\"";
+		if(!empty($title)) $output .= " title=\"".$this->encodeAttribute($title)."\"";
+		$output .= $attr;
+		$output .= ">".$this->runSpanGamut($text)."</a>";
+		return $this->hashPart($output);
+	}
+	
+	// Handle inline images
 	function _doImages_inline_callback($matches)
 	{
 		$path = $matches[3]=="" ? $matches[4] : $matches[3];
@@ -82,7 +97,7 @@ class Yellow_MarkdownExtraParser extends MarkdownExtra_Parser
 		list($width, $height) = $this->yellow->toolbox->detectImageDimensions($this->yellow->config->get("imageDir").$path);
 		$alt = $matches[2];
 		$title = $matches[7];
-		$attr  = $this->doExtraAttributes("img", $dummy =& $matches[8]);
+		$attr = $this->doExtraAttributes("img", $dummy =& $matches[8]);
 		$output = "<img src=\"".$this->encodeAttribute($src)."\"";
 		if($width && $height) $output .= " width=\"$width\" height=\"$height\"";
 		if(!empty($alt)) $output .= " alt=\"".$this->encodeAttribute($alt)."\"";

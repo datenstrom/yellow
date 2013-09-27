@@ -5,7 +5,7 @@
 // Web interface core plugin
 class Yellow_Webinterface
 {
-	const Version = "0.1.9";
+	const Version = "0.1.10";
 	var $yellow;				//access to API
 	var $users;					//web interface users
 	var $activeLocation;		//web interface location? (boolean)
@@ -55,7 +55,7 @@ class Yellow_Webinterface
 			$serverBase = $this->yellow->config->get("serverBase");
 			$webinterfaceLocation = trim($this->yellow->config->get("webinterfaceLocation"), '/');
 			$output = preg_replace("#<a(.*?)href=\"$serverBase/(?!$webinterfaceLocation)(.*?)\"(.*?)>#",
-								 "<a$1href=\"$serverBase/$webinterfaceLocation/$2\"$3>", $text);
+								   "<a$1href=\"$serverBase/$webinterfaceLocation/$2\"$3>", $text);
 			if($page == $this->yellow->page)
 			{
 				switch($page->statusCode)
