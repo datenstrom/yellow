@@ -1,4 +1,4 @@
-/* Yellow default style 0.1.2 */
+/* Yellow default style 0.1.3 */
 
 html, body, div, pre, span { margin:0; padding:0; border:0; vertical-align:baseline; }
 body { 
@@ -6,7 +6,7 @@ body {
 	background-color:#fff; color:#717171;
 	font-family:Helvetica,sans-serif; 
 	font-size:0.95em; 
-	font-weight:200; 
+	font-weight:200;
 	line-height:1.5;
 }
 h1, h2, h3, h4, h5, h6 { color:#07d; font-weight:normal; }
@@ -24,12 +24,13 @@ a:hover { color:#07d; }
 .navigation li a.active:hover { color:#07d; }
 .navigation li { display:inline; }
 .navigation ul { margin:0 -0.3em; padding:0; list-style:none; }
+.pagination { margin:1em 0; }
 .content a { color:#07d; }
 .content a:hover { color:#07d; text-decoration:underline; }
 .content img { max-width:100%; height:auto; }
 .content .flexible { position:relative; padding-bottom:56.25%; padding-top:30px; }
 .content .flexible iframe { position:absolute; top:0; left:0; width:100%; height:100%; }
-.footer { margin-top:0.5em; padding-top:0.5em; border-top:1px solid #ddd; }
+.footer { margin-top:1em; padding-top:0.5em; border-top:1px solid #ddd; }
 .left { float:left; margin:0 1em 0 0; }
 .center { display:block; margin:0 auto; }
 .right { float:right; margin:0 0 0 1em; }
@@ -46,7 +47,6 @@ a:hover { color:#07d; }
 	body { margin:0.5em; font-size:0.9em; }
 	.header h1, h1, h2 { font-size:1.3em;  }
 	.header h1, .header, .navigation, .footer, .page { margin:0; padding:0; }
-	.footer { padding-top:0.5em; }
 }
 @media print {
 	body, h1, h2, h3, h4, h5, h6 { background-color:white; color:black; }

@@ -10,7 +10,7 @@ How do I install this?
 3. Open your website in a browser, that's it!
 
 Installation requirements are Apache, mod_rewrite, PHP 5.3 and multibyte support.  
-With Yellow you don't get a lot of extra stuff, there are [Yellow extensions on Github](https://github.com/markseu/yellowcms-extensions/blob/master/README.md).
+With Yellow you don't get a lot of extra stuff. There are [Yellow extensions](https://github.com/markseu/yellowcms-extensions/blob/master/README.md) for download.
 
 How to make a website?
 ----------------------
