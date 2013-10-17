@@ -30,7 +30,7 @@ a:hover { color:#07d; }
 .content img { max-width:100%; height:auto; }
 .content .flexible { position:relative; padding-bottom:56.25%; padding-top:30px; }
 .content .flexible iframe { position:absolute; top:0; left:0; width:100%; height:100%; }
-.footer { margin-top:1em; padding-top:0.5em; border-top:1px solid #ddd; }
+.footer { margin-top:1em; border-top:1px solid #ddd; line-height:2em; }
 .left { float:left; margin:0 1em 0 0; }
 .center { display:block; margin:0 auto; }
 .right { float:right; margin:0 0 0 1em; }
@@ -45,7 +45,7 @@ a:hover { color:#07d; }
 }
 @media screen and (max-width:30em) { 
 	body { margin:0.5em; font-size:0.9em; }
-	.header h1, h1, h2 { font-size:1.3em;  }
+	.header h1, h1, h2 { font-size:1.3em; }
 	.header h1, .header, .navigation, .footer, .page { margin:0; padding:0; }
 }
 @media print {

@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.1.19";
+	const Version = "0.1.20";
 	var $page;				//current page data
 	var $pages;				//current page tree from file system
 	var $toolbox;			//toolbox with helpers
@@ -446,7 +446,7 @@ class Yellow_Page
 				$this->parser = $this->yellow->plugins->plugins[$this->get("parser")]["obj"];
 				$this->parser->parse($this->getContent(true));
 				$location = $this->yellow->toolbox->getDirectoryLocation($this->getLocation());
-				$this->parser->textHtml = preg_replace("#<a(.*?)href=\"([^\/\"]+)\"(.*?)>#",
+				$this->parser->textHtml = preg_replace("#<a(.*?)href=\"(?!javascript:)([^\/\"]+)\"(.*?)>#",
 													   "<a$1href=\"$location$2\"$3>", $this->parser->textHtml);
 			}
 			foreach($this->yellow->plugins->plugins as $key=>$value)
