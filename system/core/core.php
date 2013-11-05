@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.1.20";
+	const Version = "0.1.21";
 	var $page;				//current page data
 	var $pages;				//current page tree from file system
 	var $toolbox;			//toolbox with helpers
@@ -1306,6 +1306,7 @@ class Yellow_Toolbox
 				$elementOffsetBytes = $elementFound ? $matches[0][1] : strlenb($text);
 				$string = html_entity_decode(substrb($text, $offsetBytes, $elementOffsetBytes - $offsetBytes), ENT_QUOTES, "UTF-8");
 				if(preg_match("/^(blockquote|br|div|h\d|hr|li|ol|p|pre|ul)/i", $elementName)) $string .= ' ';
+				if(preg_match("/^\/(code|pre)/i", $elementName)) $string = preg_replace("/^(\d+\n){2,}$/", "", $string);
 				$string = preg_replace("/\s+/s", " ", $string);
 				if(substru($string, 0 , 1)==" " && (empty($output) || substru($output, -1)==' ')) $string = substru($string, 1);
 				$length = strlenu($string);

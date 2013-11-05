@@ -17,8 +17,16 @@ How to make a website?
 You already have everything you need, start by editing the default pages.  
 For more information see [Yellow documentation](https://github.com/markseu/yellowcms-extensions/blob/master/documentation/README.md).
 
+License and acknowledgments
+---------------------------
+* Yellow and Yellow extensions are licensed under [GPLv2](http://www.gnu.org/licenses/old-licenses/gpl-2.0.html)
+* [PHP Markdown](https://github.com/michelf/php-markdown) by Michel Fortin is licensed under [BSD license](http://opensource.org/licenses/BSD-3-Clause)
+* [Font Awesome](https://github.com/FortAwesome/Font-Awesome) by Dave Gandy is licensed under [OFLv1.1](http://opensource.org/licenses/OFL-1.1)
+
+Yellow is open source. You can use it for free.
+
 Need help? Have a question?
 ---------------------------
-Looking for something, then get in touch with others.  
+Looking for something, then get in touch with other users.  
 Visit [Yellow on Reddit](http://www.reddit.com/r/yellowcms/), 
 follow [Yellow on Twitter](https://twitter.com/yellowcms).

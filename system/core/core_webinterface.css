@@ -1,4 +1,4 @@
-/* Yellow web interface 0.1.1 */
+/* Yellow web interface 0.1.2 */
 
 .yellow-bar { position:relative; overflow:hidden; line-height:2.0em; }
 .yellow-barleft { display:block; float:left; }
@@ -49,3 +49,17 @@
 #yellow-paneedit #yellow-editbuttons { margin:5px 0; }
 #yellow-paneshow { min-width:20em; overflow:auto; }
 #yellow-paneuser { }
+
+/* Font icons from Fontawesome */
+
+@font-face { font-family:'FontAwesome'; font-style:normal; font-weight:normal; src:url('core_fontawesome.woff'); }
+[class*="yellow-icon-"] {
+	font-family:FontAwesome;
+	font-style:normal;
+	font-weight:normal;
+	-webkit-font-smoothing:antialiased;
+}
+.yellow-icon-search:before { content:"\f002"; }
+.yellow-icon-trash-o:before { content:"\f014"; }
+.yellow-icon-caret-down:before { content:"\f0d7"; }
+.yellow-icon-caret-up:before { content:"\f0d8"; }
