@@ -5,7 +5,7 @@
 // Command line core plugin
 class Yellow_Commandline
 {
-	const Version = "0.1.4";
+	const Version = "0.1.5";
 	var $yellow;			//access to API
 
 	// Initialise plugin
@@ -149,7 +149,7 @@ class Yellow_Commandline
 			{
 				$fileName = $this->getStaticFileName($location, $path);
 				$fileData = ob_get_contents();
-				if($statusCode == 301) $fileData = $this->getStaticRedirect($this->yellow->page->getHeader("Location"));
+				if($statusCode>=301 && $statusCode<=303) $fileData = $this->getStaticRedirect($this->yellow->page->getHeader("Location"));
 				$fileOk = $this->makeStaticFile($fileName, $fileData, $modified);
 			} else {
 				if(!$this->yellow->toolbox->isFileLocation($location))
@@ -164,8 +164,8 @@ class Yellow_Commandline
 						$fileOk = $this->makeStaticFile($fileName, $fileData, $modified);
 					}
 				} else {
-					$statusCode = 500;
-					$this->yellow->page->error($statusCode, "Invalid file name for type '$contentType'!");
+					$statusCode = 409;
+					$this->yellow->page->error($statusCode, "Type '$contentType' does not match file name!");
 				}
 			}
 			if(!$fileOk)
@@ -217,20 +217,23 @@ class Yellow_Commandline
 	// Return static location corresponding to content type
 	function getStaticLocation($location, $contentType)
 	{
-		$extension = ($pos = strrposu($location, '.')) ? substru($location, $pos) : "";
-		if($contentType == "text/html")
+		if(!empty($contentType))
 		{
-			if($this->yellow->toolbox->isFileLocation($location))
+			$extension = ($pos = strrposu($location, '.')) ? substru($location, $pos) : "";
+			if($contentType == "text/html")
 			{
-				if(!empty($extension) && $extension!=".html") $location .= ".html";
-			}
-		} else {
-			if($this->yellow->toolbox->isFileLocation($location))
-			{
-				if(empty($extension)) $location .= ".unknown";
+				if($this->yellow->toolbox->isFileLocation($location))
+				{
+					if(!empty($extension) && $extension!=".html") $location .= ".html";
+				}
 			} else {
-				if(preg_match("/^(\w+)\/(\w+)/", $contentType, $matches)) $extension = ".$matches[2]";
-				$location .= "index$extension";
+				if($this->yellow->toolbox->isFileLocation($location))
+				{
+					if(empty($extension)) $location .= ".unknown";
+				} else {
+					if(preg_match("/^(\w+)\/(\w+)/", $contentType, $matches)) $extension = ".$matches[2]";
+					$location .= "index$extension";
+				}
 			}
 		}
 		return $location;

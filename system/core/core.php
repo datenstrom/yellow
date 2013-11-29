@@ -5,20 +5,20 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.1.21";
+	const Version = "0.1.22";
 	var $page;				//current page data
 	var $pages;				//current page tree from file system
-	var $toolbox;			//toolbox with helpers
 	var $config;			//configuration
 	var $text;				//text strings
+	var $toolbox;			//toolbox with helpers
 	var $plugins;			//plugins
 
 	function __construct()
 	{
 		$this->pages = new Yellow_Pages($this);
+		$this->config = new Yellow_Config($this);
+		$this->text = new Yellow_Text($this);
 		$this->toolbox = new Yellow_Toolbox();
-		$this->config = new Yellow_Config();
-		$this->text = new Yellow_Text();
 		$this->plugins = new Yellow_Plugins();
 		$this->config->setDefault("sitename", "Yellow");
 		$this->config->setDefault("author", "Yellow");
@@ -48,7 +48,7 @@ class Yellow
 		$this->config->setDefault("errorPageFile", "error(.*).txt");
 		$this->config->setDefault("textStringFile", "text_(.*).ini");
 		$this->config->load($this->config->get("configDir").$this->config->get("configFile"));
-		$this->text->load($this->config->get("configDir").$this->config->get("textStringFile"), $this->toolbox);
+		$this->text->load($this->config->get("configDir").$this->config->get("textStringFile"));
 	}
 	
 	// Handle request
@@ -101,14 +101,6 @@ class Yellow
 				{
 					$statusCode = 200;
 					$fileName = $this->readPage($serverBase, $location, $fileName, $cacheable, $statusCode);
-					if($this->page->isExisting("redirect") && $handler=="core")
-					{
-						$statusCode = 301;
-						$locationHeader = $this->toolbox->getHttpLocationHeader($serverName, $serverBase, $this->page->get("redirect"));
-						$this->page->statusCode = 0;
-						$this->header($locationHeader);
-						$this->sendStatus($statusCode, $locationHeader);
-					}
 				} else {
 					$statusCode = 303;
 					$locationArgs = $this->toolbox->getLocationArgsCleanUrl();
@@ -186,16 +178,26 @@ class Yellow
 		}
 
 		$statusCode = $this->page->statusCode;
+		if($statusCode==200 && $this->getRequestHandler()=="core" && $this->page->isExisting("redirect"))
+		{
+			$statusCode = 301;
+			$location = $this->page->get("redirect");
+			if(preg_match("/^[^\/]+$/", $location)) $location = $this->toolbox->getDirectoryLocation($this->page->getLocation()).$location;
+			$this->page->clean($statusCode, $this->toolbox->getHttpLocationHeader($this->config->get("serverName"), "", $location));
+			$this->page->setHeader("Last-Modified", $this->page->getModified(true));
+			$this->page->setHeader("Cache-Control", "no-cache, must-revalidate");
+		}
 		if($statusCode==200 && $this->page->isCacheable() &&
 		   $this->toolbox->isFileNotModified($this->page->getHeader("Last-Modified")))
 		{
-			ob_clean();
 			$statusCode = 304;
+			$this->page->clean($statusCode);
 		}
+		if($this->page->isExisting("pageClean")) ob_clean();
 		if(PHP_SAPI != "cli")
 		{
 			@header($this->toolbox->getHttpStatusFormatted($statusCode));
-			if($statusCode != 304) foreach($this->page->headerData as $key=>$value) @header("$key: $value");
+			foreach($this->page->headerData as $key=>$value) @header("$key: $value");
 		}
 		if(defined("DEBUG") && DEBUG>=1)
 		{
@@ -206,12 +208,12 @@ class Yellow
 	}
 
 	// Send status response
-	function sendStatus($statusCode, $text = "")
+	function sendStatus($statusCode, $responseHeader = "")
 	{
 		if(PHP_SAPI != "cli")
 		{
 			@header($this->toolbox->getHttpStatusFormatted($statusCode));
-			if(!empty($text)) @header($text);
+			if(!empty($responseHeader)) @header($responseHeader);
 		}
 	}
 	
@@ -327,9 +329,9 @@ class Yellow
 	}
 	
 	// Set a response header
-	function header($text)
+	function header($responseHeader)
 	{
-		$tokens = explode(':', $text, 2);
+		$tokens = explode(':', $responseHeader, 2);
 		$this->page->setHeader(trim($tokens[0]), trim($tokens[1]));
 	}
 }
@@ -487,10 +489,22 @@ class Yellow_Page
 	// Respond with error page
 	function error($statusCode, $pageError = "")
 	{
-		if(!$this->isExisting("pageError"))
+		if(!$this->isExisting("pageError") && $statusCode>0)
 		{
 			$this->statusCode = $statusCode;
-			$this->set("pageError", empty($pageError) ? "Template/snippet error" : $pageError);
+			$this->set("pageError", empty($pageError) ? "Template/snippet error!" : $pageError);
+		}
+	}
+
+	// Respond without page content
+	function clean($statusCode, $responseHeader = "")
+	{
+		if(!$this->isExisting("pageClean") && $statusCode>0)
+		{
+			$this->statusCode = $statusCode;
+			$this->headerData = array();
+			if(!empty($responseHeader)) $this->yellow->header($responseHeader);
+			$this->set("pageClean", (string)$statusCode);
 		}
 	}
 	
@@ -542,6 +556,13 @@ class Yellow_Page
 	function getLocation()
 	{
 		return $this->yellow->pages->serverBase.$this->location;
+	}
+	
+	// Return full page URL, with server name
+	function getUrl()
+	{
+		return $this->yellow->toolbox->getHttpUrl($this->yellow->config->get("serverName"),
+			$this->yellow->pages->serverBase, $this->location);
 	}
 	
 	// Return page modification time, Unix time
@@ -799,8 +820,8 @@ class Yellow_Pages
 	
 	function __construct($yellow)
 	{
-		$this->pages = array();
 		$this->yellow = $yellow;
+		$this->pages = array();
 	}
 	
 	// Return empty page collection
@@ -945,6 +966,213 @@ class Yellow_Pages
 		$parentTopLocation = "/";
 		if(preg_match("/^(.+?\/)/", $location, $matches)) $parentTopLocation = $matches[1];
 		return $parentTopLocation;
+	}
+}
+
+// Yellow configuration
+class Yellow_Config
+{
+	var $yellow;			//access to API
+	var $modified;			//configuration modification time
+	var $config;			//configuration
+	var $configDefaults;	//configuration defaults
+	
+	function __construct($yellow)
+	{
+		$this->yellow = $yellow;
+		$this->modified = 0;
+		$this->config = array();
+		$this->configDefaults = array();
+	}
+	
+	// Load configuration from file
+	function load($fileName)
+	{
+		$fileData = @file($fileName);
+		if($fileData)
+		{
+			if(defined("DEBUG") && DEBUG>=2) echo "Yellow_Config::load file:$fileName<br/>\n";
+			$this->modified = filemtime($fileName);
+			foreach($fileData as $line)
+			{
+				if(preg_match("/^\//", $line)) continue;
+				preg_match("/^\s*(.*?)\s*=\s*(.*?)\s*$/", $line, $matches);
+				if(!empty($matches[1]) && !strempty($matches[2]))
+				{
+					$this->set($matches[1], $matches[2]);
+					if(defined("DEBUG") && DEBUG>=3) echo "Yellow_Config::load key:$matches[1] $matches[2]<br/>\n";
+				}
+			}
+		}
+	}
+	
+	// Set default configuration
+	function setDefault($key, $value)
+	{
+		$this->configDefaults[$key] = $value;
+	}
+	
+	// Set configuration
+	function set($key, $value)
+	{
+		$this->config[$key] = $value;
+	}
+	
+	// Return configuration
+	function get($key)
+	{
+		return $this->isExisting($key) ? $this->config[$key] : $this->configDefaults[$key];
+	}
+	
+	// Return configuration, HTML encoded
+	function getHtml($key)
+	{
+		return htmlspecialchars($this->get($key));
+	}
+	
+	// Return configuration strings
+	function getData($filterEnd = "")
+	{
+		$config = array();
+		if(empty($filterEnd))
+		{
+			$config = $this->config;
+		} else {
+			foreach($this->config as $key=>$value)
+			{
+				if(substru($key, -strlenu($filterEnd)) == $filterEnd) $config[$key] = $value;
+			}
+		}
+		return $config;
+	}
+	
+	// Return configuration modification time, Unix time
+	function getModified($httpFormat = false)
+	{
+		return $httpFormat ? $this->yellow->toolbox->getHttpTimeFormatted($this->modified) : $this->modified;
+	}
+	
+	// Check if configuration exists
+	function isExisting($key)
+	{
+		return !is_null($this->config[$key]);
+	}
+}
+
+// Yellow text strings
+class Yellow_Text
+{
+	var $yellow;		//access to API
+	var $modified;		//text modification time
+	var $text;			//text strings
+	var $language;		//current language
+	
+	function __construct($yellow)
+	{
+		$this->yellow = $yellow;
+		$this->modified = 0;
+		$this->text = array();
+	}
+	
+	// Load text strings from file
+	function load($fileName)
+	{
+		$path = dirname($fileName);
+		$regex = "/".basename($fileName)."/";
+		foreach($this->yellow->toolbox->getDirectoryEntries($path, $regex, true, false) as $entry)
+		{
+			$fileData = @file("$path/$entry");
+			if($fileData)
+			{
+				if(defined("DEBUG") && DEBUG>=2) echo "Yellow_Text::load file:$path/$entry<br/>\n";
+				$this->modified = max($this->modified, filemtime("$path/$entry"));
+				$language = "";
+				foreach($fileData as $line)
+				{
+					preg_match("/^\s*(.*?)\s*=\s*(.*?)\s*$/", $line, $matches);
+					if($matches[1]=="language" && !empty($matches[2])) { $language = $matches[2]; break; }
+				}
+				foreach($fileData as $line)
+				{
+					if(preg_match("/^\//", $line)) continue;
+					preg_match("/^\s*(.*?)\s*=\s*(.*?)\s*$/", $line, $matches);
+					if(!empty($language) && !empty($matches[1]) && !strempty($matches[2]))
+					{
+						$this->setLanguageText($language, $matches[1], $matches[2]);
+						if(defined("DEBUG") && DEBUG>=3) echo "Yellow_Text::load key:$matches[1] $matches[2]<br/>\n";
+					}
+				}
+			}
+		}
+	}
+	
+	// Set current language
+	function setLanguage($language)
+	{
+		$this->language = $language;
+	}
+	
+	// Set text string for specific language
+	function setLanguageText($language, $key, $value)
+	{
+		if(is_null($this->text[$language])) $this->text[$language] = array();
+		$this->text[$language][$key] = $value;
+	}
+	
+	// Return text string for specific language
+	function getLanguageText($language, $key)
+	{
+		return ($this->isLanguageText($language, $key)) ? $this->text[$language][$key] : "[$key]";
+	}
+	
+	// Return text string
+	function get($key)
+	{
+		return $this->isExisting($key) ? $this->text[$this->language][$key] : "[$key]";
+	}
+	
+	// Return text string, HTML encoded
+	function getHtml($key)
+	{
+		return htmlspecialchars($this->get($key));
+	}
+	
+	// Return text strings for specific language
+	function getData($language, $filterStart = "")
+	{
+		$text = array();
+		if(!is_null($this->text[$language]))
+		{
+			if(empty($filterStart))
+			{
+				$text = $this->text[$language];
+			} else {
+				foreach($this->text[$language] as $key=>$value)
+				{
+					if(substru($key, 0, strlenu("language")) == "language") $text[$key] = $value;
+					if(substru($key, 0, strlenu($filterStart)) == $filterStart) $text[$key] = $value;
+				}
+			}
+		}
+		return $text;
+	}
+	
+	// Return text modification time, Unix time
+	function getModified($httpFormat = false)
+	{
+		return $httpFormat ? $this->yellow->toolbox->getHttpTimeFormatted($this->modified) : $this->modified;
+	}
+	
+	// Check if text string for specific language exists
+	function isLanguageText($language, $key)
+	{
+		return !is_null($this->text[$language]) && !is_null($this->text[$language][$key]);
+	}
+	
+	// Check if text string exists
+	function isExisting($key)
+	{
+		return !is_null($this->text[$this->language]) && !is_null($this->text[$this->language][$key]);
 	}
 }
 
@@ -1182,6 +1410,7 @@ class Yellow_Toolbox
 			case 304: $text = "$_SERVER[SERVER_PROTOCOL] $statusCode Not modified"; break;
 			case 401: $text = "$_SERVER[SERVER_PROTOCOL] $statusCode Unauthorised"; break;
 			case 404: $text = "$_SERVER[SERVER_PROTOCOL] $statusCode Not found"; break;
+			case 409: $text = "$_SERVER[SERVER_PROTOCOL] $statusCode Conflict"; break;
 			case 424: $text = "$_SERVER[SERVER_PROTOCOL] $statusCode Does not exist"; break;
 			case 500: $text = "$_SERVER[SERVER_PROTOCOL] $statusCode Server error"; break;
 			default:  $text = "$_SERVER[SERVER_PROTOCOL] $statusCode Unknown status";
@@ -1195,16 +1424,22 @@ class Yellow_Toolbox
 		return gmdate("D, d M Y H:i:s", $timestamp)." GMT";
 	}
 	
-	// Return HTTP location header
-	function getHttpLocationHeader($serverName, $serverBase, $location)
+	// Return HTTP URL
+	function getHttpUrl($serverName, $serverBase, $location)
 	{
 		if(preg_match("/^(http|https):\/\//", $location))
 		{
-			$locationHeader = "Location: $location";
+			$url = $location;
 		} else {
-			$locationHeader = "Location: http://$serverName$serverBase$location";
+			$url = "http://$serverName$serverBase$location";
 		}
-		return $locationHeader;
+		return $url;
+	}
+	
+	// Return HTTP location header
+	function getHttpLocationHeader($serverName, $serverBase, $location)
+	{
+		return "Location: ".self::getHttpUrl($serverName, $serverBase, $location);
 	}
 	
 	// Return directory location
@@ -1308,7 +1543,7 @@ class Yellow_Toolbox
 				if(preg_match("/^(blockquote|br|div|h\d|hr|li|ol|p|pre|ul)/i", $elementName)) $string .= ' ';
 				if(preg_match("/^\/(code|pre)/i", $elementName)) $string = preg_replace("/^(\d+\n){2,}$/", "", $string);
 				$string = preg_replace("/\s+/s", " ", $string);
-				if(substru($string, 0 , 1)==" " && (empty($output) || substru($output, -1)==' ')) $string = substru($string, 1);
+				if(substru($string, 0, 1)==" " && (empty($output) || substru($output, -1)==' ')) $string = substru($string, 1);
 				$length = strlenu($string);
 				$output .= substru($string, 0, $length < $lengthMax ? $length : $lengthMax-1);
 				$lengthMax -= $length;
@@ -1430,191 +1665,6 @@ class Yellow_Toolbox
 	function timerStop(&$time)
 	{
 		$time = intval((microtime(true)-$time) * 1000);
-	}
-}
-
-// Yellow configuration
-class Yellow_Config
-{
-	var $config;			//configuration
-	var $configDefaults;	//configuration defaults
-	
-	function __construct()
-	{
-		$this->config = array();
-		$this->configDefaults = array();
-	}
-	
-	// Load configuration from file
-	function load($fileName)
-	{
-		$fileData = @file($fileName);
-		if($fileData)
-		{
-			if(defined("DEBUG") && DEBUG>=2) echo "Yellow_Config::load file:$fileName<br/>\n";
-			foreach($fileData as $line)
-			{
-				if(preg_match("/^\//", $line)) continue;
-				preg_match("/^\s*(.*?)\s*=\s*(.*?)\s*$/", $line, $matches);
-				if(!empty($matches[1]) && !strempty($matches[2]))
-				{
-					$this->set($matches[1], $matches[2]);
-					if(defined("DEBUG") && DEBUG>=3) echo "Yellow_Config::load key:$matches[1] $matches[2]<br/>\n";
-				}
-			}
-		}
-	}
-	
-	// Set default configuration
-	function setDefault($key, $value)
-	{
-		$this->configDefaults[$key] = $value;
-	}
-	
-	// Set configuration
-	function set($key, $value)
-	{
-		$this->config[$key] = $value;
-	}
-	
-	// Return configuration
-	function get($key)
-	{
-		return $this->isExisting($key) ? $this->config[$key] : $this->configDefaults[$key];
-	}
-	
-	// Return configuration, HTML encoded
-	function getHtml($key)
-	{
-		return htmlspecialchars($this->get($key));
-	}
-	
-	// Return configuration strings
-	function getData($filterEnd = "")
-	{
-		$config = array();
-		if(empty($filterEnd))
-		{
-			$config = $this->config;
-		} else {
-			foreach($this->config as $key=>$value)
-			{
-				if(substru($key, -strlenu($filterEnd)) == $filterEnd) $config[$key] = $value;
-			}
-		}
-		return $config;
-	}
-	
-	// Check if configuration exists
-	function isExisting($key)
-	{
-		return !is_null($this->config[$key]);
-	}
-}
-	
-// Yellow text strings
-class Yellow_Text
-{
-	var $text;			//text strings
-	var $language;		//current language
-
-	function __construct()
-	{
-		$this->text = array();
-	}
-	
-	// Load text strings from file
-	function load($fileName, $toolbox)
-	{
-		$path = dirname($fileName);
-		$regex = "/".basename($fileName)."/";
-		foreach($toolbox->getDirectoryEntries($path, $regex, true, false) as $entry)
-		{
-			$fileData = @file("$path/$entry");
-			if($fileData)
-			{
-				if(defined("DEBUG") && DEBUG>=2) echo "Yellow_Text::load file:$path/$entry<br/>\n";
-				$language = "";
-				foreach($fileData as $line)
-				{
-					preg_match("/^\s*(.*?)\s*=\s*(.*?)\s*$/", $line, $matches);
-					if($matches[1]=="language" && !empty($matches[2])) { $language = $matches[2]; break; }
-				}
-				foreach($fileData as $line)
-				{
-					if(preg_match("/^\//", $line)) continue;
-					preg_match("/^\s*(.*?)\s*=\s*(.*?)\s*$/", $line, $matches);
-					if(!empty($language) && !empty($matches[1]) && !strempty($matches[2]))
-					{
-						$this->setLanguageText($language, $matches[1], $matches[2]);
-						if(defined("DEBUG") && DEBUG>=3) echo "Yellow_Text::load key:$matches[1] $matches[2]<br/>\n";
-					}
-				}
-			}
-		}
-	}
-	
-	// Set current language
-	function setLanguage($language)
-	{
-		$this->language = $language;
-	}
-	
-	// Set text string for specific language
-	function setLanguageText($language, $key, $value)
-	{
-		if(is_null($this->text[$language])) $this->text[$language] = array();
-		$this->text[$language][$key] = $value;
-	}
-	
-	// Return text string for specific language
-	function getLanguageText($language, $key)
-	{
-		return ($this->isLanguageText($language, $key)) ? $this->text[$language][$key] : "[$key]";
-	}
-	
-	// Return text string
-	function get($key)
-	{
-		return $this->isExisting($key) ? $this->text[$this->language][$key] : "[$key]";
-	}
-	
-	// Return text string, HTML encoded
-	function getHtml($key)
-	{
-		return htmlspecialchars($this->get($key)); 
-	}
-	
-	// Return text strings for specific language
-	function getData($language, $filterStart = "")
-	{
-		$text = array();
-		if(!is_null($this->text[$language]))
-		{
-			if(empty($filterStart))
-			{
-				$text = $this->text[$language];
-			} else {
-				foreach($this->text[$language] as $key=>$value)
-				{
-					if(substru($key, 0, strlenu("language")) == "language") $text[$key] = $value;
-					if(substru($key, 0, strlenu($filterStart)) == $filterStart) $text[$key] = $value;
-				}
-			}
-		}
-		return $text;
-	}
-	
-	// Check if text string for specific language exists
-	function isLanguageText($language, $key)
-	{
-		return !is_null($this->text[$language]) && !is_null($this->text[$language][$key]);
-	}
-	
-	// Check if text string exists
-	function isExisting($key)
-	{
-		return !is_null($this->text[$this->language]) && !is_null($this->text[$this->language][$key]);
 	}
 }
 
