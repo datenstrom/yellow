@@ -3,6 +3,8 @@ Yellow
 
 Yellow is a CMS **for people** who make websites.
 
+[![Build Status](https://secure.travis-ci.org/markseu/yellowcms.png)](https://travis-ci.org/markseu/yellowcms)
+
 How do I install this?
 ----------------------
 1. [Download Yellow](https://github.com/markseu/yellowcms/archive/master.zip) and unzip it.  
