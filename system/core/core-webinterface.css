@@ -1,4 +1,4 @@
-/* Yellow web interface 0.1.2 */
+/* Yellow web interface 0.1.3 */
 
 .yellow-bar { position:relative; overflow:hidden; line-height:2.0em; }
 .yellow-barleft { display:block; float:left; }
@@ -52,7 +52,7 @@
 
 /* Font icons from Fontawesome */
 
-@font-face { font-family:'FontAwesome'; font-style:normal; font-weight:normal; src:url('core_fontawesome.woff'); }
+@font-face { font-family:'FontAwesome'; font-style:normal; font-weight:normal; src:url('core-fontawesome.woff'); }
 [class*="yellow-icon-"] {
 	font-family:FontAwesome;
 	font-style:normal;

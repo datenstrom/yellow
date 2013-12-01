@@ -19,11 +19,9 @@ For more information see [Yellow documentation](https://github.com/markseu/yello
 
 License and acknowledgments
 ---------------------------
-* Yellow and Yellow extensions are licensed under [GPLv2](http://www.gnu.org/licenses/old-licenses/gpl-2.0.html)
-* [PHP Markdown](https://github.com/michelf/php-markdown) by Michel Fortin is licensed under [BSD license](http://opensource.org/licenses/BSD-3-Clause)
+* Yellow and extensions are licensed under [GPLv2](http://opensource.org/licenses/GPL-2.0)
+* [PHP Markdown Extra](https://github.com/michelf/php-markdown) by Michel Fortin is licensed under [BSD license](http://opensource.org/licenses/BSD-3-Clause)
 * [Font Awesome](https://github.com/FortAwesome/Font-Awesome) by Dave Gandy is licensed under [OFLv1.1](http://opensource.org/licenses/OFL-1.1)
-
-Yellow is open source. You can use it for free.
 
 Need help? Have a question?
 ---------------------------

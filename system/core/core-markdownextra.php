@@ -2,15 +2,15 @@
 // Copyright (c) 2013 Datenstrom, http://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
-// Markdown parser core plugin
-class Yellow_Markdown
+// Markdown extra parser core plugin
+class YellowMarkdownExtra
 {
-	const Version = "0.1.7";
+	const Version = "0.2.1";
 	var $yellow;		//access to API
 	var $textHtml;		//generated text (HTML format)
 	
 	// Initialise plugin
-	function initPlugin($yellow)
+	function onLoad($yellow)
 	{
 		$this->yellow = $yellow;
 	}
@@ -18,14 +18,14 @@ class Yellow_Markdown
 	// Parse text
 	function parse($text)
 	{
-		$markdown = new Yellow_MarkdownExtraParser($this->yellow);
+		$markdown = new YellowMarkdownExtraParser($this->yellow);
 		return $this->textHtml = $markdown->transform($text);
 	}
 }
 
 require_once("markdown.php");
 
-class Yellow_MarkdownExtraParser extends MarkdownExtra_Parser
+class YellowMarkdownExtraParser extends MarkdownExtra_Parser
 {
 	var $yellow;	//access to API
 
@@ -108,5 +108,5 @@ class Yellow_MarkdownExtraParser extends MarkdownExtra_Parser
 	}
 }
 
-$yellow->registerPlugin("markdown", "Yellow_Markdown", Yellow_Markdown::Version);
+$yellow->registerPlugin("markdownextra", "YellowMarkdownExtra", YellowMarkdownExtra::Version);
 ?>

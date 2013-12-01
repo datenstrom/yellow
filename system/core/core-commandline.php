@@ -3,13 +3,13 @@
 // This file may be used and distributed under the terms of the public license.
 
 // Command line core plugin
-class Yellow_Commandline
+class YellowCommandline
 {
-	const Version = "0.1.5";
+	const Version = "0.2.1";
 	var $yellow;			//access to API
 
 	// Initialise plugin
-	function initPlugin($yellow)
+	function onLoad($yellow)
 	{
 		$this->yellow = $yellow;
 		$this->yellow->config->setDefault("commandBuildDefaultFile", "index.html");
@@ -33,7 +33,7 @@ class Yellow_Commandline
 	// Show available commands
 	function help()
 	{
-		echo "Yellow command line ".Yellow_Commandline::Version."\n";
+		echo "Yellow command line ".YellowCommandline::Version."\n";
 		echo "Syntax: yellow.php build DIRECTORY [LOCATION]\n";
 		echo "        yellow.php version\n";
 		return 0;
@@ -87,8 +87,8 @@ class Yellow_Commandline
 				".", "/.*\\".$this->yellow->config->get("commandBuildCustomMediaExtension")."/", false, false));
 			$fileNamesSystem = array($this->yellow->config->get("commandBuildCustomErrorFile"));
 		} else {
-			$pages = new Yellow_PageCollection($this->yellow, $location);
-			$pages->append(new Yellow_Page($this->yellow, $location));
+			$pages = new YellowPageCollection($this->yellow, $location);
+			$pages->append(new YellowPage($this->yellow, $location));
 			$fileNamesMedia = array();
 			$fileNamesSystem = array();
 		}
@@ -101,7 +101,7 @@ class Yellow_Commandline
 				++$error;
 				echo "ERROR building location '".$page->location."', ".$this->yellow->page->getStatusCode(true)."\n";
 			}
-			if(defined("DEBUG") && DEBUG>=1) echo "Yellow_Commandline::buildStatic status:$statusCode location:".$page->location."\n";
+			if(defined("DEBUG") && DEBUG>=1) echo "YellowCommandline::buildStatic status:$statusCode location:".$page->location."\n";
 		}
 		foreach($fileNamesMedia as $fileName)
 		{
@@ -112,7 +112,7 @@ class Yellow_Commandline
 				++$error;
 				echo "ERROR building media file '$path/$fileName', ".$this->yellow->toolbox->getHttpStatusFormatted($statusCode)."\n";
 			}
-			if(defined("DEBUG") && DEBUG>=1) echo "Yellow_Commandline::buildStatic status:$statusCode file:$fileName\n";
+			if(defined("DEBUG") && DEBUG>=1) echo "YellowCommandline::buildStatic status:$statusCode file:$fileName\n";
 		}
 		foreach($fileNamesSystem as $fileName)
 		{
@@ -123,10 +123,10 @@ class Yellow_Commandline
 				++$error;
 				echo "ERROR building system file '$path/$fileName', ".$this->yellow->toolbox->getHttpStatusFormatted($statusCode)."\n";
 			}
-			if(defined("DEBUG") && DEBUG>=1) echo "Yellow_Commandline::buildStatic status:$statusCode file:$fileName\n";	
+			if(defined("DEBUG") && DEBUG>=1) echo "YellowCommandline::buildStatic status:$statusCode file:$fileName\n";
 		}
 		$this->yellow->toolbox->timerStop($time);
-		if(defined("DEBUG") && DEBUG>=1) echo "Yellow_Commandline::buildStatic time:$time ms\n";
+		if(defined("DEBUG") && DEBUG>=1) echo "YellowCommandline::buildStatic time:$time ms\n";
 		return array($statusCodeMax, count($pages), count($fileNamesMedia), count($fileNamesSystem), $error);
 	}
 	
@@ -263,5 +263,5 @@ class Yellow_Commandline
 	}
 }
 	
-$yellow->registerPlugin("commandline", "Yellow_Commandline", Yellow_Commandline::Version);
+$yellow->registerPlugin("commandline", "YellowCommandline", YellowCommandline::Version);
 ?>

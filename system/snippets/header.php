@@ -6,7 +6,7 @@
 <meta name="author" content="<?php echo $yellow->page->getHtml("author") ?>" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title><?php echo $yellow->page->getHtml("titleHeader") ?></title>
-<link rel="shortcut icon" href="<?php echo $yellow->config->get("serverBase").$yellow->config->get("imageLocation")."default_icon.png" ?>" />
+<link rel="shortcut icon" href="<?php echo $yellow->config->get("serverBase").$yellow->config->get("imageLocation")."icon.png" ?>" />
 <link rel="stylesheet" type="text/css" media="all" href="<?php echo $yellow->config->get("serverBase").$yellow->config->get("styleLocation").$yellow->page->get("style").".css" ?>" />
 <?php echo $yellow->getHeaderExtra() ?>
 </head>

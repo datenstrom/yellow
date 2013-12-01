@@ -3,9 +3,9 @@
 // This file may be used and distributed under the terms of the public license.
 
 // Web interface core plugin
-class Yellow_Webinterface
+class YellowWebinterface
 {
-	const Version = "0.1.10";
+	const Version = "0.2.1";
 	var $yellow;				//access to API
 	var $users;					//web interface users
 	var $activeLocation;		//web interface location? (boolean)
@@ -14,12 +14,12 @@ class Yellow_Webinterface
 	var $rawDataOriginal;		//raw data of page in case of errors
 
 	// Initialise plugin
-	function initPlugin($yellow)
+	function onLoad($yellow)
 	{
 		$this->yellow = $yellow;
 		$this->yellow->config->setDefault("webinterfaceLocation", "/edit/");
 		$this->yellow->config->setDefault("webinterfaceUserFile", "user.ini");
-		$this->users = new Yellow_WebinterfaceUsers();
+		$this->users = new YellowWebinterfaceUsers();
 		$this->users->load($this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile"));
 	}
 
@@ -83,8 +83,8 @@ class Yellow_Webinterface
 		{
 			$location = $this->yellow->config->getHtml("serverBase").$this->yellow->config->getHtml("pluginLocation");
 			$language = $this->isUser() ? $this->users->getLanguage($this->activeUserEmail) : $this->yellow->page->get("language");
-			$header .= "<link rel=\"styleSheet\" type=\"text/css\" media=\"all\" href=\"{$location}core_webinterface.css\" />\n";
-			$header .= "<script type=\"text/javascript\" src=\"{$location}core_webinterface.js\"></script>\n";
+			$header .= "<link rel=\"styleSheet\" type=\"text/css\" media=\"all\" href=\"{$location}core-webinterface.css\" />\n";
+			$header .= "<script type=\"text/javascript\" src=\"{$location}core-webinterface.js\"></script>\n";
 			$header .= "<script type=\"text/javascript\">\n";
 			$header .= "// <![CDATA[\n";
 			if($this->isUser())
@@ -161,7 +161,7 @@ class Yellow_Webinterface
 	{
 		if($_POST["action"] == "login")
 		{
-			$email = $_POST["email"];
+			$email = $corPOST["email"];
 			$password = $_POST["password"];
 			if($this->users->checkUser($email, $password))
 			{
@@ -228,7 +228,7 @@ class Yellow_Webinterface
 }
 
 // Yellow web interface users
-class Yellow_WebinterfaceUsers
+class YellowWebinterfaceUsers
 {
 	var $users;		//registered users
 	
@@ -250,7 +250,7 @@ class Yellow_WebinterfaceUsers
 				if(!empty($matches[1]) && !empty($matches[2]) && !empty($matches[3]) && !empty($matches[4]))
 				{
 					$this->setUser($matches[1], $matches[2], $matches[3], $matches[4]);
-					if(defined("DEBUG") && DEBUG>=3) echo "Yellow_WebinterfaceUsers::load email:$matches[1] $matches[3]<br/>\n";
+					if(defined("DEBUG") && DEBUG>=3) echo "YellowWebinterfaceUsers::load email:$matches[1] $matches[3]<br/>\n";
 				}
 			}
 		}
@@ -323,5 +323,5 @@ class Yellow_WebinterfaceUsers
 	}
 }
 
-$yellow->registerPlugin("webinterface", "Yellow_Webinterface", Yellow_Webinterface::Version);
+$yellow->registerPlugin("webinterface", "YellowWebinterface", YellowWebinterface::Version);
 ?>

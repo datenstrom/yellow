@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.1.22";
+	const Version = "0.2.1";
 	var $page;				//current page data
 	var $pages;				//current page tree from file system
 	var $config;			//configuration
@@ -15,17 +15,17 @@ class Yellow
 
 	function __construct()
 	{
-		$this->pages = new Yellow_Pages($this);
-		$this->config = new Yellow_Config($this);
-		$this->text = new Yellow_Text($this);
-		$this->toolbox = new Yellow_Toolbox();
-		$this->plugins = new Yellow_Plugins();
+		$this->pages = new YellowPages($this);
+		$this->config = new YellowConfig($this);
+		$this->text = new YellowText($this);
+		$this->toolbox = new YellowToolbox();
+		$this->plugins = new YellowPlugins();
 		$this->config->setDefault("sitename", "Yellow");
 		$this->config->setDefault("author", "Yellow");
 		$this->config->setDefault("language", "en");
 		$this->config->setDefault("template", "default");
 		$this->config->setDefault("style", "default");
-		$this->config->setDefault("parser", "markdown");
+		$this->config->setDefault("parser", "markdownextra");
 		$this->config->setDefault("serverName", $this->toolbox->getServerName());
 		$this->config->setDefault("serverBase", $this->toolbox->getServerBase());
 		$this->config->setDefault("styleLocation", "/media/styles/");
@@ -46,7 +46,7 @@ class Yellow
 		$this->config->setDefault("configExtension", ".ini");
 		$this->config->setDefault("configFile", "config.ini");
 		$this->config->setDefault("errorPageFile", "error(.*).txt");
-		$this->config->setDefault("textStringFile", "text_(.*).ini");
+		$this->config->setDefault("textStringFile", "text(.*).ini");
 		$this->config->load($this->config->get("configDir").$this->config->get("configFile"));
 		$this->text->load($this->config->get("configDir").$this->config->get("textStringFile"));
 	}
@@ -61,7 +61,7 @@ class Yellow
 		$serverBase = $this->config->get("serverBase");
 		$location = $this->getRelativeLocation($serverBase);
 		$fileName = $this->getContentFileName($location);
-		$this->page = new Yellow_Page($this, $location);
+		$this->page = new YellowPage($this, $location);
 		foreach($this->plugins->plugins as $key=>$value)
 		{
 			if(method_exists($value["obj"], "onRequest"))
@@ -152,7 +152,7 @@ class Yellow
 			fclose($fileHandle);
 		}
 		$this->pages->serverBase = $serverBase;
-		$this->page = new Yellow_Page($this, $location);
+		$this->page = new YellowPage($this, $location);
 		$this->page->parseData($fileName, $fileData, $cacheable, $statusCode, $pageError);
 		$this->page->parseContent();
 		$this->page->setHeader("Content-Type", "text/html; charset=UTF-8");
@@ -337,7 +337,7 @@ class Yellow
 }
 	
 // Yellow page data
-class Yellow_Page
+class YellowPage
 {
 	var $yellow;				//access to API
 	var $location;				//page location
@@ -433,7 +433,7 @@ class Yellow_Page
 				fclose($fileHandle);
 				$this->parseMeta();
 			}
-			if(defined("DEBUG") && DEBUG>=2) echo "Yellow_Page::parseUpdate location:".$this->location."<br/>\n";
+			if(defined("DEBUG") && DEBUG>=2) echo "YellowPage::parseUpdate location:".$this->location."<br/>\n";
 		}
 	}
 	
@@ -467,7 +467,7 @@ class Yellow_Page
 			{
 				$this->set("keywords", $this->yellow->toolbox->createTextKeywords($this->get("title"), 10));
 			}
-			if(defined("DEBUG") && DEBUG>=2) echo "Yellow_Page::parseContent location:".$this->location."<br/>\n";
+			if(defined("DEBUG") && DEBUG>=2) echo "YellowPage::parseContent location:".$this->location."<br/>\n";
 		}
 	}
 	
@@ -643,7 +643,7 @@ class Yellow_Page
 }
 
 // Yellow page collection as array
-class Yellow_PageCollection extends ArrayObject
+class YellowPageCollection extends ArrayObject
 {
 	var $yellow;				//access to API
 	var $paginationPage;		//current page number in pagination
@@ -810,7 +810,7 @@ class Yellow_PageCollection extends ArrayObject
 }
 
 // Yellow page tree from file system
-class Yellow_Pages
+class YellowPages
 {
 	var $yellow;			//access to API
 	var $pages;				//scanned pages
@@ -827,7 +827,7 @@ class Yellow_Pages
 	// Return empty page collection
 	function create()
 	{
-		return new Yellow_PageCollection($this->yellow);
+		return new YellowPageCollection($this->yellow);
 	}
 	
 	// Return pages from file system
@@ -861,7 +861,7 @@ class Yellow_Pages
 		if($absoluteLocation) $location = substru($location, strlenu($this->serverBase));
 		$parentLocation = $this->getParentLocation($location);
 		$this->scanChildren($parentLocation);
-		$pages = new Yellow_PageCollection($this->yellow);
+		$pages = new YellowPageCollection($this->yellow);
 		foreach($this->pages[$parentLocation] as $page) if($page->location == $location) { $pages->append($page); break; }
 		return $pages;
 	}
@@ -870,7 +870,7 @@ class Yellow_Pages
 	function findChildren($location, $showHidden = false)
 	{
 		$this->scanChildren($location);
-		$pages = new Yellow_PageCollection($this->yellow);
+		$pages = new YellowPageCollection($this->yellow);
 		foreach($this->pages[$location] as $page) if($page->isVisible() || $showHidden) $pages->append($page);
 		return $pages;
 	}
@@ -880,7 +880,7 @@ class Yellow_Pages
 	{
 		--$levelMax;
 		$this->scanChildren($location);
-		$pages = new Yellow_PageCollection($this->yellow);
+		$pages = new YellowPageCollection($this->yellow);
 		foreach($this->pages[$location] as $page)
 		{
 			if($page->isVisible() || $showHidden)
@@ -900,7 +900,7 @@ class Yellow_Pages
 	{
 		if(is_null($this->pages[$location]))
 		{
-			if(defined("DEBUG") && DEBUG>=2) echo "Yellow_Pages::scanChildren location:$location<br/>\n";
+			if(defined("DEBUG") && DEBUG>=2) echo "YellowPages::scanChildren location:$location<br/>\n";
 			$this->pages[$location] = array();
 			$path = $this->yellow->config->get("contentDir");
 			if(!empty($location))
@@ -940,7 +940,7 @@ class Yellow_Pages
 					$fileData = "";
 					$statusCode = 0;
 				}
-				$page = new Yellow_Page($this->yellow, $this->yellow->toolbox->findLocationFromFile($fileName,
+				$page = new YellowPage($this->yellow, $this->yellow->toolbox->findLocationFromFile($fileName,
 					$this->yellow->config->get("contentDir"), $this->yellow->config->get("contentHomeDir"),
 					$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension")));
 				$page->parseData($fileName, $fileData, false, $statusCode);
@@ -970,7 +970,7 @@ class Yellow_Pages
 }
 
 // Yellow configuration
-class Yellow_Config
+class YellowConfig
 {
 	var $yellow;			//access to API
 	var $modified;			//configuration modification time
@@ -991,7 +991,7 @@ class Yellow_Config
 		$fileData = @file($fileName);
 		if($fileData)
 		{
-			if(defined("DEBUG") && DEBUG>=2) echo "Yellow_Config::load file:$fileName<br/>\n";
+			if(defined("DEBUG") && DEBUG>=2) echo "YellowConfig::load file:$fileName<br/>\n";
 			$this->modified = filemtime($fileName);
 			foreach($fileData as $line)
 			{
@@ -1000,7 +1000,7 @@ class Yellow_Config
 				if(!empty($matches[1]) && !strempty($matches[2]))
 				{
 					$this->set($matches[1], $matches[2]);
-					if(defined("DEBUG") && DEBUG>=3) echo "Yellow_Config::load key:$matches[1] $matches[2]<br/>\n";
+					if(defined("DEBUG") && DEBUG>=3) echo "YellowConfig::load key:$matches[1] $matches[2]<br/>\n";
 				}
 			}
 		}
@@ -1060,7 +1060,7 @@ class Yellow_Config
 }
 
 // Yellow text strings
-class Yellow_Text
+class YellowText
 {
 	var $yellow;		//access to API
 	var $modified;		//text modification time
@@ -1084,7 +1084,7 @@ class Yellow_Text
 			$fileData = @file("$path/$entry");
 			if($fileData)
 			{
-				if(defined("DEBUG") && DEBUG>=2) echo "Yellow_Text::load file:$path/$entry<br/>\n";
+				if(defined("DEBUG") && DEBUG>=2) echo "YellowText::load file:$path/$entry<br/>\n";
 				$this->modified = max($this->modified, filemtime("$path/$entry"));
 				$language = "";
 				foreach($fileData as $line)
@@ -1099,7 +1099,7 @@ class Yellow_Text
 					if(!empty($language) && !empty($matches[1]) && !strempty($matches[2]))
 					{
 						$this->setLanguageText($language, $matches[1], $matches[2]);
-						if(defined("DEBUG") && DEBUG>=3) echo "Yellow_Text::load key:$matches[1] $matches[2]<br/>\n";
+						if(defined("DEBUG") && DEBUG>=3) echo "YellowText::load key:$matches[1] $matches[2]<br/>\n";
 					}
 				}
 			}
@@ -1177,7 +1177,7 @@ class Yellow_Text
 }
 
 // Yellow toolbox with helpers
-class Yellow_Toolbox
+class YellowToolbox
 {
 	// Return server name from current HTTP request
 	function getServerName()
@@ -1669,7 +1669,7 @@ class Yellow_Toolbox
 }
 
 // Yellow plugins
-class Yellow_Plugins
+class YellowPlugins
 {
 	var $plugins;		//registered plugins
 
@@ -1682,9 +1682,9 @@ class Yellow_Plugins
 	function load()
 	{
 		global $yellow;
-		require_once("core_markdown.php");
-		require_once("core_commandline.php");
-		require_once("core_webinterface.php");
+		require_once("core-commandline.php");
+		require_once("core-markdownextra.php");
+		require_once("core-webinterface.php");
 		foreach($yellow->toolbox->getDirectoryEntries($yellow->config->get("pluginDir"), "/.*\.php/", true, false) as $entry)
 		{
 			$fileNamePlugin = $yellow->config->get("pluginDir")."/$entry";
@@ -1693,8 +1693,8 @@ class Yellow_Plugins
 		foreach($this->plugins as $key=>$value)
 		{
 			$this->plugins[$key]["obj"] = new $value["class"];
-			if(defined("DEBUG") && DEBUG>=2) echo "Yellow_Plugins::load class:$value[class] $value[version]<br/>\n";
-			if(method_exists($this->plugins[$key]["obj"], "initPlugin")) $this->plugins[$key]["obj"]->initPlugin($yellow);
+			if(defined("DEBUG") && DEBUG>=2) echo "YellowPlugins::load class:$value[class] $value[version]<br/>\n";
+			if(method_exists($this->plugins[$key]["obj"], "onLoad")) $this->plugins[$key]["obj"]->onLoad($yellow);
 		}
 	}
 	

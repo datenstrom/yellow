@@ -7,7 +7,7 @@ RewriteEngine on
 RewriteCond %{ENV:REDIRECT_STATUS} ^$
 RewriteRule ^(content|system)/ error404 [L]
 RewriteCond %{REQUEST_URI} \.(css|js|png|woff)$
-RewriteRule ^media/plugins/(core_.+) system/core/$1 [L]
+RewriteRule ^media/plugins/(core-.+) system/core/$1 [L]
 RewriteCond %{REQUEST_URI} \.(css|js|png|woff)$
 RewriteRule ^media/plugins/(.+) system/plugins/$1 [L]
 

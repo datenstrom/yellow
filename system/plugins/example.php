@@ -3,12 +3,12 @@
 // This file may be used and distributed under the terms of the public license.
 
 // Example plugin
-class Yellow_Example
+class YellowExample
 {
 	//You can download plugins and extensions from Github.
 	//See https://github.com/markseu/yellowcms-extensions
 	const Version = "0.0.0";
 }
 
-$yellow->registerPlugin("example", "Yellow_Example", Yellow_Example::Version);
+$yellow->registerPlugin("example", "YellowExample", YellowExample::Version);
 ?>

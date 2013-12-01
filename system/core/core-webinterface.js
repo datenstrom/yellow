@@ -4,7 +4,7 @@
 // Yellow main API
 var yellow =
 {
-	version: "0.1.2",
+	version: "0.2.1",
 	onClick: function(e) { yellow.webinterface.hidePanesOnClick(yellow.toolbox.getEventElement(e)); },
 	onKeydown: function(e) { yellow.webinterface.hidePanesOnKeydown(yellow.toolbox.getEventKeycode(e)); },
 	onResize: function() { yellow.webinterface.resizePanes(); },
@@ -64,7 +64,7 @@ yellow.webinterface =
 			var location = yellow.config.serverBase+yellow.config.pluginLocation;			
 			elementBar.innerHTML =
 				"<div class=\"yellow-barleft\">"+
-				"<a href=\"http://datenstrom.se/yellow/\" target=\"_blank\"><img src=\""+location+"core_webinterface.png\" width=\"16\" height=\"16\"> Yellow</a>"+
+				"<a href=\"http://datenstrom.se/yellow/\" target=\"_blank\"><img src=\""+location+"core-webinterface.png\" width=\"16\" height=\"16\"> Yellow</a>"+
 				"<a href=\"#\" onclick=\"yellow.onShow('yellow-paneedit'); return false;\">"+this.getText("Edit")+"</a>"+
 				"<a href=\"#\" onclick=\"yellow.onShow('yellow-paneshow'); return false;\">"+this.getText("Show")+"</a>"+
 				"</div>"+
