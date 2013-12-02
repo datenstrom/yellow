@@ -54,7 +54,7 @@ class YellowCommandline
 		list($name, $command, $path, $location) = $args;
 		if(!empty($path) && $path!="/")
 		{
-			if($this->yellow->config->isExisting("serverName") && $this->yellow->config->isExisting("serverBase"))
+			if($this->yellow->config->isExisting("serverName"))
 			{
 				$serverName = $this->yellow->config->get("serverName");
 				$serverBase = $this->yellow->config->get("serverBase");
