@@ -3,6 +3,6 @@ Title: Home
 ---
 Yes, your Yellow installation works!  
 You can now [edit this page](@pageedit) or use your favorite text editor.  
-Information for web designers are in the [documentation](https://github.com/markseu/yellowcms-extensions/blob/master/documentation/README.md).
+That’s it. For more information see [Yellow documentation](https://github.com/markseu/yellowcms-extensions/blob/master/documentation/README.md).
 
 Have fun making your website.

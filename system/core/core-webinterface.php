@@ -5,7 +5,7 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.2.1";
+	const Version = "0.2.2";
 	var $yellow;				//access to API
 	var $users;					//web interface users
 	var $activeLocation;		//web interface location? (boolean)
@@ -105,45 +105,45 @@ class YellowWebinterface
 	function processRequestAction($serverName, $serverBase, $location, $fileName)
 	{
 		$statusCode = 0;
-		if($_POST["action"] == "edit")
+		switch($_POST["action"])
 		{
-			if(!empty($_POST["rawdata"]) && $this->checkUserPermissions($location, $fileName))
-			{
-				$this->rawDataOriginal = $_POST["rawdata"];
-				if($this->yellow->toolbox->makeFile($fileName, $_POST["rawdata"]))
-				{
-					$statusCode = 303;
-					$locationHeader = $this->yellow->toolbox->getHttpLocationHeader($serverName, $serverBase, $location);
-					$this->yellow->sendStatus($statusCode, $locationHeader);
-				} else {
-					$statusCode = 500;
-					$this->yellow->processRequest($serverName, $serverBase, $location, $fileName, false, $statusCode);
-					$this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
-				}
-			}
-		} else if($_POST["action"]== "login") {
-			$statusCode = 303;
-			$locationHeader = $this->yellow->toolbox->getHttpLocationHeader($serverName, $serverBase, $location);
-			$this->yellow->sendStatus($statusCode, $locationHeader);
-		} else if($_POST["action"]== "logout") {
-			$this->users->destroyCookie("login");
-			$this->activeUserEmail = "";
-			$statusCode = 302;
-			$locationHeader = $this->yellow->toolbox->getHttpLocationHeader($serverName, $this->yellow->config->get("serverBase"), $location);
-			$this->yellow->sendStatus($statusCode, $locationHeader);
-		} else {
-			if(!is_readable($fileName))
-			{
-				if($this->yellow->toolbox->isFileLocation($location) && is_dir($this->yellow->getContentDirectory("$location/")))
-				{
-					$statusCode = 301;
-					$locationHeader = $this->yellow->toolbox->getHttpLocationHeader($serverName, $serverBase, "$location/");
-					$this->yellow->sendStatus($statusCode, $locationHeader);
-				} else {
-					$statusCode = $this->checkUserPermissions($location, $fileName) ? 424 : 404;
-					$this->yellow->processRequest($serverName, $serverBase, $location, $fileName, false, $statusCode);
-				}
-			}
+			case "edit":	if(!empty($_POST["rawdata"]) && $this->checkUserPermissions($location, $fileName))
+							{
+								$this->rawDataOriginal = $_POST["rawdata"];
+								if($this->yellow->toolbox->makeFile($fileName, $_POST["rawdata"]))
+								{
+									$statusCode = 303;
+									$locationHeader = $this->yellow->toolbox->getHttpLocationHeader($serverName, $serverBase, $location);
+									$this->yellow->sendStatus($statusCode, $locationHeader);
+								} else {
+									$statusCode = 500;
+									$this->yellow->processRequest($serverName, $serverBase, $location, $fileName, false, $statusCode);
+									$this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
+								}
+							}
+							break;
+			case "login":	$statusCode = 303;
+							$locationHeader = $this->yellow->toolbox->getHttpLocationHeader($serverName, $serverBase, $location);
+							$this->yellow->sendStatus($statusCode, $locationHeader);
+							break;
+			case "logout":	$this->users->destroyCookie("login");
+							$this->activeUserEmail = "";
+							$statusCode = 302;
+							$locationHeader = $this->yellow->toolbox->getHttpLocationHeader($serverName, $this->yellow->config->get("serverBase"), $location);
+							$this->yellow->sendStatus($statusCode, $locationHeader);
+							break;
+			default:		if(!is_readable($fileName))
+							{
+								if($this->yellow->toolbox->isFileLocation($location) && is_dir($this->yellow->getContentDirectory("$location/")))
+								{
+									$statusCode = 301;
+									$locationHeader = $this->yellow->toolbox->getHttpLocationHeader($serverName, $serverBase, "$location/");
+									$this->yellow->sendStatus($statusCode, $locationHeader);
+								} else {
+									$statusCode = $this->checkUserPermissions($location, $fileName) ? 424 : 404;
+									$this->yellow->processRequest($serverName, $serverBase, $location, $fileName, false, $statusCode);
+								}
+							}
 		}
 		return $statusCode;
 	}
@@ -161,7 +161,7 @@ class YellowWebinterface
 	{
 		if($_POST["action"] == "login")
 		{
-			$email = $corPOST["email"];
+			$email = $_POST["email"];
 			$password = $_POST["password"];
 			if($this->users->checkUser($email, $password))
 			{
