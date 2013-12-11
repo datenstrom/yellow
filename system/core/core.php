@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.2.2";
+	const Version = "0.2.3";
 	var $page;				//current page data
 	var $pages;				//current page tree from file system
 	var $config;			//configuration
@@ -326,12 +326,6 @@ class Yellow
 	function registerPlugin($name, $class, $version)
 	{
 		$this->plugins->register($name, $class, $version);
-	}
-	
-	// Add page response header, OBSOLETE DON'T USE
-	function header($responseHeader)
-	{
-		$this->page->header($responseHeader);
 	}
 }
 	
