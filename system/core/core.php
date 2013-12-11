@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.2.1";
+	const Version = "0.2.2";
 	var $page;				//current page data
 	var $pages;				//current page tree from file system
 	var $config;			//configuration
@@ -154,11 +154,11 @@ class Yellow
 		$this->pages->serverBase = $serverBase;
 		$this->page = new YellowPage($this, $location);
 		$this->page->parseData($fileName, $fileData, $cacheable, $statusCode, $pageError);
-		$this->page->parseContent();
 		$this->page->setHeader("Content-Type", "text/html; charset=UTF-8");
 		$this->page->setHeader("Last-Modified", $this->page->getModified(true));
 		if(!$this->page->isCacheable()) $this->page->setHeader("Cache-Control", "no-cache, must-revalidate");
 		$this->text->setLanguage($this->page->get("language"));
+		$this->page->parseContent();
 		return $fileName;
 	}
 	
@@ -240,7 +240,7 @@ class Yellow
 		return $this->page->isExisting("pageError");
 	}
 	
-	// Execute a template
+	// Execute template
 	function template($name)
 	{
 		$fileNameTemplate = $this->config->get("templateDir")."$name.php";
@@ -253,7 +253,7 @@ class Yellow
 		}
 	}
 	
-	// Execute a template snippet
+	// Execute code snippet
 	function snippet($name, $args = NULL)
 	{
 		$this->pages->snippetArgs = func_get_args();
@@ -267,7 +267,7 @@ class Yellow
 		}
 	}
 	
-	// Return template snippet arguments
+	// Return snippet arguments
 	function getSnippetArgs()
 	{
 		return $this->pages->snippetArgs;
@@ -307,7 +307,7 @@ class Yellow
 			$this->config->get("contentDir"), $this->config->get("contentHomeDir"), "", "");
 	}
 	
-	// Execute a plugin command
+	// Execute plugin command
 	function plugin($name, $args = NULL)
 	{
 		$statusCode = 0;
@@ -328,11 +328,10 @@ class Yellow
 		$this->plugins->register($name, $class, $version);
 	}
 	
-	// Set a response header
+	// Add page response header, OBSOLETE DON'T USE
 	function header($responseHeader)
 	{
-		$tokens = explode(':', $responseHeader, 2);
-		$this->page->setHeader(trim($tokens[0]), trim($tokens[1]));
+		$this->page->header($responseHeader);
 	}
 }
 	
@@ -406,9 +405,10 @@ class YellowPage
 		$titleHeader = $this->location!="/" ? $this->get("title")." - ".$this->get("sitename") : $this->get("sitename");
 		if(!$this->isExisting("titleHeader")) $this->set("titleHeader", $titleHeader);
 		if(!$this->isExisting("titleNavigation")) $this->set("titleNavigation", $this->get("title"));
-		$this->set("pageRead", $this->yellow->config->get("serverBase").$this->location);
-		$this->set("pageEdit", $this->yellow->config->get("serverBase").
-			rtrim($this->yellow->config->get("webinterfaceLocation"), '/').$this->location);
+		$this->set("pageRead", $this->yellow->toolbox->getHttpUrl($this->yellow->config->get("serverName"),
+			$this->yellow->config->get("serverBase"), $this->location));
+		$this->set("pageEdit", $this->yellow->toolbox->getHttpUrl($this->yellow->config->get("serverName"),
+			$this->yellow->config->get("serverBase"), rtrim($this->yellow->config->get("webinterfaceLocation"), '/').$this->location));
 		foreach($this->yellow->plugins->plugins as $key=>$value)
 		{
 			if(method_exists($value["obj"], "onParseMeta"))
@@ -483,6 +483,7 @@ class YellowPage
 				if(!is_null($output)) break;
 			}
 		}
+		if(defined("DEBUG") && DEBUG>=2 && !empty($name)) echo "YellowPage::parseType name:$name shortcut:$typeShortcut<br/>\n";
 		return $output;
 	}
 	
@@ -503,9 +504,16 @@ class YellowPage
 		{
 			$this->statusCode = $statusCode;
 			$this->headerData = array();
-			if(!empty($responseHeader)) $this->yellow->header($responseHeader);
+			if(!empty($responseHeader)) $this->header($responseHeader);
 			$this->set("pageClean", (string)$statusCode);
 		}
+	}
+	
+	// Add page response header, HTTP format
+	function header($responseHeader)
+	{
+		$tokens = explode(':', $responseHeader, 2);
+		$this->setHeader(trim($tokens[0]), trim($tokens[1]));
 	}
 	
 	// Set page response header
@@ -1098,7 +1106,7 @@ class YellowText
 					preg_match("/^\s*(.*?)\s*=\s*(.*?)\s*$/", $line, $matches);
 					if(!empty($language) && !empty($matches[1]) && !strempty($matches[2]))
 					{
-						$this->setLanguageText($language, $matches[1], $matches[2]);
+						$this->setText($matches[1], $matches[2], $language);
 						if(defined("DEBUG") && DEBUG>=3) echo "YellowText::load key:$matches[1] $matches[2]<br/>\n";
 					}
 				}
@@ -1113,16 +1121,16 @@ class YellowText
 	}
 	
 	// Set text string for specific language
-	function setLanguageText($language, $key, $value)
+	function setText($key, $value, $language)
 	{
 		if(is_null($this->text[$language])) $this->text[$language] = array();
 		$this->text[$language][$key] = $value;
 	}
 	
 	// Return text string for specific language
-	function getLanguageText($language, $key)
+	function getText($key, $language)
 	{
-		return ($this->isLanguageText($language, $key)) ? $this->text[$language][$key] : "[$key]";
+		return ($this->isText($key, $language)) ? $this->text[$language][$key] : "[$key]";
 	}
 	
 	// Return text string
@@ -1137,10 +1145,11 @@ class YellowText
 		return htmlspecialchars($this->get($key));
 	}
 	
-	// Return text strings for specific language
-	function getData($language, $filterStart = "")
+	// Return text strings
+	function getData($filterStart = "", $language = "")
 	{
 		$text = array();
+		if(empty($language)) $language = $this->language;
 		if(!is_null($this->text[$language]))
 		{
 			if(empty($filterStart))
@@ -1164,7 +1173,7 @@ class YellowText
 	}
 	
 	// Check if text string for specific language exists
-	function isLanguageText($language, $key)
+	function isText($key, $language)
 	{
 		return !is_null($this->text[$language]) && !is_null($this->text[$language][$key]);
 	}

@@ -5,7 +5,7 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.2.2";
+	const Version = "0.2.3";
 	var $yellow;				//access to API
 	var $users;					//web interface users
 	var $activeLocation;		//web interface location? (boolean)
@@ -58,15 +58,15 @@ class YellowWebinterface
 								   "<a$1href=\"$serverBase/$webinterfaceLocation/$2\"$3>", $text);
 			if($page == $this->yellow->page)
 			{
+				if(empty($this->rawDataOriginal)) $this->rawDataOriginal = $page->rawData;
 				switch($page->statusCode)
 				{
-					case 200:	$this->rawDataOriginal = $page->rawData; break;
 					case 424:	$language = $this->isUser() ? $this->users->getLanguage($this->activeUserEmail) : $page->get("language");
 								$page->rawData = "---\r\n";
-								$page->rawData .= "Title: ".$this->yellow->text->getLanguageText($language, "webinterface424Title")."\r\n";
+								$page->rawData .= "Title: ".$this->yellow->text->getText("webinterface424Title", $language)."\r\n";
 								$page->rawData .= "Author: ".$this->users->getName($this->activeUserEmail)."\r\n";
 								$page->rawData .= "---\r\n";
-								$page->rawData .= $this->yellow->text->getLanguageText($language, "webinterface424Text");
+								$page->rawData .= $this->yellow->text->getText("webinterface424Text", $language);
 								break;
 					case 500:	$page->rawData = $this->rawDataOriginal; break;
 				}
@@ -93,7 +93,7 @@ class YellowWebinterface
 				$header .= "yellow.pages = ".json_encode($this->getPagesData()).";\n";
 				$header .= "yellow.config = ".json_encode($this->getConfigData($this->activeUserEmail)).";\n";
 			}
-			$header .= "yellow.text = ".json_encode($this->yellow->text->getData($language, "webinterface")).";\n";
+			$header .= "yellow.text = ".json_encode($this->yellow->text->getData("webinterface", $language)).";\n";
 			if(defined("DEBUG")) $header .= "yellow.debug = ".json_encode(DEBUG).";\n";
 			$header .= "// ]]>\n";
 			$header .= "</script>\n";
