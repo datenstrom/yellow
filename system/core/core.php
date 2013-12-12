@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.2.3";
+	const Version = "0.2.4";
 	var $page;				//current page data
 	var $pages;				//current page tree from file system
 	var $config;			//configuration
@@ -1638,20 +1638,23 @@ class YellowToolbox
 					$height = (ord($dataHeader[14])<<8) + ord($dataHeader[15]);
 				}
 			} else if(substru($fileName, -3) == "jpg") {
-				$dataBuffer = fread($fileHandle, 2048);
+				$dataBufferSize = min(filesize($fileName), 8192);
+				$dataBuffer = fread($fileHandle, $dataBufferSize);
 				$dataSignature = substrb($dataBuffer, 0, 11);
 				if(!feof($fileHandle) && $dataSignature=="\xff\xd8\xff\xe0\x00\x10JFIF\0")
 				{
-					$marker = substrb($dataBuffer, 20, 2);
-					$length = (ord($dataBuffer[22])<<8) + ord($dataBuffer[23]) + 2;
-					$pos = 158 + ($marker=="\xff\xe1" ? $length : 0);
-					if($pos+8 < 2048)
+					for($pos=20; $pos+8<$dataBufferSize; $pos+=$length)
 					{
-						$width = (ord($dataBuffer[$pos+7])<<8) + ord($dataBuffer[$pos+8]);
-						$height = (ord($dataBuffer[$pos+5])<<8) + ord($dataBuffer[$pos+6]);
+						if($dataBuffer[$pos] != "\xff") break;
+						if($dataBuffer[$pos+1]=="\xc0" || $dataBuffer[$pos+1]=="\xc2")
+						{
+							$width = (ord($dataBuffer[$pos+7])<<8) + ord($dataBuffer[$pos+8]);
+							$height = (ord($dataBuffer[$pos+5])<<8) + ord($dataBuffer[$pos+6]);
+							break;
+						}
+						$length = (ord($dataBuffer[$pos+2])<<8) + ord($dataBuffer[$pos+3]) + 2;
 					}
 				}
-				
 			}
 			fclose($fileHandle);
 		}
