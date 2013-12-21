@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.2.4";
+	const Version = "0.2.5";
 	var $page;				//current page data
 	var $pages;				//current page tree from file system
 	var $config;			//configuration
@@ -59,8 +59,7 @@ class Yellow
 		$statusCode = 0;
 		$serverName = $this->config->get("serverName");
 		$serverBase = $this->config->get("serverBase");
-		$location = $this->getRelativeLocation($serverBase);
-		$fileName = $this->getContentFileName($location);
+		list($location, $fileName) = $this->getRequestLocationFile($serverBase);
 		$this->page = new YellowPage($this, $location);
 		foreach($this->plugins->plugins as $key=>$value)
 		{
@@ -103,11 +102,11 @@ class Yellow
 					$fileName = $this->readPage($serverBase, $location, $fileName, $cacheable, $statusCode);
 				} else {
 					$statusCode = 303;
-					$locationArgs = $this->toolbox->getLocationArgsCleanUrl();
+					$locationArgs = $this->toolbox->getLocationArgsCleanUrl($location);
 					$this->sendStatus($statusCode, $this->toolbox->getHttpLocationHeader($serverName, $serverBase, $location.$locationArgs));
 				}
 			} else {
-				if($this->toolbox->isFileLocation($location) && is_dir($this->getContentDirectory("$location/")))
+				if($this->toolbox->isFileLocation($location) && $this->isContentDirectory("$location/"))
 				{
 					$statusCode = 301;
 					$this->sendStatus($statusCode, $this->toolbox->getHttpLocationHeader($serverName, $serverBase, "$location/"));
@@ -191,7 +190,8 @@ class Yellow
 		   $this->toolbox->isFileNotModified($this->page->getHeader("Last-Modified")))
 		{
 			$statusCode = 304;
-			$this->page->clean($statusCode);
+			if($this->page->isHeader("Cache-Control")) $responseHeader = "Cache-Control: ".$this->page->getHeader("Cache-Control");
+			$this->page->clean($statusCode, $responseHeader);
 		}
 		if($this->page->isExisting("pageClean")) ob_clean();
 		if(PHP_SAPI != "cli")
@@ -217,6 +217,25 @@ class Yellow
 		}
 	}
 	
+	// Return request location and file name, without server base
+	function getRequestLocationFile($serverBase)
+	{
+		$location = $this->toolbox->getLocationNormalised();
+		$location = substru($location, strlenu($serverBase));
+		$fileName = $this->toolbox->findFileFromLocation($location,
+			$this->config->get("contentDir"), $this->config->get("contentHomeDir"),
+			$this->config->get("contentDefaultFile"), $this->config->get("contentExtension"));
+		if(!$this->toolbox->isFileLocation($location) && !is_file($fileName) &&
+		   preg_match("/[^\/]+:.*/", rawurldecode($this->toolbox->getLocation())))
+		{
+			$location = rtrim($location, '/');
+			$fileName = $this->toolbox->findFileFromLocation($location,
+				 $this->config->get("contentDir"), $this->config->get("contentHomeDir"),
+				 $this->config->get("contentDefaultFile"), $this->config->get("contentExtension"));
+		}
+		return array($location, $fileName);
+	}
+	
 	// Return name of request handler
 	function getRequestHandler()
 	{
@@ -229,7 +248,7 @@ class Yellow
 		return isset($_GET["clean-url"]) || isset($_POST["clean-url"]);
 	}
 	
-	// Check for request error
+	// Check if request error happened
 	function isRequestError()
 	{
 		$serverBase = $this->config->get("serverBase");
@@ -238,6 +257,14 @@ class Yellow
 			$this->page->error(500, "Server base '$serverBase' not supported!");
 		}
 		return $this->page->isExisting("pageError");
+	}
+	
+	// Check if content directory exists
+	function isContentDirectory($location)
+	{
+		$path = $this->toolbox->findFileFromLocation($location,
+			$this->config->get("contentDir"), $this->config->get("contentHomeDir"), "", "");
+		return is_dir($path);
 	}
 	
 	// Execute template
@@ -282,29 +309,6 @@ class Yellow
 			if(method_exists($value["obj"], "onHeaderExtra")) $header .= $value["obj"]->onHeaderExtra();
 		}
 		return $header;
-	}
-	
-	// Return content location for current HTTP request, without server base
-	function getRelativeLocation($serverBase)
-	{
-		$location = $this->toolbox->getLocation();
-		$location = $this->toolbox->normaliseLocation($location);
-		return substru($location, strlenu($serverBase));
-	}
-	
-	// Return content file name from location
-	function getContentFileName($location)
-	{
-		return $this->toolbox->findFileFromLocation($location,
-			$this->config->get("contentDir"), $this->config->get("contentHomeDir"),
-			$this->config->get("contentDefaultFile"), $this->config->get("contentExtension"));
-	}
-	
-	// Return content directory from location
-	function getContentDirectory($location)
-	{
-		return $this->toolbox->findFileFromLocation($location,
-			$this->config->get("contentDir"), $this->config->get("contentHomeDir"), "", "");
 	}
 	
 	// Execute plugin command
@@ -439,11 +443,15 @@ class YellowPage
 			$this->parser = new stdClass;
 			if($this->yellow->plugins->isExisting($this->get("parser")))
 			{
-				$this->parser = $this->yellow->plugins->plugins[$this->get("parser")]["obj"];
-				$this->parser->parse($this->getContent(true));
-				$location = $this->yellow->toolbox->getDirectoryLocation($this->getLocation());
-				$this->parser->textHtml = preg_replace("#<a(.*?)href=\"(?!javascript:)([^\/\"]+)\"(.*?)>#",
-													   "<a$1href=\"$location$2\"$3>", $this->parser->textHtml);
+				$plugin = $this->yellow->plugins->plugins[$this->get("parser")];
+				if(method_exists($plugin["obj"], "onParse"))
+				{
+					$this->parser = $plugin["obj"];
+					$this->parser->onParse($this->getContent(true));
+					$location = $this->yellow->toolbox->getDirectoryLocation($this->getLocation());
+					$this->parser->textHtml = preg_replace("#<a(.*?)href=\"(?!javascript:)([^\/\"]+)\"(.*?)>#",
+														   "<a$1href=\"$location$2\"$3>", $this->parser->textHtml);
+				}
 			}
 			foreach($this->yellow->plugins->plugins as $key=>$value)
 			{
@@ -762,10 +770,10 @@ class YellowPageCollection extends ArrayObject
 	{
 		if($pageNumber>=1 && $pageNumber<=$this->paginationCount)
 		{
-			$locationArgs = $this->yellow->toolbox->getLocationArgs($pageNumber>1 ? "page:$pageNumber" : "page:");
-			$location = $this->yellow->page->getLocation().$locationArgs;
+			$location = $this->yellow->page->getLocation();
+			$locationArgs = $this->yellow->toolbox->getLocationArgs($location, $pageNumber>1 ? "page:$pageNumber" : "page:");
 		}
-		return $location;
+		return $location.$locationArgs;
 	}
 	
 	// Return absolute location for previous page in pagination
@@ -1203,11 +1211,50 @@ class YellowToolbox
 		return ($pos = strposu($uri, '?')) ? substru($uri, 0, $pos) : $uri;
 	}
 	
+	// Return location from current HTTP request, remove unwanted path tokens and location arguments
+	function getLocationNormalised()
+	{
+		$string = rawurldecode($this->getLocation());
+		$location = ($string[0]=='/') ? '' : '/';
+		for($pos=0; $pos<strlenb($string); ++$pos)
+		{
+			if($string[$pos] == '/')
+			{
+				if($string[$pos+1] == '/') continue;
+				if($string[$pos+1] == '.')
+				{
+					$posNew = $pos+1; while($string[$posNew] == '.') ++$posNew;
+					if($string[$posNew]=='/' || $string[$posNew]=='')
+					{
+						$pos = $posNew-1;
+						continue;
+					}
+				}
+			}
+			$location .= $string[$pos];
+		}
+		if(preg_match("/^(.*?\/)([^\/]+:.*)$/", $location, $matches))
+		{
+			$location = $matches[1];
+			foreach(explode('/', $matches[2]) as $token)
+			{
+				preg_match("/^(.*?):(.*)$/", $token, $matches);
+				if(!empty($matches[1]) && !strempty($matches[2]))
+				{
+					$matches[1] = strreplaceu(array("\x1c", "\x1d"), array('/', ':'), $matches[1]);
+					$matches[2] = strreplaceu(array("\x1c", "\x1d"), array('/', ':'), $matches[2]);
+					$_REQUEST[$matches[1]] = $matches[2];
+				}
+			}
+		}
+		return $location;
+	}
+	
 	// Return location arguments from current HTTP request
-	function getLocationArgs($arg = "")
+	function getLocationArgs($location, $arg = "")
 	{		
 		preg_match("/^(.*?):(.*)$/", $arg, $args);
-		if(preg_match("/^(.*?\/)(\w+:.*)$/", rawurldecode(self::getLocation()), $matches))
+		if(preg_match("/^(.*?\/)([^\/]+:.*)$/", rawurldecode($this->getLocation()), $matches))
 		{
 			foreach(explode('/', $matches[2]) as $token)
 			{
@@ -1225,13 +1272,16 @@ class YellowToolbox
 			if(!empty($locationArgs)) $locationArgs .= '/';
 			$locationArgs .= "$args[1]:$args[2]";
 		}
-		$locationArgs = rawurlencode($locationArgs);
-		$locationArgs = strreplaceu(array('%3A','%2F'), array(':','/'), $locationArgs);
+		if(!empty($locationArgs))
+		{
+			if($this->isFileLocation($location)) $locationArgs = '/'.$locationArgs;
+			$locationArgs = strreplaceu(array('%3A','%2F'), array(':','/'), rawurlencode($locationArgs));
+		}
 		return $locationArgs;
 	}
 	
 	// Return location arguments from current HTTP request, convert form into clean URL
-	function getLocationArgsCleanUrl()
+	function getLocationArgsCleanUrl($location)
 	{
 		foreach(array_merge($_GET, $_POST) as $key=>$value)
 		{
@@ -1243,50 +1293,14 @@ class YellowToolbox
 				$locationArgs .= "$key:$value";
 			}
 		}
-		$locationArgs = rawurlencode($locationArgs);
-		$locationArgs = strreplaceu(array('%3A','%2F'), array(':','/'), $locationArgs);
+		if(!empty($locationArgs))
+		{
+			if($this->isFileLocation($location)) $locationArgs = '/'.$locationArgs;
+			$locationArgs = strreplaceu(array('%3A','%2F'), array(':','/'), rawurlencode($locationArgs));
+		}
 		return $locationArgs;
 	}
 
-	// Normalise location and remove unwanted path tokens
-	function normaliseLocation($location, $convertArgs = true)
-	{
-		$string = rawurldecode($location);
-		$location = ($string[0]=='/') ? '' : '/';
-		for($pos=0; $pos<strlenb($string); ++$pos)
-		{
-			if($string[$pos] == '/')
-			{
-				if($string[$pos+1] == '/') continue;
-				if($string[$pos+1] == '.')
-				{
-					$posNew = $pos+1; while($string[$posNew] == '.') ++$posNew;
-					if($string[$posNew]=='/' || $string[$posNew]=='')
-					{
-						$pos = $posNew-1; 
-						continue;
-					}
-				}
-			}
-			$location .= $string[$pos];
-		}
-		if($convertArgs && preg_match("/^(.*?\/)(\w+:.*)$/", $location, $matches))
-		{
-			$location = $matches[1];
-			foreach(explode('/', $matches[2]) as $token)
-			{
-				preg_match("/^(.*?):(.*)$/", $token, $matches);
-				if(!empty($matches[1]) && !strempty($matches[2]))
-				{
-					$matches[1] = strreplaceu(array("\x1c", "\x1d"), array('/', ':'), $matches[1]);
-					$matches[2] = strreplaceu(array("\x1c", "\x1d"), array('/', ':'), $matches[2]);
-					$_REQUEST[$matches[1]] = $matches[2];
-				}
-			}
-		}
-		return $location;
-	}
-	
 	// Check if file is unmodified since last HTTP request
 	function isFileNotModified($lastModified)
 	{
@@ -1304,7 +1318,7 @@ class YellowToolbox
 	{
 		$string = "";
 		$tokens = explode('/', $location);
-		for($i=1; $i<count($tokens); ++$i) $string .= '/'.self::normaliseName($tokens[$i]);
+		for($i=1; $i<count($tokens); ++$i) $string .= '/'.$this->normaliseName($tokens[$i]);
 		return $location == $string;
 	}
 	
@@ -1344,32 +1358,32 @@ class YellowToolbox
 			for($i=1; $i<count($tokens)-1; ++$i)
 			{
 				$token = $tokens[$i];
-				if(self::normaliseName($token) != $token) $invalid = true;
+				if($this->normaliseName($token) != $token) $invalid = true;
 				$regex = "/^[\d\-\_\.]*".strreplaceu('-', '.', $token)."$/";
-				foreach(self::getDirectoryEntries($path, $regex) as $entry)
+				foreach($this->getDirectoryEntries($path, $regex) as $entry)
 				{
-					if(self::normaliseName($entry) == $token) { $token = $entry; break; }
+					if($this->normaliseName($entry) == $token) { $token = $entry; break; }
 				}
 				$path .= "$token/";
 			}
 		} else {
 			$i = 1;
 			$token = rtrim($pathHome, '/');
-			if(self::normaliseName($token) != $token) $invalid = true;
+			if($this->normaliseName($token) != $token) $invalid = true;
 			$regex = "/^[\d\-\_\.]*".strreplaceu('-', '.', $token)."$/";
-			foreach(self::getDirectoryEntries($path, $regex) as $entry)
+			foreach($this->getDirectoryEntries($path, $regex) as $entry)
 			{
-				if(self::normaliseName($entry) == $token) { $token = $entry; break; }
+				if($this->normaliseName($entry) == $token) { $token = $entry; break; }
 			}
 			$path .= "$token/";
 		}
 		$token = !empty($tokens[$i]) ? $tokens[$i].$fileExtension : $fileDefault;
 		if(!empty($tokens[$i]) && $tokens[$i].$fileExtension==$fileDefault) $invalid = true;
-		if(self::normaliseName($token) != $token) $invalid = true;
+		if($this->normaliseName($token) != $token) $invalid = true;
 		$regex = "/^[\d\-\_\.]*".strreplaceu('-', '.', $token)."$/";
-		foreach(self::getDirectoryEntries($path, $regex, false, false) as $entry)
+		foreach($this->getDirectoryEntries($path, $regex, false, false) as $entry)
 		{
-			if(self::normaliseName($entry) == $token) { $token = $entry; break; }
+			if($this->normaliseName($entry) == $token) { $token = $entry; break; }
 		}
 		$path .= $token;
 		return $invalid ? "" : $path;
@@ -1383,11 +1397,11 @@ class YellowToolbox
 		$tokens = explode('/', $fileName);
 		for($i=0; $i<count($tokens)-1; ++$i)
 		{
-			$token = self::normaliseName($tokens[$i]).'/';
+			$token = $this->normaliseName($tokens[$i]).'/';
 			if($i || $token!=$pathHome) $location .= $token;
 		}
-		$token = self::normaliseName($tokens[$i]);
-		if($token != $fileDefault) $location .= self::normaliseName($tokens[$i], true);
+		$token = $this->normaliseName($tokens[$i]);
+		if($token != $fileDefault) $location .= $this->normaliseName($tokens[$i], true);
 		return $location;
 	}
 	
@@ -1411,6 +1425,7 @@ class YellowToolbox
 			case 302: $text = "$_SERVER[SERVER_PROTOCOL] $statusCode Moved temporarily"; break;
 			case 303: $text = "$_SERVER[SERVER_PROTOCOL] $statusCode Reload please"; break;
 			case 304: $text = "$_SERVER[SERVER_PROTOCOL] $statusCode Not modified"; break;
+			case 400: $text = "$_SERVER[SERVER_PROTOCOL] $statusCode Bad request"; break;
 			case 401: $text = "$_SERVER[SERVER_PROTOCOL] $statusCode Unauthorised"; break;
 			case 404: $text = "$_SERVER[SERVER_PROTOCOL] $statusCode Not found"; break;
 			case 409: $text = "$_SERVER[SERVER_PROTOCOL] $statusCode Conflict"; break;
@@ -1442,7 +1457,7 @@ class YellowToolbox
 	// Return HTTP location header
 	function getHttpLocationHeader($serverName, $serverBase, $location)
 	{
-		return "Location: ".self::getHttpUrl($serverName, $serverBase, $location);
+		return "Location: ".$this->getHttpUrl($serverName, $serverBase, $location);
 	}
 	
 	// Return directory location
@@ -1481,20 +1496,20 @@ class YellowToolbox
 	function getDirectoryEntriesRecursive($path, $regex = "/.*/", $sort = false, $directories = true, $levelMax = 0)
 	{
 		$entries = array();
-		foreach(self::getDirectoryEntries($path, $regex, $sort, $directories) as $entry) array_push($entries, "$path/$entry");
+		foreach($this->getDirectoryEntries($path, $regex, $sort, $directories) as $entry) array_push($entries, "$path/$entry");
 		--$levelMax;
 		if($levelMax != 0)
 		{
-			foreach(self::getDirectoryEntries($path, "/.*/", $sort, true) as $entry)
+			foreach($this->getDirectoryEntries($path, "/.*/", $sort, true) as $entry)
 			{
-				$entries = array_merge($entries, self::getDirectoryEntriesRecursive("$path/$entry", $regex, $sort, $directories, $levelMax));
+				$entries = array_merge($entries, $this->getDirectoryEntriesRecursive("$path/$entry", $regex, $sort, $directories, $levelMax));
 			}
 		}
 		return $entries;
 	}
 
 	// Create file
-	function makeFile($fileName, $fileData, $mkdir = false)
+	function createFile($fileName, $fileData, $mkdir = false)
 	{
 		$ok = false;
 		if($mkdir)
@@ -1585,12 +1600,17 @@ class YellowToolbox
 				$offsetBytes = $elementOffsetBytes + strlenb($element);
 			}
 			$output = rtrim($output);
+			for($i=count($elementsOpen)-1; $i>=0; --$i)
+			{
+				if(!preg_match("/^(dl|ol|ul|table|tbody|thead|tfoot|tr)/i", $elementsOpen[$i])) break;
+				$output .= "</".$elementsOpen[$i].">";
+			}
 			if($lengthMax <= 0) $output .= $endMarkerFound ? $endMarkerText : "…";
-			for($t=count($elementsOpen)-1; $t>=0; --$t) $output .= "</".$elementsOpen[$t].">";
+			for(; $i>=0; --$i) $output .= "</".$elementsOpen[$i].">";
 		}
 		return $output;
 	}
-
+	
 	// Create keywords from text string
 	function createTextKeywords($text, $keywordsMax)
 	{
@@ -1688,14 +1708,10 @@ class YellowPlugins
 	function load()
 	{
 		global $yellow;
-		require_once("core-commandline.php");
-		require_once("core-markdownextra.php");
-		require_once("core-webinterface.php");
-		foreach($yellow->toolbox->getDirectoryEntries($yellow->config->get("pluginDir"), "/.*\.php/", true, false) as $entry)
-		{
-			$fileNamePlugin = $yellow->config->get("pluginDir")."/$entry";
-			require_once($fileNamePlugin);
-		}
+		$path = dirname(__FILE__);
+		foreach($yellow->toolbox->getDirectoryEntries($path, "/.*\.php/", true, false) as $entry) require_once("$path/$entry");
+		$path = $yellow->config->get("pluginDir");
+		foreach($yellow->toolbox->getDirectoryEntries($path, "/.*\.php/", true, false) as $entry) require_once("$path/$entry");
 		foreach($this->plugins as $key=>$value)
 		{
 			$this->plugins[$key]["obj"] = new $value["class"];

@@ -5,7 +5,7 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.2.3";
+	const Version = "0.2.4";
 	var $yellow;				//access to API
 	var $users;					//web interface users
 	var $activeLocation;		//web interface location? (boolean)
@@ -19,7 +19,7 @@ class YellowWebinterface
 		$this->yellow = $yellow;
 		$this->yellow->config->setDefault("webinterfaceLocation", "/edit/");
 		$this->yellow->config->setDefault("webinterfaceUserFile", "user.ini");
-		$this->users = new YellowWebinterfaceUsers();
+		$this->users = new YellowWebinterfaceUsers($yellow);
 		$this->users->load($this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile"));
 	}
 
@@ -30,8 +30,7 @@ class YellowWebinterface
 		if($this->checkWebinterfaceLocation($location))
 		{
 			$serverBase .= rtrim($this->yellow->config->get("webinterfaceLocation"), '/');
-			$location = $this->yellow->getRelativeLocation($serverBase);
-			$fileName = $this->yellow->getContentFileName($location);
+			list($location, $fileName) = $this->yellow->getRequestLocationFile($serverBase);
 			if($this->checkUser()) $statusCode = $this->processRequestAction($serverName, $serverBase, $location, $fileName);
 			if($statusCode == 0) $statusCode = $this->yellow->processRequest($serverName, $serverBase, $location, $fileName,
 													false, $this->activeUserFail ? 401 : 0);
@@ -101,6 +100,43 @@ class YellowWebinterface
 		return $header;
 	}
 	
+	// Handle command help
+	function onCommandHelp()
+	{
+		return "user EMAIL PASSWORD [NAME LANGUAGE]\n";
+	}
+	
+	// Handle command
+	function onCommand($args)
+	{
+		list($name, $command) = $args;		
+		switch($command)
+		{
+			case "user":	$statusCode = $this->userCommand($args); break;
+			default:		$statusCode = 0;
+		}
+		return $statusCode;
+	}
+	
+	// Create or update user
+	function userCommand($args)
+	{
+		$statusCode = 0;
+		list($dummy, $command, $email, $password, $name, $language) = $args;
+		if(!empty($email) && !empty($password) )
+		{
+			$fileName = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
+			$statusCode = $this->users->createUser($fileName, $email, $password, $name, $language)  ? 200 : 500;
+			if($statusCode != 200) echo "ERROR updating configuration: Can't write file '$fileName'!\n";
+			echo "Yellow $command: User account ".($statusCode!=200 ? "not " : "");
+			echo ($this->users->isExisting($email) ? "updated" : "created")."\n";
+		} else {
+			echo "Yellow $command: Invalid arguments\n";
+			$statusCode = 400;
+		}
+		return $statusCode;
+	}
+	
 	// Process request for an action
 	function processRequestAction($serverName, $serverBase, $location, $fileName)
 	{
@@ -110,7 +146,7 @@ class YellowWebinterface
 			case "edit":	if(!empty($_POST["rawdata"]) && $this->checkUserPermissions($location, $fileName))
 							{
 								$this->rawDataOriginal = $_POST["rawdata"];
-								if($this->yellow->toolbox->makeFile($fileName, $_POST["rawdata"]))
+								if($this->yellow->toolbox->createFile($fileName, $_POST["rawdata"]))
 								{
 									$statusCode = 303;
 									$locationHeader = $this->yellow->toolbox->getHttpLocationHeader($serverName, $serverBase, $location);
@@ -134,7 +170,7 @@ class YellowWebinterface
 							break;
 			default:		if(!is_readable($fileName))
 							{
-								if($this->yellow->toolbox->isFileLocation($location) && is_dir($this->yellow->getContentDirectory("$location/")))
+								if($this->yellow->toolbox->isFileLocation($location) && $this->yellow->isContentDirectory("$location/"))
 								{
 									$statusCode = 301;
 									$locationHeader = $this->yellow->toolbox->getHttpLocationHeader($serverName, $serverBase, "$location/");
@@ -230,10 +266,12 @@ class YellowWebinterface
 // Yellow web interface users
 class YellowWebinterfaceUsers
 {
+	var $yellow;	//access to API
 	var $users;		//registered users
 	
-	function __construct()
+	function __construct($yellow)
 	{
+		$this->yellow = $yellow;
 		$this->users = array();
 	}
 
@@ -254,6 +292,41 @@ class YellowWebinterfaceUsers
 				}
 			}
 		}
+	}
+	
+	// Create or update user in file
+	function createUser($fileName, $email, $password, $name, $language)
+	{
+		$email = strreplaceu(',', '-', $email);
+		$password = hash("sha256", $email.$password);
+		$fileNewUser = true;
+		$fileData = @file($fileName);
+		if($fileData)
+		{
+			foreach($fileData as $line)
+			{
+				preg_match("/^(.*?),\s*(.*?),\s*(.*?),\s*(.*?)\s*$/", $line, $matches);
+				if(!empty($matches[1]) && !empty($matches[2]) && !empty($matches[3]) && !empty($matches[4]))
+				{
+					if($matches[1] == $email)
+					{
+						$name = strreplaceu(',', '-', empty($name) ? $matches[3] : $name);
+						$language = strreplaceu(',', '-', empty($language) ? $matches[4] : $language);
+						$fileDataNew .= "$email,$password,$name,$language\n";
+						$fileNewUser = false;
+						continue;
+					}
+				}
+				$fileDataNew .= $line;
+			}
+		}
+		if($fileNewUser)
+		{
+			$name = strreplaceu(',', '-', empty($name) ? $this->yellow->config->get("sitename") : $name);
+			$language = strreplaceu(',', '-', empty($language) ? $this->yellow->config->get("language") : $language);
+			$fileDataNew .= "$email,$password,$name,$language\n";
+		}
+		return $this->yellow->toolbox->createFile($fileName, $fileDataNew);
 	}
 
 	// Set user data

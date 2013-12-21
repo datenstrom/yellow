@@ -5,7 +5,7 @@
 // Command line core plugin
 class YellowCommandline
 {
-	const Version = "0.2.1";
+	const Version = "0.2.2";
 	var $yellow;			//access to API
 
 	// Initialise plugin
@@ -17,41 +17,49 @@ class YellowCommandline
 		$this->yellow->config->setDefault("commandBuildCustomErrorFile", "error404.html");
 	}
 	
+	// Handle command help
+	function onCommandHelp()
+	{
+		$help .= "version\n";
+		$help .= "build DIRECTORY [LOCATION]\n";
+		return $help;
+	}
+	
 	// Handle command
 	function onCommand($args)
 	{
 		list($name, $command) = $args;
 		switch($command)
 		{
-			case "build":	$statusCode = $this->build($args); break;
-			case "version":	$statusCode = $this->version(); break;
-			default:		$statusCode = $this->help();
+			case "":		$statusCode = $this->helpCommand(); break;
+			case "version":	$statusCode = $this->versionCommand(); break;
+			case "build":	$statusCode = $this->buildCommand($args); break;
+			default:		$statusCode = $this->pluginCommand($args); break;
 		}
 		return $statusCode;
 	}
 	
 	// Show available commands
-	function help()
+	function helpCommand()
 	{
 		echo "Yellow command line ".YellowCommandline::Version."\n";
-		echo "Syntax: yellow.php build DIRECTORY [LOCATION]\n";
-		echo "        yellow.php version\n";
-		return 0;
+		foreach($this->getCommandHelp() as $line) echo (++$lineCounter>1 ? "        " : "Syntax: ")."yellow.php $line\n";
+		return 200;
 	}
 	
 	// Show software version
-	function version()
+	function versionCommand()
 	{
 		echo "Yellow ".Yellow::Version."\n";
 		foreach($this->yellow->plugins->plugins as $key=>$value) echo "$value[class] $value[version]\n";
-		return 0;
+		return 200;
 	}
 	
 	// Build website
-	function build($args)
+	function buildCommand($args)
 	{
 		$statusCode = 0;
-		list($name, $command, $path, $location) = $args;
+		list($dummy, $command, $path, $location) = $args;
 		if(!empty($path) && $path!="/")
 		{
 			if($this->yellow->config->isExisting("serverName"))
@@ -64,11 +72,12 @@ class YellowCommandline
 				$fileName = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
 				echo "ERROR bulding website: Please configure serverName and serverBase in file '$fileName'!\n";
 			}
-			echo "Yellow build: $content content, $media media, $system system";
+			echo "Yellow $command: $content content, $media media, $system system";
 			echo ", $error error".($error!=1 ? 's' : '');
 			echo ", status $statusCode\n";
 		} else {
-			echo "Yellow build: Invalid arguments\n";
+			echo "Yellow $command: Invalid arguments\n";
+			$statusCode = 400;
 		}
 		return $statusCode;
 	}
@@ -87,7 +96,8 @@ class YellowCommandline
 				".", "/.*\\".$this->yellow->config->get("commandBuildCustomMediaExtension")."/", false, false));
 			$fileNamesSystem = array($this->yellow->config->get("commandBuildCustomErrorFile"));
 		} else {
-			$pages = new YellowPageCollection($this->yellow, $location);
+			if($location[0] != '/') $location = '/'.$location;
+			$pages = new YellowPageCollection($this->yellow);
 			$pages->append(new YellowPage($this->yellow, $location));
 			$fileNamesMedia = array();
 			$fileNamesSystem = array();
@@ -150,18 +160,18 @@ class YellowCommandline
 				$fileName = $this->getStaticFileName($location, $path);
 				$fileData = ob_get_contents();
 				if($statusCode>=301 && $statusCode<=303) $fileData = $this->getStaticRedirect($this->yellow->page->getHeader("Location"));
-				$fileOk = $this->makeStaticFile($fileName, $fileData, $modified);
+				$fileOk = $this->createStaticFile($fileName, $fileData, $modified);
 			} else {
 				if(!$this->yellow->toolbox->isFileLocation($location))
 				{
 					$fileName = $this->getStaticFileName($location, $path);
 					$fileData = $this->getStaticRedirect("http://$serverName$serverBase$staticLocation");
-					$fileOk = $this->makeStaticFile($fileName, $fileData, $modified);
+					$fileOk = $this->createStaticFile($fileName, $fileData, $modified);
 					if($fileOk)
 					{
 						$fileName = $this->getStaticFileName($staticLocation, $path);
 						$fileData = ob_get_contents();
-						$fileOk = $this->makeStaticFile($fileName, $fileData, $modified);
+						$fileOk = $this->createStaticFile($fileName, $fileData, $modified);
 					}
 				} else {
 					$statusCode = 409;
@@ -190,7 +200,7 @@ class YellowCommandline
 		if($statusCode == $statusCodeRequest)
 		{
 			$modified = strtotime($this->yellow->page->getHeader("Last-Modified"));			
-			if(!$this->makeStaticFile($fileName, ob_get_contents(), $modified))
+			if(!$this->createStaticFile($fileName, ob_get_contents(), $modified))
 			{
 				$statusCode = 500;
 				$this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
@@ -201,9 +211,9 @@ class YellowCommandline
 	}
 	
 	// Create static file
-	function makeStaticFile($fileName, $fileData, $modified)
+	function createStaticFile($fileName, $fileData, $modified)
 	{
-		return $this->yellow->toolbox->makeFile($fileName, $fileData, true) &&
+		return $this->yellow->toolbox->createFile($fileName, $fileData, true) &&
 			$this->yellow->toolbox->modifyFile($fileName, $modified);
 	}
 	
@@ -253,13 +263,48 @@ class YellowCommandline
 	// Return static redirect data
 	function getStaticRedirect($url)
 	{
-		$data  = "<!DOCTYPE html><html>\n";
-		$data .= "<head>\n";
-		$data .= "<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" />\n";
-		$data .= "<meta http-equiv=\"refresh\" content=\"0;url=$url\" />\n";
-		$data .= "</head>\n";
-		$data .= "</html>\n";
+		$text  = "<!DOCTYPE html><html>\n";
+		$text .= "<head>\n";
+		$text .= "<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" />\n";
+		$text .= "<meta http-equiv=\"refresh\" content=\"0;url=$url\" />\n";
+		$text .= "</head>\n";
+		$text .= "</html>\n";
+		return $text;
+	}
+	
+	// Return command help
+	function getCommandHelp()
+	{
+		$data = array();
+		foreach($this->yellow->plugins->plugins as $key=>$value)
+		{
+			if(method_exists($value["obj"], "onCommandHelp"))
+			{
+				foreach(preg_split("/[\r\n]+/", $value["obj"]->onCommandHelp()) as $line)
+				{
+					list($command, $text) = explode(' ', $line, 2);
+					if(!empty($command) && is_null($data[$command])) $data[$command] = $line;
+				}
+			}
+		}
+		uksort($data, strnatcasecmp);
 		return $data;
+	}
+	
+	// Forward plugin command
+	function pluginCommand($args)
+	{
+		$statusCode = 0;
+		foreach($this->yellow->plugins->plugins as $key=>$value)
+		{
+			if($key == "commandline") continue;
+			if(method_exists($value["obj"], "onCommand"))
+			{
+				$statusCode = $value["obj"]->onCommand($args);
+				if($statusCode != 0) break;
+			}
+		}
+		return $statusCode;
 	}
 }
 	

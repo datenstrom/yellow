@@ -2,10 +2,10 @@
 // Copyright (c) 2013 Datenstrom, http://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
-// Markdown extra parser core plugin
+// Markdown extra core plugin
 class YellowMarkdownExtra
 {
-	const Version = "0.2.4";
+	const Version = "0.2.5";
 	var $yellow;		//access to API
 	var $textHtml;		//generated text (HTML format)
 	
@@ -15,8 +15,8 @@ class YellowMarkdownExtra
 		$this->yellow = $yellow;
 	}
 	
-	// Parse text
-	function parse($text)
+	// Handle text parsing
+	function onParse($text)
 	{
 		$markdown = new YellowMarkdownExtraParser($this->yellow);
 		return $this->textHtml = $markdown->transform($text);
