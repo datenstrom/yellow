@@ -1,11 +1,11 @@
 <?php
-// Copyright (c) 2013 Datenstrom, http://datenstrom.se
+// Copyright (c) 2013-2014 Datenstrom, http://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 // Yellow main class
 class Yellow
 {
-	const Version = "0.2.5";
+	const Version = "0.2.6";
 	var $page;				//current page data
 	var $pages;				//current page tree from file system
 	var $config;			//configuration
@@ -30,7 +30,7 @@ class Yellow
 		$this->config->setDefault("serverBase", $this->toolbox->getServerBase());
 		$this->config->setDefault("styleLocation", "/media/styles/");
 		$this->config->setDefault("imageLocation", "/media/images/");
-		$this->config->setDefault("pluginLocation", "media/plugins/");
+		$this->config->setDefault("pluginLocation", "/media/plugins/");
 		$this->config->setDefault("systemDir", "system/");
 		$this->config->setDefault("configDir", "system/config/");
 		$this->config->setDefault("pluginDir", "system/plugins/");
@@ -171,11 +171,10 @@ class Yellow
 		{
 			$this->page->error(500, "Style '".$this->page->get("style")."' does not exist!");
 		}
-		if(!$this->plugins->isExisting($this->page->get("parser")))
+		if(!is_object($this->page->parser))
 		{
 			$this->page->error(500, "Parser '".$this->page->get("parser")."' does not exist!");
 		}
-
 		$statusCode = $this->page->statusCode;
 		if($statusCode==200 && $this->getRequestHandler()=="core" && $this->page->isExisting("redirect"))
 		{
@@ -403,6 +402,7 @@ class YellowPage
 		$titleHeader = $this->location!="/" ? $this->get("title")." - ".$this->get("sitename") : $this->get("sitename");
 		if(!$this->isExisting("titleHeader")) $this->set("titleHeader", $titleHeader);
 		if(!$this->isExisting("titleNavigation")) $this->set("titleNavigation", $this->get("title"));
+		if(!$this->isExisting("titleContent")) $this->set("titleContent", $this->get("title"));
 		$this->set("pageRead", $this->yellow->toolbox->getHttpUrl($this->yellow->config->get("serverName"),
 			$this->yellow->config->get("serverBase"), $this->location));
 		$this->set("pageEdit", $this->yellow->toolbox->getHttpUrl($this->yellow->config->get("serverName"),
@@ -440,7 +440,6 @@ class YellowPage
 	{
 		if(!is_object($this->parser))
 		{
-			$this->parser = new stdClass;
 			if($this->yellow->plugins->isExisting($this->get("parser")))
 			{
 				$plugin = $this->yellow->plugins->plugins[$this->get("parser")];
@@ -451,23 +450,23 @@ class YellowPage
 					$location = $this->yellow->toolbox->getDirectoryLocation($this->getLocation());
 					$this->parser->textHtml = preg_replace("#<a(.*?)href=\"(?!javascript:)([^\/\"]+)\"(.*?)>#",
 														   "<a$1href=\"$location$2\"$3>", $this->parser->textHtml);
-				}
-			}
-			foreach($this->yellow->plugins->plugins as $key=>$value)
-			{
-				if(method_exists($value["obj"], "onParseContent"))
-				{
-					$output = $value["obj"]->onParseContent($this, $this->parser->textHtml);
-					if(!is_null($output)) { $this->parser->textHtml = $output; break; }
-				}
-			}
-			if(!$this->isExisting("description"))
-			{
-				$this->set("description", $this->yellow->toolbox->createTextDescription($this->parser->textHtml, 150));
-			}
-			if(!$this->isExisting("keywords"))
-			{
-				$this->set("keywords", $this->yellow->toolbox->createTextKeywords($this->get("title"), 10));
+					foreach($this->yellow->plugins->plugins as $key=>$value)
+					{
+						if(method_exists($value["obj"], "onParseContent"))
+						{
+							$output = $value["obj"]->onParseContent($this, $this->parser->textHtml);
+							if(!is_null($output)) { $this->parser->textHtml = $output; break; }
+						}
+					}
+					if(!$this->isExisting("description"))
+					{
+						$this->set("description", $this->yellow->toolbox->createTextDescription($this->parser->textHtml, 150));
+					}
+					if(!$this->isExisting("keywords"))
+					{
+						$this->set("keywords", $this->yellow->toolbox->createTextKeywords($this->get("title"), 10));
+					}
+			   }
 			}
 			if(defined("DEBUG") && DEBUG>=2) echo "YellowPage::parseContent location:".$this->location."<br/>\n";
 		}
@@ -557,7 +556,7 @@ class YellowPage
 			$text = substrb($this->rawData, $this->metaDataOffsetBytes);
 		} else {
 			$this->parseContent();
-			$text = $this->parser->textHtml;
+			$text = is_object($this->parser) ? $this->parser->textHtml : "";
 		}
 		return $text;
 	}
@@ -1709,7 +1708,7 @@ class YellowPlugins
 	{
 		global $yellow;
 		$path = dirname(__FILE__);
-		foreach($yellow->toolbox->getDirectoryEntries($path, "/.*\.php/", true, false) as $entry) require_once("$path/$entry");
+		foreach($yellow->toolbox->getDirectoryEntries($path, "/core-.*\.php/", true, false) as $entry) require_once("$path/$entry");
 		$path = $yellow->config->get("pluginDir");
 		foreach($yellow->toolbox->getDirectoryEntries($path, "/.*\.php/", true, false) as $entry) require_once("$path/$entry");
 		foreach($this->plugins as $key=>$value)
@@ -1753,6 +1752,9 @@ function strposb() { return call_user_func_array("strpos", func_get_args()); }
 function strrposb() { return call_user_func_array("strrpos", func_get_args()); }
 function substrb() { return call_user_func_array("substr", func_get_args()); }
 
+// Default timezone for PHP 5
+date_default_timezone_set(@date_default_timezone_get());
+	
 // Error reporting for PHP 5
 error_reporting(E_ALL ^ E_NOTICE);
 ?>
