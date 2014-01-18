@@ -1,6 +1,6 @@
-/* Yellow default style 0.1.3 */
+/* Yellow default style 0.1.4 */
 
-html, body, div, pre, span { margin:0; padding:0; border:0; vertical-align:baseline; }
+html, body, div, pre, span, tr, th, td { margin:0; padding:0; border:0; vertical-align:baseline; }
 body { 
 	margin:1em;
 	background-color:#fff; color:#717171;
