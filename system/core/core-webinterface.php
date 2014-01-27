@@ -1,11 +1,11 @@
 <?php
-// Copyright (c) 2013 Datenstrom, http://datenstrom.se
+// Copyright (c) 2013-2014 Datenstrom, http://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.2.4";
+	const Version = "0.2.5";
 	var $yellow;				//access to API
 	var $users;					//web interface users
 	var $activeLocation;		//web interface location? (boolean)
@@ -45,19 +45,26 @@ class YellowWebinterface
 		return $statusCode;
 	}
 	
+	// Handle page meta data parsing
+	function onParseMeta($page, $text)
+	{
+		if($this->isWebinterfaceLocation() && $this->isUser())
+		{
+			if($page == $this->yellow->page)
+			{
+				if(empty($this->rawDataOriginal)) $this->rawDataOriginal = $page->rawData;
+			}
+		}
+	}
+	
 	// Handle page content parsing
 	function onParseContent($page, $text)
 	{
 		$output = NULL;
 		if($this->isWebinterfaceLocation() && $this->isUser())
 		{
-			$serverBase = $this->yellow->config->get("serverBase");
-			$webinterfaceLocation = trim($this->yellow->config->get("webinterfaceLocation"), '/');
-			$output = preg_replace("#<a(.*?)href=\"$serverBase/(?!$webinterfaceLocation)(.*?)\"(.*?)>#",
-								   "<a$1href=\"$serverBase/$webinterfaceLocation/$2\"$3>", $text);
 			if($page == $this->yellow->page)
 			{
-				if(empty($this->rawDataOriginal)) $this->rawDataOriginal = $page->rawData;
 				switch($page->statusCode)
 				{
 					case 424:	$language = $this->isUser() ? $this->users->getLanguage($this->activeUserEmail) : $page->get("language");
@@ -70,6 +77,14 @@ class YellowWebinterface
 					case 500:	$page->rawData = $this->rawDataOriginal; break;
 				}
 			}
+			$serverBase = $this->yellow->config->get("serverBase");
+			$location = trim($this->yellow->config->get("webinterfaceLocation"), '/');
+			$callback = function($matches) use ($serverBase, $location)
+			{
+				$matches[2] = preg_replace("#^$serverBase/(?!$location)(.*)$#", "$serverBase/$location/$1", $matches[2]);
+				return "<a$matches[1]href=\"$matches[2]\"$matches[3]>";
+			};
+			$output = preg_replace_callback("/<a(.*?)href=\"([^\"]+)\"(.*?)>/i", $callback, $text);
 		}
 		return $output;
 	}

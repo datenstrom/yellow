@@ -1,11 +1,11 @@
 <?php
-// Copyright (c) 2013 Datenstrom, http://datenstrom.se
+// Copyright (c) 2013-2014 Datenstrom, http://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 // Markdown extra core plugin
 class YellowMarkdownExtra
 {
-	const Version = "0.2.5";
+	const Version = "0.2.6";
 	var $yellow;		//access to API
 	var $textHtml;		//generated text (HTML format)
 	
@@ -16,10 +16,10 @@ class YellowMarkdownExtra
 	}
 	
 	// Handle text parsing
-	function onParse($text)
+	function onParse($page, $text)
 	{
 		$markdown = new YellowMarkdownExtraParser($this->yellow);
-		return $this->textHtml = $markdown->transform($text);
+		$this->textHtml = $markdown->transform($page, $text);
 	}
 }
 
@@ -35,12 +35,14 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser
 	}
 	
 	// Transform text
-	function transform($text)
+	function transform($page, $text)
 	{
-		$text = preg_replace("/@pageRead/i", $this->yellow->page->get("pageRead"), $text);
-		$text = preg_replace("/@pageEdit/i", $this->yellow->page->get("pageEdit"), $text);
-		$text = preg_replace("/@pageError/i", $this->yellow->page->get("pageError"), $text);
-		return parent::transform($text);
+		$location = $this->yellow->toolbox->getDirectoryLocation($page->getLocation());
+		$text = preg_replace("/@pageRead/i", $page->get("pageRead"), $text);
+		$text = preg_replace("/@pageEdit/i", $page->get("pageEdit"), $text);
+		$text = preg_replace("/@pageError/i", $page->get("pageError"), $text);
+		return preg_replace("/<a(.*?)href=\"(?!javascript:)([^\/\"]+)\"(.*?)>/i",
+							"<a$1href=\"$location$2\"$3>", parent::transform($text));
 	}
 
 	// Handle links

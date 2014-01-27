@@ -12,5 +12,5 @@
 </head>
 <body>
 <div class="page">
-<div class="header"><h1><a href="<?php echo $yellow->config->get("serverBase")."/" ?>"><?php echo $yellow->page->getHtml("sitename") ?></a></h1></div>
+<div class="header"><h1><a href="<?php echo $yellow->pages->serverBase."/" ?>"><?php echo $yellow->page->getHtml("sitename") ?></a></h1></div>
 <div class="header-banner"></div>

@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.2.6";
+	const Version = "0.2.7";
 	var $page;				//current page data
 	var $pages;				//current page tree from file system
 	var $config;			//configuration
@@ -224,8 +224,7 @@ class Yellow
 		$fileName = $this->toolbox->findFileFromLocation($location,
 			$this->config->get("contentDir"), $this->config->get("contentHomeDir"),
 			$this->config->get("contentDefaultFile"), $this->config->get("contentExtension"));
-		if(!$this->toolbox->isFileLocation($location) && !is_file($fileName) &&
-		   preg_match("/[^\/]+:.*/", rawurldecode($this->toolbox->getLocation())))
+		if(!is_file($fileName) && $this->toolbox->isLocationArgs($this->toolbox->getLocation()))
 		{
 			$location = rtrim($location, '/');
 			$fileName = $this->toolbox->findFileFromLocation($location,
@@ -446,10 +445,7 @@ class YellowPage
 				if(method_exists($plugin["obj"], "onParse"))
 				{
 					$this->parser = $plugin["obj"];
-					$this->parser->onParse($this->getContent(true));
-					$location = $this->yellow->toolbox->getDirectoryLocation($this->getLocation());
-					$this->parser->textHtml = preg_replace("#<a(.*?)href=\"(?!javascript:)([^\/\"]+)\"(.*?)>#",
-														   "<a$1href=\"$location$2\"$3>", $this->parser->textHtml);
+					$this->parser->onParse($this, $this->getContent(true));
 					foreach($this->yellow->plugins->plugins as $key=>$value)
 					{
 						if(method_exists($value["obj"], "onParseContent"))
@@ -466,7 +462,7 @@ class YellowPage
 					{
 						$this->set("keywords", $this->yellow->toolbox->createTextKeywords($this->get("title"), 10));
 					}
-			   }
+				}
 			}
 			if(defined("DEBUG") && DEBUG>=2) echo "YellowPage::parseContent location:".$this->location."<br/>\n";
 		}
@@ -1207,13 +1203,13 @@ class YellowToolbox
 	function getLocation()
 	{
 		$uri = $_SERVER["REQUEST_URI"];
-		return ($pos = strposu($uri, '?')) ? substru($uri, 0, $pos) : $uri;
+		return rawurldecode(($pos = strposu($uri, '?')) ? substru($uri, 0, $pos) : $uri);
 	}
 	
-	// Return location from current HTTP request, remove unwanted path tokens and location arguments
+	// Return location from current HTTP request, remove unwanted path tokens
 	function getLocationNormalised()
 	{
-		$string = rawurldecode($this->getLocation());
+		$string = $this->getLocation();
 		$location = ($string[0]=='/') ? '' : '/';
 		for($pos=0; $pos<strlenb($string); ++$pos)
 		{
@@ -1246,6 +1242,7 @@ class YellowToolbox
 				}
 			}
 		}
+		if(!preg_match("/^HTTP\//", $_SERVER["SERVER_PROTOCOL"])) $_SERVER["SERVER_PROTOCOL"] = "HTTP/1.1";
 		return $location;
 	}
 	
@@ -1253,7 +1250,7 @@ class YellowToolbox
 	function getLocationArgs($location, $arg = "")
 	{		
 		preg_match("/^(.*?):(.*)$/", $arg, $args);
-		if(preg_match("/^(.*?\/)([^\/]+:.*)$/", rawurldecode($this->getLocation()), $matches))
+		if(preg_match("/^(.*?\/)([^\/]+:.*)$/", $this->getLocation(), $matches))
 		{
 			foreach(explode('/', $matches[2]) as $token)
 			{
@@ -1298,6 +1295,12 @@ class YellowToolbox
 			$locationArgs = strreplaceu(array('%3A','%2F'), array(':','/'), rawurlencode($locationArgs));
 		}
 		return $locationArgs;
+	}
+	
+	// Check if location contains location arguments
+	function isLocationArgs($location)
+	{
+		return preg_match("/[^\/]+:.*$/", $location);
 	}
 
 	// Check if file is unmodified since last HTTP request
