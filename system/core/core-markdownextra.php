@@ -5,7 +5,7 @@
 // Markdown extra core plugin
 class YellowMarkdownExtra
 {
-	const Version = "0.2.6";
+	const Version = "0.2.7";
 	var $yellow;		//access to API
 	var $textHtml;		//generated text (HTML format)
 	
@@ -15,11 +15,11 @@ class YellowMarkdownExtra
 		$this->yellow = $yellow;
 	}
 	
-	// Handle text parsing
+	// Handle page parsing
 	function onParse($page, $text)
 	{
 		$markdown = new YellowMarkdownExtraParser($this->yellow);
-		$this->textHtml = $markdown->transform($page, $text);
+		$this->textHtml = $markdown->transformPage($page, $text);
 	}
 }
 
@@ -34,15 +34,15 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser
 		parent::__construct();
 	}
 	
-	// Transform text
-	function transform($page, $text)
+	// Transform page text
+	function transformPage($page, $text)
 	{
 		$location = $this->yellow->toolbox->getDirectoryLocation($page->getLocation());
 		$text = preg_replace("/@pageRead/i", $page->get("pageRead"), $text);
 		$text = preg_replace("/@pageEdit/i", $page->get("pageEdit"), $text);
 		$text = preg_replace("/@pageError/i", $page->get("pageError"), $text);
 		return preg_replace("/<a(.*?)href=\"(?!javascript:)([^\/\"]+)\"(.*?)>/i",
-							"<a$1href=\"$location$2\"$3>", parent::transform($text));
+							"<a$1href=\"$location$2\"$3>", $this->transform($text));
 	}
 
 	// Handle links
