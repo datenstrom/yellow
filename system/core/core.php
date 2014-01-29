@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.2.7";
+	const Version = "0.2.8";
 	var $page;				//current page data
 	var $pages;				//current page tree from file system
 	var $config;			//configuration
@@ -341,6 +341,7 @@ class YellowPage
 	var $metaDataOffsetBytes;	//meta data offset
 	var $metaData;				//meta data
 	var $headerData;			//response header
+	var $parserData;			//content data of page
 	var $parser;				//content parser
 	var $active;				//page is active location? (boolean)
 	var $visible;				//page is visible location? (boolean)
@@ -445,18 +446,18 @@ class YellowPage
 				if(method_exists($plugin["obj"], "onParse"))
 				{
 					$this->parser = $plugin["obj"];
-					$this->parser->onParse($this, $this->getContent(true));
+					$this->parserData = $this->parser->onParse($this, $this->getContent(true));
 					foreach($this->yellow->plugins->plugins as $key=>$value)
 					{
 						if(method_exists($value["obj"], "onParseContent"))
 						{
-							$output = $value["obj"]->onParseContent($this, $this->parser->textHtml);
-							if(!is_null($output)) { $this->parser->textHtml = $output; break; }
+							$output = $value["obj"]->onParseContent($this, $this->parserData);
+							if(!is_null($output)) { $this->parserData = $output; break; }
 						}
 					}
 					if(!$this->isExisting("description"))
 					{
-						$this->set("description", $this->yellow->toolbox->createTextDescription($this->parser->textHtml, 150));
+						$this->set("description", $this->yellow->toolbox->createTextDescription($this->parserData, 150));
 					}
 					if(!$this->isExisting("keywords"))
 					{
@@ -552,7 +553,7 @@ class YellowPage
 			$text = substrb($this->rawData, $this->metaDataOffsetBytes);
 		} else {
 			$this->parseContent();
-			$text = is_object($this->parser) ? $this->parser->textHtml : "";
+			$text = $this->parserData;
 		}
 		return $text;
 	}
@@ -914,24 +915,24 @@ class YellowPages
 					$this->yellow->config->get("contentDir"), $this->yellow->config->get("contentHomeDir"), "", "");
 			}
 			$fileNames = array();
-			foreach($this->yellow->toolbox->getDirectoryEntries($path, "/.*/", true) as $entry)
+			foreach($this->yellow->toolbox->getDirectoryEntries($path, "/.*/") as $entry)
 			{
 				$fileDefault = $this->yellow->config->get("contentDefaultFile");
-				if(!is_file($path.$entry."/".$fileDefault))
+				if(!is_file($entry."/".$fileDefault))
 				{
 					$regex = "/^[\d\-\_\.]*".strreplaceu('-', '.', $fileDefault)."$/";
-					foreach($this->yellow->toolbox->getDirectoryEntries($path.$entry, $regex, false, false) as $entry2)
+					foreach($this->yellow->toolbox->getDirectoryEntries($entry, $regex, false, false, false) as $entry2)
 					{
 						if($this->yellow->toolbox->normaliseName($entry2) == $fileDefault) { $fileDefault = $entry2; break; }
 					}
 				}
-				array_push($fileNames, $path.$entry."/".$fileDefault);
+				array_push($fileNames, $entry."/".$fileDefault);
 			}
+			$fileDefault = $this->yellow->config->get("contentDefaultFile");
 			$regex = "/.*\\".$this->yellow->config->get("contentExtension")."/";
-			foreach($this->yellow->toolbox->getDirectoryEntries($path, $regex, true, false) as $entry)
+			foreach($this->yellow->toolbox->getDirectoryEntries($path, $regex, true, false, false) as $entry)
 			{
-				$token = $this->yellow->toolbox->normaliseName($entry);
-				if($token != $this->yellow->config->get("contentDefaultFile")) array_push($fileNames, $path.$entry);
+				if($this->yellow->toolbox->normaliseName($entry) != $fileDefault) array_push($fileNames, $path.$entry);
 			}
 			foreach($fileNames as $fileName)
 			{
@@ -1086,11 +1087,11 @@ class YellowText
 		$regex = "/".basename($fileName)."/";
 		foreach($this->yellow->toolbox->getDirectoryEntries($path, $regex, true, false) as $entry)
 		{
-			$fileData = @file("$path/$entry");
+			$fileData = @file($entry);
 			if($fileData)
 			{
-				if(defined("DEBUG") && DEBUG>=2) echo "YellowText::load file:$path/$entry<br/>\n";
-				$this->modified = max($this->modified, filemtime("$path/$entry"));
+				if(defined("DEBUG") && DEBUG>=2) echo "YellowText::load file:$entry<br/>\n";
+				$this->modified = max($this->modified, filemtime($entry));
 				$language = "";
 				foreach($fileData as $line)
 				{
@@ -1362,7 +1363,7 @@ class YellowToolbox
 				$token = $tokens[$i];
 				if($this->normaliseName($token) != $token) $invalid = true;
 				$regex = "/^[\d\-\_\.]*".strreplaceu('-', '.', $token)."$/";
-				foreach($this->getDirectoryEntries($path, $regex) as $entry)
+				foreach($this->getDirectoryEntries($path, $regex, false, true, false) as $entry)
 				{
 					if($this->normaliseName($entry) == $token) { $token = $entry; break; }
 				}
@@ -1373,7 +1374,7 @@ class YellowToolbox
 			$token = rtrim($pathHome, '/');
 			if($this->normaliseName($token) != $token) $invalid = true;
 			$regex = "/^[\d\-\_\.]*".strreplaceu('-', '.', $token)."$/";
-			foreach($this->getDirectoryEntries($path, $regex) as $entry)
+			foreach($this->getDirectoryEntries($path, $regex, false, true, false) as $entry)
 			{
 				if($this->normaliseName($entry) == $token) { $token = $entry; break; }
 			}
@@ -1383,7 +1384,7 @@ class YellowToolbox
 		if(!empty($tokens[$i]) && $tokens[$i].$fileExtension==$fileDefault) $invalid = true;
 		if($this->normaliseName($token) != $token) $invalid = true;
 		$regex = "/^[\d\-\_\.]*".strreplaceu('-', '.', $token)."$/";
-		foreach($this->getDirectoryEntries($path, $regex, false, false) as $entry)
+		foreach($this->getDirectoryEntries($path, $regex, false, false, false) as $entry)
 		{
 			if($this->normaliseName($entry) == $token) { $token = $entry; break; }
 		}
@@ -1469,12 +1470,13 @@ class YellowToolbox
 	}
 	
 	// Return files and directories
-	function getDirectoryEntries($path, $regex = "/.*/", $sort = false, $directories = true)
+	function getDirectoryEntries($path, $regex = "/.*/", $sort = true, $directories = true, $includePath = true)
 	{
 		$entries = array();
 		$dirHandle = @opendir($path);
 		if($dirHandle)
 		{
+			$path = rtrim($path, '/');
 			while(($entry = readdir($dirHandle)) !== false)
 			{
 				if(substru($entry, 0, 1) == ".") continue;
@@ -1482,9 +1484,9 @@ class YellowToolbox
 				{
 					if($directories)
 					{
-						if(is_dir("$path/$entry")) array_push($entries, $entry);
+						if(is_dir("$path/$entry")) array_push($entries, $includePath ? "$path/$entry" : $entry);
 					} else {
-						if(is_file("$path/$entry")) array_push($entries, $entry);
+						if(is_file("$path/$entry")) array_push($entries, $includePath ? "$path/$entry" : $entry);
 					}
 				}
 			}
@@ -1495,16 +1497,15 @@ class YellowToolbox
 	}
 	
 	// Return files and directories recursively
-	function getDirectoryEntriesRecursive($path, $regex = "/.*/", $sort = false, $directories = true, $levelMax = 0)
+	function getDirectoryEntriesRecursive($path, $regex = "/.*/", $sort = true, $directories = true, $levelMax = 0)
 	{
-		$entries = array();
-		foreach($this->getDirectoryEntries($path, $regex, $sort, $directories) as $entry) array_push($entries, "$path/$entry");
 		--$levelMax;
+		$entries = $this->getDirectoryEntries($path, $regex, $sort, $directories);
 		if($levelMax != 0)
 		{
 			foreach($this->getDirectoryEntries($path, "/.*/", $sort, true) as $entry)
 			{
-				$entries = array_merge($entries, $this->getDirectoryEntriesRecursive("$path/$entry", $regex, $sort, $directories, $levelMax));
+				$entries = array_merge($entries, $this->getDirectoryEntriesRecursive($entry, $regex, $sort, $directories, $levelMax));
 			}
 		}
 		return $entries;
@@ -1711,9 +1712,9 @@ class YellowPlugins
 	{
 		global $yellow;
 		$path = dirname(__FILE__);
-		foreach($yellow->toolbox->getDirectoryEntries($path, "/core-.*\.php/", true, false) as $entry) require_once("$path/$entry");
+		foreach($yellow->toolbox->getDirectoryEntries($path, "/core-.*\.php/", true, false) as $entry) require_once($entry);
 		$path = $yellow->config->get("pluginDir");
-		foreach($yellow->toolbox->getDirectoryEntries($path, "/.*\.php/", true, false) as $entry) require_once("$path/$entry");
+		foreach($yellow->toolbox->getDirectoryEntries($path, "/.*\.php/", true, false) as $entry) require_once($entry);
 		foreach($this->plugins as $key=>$value)
 		{
 			$this->plugins[$key]["obj"] = new $value["class"];

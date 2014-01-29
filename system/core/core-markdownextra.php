@@ -5,9 +5,8 @@
 // Markdown extra core plugin
 class YellowMarkdownExtra
 {
-	const Version = "0.2.7";
+	const Version = "0.2.8";
 	var $yellow;		//access to API
-	var $textHtml;		//generated text (HTML format)
 	
 	// Initialise plugin
 	function onLoad($yellow)
@@ -19,7 +18,7 @@ class YellowMarkdownExtra
 	function onParse($page, $text)
 	{
 		$markdown = new YellowMarkdownExtraParser($this->yellow);
-		$this->textHtml = $markdown->transformPage($page, $text);
+		return $markdown->transformPage($page, $text);
 	}
 }
 
