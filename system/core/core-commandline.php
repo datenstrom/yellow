@@ -5,9 +5,13 @@
 // Command line core plugin
 class YellowCommandline
 {
-	const Version = "0.2.3";
+	const Version = "0.2.4";
 	var $yellow;			//access to API
-
+	var $content;			//number of content pages
+	var $error;				//number of build errors
+	var $locationsArgs;		//build locations with arguments
+	var $locationsPage;		//build locations with pagination
+	
 	// Initialise plugin
 	function onLoad($yellow)
 	{
@@ -81,11 +85,12 @@ class YellowCommandline
 		return $statusCode;
 	}
 	
-	// Build static files
+	// Build static locations and files
 	function buildStatic($location, $path)
 	{
 		$this->yellow->toolbox->timerStart($time);
-		$statusCodeMax = $error = 0;
+		$this->content = $this->error = $statusCodeMax = 0;
+		$this->locationsArgs = $this->locationsPage = array();
 		if(empty($location))
 		{
 			$pages = $this->yellow->pages->index(true);
@@ -102,26 +107,36 @@ class YellowCommandline
 		}
 		foreach($pages as $page)
 		{
-			$statusCode = $this->buildStaticLocation($page->location, $path);
-			$statusCodeMax = max($statusCodeMax, $statusCode); if($statusCode >= 400) ++$error;
+			$statusCodeMax = max($statusCodeMax, $this->buildStaticLocation($page->location, $path, empty($location)));
+		}
+		foreach($this->locationsArgs as $location)
+		{
+			$statusCodeMax = max($statusCodeMax, $this->buildStaticLocation($location, $path, true));
+		}
+		foreach($this->locationsPage as $location)
+		{
+			for($pageNumber=2; $pageNumber<=999; ++$pageNumber)
+			{
+				$statusCode = $this->buildStaticLocation($location.$pageNumber, $path, false, true);
+				$statusCodeMax = max($statusCodeMax, $statusCode);
+				if($statusCode == 0) break;
+			}
 		}
 		foreach($fileNamesMedia as $fileName)
 		{
-			$statusCode = $this->buildStaticFile($fileName, "$path/$fileName", "media file");
-			$statusCodeMax = max($statusCodeMax, $statusCode); if($statusCode >= 400) ++$error;
+			$statusCodeMax = max($statusCodeMax, $this->buildStaticFile($fileName, "$path/$fileName", "media file"));
 		}
 		foreach($fileNamesSystem as $fileName)
 		{
-			$statusCode = $this->buildStaticFile($fileName, "$path/$fileName", "system file");
-			$statusCodeMax = max($statusCodeMax, $statusCode); if($statusCode >= 400) ++$error;
+			$statusCodeMax = max($statusCodeMax, $this->buildStaticFile($fileName, "$path/$fileName", "system file"));
 		}
 		$this->yellow->toolbox->timerStop($time);
 		if(defined("DEBUG") && DEBUG>=1) echo "YellowCommandline::buildStatic time:$time ms\n";
-		return array($statusCodeMax, count($pages), count($fileNamesMedia), count($fileNamesSystem), $error);
+		return array($statusCodeMax, $this->content, count($fileNamesMedia), count($fileNamesSystem), $this->error);
 	}
 	
 	// Build static location
-	function buildStaticLocation($location, $path)
+	function buildStaticLocation($location, $path, $analyse = false, $probe = false)
 	{		
 		ob_start();
 		$_SERVER["SERVER_PROTOCOL"] = "HTTP/1.1";
@@ -144,23 +159,8 @@ class YellowCommandline
 				$fileOk = $this->yellow->toolbox->createFile($fileName, $fileData, true) &&
 					$this->yellow->toolbox->modifyFile($fileName, $modified);
 			} else {
-				if(!$this->yellow->toolbox->isFileLocation($location))
-				{
-					$fileName = $this->getStaticFileName($location, $path);
-					$fileData = $this->getStaticRedirect($staticLocation);
-					$fileOk = $this->yellow->toolbox->createFile($fileName, $fileData, true) &&
-						$this->yellow->toolbox->modifyFile($fileName, $modified);
-					if($fileOk)
-					{
-						$fileName = $this->getStaticFileName($staticLocation, $path);
-						$fileData = ob_get_contents();
-						$fileOk = $this->yellow->toolbox->createFile($fileName, $fileData, true) &&
-							$this->yellow->toolbox->modifyFile($fileName, $modified);
-					}
-				} else {
-					$statusCode = 409;
-					$this->yellow->page->error($statusCode, "Type '$contentType' does not match file name!");
-				}
+				$statusCode = 409;
+				$this->yellow->page->error($statusCode, "Type '$contentType' does not match file name!");
 			}
 			if(!$fileOk)
 			{
@@ -169,7 +169,14 @@ class YellowCommandline
 			}
 		}
 		ob_end_clean();
-		if($statusCode>=400) echo "ERROR building location '$location', ".$this->yellow->page->getStatusCode(true)."\n";
+		if($statusCode==200 && $analyse) $this->analyseStaticLocation($fileData);
+		if($statusCode==404 && $probe) $statusCode = 0;
+		if($statusCode != 0) ++$this->content;
+		if($statusCode >= 400)
+		{
+			++$this->error;
+			echo "ERROR building content location '$location', ".$this->yellow->page->getStatusCode(true)."\n";
+		}
 		if(defined("DEBUG") && DEBUG>=1) echo "YellowCommandline::buildStaticLocation status:$statusCode location:$location\n";
 		return $statusCode;
 	}
@@ -206,9 +213,48 @@ class YellowCommandline
 			}
 			ob_end_clean();
 		}
-		if($statusCode>=400) echo "ERROR building $fileType '$fileNameSource', ".$this->yellow->toolbox->getHttpStatusFormatted($statusCode)."\n";
+		if($statusCode >= 400)
+		{
+			++$this->error;
+			echo "ERROR building $fileType '$fileNameSource', ".$this->yellow->toolbox->getHttpStatusFormatted($statusCode)."\n";
+		}
 		if(defined("DEBUG") && DEBUG>=1) echo "YellowCommandline::buildStaticFile status:$statusCode file:$fileNameSource\n";
 		return $statusCode;
+	}
+	
+	// Analyse static location, detect links with arguments and pagination
+	function analyseStaticLocation($fileData)
+	{
+		$serverName = $this->yellow->config->get("serverName");
+		$serverBase = $this->yellow->config->get("serverBase");
+		preg_match_all("/<a(.*?)href=\"([^\"]+)\"(.*?)>/i", $fileData, $matches);
+		foreach($matches[2] as $match)
+		{
+			if(preg_match("/^\w+:\/+(.*?)(\/.*)$/", $match, $tokens))
+			{
+				if($tokens[1] != $serverName) continue;
+				$match = $tokens[2];
+			}
+			if(!$this->yellow->toolbox->isLocationArgs($match)) continue;
+			if(substru($match, 0, strlenu($serverBase)) != $serverBase) continue;
+			$match = rawurldecode(substru($match, strlenu($serverBase)));
+			if(!preg_match("/^(.*\/page:)\d*$/", $match, $tokens))
+			{
+				$match = rtrim($match, '/').'/';
+				if(is_null($this->locationsArgs[$match]))
+				{
+					$this->locationsArgs[$match] = $match;
+					if(defined("DEBUG") && DEBUG>=2) echo "YellowCommandline::analyseStaticLocation type:args location:$match\n";
+				}
+			} else {
+				$match = $tokens[1];
+				if(is_null($this->locationsPage[$match]))
+				{
+					$this->locationsPage[$match] = $match;
+					if(defined("DEBUG") && DEBUG>=2) echo "YellowCommandline::analyseStaticLocation type:page location:$match\n";
+				}
+			}
+		}
 	}
 	
 	// Return static location corresponding to content type
@@ -221,12 +267,12 @@ class YellowCommandline
 			{
 				if($this->yellow->toolbox->isFileLocation($location))
 				{
-					if(!empty($extension) && $extension!=".html") $location .= ".html";
+					if(!empty($extension) && !preg_match("/^\.(html|md)$/", $extension)) $location .= ".html";
 				}
 			} else {
 				if($this->yellow->toolbox->isFileLocation($location))
 				{
-					if(empty($extension)) $location .= ".unknown";
+					if(empty($extension)) $location .= ".invalid";
 				} else {
 					if(preg_match("/^(\w+)\/(\w+)/", $contentType, $matches)) $extension = ".$matches[2]";
 					$location .= "index$extension";

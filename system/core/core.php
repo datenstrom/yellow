@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.2.8";
+	const Version = "0.2.9";
 	var $page;				//current page data
 	var $pages;				//current page tree from file system
 	var $config;			//configuration
@@ -652,6 +652,7 @@ class YellowPage
 class YellowPageCollection extends ArrayObject
 {
 	var $yellow;				//access to API
+	var $filterValue;			//current page filter value
 	var $paginationPage;		//current page number in pagination
 	var $paginationCount;		//highest page number in pagination
 	
@@ -667,16 +668,20 @@ class YellowPageCollection extends ArrayObject
 		if(!empty($key))
 		{
 			$array = array();
-			$value = strtoloweru($value);
+			$value = strreplaceu(' ', '-', strtoloweru($value));
 			$valueLength = strlenu($value);
 			foreach($this->getArrayCopy() as $page)
 			{
 				if($page->isExisting($key))
 				{
-					foreach(preg_split("/,\s*/", strtoloweru($page->get($key))) as $valuePage)
+					foreach(preg_split("/,\s*/", $page->get($key)) as $pageValue)
 					{
-						$length = $exactMatch ? strlenu($valuePage) : $valueLength;
-						if($value == substru($valuePage, 0, $length)) array_push($array, $page);
+						$pageValueLength = $exactMatch ? strlenu($pageValue) : $valueLength;
+						if($value == substru(strreplaceu(' ', '-', strtoloweru($pageValue)), 0, $pageValueLength))
+						{
+							$this->filterValue = $pageValue;
+							array_push($array, $page);
+						}
 					}
 				}
 			}
@@ -786,6 +791,12 @@ class YellowPageCollection extends ArrayObject
 		$pageNumber = $this->paginationPage;
 		$pageNumber = ($pageNumber>=1 && $pageNumber<$this->paginationCount) ? $pageNumber+1 : 0;
 		return $this->getLocationPage($pageNumber);
+	}
+	
+	// Return current page filter
+	function getFilter()
+	{
+		return $this->filterValue;
 	}
 	
 	// Return last modification time for page collection, Unix time
@@ -1272,7 +1283,7 @@ class YellowToolbox
 		if(!empty($locationArgs))
 		{
 			if($this->isFileLocation($location)) $locationArgs = '/'.$locationArgs;
-			$locationArgs = strreplaceu(array('%3A','%2F'), array(':','/'), rawurlencode($locationArgs));
+			$locationArgs = $this->normaliseLocationArgs($locationArgs, false);
 		}
 		return $locationArgs;
 	}
@@ -1293,7 +1304,7 @@ class YellowToolbox
 		if(!empty($locationArgs))
 		{
 			if($this->isFileLocation($location)) $locationArgs = '/'.$locationArgs;
-			$locationArgs = strreplaceu(array('%3A','%2F'), array(':','/'), rawurlencode($locationArgs));
+			$locationArgs = $this->normaliseLocationArgs($locationArgs, false);
 		}
 		return $locationArgs;
 	}
@@ -1408,12 +1419,30 @@ class YellowToolbox
 		return $location;
 	}
 	
-	// Normalise directory/file name and convert unwanted characters
+	// Normalise location arguments
+	function normaliseLocationArgs($text, $lowerCase = true)
+	{
+		if($lowerCase) $text = strreplaceu(' ', '-', strtoloweru($text));
+		if(!preg_match("/^(.*\/)?page:\d*$/", $text)) $text .= '/';
+		return strreplaceu(array('%3A','%2F'), array(':','/'), rawurlencode($text));
+	}
+	
+	// Normalise directory/file name
 	function normaliseName($text, $removeExtension = false)
 	{
 		if(preg_match("/^[\d\-\_\.]+(.*)$/", $text, $matches)) $text = $matches[1];
 		if($removeExtension) $text = ($pos = strrposu($text, '.')) ? substru($text, 0, $pos) : $text;
-		$text = preg_replace("/[^\pL\d\-\_\.]/u", "-", $text);
+		return preg_replace("/[^\pL\d\-\_\.]/u", "-", $text);
+	}
+	
+	// Normalise text into UTF-8 NFC
+	function normaliseUnicode($text)
+	{
+		if(PHP_OS=="Darwin" && !mb_check_encoding($text, "ASCII"))
+		{
+			$utf8nfc = preg_match("//u", $text) && !preg_match('/[^\x00-\x{2FF}]/u', $text);
+			if(!$utf8nfc) $text = iconv("UTF-8-MAC", "UTF-8", $text);
+		}
 		return $text;
 	}
 	
@@ -1480,6 +1509,7 @@ class YellowToolbox
 			while(($entry = readdir($dirHandle)) !== false)
 			{
 				if(substru($entry, 0, 1) == ".") continue;
+				$entry = $this->normaliseUnicode($entry);
 				if(preg_match($regex, $entry))
 				{
 					if($directories)
