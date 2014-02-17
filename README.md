@@ -23,4 +23,3 @@ License and a big thanks
 ------------------------
 * Yellow and extensions by Mark Seuffert are licensed under [GPLv2](http://opensource.org/licenses/GPL-2.0)
 * [PHP Markdown Extra](https://github.com/michelf/php-markdown) by Michel Fortin is licensed under [BSD license](http://opensource.org/licenses/BSD-3-Clause)
-* [Font Awesome](https://github.com/FortAwesome/Font-Awesome) by Dave Gandy is licensed under [OFLv1.1](http://opensource.org/licenses/OFL-1.1)

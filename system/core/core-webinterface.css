@@ -1,4 +1,4 @@
-/* Yellow web interface 0.2.1 */
+/* Yellow web interface 0.2.2 */
 
 .yellow-bar { position:relative; overflow:hidden; line-height:2.0em; }
 .yellow-bar-left { display:block; float:left; }
@@ -47,19 +47,6 @@
 #yellow-pane-edit #yellow-edit-text { margin:0; padding:5px; border:1px solid #bbb; resize:none; font-size:0.9em }
 #yellow-pane-edit #yellow-edit-info { margin:0; padding:5px; border:1px solid #bbb; display:none; }
 #yellow-pane-edit #yellow-edit-buttons { margin:5px 0; }
-#yellow-pane-show { min-width:20em; overflow:auto; }
 #yellow-pane-user { }
 
 .yellow-icon { width:16px; height:16px; display:inline-block; background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAA4UlEQVQoFZWQPQrCQBBGv80qwfyIIoKFhYWl1/EGFl5A7EyhIFgIgnZewpt4A5uAgoWIS0SMiRlJlqzZJtPMtzPvMbAsPqNUGaXoBC4tVJQL9gIsROQj2Kdzc4hqH2Ipsb8LTTge6lvwzo+w4O7AJExBFYI5ohtgwp7Q0hzBeEFsKGelCvEFYk2r2hi8B2cK4SEOMpg6K3yri/YJvIWPD9xxHeTpJKsXaPmAWFHnXYgZBbWKAvA8pMz7qML00glxWOTkRCfwRrpmXHIy6ATDyoTMlLjul3JLXdRd0HFyVlr4AhXBLDxuCuBRAAAAAElFTkSuQmCC); }
-
-@font-face { font-family:'FontAwesome'; font-style:normal; font-weight:normal; src:url('core-fontawesome.woff'); }
-[class*="yellow-icon-"] {
-	font-family:FontAwesome;
-	font-style:normal;
-	font-weight:normal;
-	-webkit-font-smoothing:antialiased;
-}
-.yellow-icon-search:before { content:"\f002"; }
-.yellow-icon-trash-o:before { content:"\f014"; }
-.yellow-icon-caret-down:before { content:"\f0d7"; }
-.yellow-icon-caret-up:before { content:"\f0d8"; }

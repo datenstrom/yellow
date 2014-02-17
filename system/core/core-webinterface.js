@@ -1,16 +1,16 @@
-// Copyright (c) 2013 Datenstrom, http://datenstrom.se
+// Copyright (c) 2013-2014 Datenstrom, http://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 // Yellow main API
 var yellow =
 {
-	version: "0.2.2",
+	version: "0.2.3",
 	onClick: function(e) { yellow.webinterface.hidePanesOnClick(yellow.toolbox.getEventElement(e)); },
 	onKeydown: function(e) { yellow.webinterface.hidePanesOnKeydown(yellow.toolbox.getEventKeycode(e)); },
 	onResize: function() { yellow.webinterface.resizePanes(); },
 	onShow: function(id) { yellow.webinterface.showPane(id); },
 	onLogout: function() { yellow.toolbox.submitForm({"action":"logout"}); },
-	webinterface:{}, page:{}, pages:{}, toolbox:{}, config:{}, text:{}
+	webinterface:{}, page:{}, toolbox:{}, config:{}, text:{}
 }
 
 // Yellow web interface
@@ -40,7 +40,6 @@ yellow.webinterface =
 			{
 				yellow.toolbox.insertBefore(this.createBar("yellow-bar"), body.firstChild);
 				yellow.toolbox.insertAfter(this.createPane("yellow-pane-edit"), body.firstChild);
-				yellow.toolbox.insertAfter(this.createPane("yellow-pane-show"), body.firstChild);
 				yellow.toolbox.insertAfter(this.createPane("yellow-pane-user"), body.firstChild);
 				yellow.toolbox.setText(document.getElementById("yellow-edit-text"), yellow.page.rawData);
 			} else {
@@ -64,12 +63,11 @@ yellow.webinterface =
 			var location = yellow.config.serverBase+yellow.config.pluginLocation;			
 			elementBar.innerHTML =
 				"<div class=\"yellow-bar-left\">"+
-				"<a href=\"http://datenstrom.se/yellow/\" target=\"_blank\"><i class=\"yellow-icon\"></i> Yellow</a>"+
+				"<a href=\"https://github.com/markseu/yellowcms-extensions/blob/master/documentation/README.md\" target=\"_blank\"><i class=\"yellow-icon\"></i> Yellow</a>"+
 				"<a href=\"#\" onclick=\"yellow.onShow('yellow-pane-edit'); return false;\">"+this.getText("Edit")+"</a>"+
-				"<a href=\"#\" onclick=\"yellow.onShow('yellow-pane-show'); return false;\">"+this.getText("Show")+"</a>"+
 				"</div>"+
 				"<div class=\"yellow-bar-right\">"+
-				"<a href=\"#\" onclick=\"yellow.onShow('yellow-pane-user'); return false;\" id=\"yellow-username\">"+yellow.config.userName+" <i class=\"yellow-icon-caret-down\"></i></a>"+
+				"<a href=\"#\" onclick=\"yellow.onShow('yellow-pane-user'); return false;\" id=\"yellow-username\">"+yellow.config.userName+" &#9662;</a>"+
 				"</div>";
 		}
 		return elementBar;
@@ -97,7 +95,6 @@ yellow.webinterface =
 				"</form>";
 		} else if(id == "yellow-pane-edit") {
 			elementDiv.innerHTML =
-				"<p>Editing page...</p>"+
 				"<form method=\"post\">"+
 				"<input type=\"hidden\" name=\"action\" value=\"edit\" />"+
 				"<textarea id=\"yellow-edit-text\" name=\"rawdata\"></textarea>"+
@@ -106,19 +103,6 @@ yellow.webinterface =
 				"<input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("SaveButton")+"\" />"+
 				"</div>"+
 				"</form>";
-		} else if(id == "yellow-pane-show") {
-			elementDiv.innerHTML = "<p>Showing files...</p>";
-			var elementUl = document.createElement("ul");
-			for(var n in yellow.pages)
-			{
-				var elementLi = document.createElement("li");
-				var elementA = document.createElement("a");
-				elementA.setAttribute("href", yellow.pages[n]["location"]);
-				yellow.toolbox.setText(elementA, yellow.pages[n]["title"]);
-				elementLi.appendChild(elementA);
-				elementUl.appendChild(elementLi);
-			}
-			elementDiv.appendChild(elementUl);
 		} else if(id == "yellow-pane-user") {
 			elementDiv.innerHTML =
 				"<p>"+yellow.config.userEmail+"</p>"+
@@ -207,11 +191,6 @@ yellow.webinterface =
 				var height2 = yellow.toolbox.getOuterHeight(document.getElementById("yellow-pane-edit-content"));
 				var height3 = yellow.toolbox.getOuterHeight(document.getElementById("yellow-edit-text"));
 				yellow.toolbox.setOuterHeight(document.getElementById("yellow-edit-text"), height1 - height2 + height3);
-			}
-			if(yellow.toolbox.isVisible(document.getElementById("yellow-pane-show")))
-			{
-				yellow.toolbox.setOuterTop(document.getElementById("yellow-pane-show"), paneTop);
-				yellow.toolbox.setOuterHeight(document.getElementById("yellow-pane-show"), paneHeight, true);
 			}
 			if(yellow.toolbox.isVisible(document.getElementById("yellow-pane-user")))
 			{

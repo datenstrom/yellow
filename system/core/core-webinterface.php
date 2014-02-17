@@ -5,7 +5,7 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.2.5";
+	const Version = "0.2.6";
 	var $yellow;				//access to API
 	var $users;					//web interface users
 	var $activeLocation;		//web interface location? (boolean)
@@ -104,7 +104,6 @@ class YellowWebinterface
 			if($this->isUser())
 			{
 				$header .= "yellow.page.rawData = ".json_encode($this->yellow->page->rawData).";\n";
-				$header .= "yellow.pages = ".json_encode($this->getPagesData()).";\n";
 				$header .= "yellow.config = ".json_encode($this->getConfigData($this->activeUserEmail)).";\n";
 			}
 			$header .= "yellow.text = ".json_encode($this->yellow->text->getData("webinterface", $language)).";\n";
@@ -250,20 +249,6 @@ class YellowWebinterface
 	function isUser()
 	{
 		return !empty($this->activeUserEmail);
-	}
-
-	// Return page tree with content information, two levels
-	function getPagesData()
-	{
-		$data = array();
-		foreach($this->yellow->pages->index(true, 2) as $page)
-		{
-			$data[$page->fileName] = array();
-			$data[$page->fileName]["location"] = $page->getLocation();
-			$data[$page->fileName]["modified"] = $page->getModified();
-			$data[$page->fileName]["title"] = $page->getHtml("title");
-		}
-		return $data;
 	}
 	
 	// Return configuration data including user information
