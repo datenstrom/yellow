@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.2.9";
+	const Version = "0.2.10";
 	var $page;				//current page data
 	var $pages;				//current page tree from file system
 	var $config;			//configuration
@@ -485,35 +485,6 @@ class YellowPage
 		return $output;
 	}
 	
-	// Respond with error page
-	function error($statusCode, $pageError = "")
-	{
-		if(!$this->isExisting("pageError") && $statusCode>0)
-		{
-			$this->statusCode = $statusCode;
-			$this->set("pageError", empty($pageError) ? "Template/snippet error!" : $pageError);
-		}
-	}
-
-	// Respond without page content
-	function clean($statusCode, $responseHeader = "")
-	{
-		if(!$this->isExisting("pageClean") && $statusCode>0)
-		{
-			$this->statusCode = $statusCode;
-			$this->headerData = array();
-			if(!empty($responseHeader)) $this->header($responseHeader);
-			$this->set("pageClean", (string)$statusCode);
-		}
-	}
-	
-	// Add page response header, HTTP format
-	function header($responseHeader)
-	{
-		$tokens = explode(':', $responseHeader, 2);
-		$this->setHeader(trim($tokens[0]), trim($tokens[1]));
-	}
-	
 	// Set page response header
 	function setHeader($key, $value)
 	{
@@ -531,7 +502,7 @@ class YellowPage
 	{
 		$this->metaData[$key] = $value;
 	}
-
+	
 	// Return page meta data
 	function get($key)
 	{
@@ -556,6 +527,33 @@ class YellowPage
 			$text = $this->parserData;
 		}
 		return $text;
+	}
+	
+	// Return parent page relative to current page
+	function getParent()
+	{
+		$parentLocation = $this->yellow->pages->getParentLocation($this->location);
+		return $this->yellow->pages->find($parentLocation, false)->first();
+	}
+	
+	// Return top-level parent page of current page
+	function getParentTop()
+	{
+		$parentTopLocation = $this->yellow->pages->getParentTopLocation($this->location);
+		return $this->yellow->pages->find($parentTopLocation, false)->first();
+	}
+	
+	// Return pages on the same level as current page
+	function getSiblings($showInvisible = false)
+	{
+		$parentLocation = $this->yellow->pages->getParentLocation($this->location);
+		return $this->yellow->pages->findChildren($parentLocation, $showInvisible);
+	}
+	
+	// Return child pages relative to current page
+	function getChildren($showInvisible = false)
+	{
+		return $this->yellow->pages->findChildren($this->location, $showInvisible);
 	}
 	
 	// Return absolute page location
@@ -590,31 +588,33 @@ class YellowPage
 		return $statusCode;
 	}
 	
-	// Return parent page relative to current page
-	function getParent()
+	// Respond with error page
+	function error($statusCode, $pageError = "")
 	{
-		$parentLocation = $this->yellow->pages->getParentLocation($this->location);
-		return $this->yellow->pages->find($parentLocation, false)->first();
+		if(!$this->isExisting("pageError") && $statusCode>0)
+		{
+			$this->statusCode = $statusCode;
+			$this->set("pageError", empty($pageError) ? "Template/snippet error!" : $pageError);
+		}
 	}
-
-	// Return top-level parent page of current page
-	function getParentTop()
+	
+	// Respond with status code, no page content
+	function clean($statusCode, $responseHeader = "")
 	{
-		$parentTopLocation = $this->yellow->pages->getParentTopLocation($this->location);
-		return $this->yellow->pages->find($parentTopLocation, false)->first();
+		if(!$this->isExisting("pageClean") && $statusCode>0)
+		{
+			$this->statusCode = $statusCode;
+			$this->headerData = array();
+			if(!empty($responseHeader)) $this->header($responseHeader);
+			$this->set("pageClean", (string)$statusCode);
+		}
 	}
-
-	// Return pages on the same level as current page
-	function getSiblings($showHidden = false)
+	
+	// Add page response header, HTTP format
+	function header($responseHeader)
 	{
-		$parentLocation = $this->yellow->pages->getParentLocation($this->location);
-		return $this->yellow->pages->findChildren($parentLocation, $showHidden);
-	}
-
-	// Return child pages relative to current page
-	function getChildren($showHidden = false)
-	{
-		return $this->yellow->pages->findChildren($this->location, $showHidden);
+		$tokens = explode(':', $responseHeader, 2);
+		$this->setHeader(trim($tokens[0]), trim($tokens[1]));
 	}
 	
 	// Check if response header exists
@@ -623,7 +623,7 @@ class YellowPage
 		return !is_null($this->headerData[$key]);
 	}
 
-	// Check if meta data exists
+	// Check if page meta data exists
 	function isExisting($key)
 	{
 		return !is_null($this->metaData[$key]);
@@ -848,15 +848,15 @@ class YellowPages
 	}
 	
 	// Return pages from file system
-	function index($showHidden = false, $levelMax = 0)
+	function index($showInvisible = false, $levelMax = 0)
 	{
-		return $this->findChildrenRecursive("", $showHidden, $levelMax);
+		return $this->findChildrenRecursive("", $showInvisible, $levelMax);
 	}
 	
 	// Return page collection with top-level navigation
-	function top($showHidden = false)
+	function top($showInvisible = false)
 	{
-		return $this->findChildren("", $showHidden);
+		return $this->findChildren("", $showInvisible);
 	}
 	
 	// Return page collection with path ancestry
@@ -884,28 +884,28 @@ class YellowPages
 	}
 	
 	// Find child pages
-	function findChildren($location, $showHidden = false)
+	function findChildren($location, $showInvisible = false)
 	{
 		$this->scanChildren($location);
 		$pages = new YellowPageCollection($this->yellow);
-		foreach($this->pages[$location] as $page) if($page->isVisible() || $showHidden) $pages->append($page);
+		foreach($this->pages[$location] as $page) if($page->isVisible() || $showInvisible) $pages->append($page);
 		return $pages;
 	}
 	
 	// Find child pages recursively
-	function findChildrenRecursive($location, $showHidden = false, $levelMax = 0)
+	function findChildrenRecursive($location, $showInvisible = false, $levelMax = 0)
 	{
 		--$levelMax;
 		$this->scanChildren($location);
 		$pages = new YellowPageCollection($this->yellow);
 		foreach($this->pages[$location] as $page)
 		{
-			if($page->isVisible() || $showHidden)
+			if($page->isVisible() || $showInvisible)
 			{
 				$pages->append($page);
 				if(!$this->yellow->toolbox->isFileLocation($page->location) && $levelMax!=0)
 				{
-					$pages->merge($this->findChildrenRecursive($page->location, $showHidden, $levelMax));
+					$pages->merge($this->findChildrenRecursive($page->location, $showInvisible, $levelMax));
 				}
 			}
 		}
