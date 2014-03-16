@@ -5,12 +5,12 @@
 // Command line core plugin
 class YellowCommandline
 {
-	const Version = "0.2.4";
-	var $yellow;			//access to API
-	var $content;			//number of content pages
-	var $error;				//number of build errors
-	var $locationsArgs;		//build locations with arguments
-	var $locationsPage;		//build locations with pagination
+	const Version = "0.2.5";
+	var $yellow;				//access to API
+	var $content;				//number of content pages
+	var $error;					//number of build errors
+	var $locationsArguments;	//build locations with arguments
+	var $locationsPagination;	//build locations with pagination
 	
 	// Initialise plugin
 	function onLoad($yellow)
@@ -67,7 +67,7 @@ class YellowCommandline
 		list($dummy, $command, $path, $location) = $args;
 		if(!empty($path) && $path!="/" && (empty($location) || $location[0]=='/'))
 		{
-			if($this->yellow->config->isExisting("serverName"))
+			if($this->checkStaticConfig())
 			{
 				list($statusCode, $content, $media, $system, $error) = $this->buildStatic($location, $path);
 			} else {
@@ -90,7 +90,7 @@ class YellowCommandline
 	{
 		$this->yellow->toolbox->timerStart($time);
 		$this->content = $this->error = $statusCodeMax = 0;
-		$this->locationsArgs = $this->locationsPage = array();
+		$this->locationsArguments = $this->locationsPagination = array();
 		if(empty($location))
 		{
 			$pages = $this->yellow->pages->index(true);
@@ -109,11 +109,11 @@ class YellowCommandline
 		{
 			$statusCodeMax = max($statusCodeMax, $this->buildStaticLocation($page->location, $path, empty($location)));
 		}
-		foreach($this->locationsArgs as $location)
+		foreach($this->locationsArguments as $location)
 		{
 			$statusCodeMax = max($statusCodeMax, $this->buildStaticLocation($location, $path, true));
 		}
-		foreach($this->locationsPage as $location)
+		foreach($this->locationsPagination as $location)
 		{
 			for($pageNumber=2; $pageNumber<=999; ++$pageNumber)
 			{
@@ -147,22 +147,12 @@ class YellowCommandline
 		$statusCode = $this->yellow->request();
 		if($statusCode != 404)
 		{
-			$fileOk = true;
 			$modified = strtotime($this->yellow->page->getHeader("Last-Modified"));
-			list($contentType, $contentEncoding) = explode(';', $this->yellow->page->getHeader("Content-Type"), 2);
-			$staticLocation = $this->getStaticLocation($location, $contentType);
-			if($location == $staticLocation)
-			{
-				$fileName = $this->getStaticFileName($location, $path);
-				$fileData = ob_get_contents();
-				if($statusCode>=301 && $statusCode<=303) $fileData = $this->getStaticRedirect($this->yellow->page->getHeader("Location"));
-				$fileOk = $this->yellow->toolbox->createFile($fileName, $fileData, true) &&
-					$this->yellow->toolbox->modifyFile($fileName, $modified);
-			} else {
-				$statusCode = 409;
-				$this->yellow->page->error($statusCode, "Type '$contentType' does not match file name!");
-			}
-			if(!$fileOk)
+			$fileName = $this->getStaticFileName($location, $path);
+			$fileData = ob_get_contents();
+			if($statusCode>=301 && $statusCode<=303) $fileData = $this->getStaticRedirect($this->yellow->page->getHeader("Location"));
+			if(!$this->yellow->toolbox->createFile($fileName, $fileData, true) ||
+			   !$this->yellow->toolbox->modifyFile($fileName, $modified))
 			{
 				$statusCode = 500;
 				$this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
@@ -227,6 +217,7 @@ class YellowCommandline
 	{
 		$serverName = $this->yellow->config->get("serverName");
 		$serverBase = $this->yellow->config->get("serverBase");
+		$pagination = $this->yellow->config->get("contentPagination");
 		preg_match_all("/<a(.*?)href=\"([^\"]+)\"(.*?)>/i", $fileData, $matches);
 		foreach($matches[2] as $match)
 		{
@@ -237,49 +228,32 @@ class YellowCommandline
 			}
 			if(!$this->yellow->toolbox->isLocationArgs($match)) continue;
 			if(substru($match, 0, strlenu($serverBase)) != $serverBase) continue;
-			$match = rawurldecode(substru($match, strlenu($serverBase)));
-			if(!preg_match("/^(.*\/page:)\d*$/", $match, $tokens))
+			$location = rawurldecode(substru($match, strlenu($serverBase)));
+			if(!$this->yellow->toolbox->isPaginationLocation($location, $pagination))
 			{
-				$match = rtrim($match, '/').'/';
-				if(is_null($this->locationsArgs[$match]))
+				$location = rtrim($location, '/').'/';
+				if(is_null($this->locationsArguments[$location]))
 				{
-					$this->locationsArgs[$match] = $match;
-					if(defined("DEBUG") && DEBUG>=2) echo "YellowCommandline::analyseStaticLocation type:args location:$match\n";
+					$this->locationsArguments[$location] = $location;
+					if(defined("DEBUG") && DEBUG>=2) echo "YellowCommandline::analyseStaticLocation type:arguments location:$location\n";
 				}
 			} else {
-				$match = $tokens[1];
-				if(is_null($this->locationsPage[$match]))
+				$location = rtrim($location, "0..9");
+				if(is_null($this->locationsPagination[$location]))
 				{
-					$this->locationsPage[$match] = $match;
-					if(defined("DEBUG") && DEBUG>=2) echo "YellowCommandline::analyseStaticLocation type:page location:$match\n";
+					$this->locationsPagination[$location] = $location;
+					if(defined("DEBUG") && DEBUG>=2) echo "YellowCommandline::analyseStaticLocation type:pagination location:$location\n";
 				}
 			}
 		}
 	}
 	
-	// Return static location corresponding to content type
-	function getStaticLocation($location, $contentType)
+	// Check static configuration
+	function checkStaticConfig()
 	{
-		if(!empty($contentType))
-		{
-			$extension = ($pos = strrposu($location, '.')) ? substru($location, $pos) : "";
-			if($contentType == "text/html")
-			{
-				if($this->yellow->toolbox->isFileLocation($location))
-				{
-					if(!empty($extension) && !preg_match("/^\.(html|md)$/", $extension)) $location .= ".html";
-				}
-			} else {
-				if($this->yellow->toolbox->isFileLocation($location))
-				{
-					if(empty($extension)) $location .= ".invalid";
-				} else {
-					if(preg_match("/^(\w+)\/(\w+)/", $contentType, $matches)) $extension = ".$matches[2]";
-					$location .= "index$extension";
-				}
-			}
-		}
-		return $location;
+		$serverName = $this->yellow->config->get("serverName");
+		$serverBase = $this->yellow->config->get("serverBase");
+		return !empty($serverName) && $this->yellow->toolbox->isValidLocation($serverBase) && $serverBase!="/";
 	}
 	
 	// Return static file name from location
