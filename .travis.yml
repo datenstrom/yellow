@@ -5,5 +5,5 @@ php:
   - 5.3
 before_script: 
   - echo "serverName = your.domain.name" >> system/config/config.ini
-  - cat system/config/config.ini
+  - php yellow.php version
 script: php yellow.php build test
