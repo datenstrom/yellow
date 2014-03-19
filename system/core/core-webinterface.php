@@ -5,7 +5,7 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.2.6";
+	const Version = "0.2.7";
 	var $yellow;				//access to API
 	var $users;					//web interface users
 	var $activeLocation;		//web interface location? (boolean)
@@ -24,13 +24,12 @@ class YellowWebinterface
 	}
 
 	// Handle web interface location
-	function onRequest($serverName, $serverBase, $location, $fileName)
+	function onRequest($location)
 	{
 		$statusCode = 0;
 		if($this->checkWebinterfaceLocation($location))
 		{
-			$serverBase .= rtrim($this->yellow->config->get("webinterfaceLocation"), '/');
-			list($location, $fileName) = $this->yellow->getRequestLocationFile($serverBase);
+			list($serverName, $serverBase, $location, $fileName) = $this->yellow->getRequestInformation($this->yellow->config->get("webinterfaceLocation"));
 			if($this->checkUser()) $statusCode = $this->processRequestAction($serverName, $serverBase, $location, $fileName);
 			if($statusCode == 0) $statusCode = $this->yellow->processRequest($serverName, $serverBase, $location, $fileName,
 													false, $this->activeUserFail ? 401 : 0);

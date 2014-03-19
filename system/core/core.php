@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.2.11";
+	const Version = "0.2.12";
 	var $page;				//current page data
 	var $pages;				//current page tree from file system
 	var $config;			//configuration
@@ -58,16 +58,14 @@ class Yellow
 		$this->toolbox->timerStart($time);
 		ob_start();
 		$statusCode = 0;
-		$serverName = $this->config->get("serverName");
-		$serverBase = $this->config->get("serverBase");
-		list($location, $fileName) = $this->getRequestLocationFile($serverBase);
+		list($serverName, $serverBase, $location, $fileName) = $this->getRequestInformation();
 		$this->page = new YellowPage($this, $location);
 		foreach($this->plugins->plugins as $key=>$value)
 		{
 			if(method_exists($value["obj"], "onRequest"))
 			{
 				$this->pages->requestHandler = $key;
-				$statusCode = $value["obj"]->onRequest($serverName, $serverBase, $location, $fileName);
+				$statusCode = $value["obj"]->onRequest($location);
 				if($statusCode != 0) break;
 			}
 		}
@@ -171,11 +169,6 @@ class Yellow
 		{
 			$this->page->error(500, "Parser '".$this->page->get("parser")."' does not exist!");
 		}
-		list($contentType) = explode(';', $this->page->getHeader("Content-Type"));
-		if(!$this->toolbox->isValidContentType($contentType, $this->page->getLocation()))
-		{
-			$this->page->error(500, "Type '$contentType' does not match name!");
-		}
 		$statusCode = $this->page->statusCode;
 		if($statusCode==200 && $this->getRequestHandler()=="core" && $this->page->isExisting("redirect"))
 		{
@@ -192,6 +185,12 @@ class Yellow
 			$statusCode = 304;
 			if($this->page->isHeader("Cache-Control")) $responseHeader = "Cache-Control: ".$this->page->getHeader("Cache-Control");
 			$this->page->clean($statusCode, $responseHeader);
+		}
+		list($contentType) = explode(';', $this->page->getHeader("Content-Type"));
+		if($statusCode==200 && !$this->toolbox->isValidContentType($contentType, $this->page->getLocation()))
+		{
+			$statusCode = 500;
+			$this->page->error($statusCode, "Type '$contentType' does not match name!");
 		}
 		if($this->page->isExisting("pageClean")) ob_clean();
 		if(PHP_SAPI != "cli")
@@ -219,9 +218,12 @@ class Yellow
 		}
 	}
 	
-	// Return request location and file name, without server base
-	function getRequestLocationFile($serverBase)
+	// Return request information
+	function getRequestInformation($serverBaseLocation = "")
 	{
+		$serverName = $this->config->get("serverName");
+		$serverBase = $this->config->get("serverBase");
+		if(!empty($serverBaseLocation)) $serverBase .= rtrim($serverBaseLocation, '/');
 		$location = $this->toolbox->getLocationNormalised();
 		$location = substru($location, strlenu($serverBase));
 		$fileName = $this->toolbox->findFileFromLocation($location,
@@ -231,13 +233,13 @@ class Yellow
 		{
 			$location = rtrim($location, '/');
 			$fileName = $this->toolbox->findFileFromLocation($location,
-				 $this->config->get("contentDir"), $this->config->get("contentHomeDir"),
-				 $this->config->get("contentDefaultFile"), $this->config->get("contentExtension"));
+				$this->config->get("contentDir"), $this->config->get("contentHomeDir"),
+				$this->config->get("contentDefaultFile"), $this->config->get("contentExtension"));
 		}
-		return array($location, $fileName);
+		return array($serverName, $serverBase, $location, $fileName);
 	}
 	
-	// Return name of request handler
+	// Return request handler
 	function getRequestHandler()
 	{
 		return $this->pages->requestHandler;
@@ -834,7 +836,7 @@ class YellowPages
 {
 	var $yellow;			//access to API
 	var $pages;				//scanned pages
-	var $requestHandler;	//request handler
+	var $requestHandler;	//request handler name
 	var $serverBase;		//requested server base
 	var $snippetArgs;		//requested snippet arguments
 	
