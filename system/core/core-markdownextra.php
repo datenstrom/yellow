@@ -5,7 +5,7 @@
 // Markdown extra core plugin
 class YellowMarkdownExtra
 {
-	const Version = "0.2.8";
+	const Version = "0.2.9";
 	var $yellow;		//access to API
 	
 	// Initialise plugin
@@ -25,11 +25,13 @@ class YellowMarkdownExtra
 // Markdown extra parser
 class YellowMarkdownExtraParser extends MarkdownExtraParser
 {
-	var $yellow;	//access to API
+	var $yellow;		//access to API
+	var $idAttributes;	//id attributes
 
 	function __construct($yellow)
 	{
 		$this->yellow = $yellow;
+		$this->idAttributes = array();
 		parent::__construct();
 	}
 	
@@ -44,6 +46,19 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser
 							"<a$1href=\"$location$2\"$3>", $this->transform($text));
 	}
 
+	// Return unique id attribute
+	function getIdAttribute($text)
+	{
+		$text = $this->yellow->toolbox->normaliseName($text, false, true);
+		$text = trim(preg_replace("/-+/", "-", $text), "-");
+		if(is_null($this->idAttributes[$text]))
+		{
+			$this->idAttributes[$text] = $text;
+			$attr = " id=\"$text\"";
+		}
+		return $attr;
+	}
+	
 	// Handle links
 	function doAutoLinks($text)
 	{
@@ -73,6 +88,29 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser
 			$output = "<pre$attr><code>".htmlspecialchars($text, ENT_NOQUOTES)."</code></pre>";
 		}
 		return "\n\n".$this->hashBlock($output)."\n\n";
+	}
+	
+	// Handle headers, text style
+	function _doHeaders_callback_setext($matches)
+	{
+		if ($matches[3] == '-' && preg_match('{^- }', $matches[1])) return $matches[0];
+		$text = $matches[1];
+		$level = $matches[3]{0} == '=' ? 1 : 2;
+		$attr = $this->doExtraAttributes("h$level", $dummy =& $matches[2]);
+		if(empty($attr) && $level==2) $attr = $this->getIdAttribute($text);
+		$output = "<h$level$attr>".$this->runSpanGamut($text)."</h$level>";
+		return "\n".$this->hashBlock($output)."\n\n";
+	}
+	
+	// Handle headers, atx style
+	function _doHeaders_callback_atx($matches)
+	{
+		$text = $matches[2];
+		$level = strlen($matches[1]);
+		$attr = $this->doExtraAttributes("h$level", $dummy =& $matches[3]);
+		if(empty($attr) && $level==2) $attr = $this->getIdAttribute($text);
+		$output = "<h$level$attr>".$this->runSpanGamut($text)."</h$level>";
+		return "\n".$this->hashBlock($output)."\n\n";
 	}
 	
 	// Handle inline links

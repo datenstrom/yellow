@@ -5,9 +5,9 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.2.12";
-	var $page;				//current page data
-	var $pages;				//current page tree from file system
+	const Version = "0.2.13";
+	var $page;				//current page
+	var $pages;				//pages from file system
 	var $config;			//configuration
 	var $text;				//text strings
 	var $toolbox;			//toolbox with helpers
@@ -330,7 +330,7 @@ class Yellow
 	}
 }
 	
-// Yellow page data
+// Yellow page
 class YellowPage
 {
 	var $yellow;				//access to API
@@ -831,7 +831,7 @@ class YellowPageCollection extends ArrayObject
 	}
 }
 
-// Yellow page tree from file system
+// Yellow pages from file system
 class YellowPages
 {
 	var $yellow;			//access to API
@@ -1486,10 +1486,11 @@ class YellowToolbox
 	}
 	
 	// Normalise directory/file name
-	function normaliseName($text, $removeExtension = false)
+	function normaliseName($text, $removeExtension = false, $lowerCase = false)
 	{
 		if(preg_match("/^[\d\-\_\.]+(.*)$/", $text, $matches)) $text = $matches[1];
 		if($removeExtension) $text = ($pos = strrposu($text, '.')) ? substru($text, 0, $pos) : $text;
+		if($lowerCase) $text = strtoloweru($text);
 		return preg_replace("/[^\pL\d\-\_\.]/u", "-", $text);
 	}
 	
