@@ -1,7 +1,7 @@
 Yellow
 ======
 
-Yellow is a CMS **for people** who make websites.
+Yellow is **for people** who make websites.
 
 [![Build Status](https://secure.travis-ci.org/markseu/yellowcms.png)](https://travis-ci.org/markseu/yellowcms)
 
@@ -16,7 +16,7 @@ With Yellow you don't get a lot of extra stuff. There are [Yellow extensions](ht
 
 How do I get started?
 ----------------------
-You already have everything you need, start by editing a page.  
+You already have everything you need. Start editing your website.  
 That's it. For more information see [Yellow documentation](https://github.com/markseu/yellowcms-extensions/blob/master/documentation/README.md).
 
 License and thanks
