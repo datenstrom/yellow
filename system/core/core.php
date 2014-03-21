@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.2.13";
+	const Version = "0.2.14";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -1485,20 +1485,20 @@ class YellowToolbox
 		return $fileNames;
 	}
 	
-	// Normalise directory/file name
-	function normaliseName($text, $removeExtension = false, $lowerCase = false)
+	// Normalise directory/file/attribute name
+	function normaliseName($text, $removeExtension = false, $filterStrict = false)
 	{
 		if(preg_match("/^[\d\-\_\.]+(.*)$/", $text, $matches)) $text = $matches[1];
 		if($removeExtension) $text = ($pos = strrposu($text, '.')) ? substru($text, 0, $pos) : $text;
-		if($lowerCase) $text = strtoloweru($text);
+		if($filterStrict) $text = strreplaceu('.', '-', strtoloweru($text));
 		return preg_replace("/[^\pL\d\-\_\.]/u", "-", $text);
 	}
 	
 	// Normalise location arguments
-	function normaliseArgs($text, $appendSlash = true, $lowerCase = true)
+	function normaliseArgs($text, $appendSlash = true, $filterStrict = true)
 	{
 		if($appendSlash) $text .= '/';
-		if($lowerCase) $text = strreplaceu(' ', '-', strtoloweru($text));
+		if($filterStrict) $text = strreplaceu(' ', '-', strtoloweru($text));
 		return strreplaceu(array('%3A','%2F'), array(':','/'), rawurlencode($text));
 	}
 	
