@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.2.14";
+	const Version = "0.2.15";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -277,7 +277,7 @@ class Yellow
 		}
 	}
 	
-	// Execute code snippet
+	// Execute snippet code
 	function snippet($name, $args = NULL)
 	{
 		$this->pages->snippetArgs = func_get_args();
@@ -362,9 +362,9 @@ class YellowPage
 		$this->fileName = $fileName;
 		$this->rawData = $rawData;
 		$this->active = $this->yellow->toolbox->isActiveLocation($this->yellow->pages->serverBase, $this->location,
-							$this->yellow->page->location);
+			$this->yellow->page->location);
 		$this->visible = $this->yellow->toolbox->isVisibleLocation($this->yellow->pages->serverBase, $this->location,
-							$fileName, $this->yellow->config->get("contentDir"));
+			$fileName, $this->yellow->config->get("contentDir"));
 		$this->cacheable = $cacheable;
 		$this->statusCode = $statusCode;
 		if(!empty($pageError)) $this->error($statusCode, $pageError);
@@ -381,7 +381,8 @@ class YellowPage
 		$this->set("sitename", $this->yellow->config->get("sitename"));
 		$this->set("author", $this->yellow->config->get("author"));
 		$this->set("language", $this->yellow->config->get("language"));
-		$this->set("template", $this->yellow->config->get("template"));
+		$this->set("template", $this->yellow->toolbox->findTemplateFromFile($this->fileName,
+			$this->yellow->config->get("templateDir"), $this->yellow->config->get("template")));
 		$this->set("style", $this->yellow->config->get("style"));
 		$this->set("parser", $this->yellow->config->get("parser"));
 		
@@ -678,7 +679,7 @@ class YellowPageCollection extends ArrayObject
 						$pageValueLength = $exactMatch ? strlenu($pageValue) : $valueLength;
 						if($value == substru(strreplaceu(' ', '-', strtoloweru($pageValue)), 0, $pageValueLength))
 						{
-							$this->filterValue = $pageValue;
+							$this->filterValue = substru($pageValue, 0, $pageValueLength);
 							array_push($array, $page);
 						}
 					}
@@ -1483,6 +1484,13 @@ class YellowToolbox
 			}
 		}
 		return $fileNames;
+	}
+	
+	// Return template from file path
+	function findTemplateFromFile($fileName, $templateDir, $templateDefault)
+	{
+		if(preg_match("/^.*\/(.+?)$/", dirname($fileName), $matches)) $templateFolder = $this->normaliseName($matches[1]);
+		return is_file("$templateDir$templateFolder.php") ? $templateFolder : $templateDefault;
 	}
 	
 	// Normalise directory/file/attribute name

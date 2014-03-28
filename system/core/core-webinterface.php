@@ -131,7 +131,7 @@ class YellowWebinterface
 		return $statusCode;
 	}
 	
-	// Create or update user
+	// Create or update user account
 	function userCommand($args)
 	{
 		$statusCode = 0;

@@ -16,10 +16,10 @@ With Yellow you don't get a lot of extra stuff. There are [Yellow extensions](ht
 
 How do I get started?
 ----------------------
-You already have everything you need. Start editing your website.  
+You already have everything you need. Start by editing your website.  
 That's it. For more information see [Yellow documentation](https://github.com/markseu/yellowcms-extensions/blob/master/documentation/README.md).
 
 License and thanks
 ------------------
 * Yellow by Mark Seuffert and David Fehrmann is licensed under [GPLv2](http://opensource.org/licenses/GPL-2.0). 
-* [PHP Markdown Extra](https://github.com/michelf/php-markdown) by Michel Fortin is licensed under [BSD license](http://opensource.org/licenses/BSD-3-Clause)
+* [PHP Markdown Extra](https://github.com/michelf/php-markdown) by Michel Fortin is licensed under [BSD license](http://opensource.org/licenses/BSD-3-Clause).
