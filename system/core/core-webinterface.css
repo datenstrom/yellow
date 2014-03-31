@@ -1,9 +1,10 @@
-/* Yellow web interface 0.2.2 */
+/* Yellow web interface 0.2.3 */
 
 .yellow-bar { position:relative; overflow:hidden; line-height:2.0em; }
 .yellow-bar-left { display:block; float:left; }
 .yellow-bar-left a { margin-right:1em; }
 .yellow-bar-right { display:block; float:right; }
+.yellow-body-modal-open { overflow:hidden; }
 
 .yellow-pane { 
 	position:absolute; display:none; z-index:10; 

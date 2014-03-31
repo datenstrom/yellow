@@ -4,7 +4,7 @@
 // Yellow main API
 var yellow =
 {
-	version: "0.2.3",
+	version: "0.2.4",
 	onClick: function(e) { yellow.webinterface.hidePanesOnClick(yellow.toolbox.getEventElement(e)); },
 	onKeydown: function(e) { yellow.webinterface.hidePanesOnKeydown(yellow.toolbox.getEventKeycode(e)); },
 	onResize: function() { yellow.webinterface.resizePanes(); },
@@ -116,11 +116,13 @@ yellow.webinterface =
 	// Show or hide pane
 	showPane: function(id)
 	{
-		if(!yellow.toolbox.isVisible(document.getElementById(id)))
+		var element = document.getElementById(id);
+		if(!yellow.toolbox.isVisible(element))
 		{
 			this.hidePanes();
 			if(yellow.debug) console.log("yellow.webinterface.showPane id:"+id);
-			document.getElementById(id).style.display = "block";
+			element.style.display = "block";
+			yellow.toolbox.addClass(document.body, "yellow-body-modal-open");
 			this.resizePanes();
 		} else {
 			this.hidePane(id);
@@ -130,10 +132,12 @@ yellow.webinterface =
 	// Hide pane
 	hidePane: function(id)
 	{
-		if(yellow.toolbox.isVisible(document.getElementById(id)))
+		var element = document.getElementById(id);
+		if(yellow.toolbox.isVisible(element))
 		{
 			if(yellow.debug) console.log("yellow.webinterface.hidePane id:"+id);
-			document.getElementById(id).style.display = "none";
+			element.style.display = "none";
+			yellow.toolbox.removeClass(document.body, "yellow-body-modal-open");
 		}
 	},
 
@@ -230,7 +234,21 @@ yellow.toolbox =
 	{
 		referenceElement.parentNode.insertBefore(newElement, referenceElement.nextSibling);
 	},
-	
+
+	// Add element class
+	addClass: function(element, name)
+	{
+		var string = element.className + " " + name;
+		element.className = string.replace(/^\s+|\s+$/, "");
+	},
+
+	// Remove element class
+	removeClass: function(element, name)
+	{
+		var string = (" " + element.className + " ").replace(" " + name + " ", " ");
+		element.className = string.replace(/^\s+|\s+$/, "");
+	},
+
 	// Add event handler
 	addEvent: function(element, type, handler)
 	{
@@ -266,7 +284,7 @@ yellow.toolbox =
 	
 	setOuterHeight: function(element, height, maxHeight)
 	{
-		height -=this.getBoxSize(element).height;
+		height -= this.getBoxSize(element).height;
 		if(maxHeight)
 		{
 			element.style.maxHeight = Math.max(0, height) + "px";
@@ -278,14 +296,14 @@ yellow.toolbox =
 	// Return element width/height in pixel, including padding and border
 	getOuterWidth: function(element, includeMargin)
 	{
-		width = element.offsetWidth;
+		var width = element.offsetWidth;
 		if(includeMargin) width += this.getMarginSize(element).width;
 		return width;
 	},
 
 	getOuterHeight: function(element, includeMargin)
 	{
-		height = element.offsetHeight;
+		var height = element.offsetHeight;
 		if(includeMargin) height += this.getMarginSize(element).height;
 		return height;
 	},
