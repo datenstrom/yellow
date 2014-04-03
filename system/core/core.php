@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.2.15";
+	const Version = "0.2.16";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -537,9 +537,10 @@ class YellowPage
 	}
 	
 	// Return top-level parent page of current page
-	function getParentTop()
+	function getParentTop($homeFailback = false)
 	{
 		$parentTopLocation = $this->yellow->pages->getParentTopLocation($this->location);
+		if($homeFailback && !$this->yellow->isContentDirectory($parentTopLocation)) $parentTopLocation = "/";
 		return $this->yellow->pages->find($parentTopLocation, false)->first();
 	}
 	
