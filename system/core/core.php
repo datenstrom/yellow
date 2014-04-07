@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.2.16";
+	const Version = "0.2.17";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -854,7 +854,7 @@ class YellowPages
 		return new YellowPageCollection($this->yellow);
 	}
 	
-	// Return pages from file system
+	// Return page collection with all pages from file system
 	function index($showInvisible = false, $levelMax = 0)
 	{
 		return $this->findChildrenRecursive("", $showInvisible, $levelMax);

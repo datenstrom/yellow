@@ -4,11 +4,12 @@
 // Yellow main API
 var yellow =
 {
-	version: "0.2.4",
+	version: "0.2.5",
 	onClick: function(e) { yellow.webinterface.hidePanesOnClick(yellow.toolbox.getEventElement(e)); },
 	onKeydown: function(e) { yellow.webinterface.hidePanesOnKeydown(yellow.toolbox.getEventKeycode(e)); },
 	onResize: function() { yellow.webinterface.resizePanes(); },
 	onShow: function(id) { yellow.webinterface.showPane(id); },
+	onHide: function(id) { yellow.webinterface.hidePane(id); },
 	onLogout: function() { yellow.toolbox.submitForm({"action":"logout"}); },
 	webinterface:{}, page:{}, toolbox:{}, config:{}, text:{}
 }
@@ -42,6 +43,12 @@ yellow.webinterface =
 				yellow.toolbox.insertAfter(this.createPane("yellow-pane-edit"), body.firstChild);
 				yellow.toolbox.insertAfter(this.createPane("yellow-pane-user"), body.firstChild);
 				yellow.toolbox.setText(document.getElementById("yellow-edit-text"), yellow.page.rawData);
+				if(yellow.page.permissions)
+				{
+					document.getElementById("yellow-edit-cancel").style.display = "none";
+				} else {
+					document.getElementById("yellow-edit-save").style.display = "none";
+				}
 			} else {
 				yellow.toolbox.insertBefore(this.createBar("yellow-bar", true), body.firstChild);
 				yellow.toolbox.insertAfter(this.createPane("yellow-pane-login", true), body.firstChild);
@@ -100,7 +107,8 @@ yellow.webinterface =
 				"<textarea id=\"yellow-edit-text\" name=\"rawdata\"></textarea>"+
 				"<div id=\"yellow-edit-info\" /></div>"+
 				"<div id=\"yellow-edit-buttons\">"+
-				"<input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("SaveButton")+"\" />"+
+				"<input id=\"yellow-edit-save\" class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("SaveButton")+"\" />"+
+				"<input id=\"yellow-edit-cancel\" class=\"yellow-btn\" type=\"button\" onclick=\"yellow.onHide('yellow-pane-edit'); return false;\" value=\""+this.getText("CancelButton")+"\" />"+
 				"</div>"+
 				"</form>";
 		} else if(id == "yellow-pane-user") {

@@ -5,7 +5,7 @@
 // Command line core plugin
 class YellowCommandline
 {
-	const Version = "0.2.6";
+	const Version = "0.2.7";
 	var $yellow;				//access to API
 	var $content;				//number of content pages
 	var $media;					//number of media files
@@ -352,6 +352,11 @@ class YellowCommandline
 				$statusCode = $value["obj"]->onCommand($args);
 				if($statusCode != 0) break;
 			}
+		}
+		if($statusCode == 0)
+		{
+			$statusCode = 400;
+			echo "Yellow command line: Invalid arguments\n";
 		}
 		return $statusCode;
 	}
