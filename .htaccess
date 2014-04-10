@@ -1,21 +1,26 @@
-# Yellow .htaccess
 <IfModule mod_rewrite.c>
 RewriteEngine on
 
-# RewriteBase /yellow
+# Yellow dynamic pages
 
 RewriteCond %{ENV:REDIRECT_STATUS} ^$
 RewriteRule ^(content|system)/ error404 [L]
+RewriteCond %{DOCUMENT_ROOT}/yellow.php -f
 RewriteCond %{REQUEST_URI} \.(css|js|png)$
 RewriteRule ^media/plugins/(core-.+) system/core/$1 [L]
+RewriteCond %{DOCUMENT_ROOT}/yellow.php -f
 RewriteCond %{REQUEST_URI} \.(css|js|png)$
 RewriteRule ^media/plugins/(.+) system/plugins/$1 [L]
 
-RewriteRule ^$ yellow.php [L]
+RewriteCond %{DOCUMENT_ROOT}/yellow.php -f
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ yellow.php [L]
+DirectoryIndex index.html yellow.php
+
+# Yellow static pages
 
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^[^\.]+$ - [T=text/html,L]
+ErrorDocument 404 /error404.html
 </IfModule>
