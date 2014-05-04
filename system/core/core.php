@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.2.17";
+	const Version = "0.2.18";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -65,7 +65,7 @@ class Yellow
 			if(method_exists($value["obj"], "onRequest"))
 			{
 				$this->pages->requestHandler = $key;
-				$statusCode = $value["obj"]->onRequest($location);
+				$statusCode = $value["obj"]->onRequest($serverName, $serverBase, $location, $fileName);
 				if($statusCode != 0) break;
 			}
 		}
@@ -1527,18 +1527,18 @@ class YellowToolbox
 	{
 		switch($statusCode)
 		{
-			case 0:   $text = "$_SERVER[SERVER_PROTOCOL] $statusCode No data"; break;
-			case 200: $text = "$_SERVER[SERVER_PROTOCOL] $statusCode OK"; break;
-			case 301: $text = "$_SERVER[SERVER_PROTOCOL] $statusCode Moved permanently"; break;
-			case 302: $text = "$_SERVER[SERVER_PROTOCOL] $statusCode Moved temporarily"; break;
-			case 303: $text = "$_SERVER[SERVER_PROTOCOL] $statusCode Reload please"; break;
-			case 304: $text = "$_SERVER[SERVER_PROTOCOL] $statusCode Not modified"; break;
-			case 400: $text = "$_SERVER[SERVER_PROTOCOL] $statusCode Bad request"; break;
-			case 401: $text = "$_SERVER[SERVER_PROTOCOL] $statusCode Unauthorised"; break;
-			case 404: $text = "$_SERVER[SERVER_PROTOCOL] $statusCode Not found"; break;
-			case 424: $text = "$_SERVER[SERVER_PROTOCOL] $statusCode Does not exist"; break;
-			case 500: $text = "$_SERVER[SERVER_PROTOCOL] $statusCode Server error"; break;
-			default:  $text = "$_SERVER[SERVER_PROTOCOL] $statusCode Unknown status";
+			case 0:		$text = "$_SERVER[SERVER_PROTOCOL] $statusCode No data"; break;
+			case 200:	$text = "$_SERVER[SERVER_PROTOCOL] $statusCode OK"; break;
+			case 301:	$text = "$_SERVER[SERVER_PROTOCOL] $statusCode Moved permanently"; break;
+			case 302:	$text = "$_SERVER[SERVER_PROTOCOL] $statusCode Moved temporarily"; break;
+			case 303:	$text = "$_SERVER[SERVER_PROTOCOL] $statusCode Reload please"; break;
+			case 304:	$text = "$_SERVER[SERVER_PROTOCOL] $statusCode Not modified"; break;
+			case 400:	$text = "$_SERVER[SERVER_PROTOCOL] $statusCode Bad request"; break;
+			case 401:	$text = "$_SERVER[SERVER_PROTOCOL] $statusCode Unauthorised"; break;
+			case 404:	$text = "$_SERVER[SERVER_PROTOCOL] $statusCode Not found"; break;
+			case 424:	$text = "$_SERVER[SERVER_PROTOCOL] $statusCode Does not exist"; break;
+			case 500:	$text = "$_SERVER[SERVER_PROTOCOL] $statusCode Server error"; break;
+			default:	$text = "$_SERVER[SERVER_PROTOCOL] $statusCode Unknown status";
 		}
 		return $text;
 	}
@@ -1733,21 +1733,6 @@ class YellowToolbox
 		if(preg_match("/^.*\/([\w\-]+)/", $text, $matches)) $text = ucfirst($matches[1]);
 		return $text;
 	}
-	
-	// Detect web browser language
-	function detectBrowserLanguage($languagesAllowed, $languageDefault)
-	{
-		$language = $languageDefault;
-		if(isset($_SERVER["HTTP_ACCEPT_LANGUAGE"]))
-		{
-			foreach(preg_split("/,\s*/", $_SERVER["HTTP_ACCEPT_LANGUAGE"]) as $string)
-			{
-				$tokens = explode(';', $string, 2);
-				if(in_array($tokens[0], $languagesAllowed)) { $language = $tokens[0]; break; }
-			}
-		}
-		return $language;
-	}
 
 	// Detect PNG and JPG image dimensions
 	function detectImageDimensions($fileName)
@@ -1788,7 +1773,75 @@ class YellowToolbox
 		}
 		return array($width, $height);
 	}
-
+	
+	// Create random text for cryptography
+	function createSalt($length, $bcryptFormat = false)
+	{
+		$dataBuffer = $salt = "";
+		$dataBufferSize = $bcryptFormat ? intval(ceil($length/4) * 3) : intval(ceil($length/2));
+		if(empty($dataBuffer) && function_exists("mcrypt_create_iv"))
+		{
+			$dataBuffer = @mcrypt_create_iv($dataBufferSize, MCRYPT_DEV_URANDOM);
+		}
+		if(empty($dataBuffer) && function_exists("openssl_random_pseudo_bytes"))
+		{
+			$dataBuffer = @openssl_random_pseudo_bytes($dataBufferSize);
+		}
+		if(strlenb($dataBuffer) == $dataBufferSize)
+		{
+			if($bcryptFormat)
+			{
+				$salt = substrb(base64_encode($dataBuffer), 0, $length);
+				$base64Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+				$bcrypt64Chars = "./ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+				$salt = strtr($salt, $base64Chars, $bcrypt64Chars);
+			} else {
+				$salt = substrb(bin2hex($dataBuffer), 0, $length);
+			}
+		}
+		return $salt;
+	}
+	
+	// Create hash with random salt
+	function createHash($text, $algorithm, $cost = 0)
+	{
+		$hash = "";
+		switch($algorithm)
+		{
+			case "bcrypt":	$prefix = sprintf("$2y$%02d$", $cost);
+							$salt = $this->createSalt(22, true);
+							$hash = crypt($text, $prefix.$salt);
+							if(empty($salt) || strlenb($hash)!=60) $hash = "";
+							break;
+			case "sha256":	$prefix = "$5y$";
+							$salt = $this->createSalt(32);
+							$hash = "$prefix$salt".hash("sha256", $salt.$text);
+							if(empty($salt) || strlenb($hash)!=100) $hash = "";
+							break;
+		}
+		return $hash;
+	}
+	
+	// Verify that text matches hash
+	function verifyHash($text, $algorithm, $hash)
+	{
+		$hashCalculated = "";
+		switch($algorithm)
+		{
+			case "bcrypt":	if(substrb($hash, 0, 4) == "$2y$") $hashCalculated = crypt($text, $hash); break;
+			case "sha256":	if(substrb($hash, 0, 4) == "$5y$")
+							{
+								$prefix = substrb($hash, 0, 4);
+								$salt = substrb($hash, 4, 32);
+								$hashCalculated = "$prefix$salt".hash("sha256", $salt.$text);
+							}
+							break;
+		}
+		$ok = !empty($hashCalculated) && strlenb($hashCalculated)==strlenb($hash);
+		if($ok) for($i=0; $i<strlenb($hashCalculated); ++$i) $ok &= $hashCalculated[$i] == $hash[$i];
+		return $ok;
+	}
+	
 	// Start timer
 	function timerStart(&$time)
 	{

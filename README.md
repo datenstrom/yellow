@@ -11,13 +11,12 @@ How do I install this?
 2. Copy all files to your web hosting.  
 3. Open your website in a browser.
 
-Installation requirements are Apache, mod_rewrite and PHP 5.3.  
-With Yellow you don't get a lot of extra stuff. There are [Yellow extensions](https://github.com/markseu/yellowcms-extensions/blob/master/README.md).
+Installation requirements are Apache, mod_rewrite, mod_ssl and PHP 5.3.  
 
 How do I get started?
-----------------------
-You already have everything you need. Start by editing your website.  
-That's it. For more information see [Yellow documentation](https://github.com/markseu/yellowcms-extensions/blob/master/documentation/README.md).
+---------------------
+You already have everything you need. Start by editing your own website.  
+There are [Yellow extensions](https://github.com/markseu/yellowcms-extensions). For more information see [Yellow documentation](https://github.com/markseu/yellowcms-extensions/blob/master/documentation/README.md)
 
 License and thanks
 ------------------

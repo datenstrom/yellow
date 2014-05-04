@@ -5,7 +5,7 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.2.8";
+	const Version = "0.2.9";
 	var $yellow;				//access to API
 	var $users;					//web interface users
 	var $active;				//web interface is active location? (boolean)
@@ -19,12 +19,14 @@ class YellowWebinterface
 		$this->yellow->config->setDefault("webinterfaceLocation", "/edit/");
 		$this->yellow->config->setDefault("webinterfaceUserFile", "user.ini");
 		$this->yellow->config->setDefault("webinterfaceUserHome", "/");
+		$this->yellow->config->setDefault("webinterfaceUserHashAlgorithm", "bcrypt");
+		$this->yellow->config->setDefault("webinterfaceUserHashCost", "10");
 		$this->users = new YellowWebinterfaceUsers($yellow);
 		$this->users->load($this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile"));
 	}
 
 	// Handle web interface location
-	function onRequest($location)
+	function onRequest($serverName, $serverBase, $location, $fileName)
 	{
 		$statusCode = 0;
 		if($this->checkLocation($location))
@@ -141,8 +143,17 @@ class YellowWebinterface
 		if(!empty($email) && !empty($password) && (empty($home) || $home[0]=='/'))
 		{
 			$fileName = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
-			$statusCode = $this->users->createUser($fileName, $email, $password, $name, $language, $home)  ? 200 : 500;
-			if($statusCode != 200) echo "ERROR updating configuration: Can't write file '$fileName'!\n";
+			$algorithm = $this->yellow->config->get("webinterfaceUserHashAlgorithm");
+			$cost = $this->yellow->config->get("webinterfaceUserHashCost");
+			$hash = $this->yellow->toolbox->createHash($password, $algorithm, $cost);
+			if(empty($hash))
+			{
+				$statusCode = 500;
+				echo "ERROR creating hash: Algorithm '$algorithm' not supported!\n";
+			} else {
+				$statusCode = $this->users->createUser($fileName, $email, $hash, $name, $language, $home)  ? 200 : 500;
+				if($statusCode != 200) echo "ERROR updating configuration: Can't write file '$fileName'!\n";
+			}
 			echo "Yellow $command: User account ".($statusCode!=200 ? "not " : "");
 			echo ($this->users->isExisting($email) ? "updated" : "created")."\n";
 		} else {
@@ -230,10 +241,10 @@ class YellowWebinterface
 				$this->loginFailed = true;
 			}
 		} else if(isset($_COOKIE["login"])) {
-			$cookie = $_COOKIE["login"];
-			if($this->users->checkCookie($cookie))
+			list($email, $session) = $this->users->getCookieInformation($_COOKIE["login"]);
+			if($this->users->checkCookie($email, $session))
 			{
-				$this->users->email = $this->users->getCookieEmail($cookie);
+				$this->users->email = $email;
 			} else {
 				$this->loginFailed = true;
 			}
@@ -315,22 +326,21 @@ class YellowWebinterfaceUsers
 	}
 	
 	// Set user data
-	function set($email, $password, $name, $language, $home)
+	function set($email, $hash, $name, $language, $home)
 	{
 		$this->users[$email] = array();
 		$this->users[$email]["email"] = $email;
-		$this->users[$email]["password"] = $password;
+		$this->users[$email]["hash"] = $hash;
 		$this->users[$email]["name"] = $name;
 		$this->users[$email]["language"] = $language;
 		$this->users[$email]["home"] = $home;
-		$this->users[$email]["session"] = hash("sha256", $email.$password.$password.$email);
 	}
 	
 	// Create or update user in file
-	function createUser($fileName, $email, $password, $name, $language, $home)
+	function createUser($fileName, $email, $hash, $name, $language, $home)
 	{
 		$email = strreplaceu(',', '-', $email);
-		$password = hash("sha256", $email.$password);
+		$hash = strreplaceu(',', '-', $hash);
 		$fileNewUser = true;
 		$fileData = @file($fileName);
 		if($fileData)
@@ -345,7 +355,7 @@ class YellowWebinterfaceUsers
 						$name = strreplaceu(',', '-', empty($name) ? $matches[3] : $name);
 						$language = strreplaceu(',', '-', empty($language) ? $matches[4] : $language);
 						$home = strreplaceu(',', '-', empty($home) ? $matches[5] : $home);
-						$fileDataNew .= "$email,$password,$name,$language,$home\n";
+						$fileDataNew .= "$email,$hash,$name,$language,$home\n";
 						$fileNewUser = false;
 						continue;
 					}
@@ -358,7 +368,7 @@ class YellowWebinterfaceUsers
 			$name = strreplaceu(',', '-', empty($name) ? $this->yellow->config->get("sitename") : $name);
 			$language = strreplaceu(',', '-', empty($language) ? $this->yellow->config->get("language") : $language);
 			$home = strreplaceu(',', '-', empty($home) ? $this->yellow->config->get("webinterfaceUserHome") : $home);
-			$fileDataNew .= "$email,$password,$name,$language,$home\n";
+			$fileDataNew .= "$email,$hash,$name,$language,$home\n";
 		}
 		return $this->yellow->toolbox->createFile($fileName, $fileDataNew);
 	}
@@ -366,7 +376,8 @@ class YellowWebinterfaceUsers
 	// Check user login
 	function checkUser($email, $password)
 	{
-		return $this->isExisting($email) && hash("sha256", $email.$password)==$this->users[$email]["password"];
+		$algorithm = $this->yellow->config->get("webinterfaceUserHashAlgorithm");
+		return $this->isExisting($email) && $this->yellow->toolbox->verifyHash($password, $algorithm, $this->users[$email]["hash"]);
 	}
 
 	// Create browser cookie
@@ -374,30 +385,30 @@ class YellowWebinterfaceUsers
 	{
 		if($this->isExisting($email))
 		{
-			$salt = hash("sha256", uniqid(mt_rand(), true));
-			$text = $email.";".$salt.";".hash("sha256", $salt.$this->users[$email]["session"]);
-			setcookie($cookieName, $text, time()+60*60*24*30*365*10, "/");
+			$location = $this->yellow->config->get("serverBase").$this->yellow->config->get("webinterfaceLocation");
+			$session = $this->yellow->toolbox->createHash($this->users[$email]["hash"], "sha256");
+			if(empty($session)) $session = "error-hash-algorithm-sha256";
+			setcookie($cookieName, "$email,$session", time()+60*60*24*30*365, $location);
 		}
 	}
 	
 	// Destroy browser cookie
 	function destroyCookie($cookieName)
 	{
-		setcookie($cookieName, "", time()-3600, "/");
+		$location = $this->yellow->config->get("serverBase").$this->yellow->config->get("webinterfaceLocation");
+		setcookie($cookieName, "", time()-3600, $location);
+	}
+	
+	// Return information from browser cookie
+	function getCookieInformation($cookie)
+	{
+		return explode(',', $cookie, 2);
 	}
 	
 	// Check user login from browser cookie
-	function checkCookie($cookie)
+	function checkCookie($email, $session)
 	{
-		list($email, $salt, $session) = explode(';', $cookie);
-		return $this->isExisting($email) && hash("sha256", $salt.$this->users[$email]["session"])==$session;
-	}
-	
-	// Return user email from browser cookie
-	function getCookieEmail($cookie)
-	{
-		list($email, $salt, $session) = explode(';', $cookie);
-		return $email;
+		return $this->isExisting($email) && $this->yellow->toolbox->verifyHash($this->users[$email]["hash"], "sha256", $session);
 	}
 	
 	// Return user name
