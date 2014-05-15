@@ -5,7 +5,7 @@
 // Command line core plugin
 class YellowCommandline
 {
-	const Version = "0.2.7";
+	const Version = "0.2.8";
 	var $yellow;				//access to API
 	var $content;				//number of content pages
 	var $media;					//number of media files
@@ -77,7 +77,7 @@ class YellowCommandline
 				$statusCode = 500;
 				list($this->content, $this->media, $this->system, $this->error) = array(0, 0, 0, 1);
 				$fileName = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
-				echo "ERROR bulding pages: Please configure serverName and serverBase in file '$fileName'!\n";
+				echo "ERROR bulding pages: Please configure serverScheme, serverName and serverBase in file '$fileName'!\n";
 			}
 			echo "Yellow $command: $this->content content, $this->media media, $this->system system";
 			echo ", $this->error error".($this->error!=1 ? 's' : '');
@@ -108,7 +108,7 @@ class YellowCommandline
 				$this->yellow->config->get("commandlineServerFile"));
 		} else {
 			$pages = new YellowPageCollection($this->yellow);
-			$pages->append(new YellowPage($this->yellow, $location));
+			$pages->append(new YellowPage($this->yellow, "", "", "", $location));
 			$fileNamesMedia = $fileNamesSystem = array();
 		}
 		foreach($pages as $page)
@@ -291,9 +291,10 @@ class YellowCommandline
 	// Check static configuration
 	function checkStaticConfig()
 	{
+		$serverScheme = $this->yellow->config->get("serverScheme");
 		$serverName = $this->yellow->config->get("serverName");
 		$serverBase = $this->yellow->config->get("serverBase");
-		return !empty($serverName) && $this->yellow->toolbox->isValidLocation($serverBase) && $serverBase!="/";
+		return !empty($serverScheme) && !empty($serverName) && $this->yellow->toolbox->isValidLocation($serverBase) && $serverBase!="/";
 	}
 	
 	// Return static file name from location
@@ -310,8 +311,9 @@ class YellowCommandline
 	// Return static redirect data
 	function getStaticRedirect($location)
 	{
-		$url = $this->yellow->toolbox->getHttpUrl($this->yellow->config->get("serverName"),
-			$this->yellow->config->get("serverBase"), $location);
+		$serverScheme = $this->yellow->config->get("serverScheme");
+		$serverName = $this->yellow->config->get("serverName");
+		$url = $this->yellow->toolbox->getUrl($serverScheme, $serverName, "", $location);
 		$text  = "<!DOCTYPE html><html>\n";
 		$text .= "<head>\n";
 		$text .= "<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" />\n";

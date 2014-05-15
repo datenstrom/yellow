@@ -8,7 +8,7 @@ class YellowWebinterface
 	const Version = "0.2.9";
 	var $yellow;				//access to API
 	var $users;					//web interface users
-	var $active;				//web interface is active location? (boolean)
+	var $active;				//web interface is active? (boolean)
 	var $loginFailed;			//web interface login failed? (boolean)
 	var $rawDataOriginal;		//raw data of page in case of errors
 
@@ -21,25 +21,31 @@ class YellowWebinterface
 		$this->yellow->config->setDefault("webinterfaceUserHome", "/");
 		$this->yellow->config->setDefault("webinterfaceUserHashAlgorithm", "bcrypt");
 		$this->yellow->config->setDefault("webinterfaceUserHashCost", "10");
+		$this->yellow->config->setDefault("webinterfaceServerScheme", "https");
+		$this->yellow->config->setDefault("webinterfaceServerName", $this->yellow->config->get("serverName"));
 		$this->users = new YellowWebinterfaceUsers($yellow);
 		$this->users->load($this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile"));
 	}
 
 	// Handle web interface location
-	function onRequest($serverName, $serverBase, $location, $fileName)
+	function onRequest($serverScheme, $serverName, $base, $location, $fileName)
 	{
 		$statusCode = 0;
-		if($this->checkLocation($location))
+		if($this->checkRequest($location))
 		{
-			list($serverName, $serverBase, $location, $fileName) = $this->yellow->getRequestInformation($this->yellow->config->get("webinterfaceLocation"));
-			if($this->checkUser()) $statusCode = $this->processRequestAction($serverName, $serverBase, $location, $fileName);
-			if($statusCode == 0) $statusCode = $this->yellow->processRequest($serverName, $serverBase, $location, $fileName,
+			list($serverScheme, $serverName, $base, $location, $fileName) = $this->getRequestInformation();
+			if($this->checkUser()) $statusCode = $this->processRequestAction($serverScheme, $serverName, $base, $location, $fileName);
+			if($statusCode == 0) $statusCode = $this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName,
 													false, $this->loginFailed ? 401 : 0);
 		} else {
-			if($this->yellow->config->get("webinterfaceLocation") == "$location/")
+			$activeLocation = $this->yellow->config->get("webinterfaceLocation");
+			if(rtrim($location, '/') == rtrim($activeLocation, '/'))
 			{
 				$statusCode = 301;
-				$locationHeader = $this->yellow->toolbox->getHttpLocationHeader($serverName, $serverBase, "$location/");
+				$locationHeader = $this->yellow->toolbox->getLocationHeader(
+					$this->yellow->config->get("webinterfaceServerScheme"),
+					$this->yellow->config->get("webinterfaceServerName"),
+					$base, $activeLocation);
 				$this->yellow->sendStatus($statusCode, $locationHeader);
 			}
 		}
@@ -79,10 +85,10 @@ class YellowWebinterface
 				}
 			}
 			$serverBase = $this->yellow->config->get("serverBase");
-			$location = trim($this->yellow->config->get("webinterfaceLocation"), '/');
-			$callback = function($matches) use ($serverBase, $location)
+			$activePath = trim($this->yellow->config->get("webinterfaceLocation"), '/');
+			$callback = function($matches) use ($serverBase, $activePath)
 			{
-				$matches[2] = preg_replace("#^$serverBase/(?!$location)(.*)$#", "$serverBase/$location/$1", $matches[2]);
+				$matches[2] = preg_replace("#^$serverBase/(?!$activePath)(.*)$#", "$serverBase/$activePath/$1", $matches[2]);
 				return "<a$matches[1]href=\"$matches[2]\"$matches[3]>";
 			};
 			$output = preg_replace_callback("/<a(.*?)href=\"([^\"]+)\"(.*?)>/i", $callback, $text);
@@ -97,7 +103,6 @@ class YellowWebinterface
 		if($this->isActive())
 		{
 			$location = $this->yellow->config->getHtml("serverBase").$this->yellow->config->getHtml("pluginLocation");
-			$language = $this->isUser() ? $this->users->getLanguage() : $this->yellow->page->get("language");
 			$header .= "<link rel=\"styleSheet\" type=\"text/css\" media=\"all\" href=\"{$location}core-webinterface.css\" />\n";
 			$header .= "<script type=\"text/javascript\" src=\"{$location}core-webinterface.js\"></script>\n";
 			$header .= "<script type=\"text/javascript\">\n";
@@ -109,6 +114,7 @@ class YellowWebinterface
 				$header .= "yellow.page.permissions = " .json_encode($permissions).";\n";
 				$header .= "yellow.config = ".json_encode($this->getConfigData()).";\n";
 			}
+			$language = $this->isUser() ? $this->users->getLanguage() : $this->yellow->page->get("language");
 			$header .= "yellow.text = ".json_encode($this->yellow->text->getData("webinterface", $language)).";\n";
 			if(defined("DEBUG")) $header .= "yellow.debug = ".json_encode(DEBUG).";\n";
 			$header .= "// ]]>\n";
@@ -164,7 +170,7 @@ class YellowWebinterface
 	}
 	
 	// Process request for an action
-	function processRequestAction($serverName, $serverBase, $location, $fileName)
+	function processRequestAction($serverScheme, $serverName, $base, $location, $fileName)
 	{
 		$statusCode = 0;
 		switch($_POST["action"])
@@ -175,11 +181,13 @@ class YellowWebinterface
 								if($this->yellow->toolbox->createFile($fileName, $_POST["rawdata"]))
 								{
 									$statusCode = 303;
-									$locationHeader = $this->yellow->toolbox->getHttpLocationHeader($serverName, $serverBase, $location);
+									$locationHeader = $this->yellow->toolbox->getLocationHeader(
+										$serverScheme, $serverName, $base, $location);
 									$this->yellow->sendStatus($statusCode, $locationHeader);
 								} else {
 									$statusCode = 500;
-									$this->yellow->processRequest($serverName, $serverBase, $location, $fileName, false, $statusCode);
+									$this->yellow->processRequest(
+										$serverScheme, $serverName, $base, $location, $fileName, false, $statusCode);
 									$this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
 								}
 							}
@@ -188,18 +196,23 @@ class YellowWebinterface
 							if(substru($location, 0, strlenu($home)) == $home)
 							{
 								$statusCode = 303;
-								$locationHeader = $this->yellow->toolbox->getHttpLocationHeader($serverName, $serverBase, $location);
+								$locationHeader = $this->yellow->toolbox->getLocationHeader(
+									$serverScheme, $serverName, $base, $location);
 								$this->yellow->sendStatus($statusCode, $locationHeader);
 							} else {
 								$statusCode = 302;
-								$locationHeader = $this->yellow->toolbox->getHttpLocationHeader($serverName, $serverBase, $home);
+								$locationHeader = $this->yellow->toolbox->getLocationHeader(
+									$serverScheme, $serverName, $base, $home);
 								$this->yellow->sendStatus($statusCode, $locationHeader);
 							}
 							break;
 			case "logout":	$this->users->destroyCookie("login");
 							$this->users->email = "";
 							$statusCode = 302;
-							$locationHeader = $this->yellow->toolbox->getHttpLocationHeader($serverName, $this->yellow->config->get("serverBase"), $location);
+							$locationHeader = $this->yellow->toolbox->getLocationHeader(
+								$this->yellow->config->get("serverScheme"),
+								$this->yellow->config->get("serverName"),
+								$this->yellow->config->get("serverBase"), $location);
 							$this->yellow->sendStatus($statusCode, $locationHeader);
 							break;
 			default:		if(!is_readable($fileName))
@@ -207,22 +220,28 @@ class YellowWebinterface
 								if($this->yellow->toolbox->isFileLocation($location) && $this->yellow->isContentDirectory("$location/"))
 								{
 									$statusCode = 301;
-									$locationHeader = $this->yellow->toolbox->getHttpLocationHeader($serverName, $serverBase, "$location/");
+									$locationHeader = $this->yellow->toolbox->getLocationHeader(
+										$serverScheme, $serverName, $base, "$location/");
 									$this->yellow->sendStatus($statusCode, $locationHeader);
 								} else {
 									$statusCode = $this->checkPermissions($location, $fileName) ? 424 : 404;
-									$this->yellow->processRequest($serverName, $serverBase, $location, $fileName, false, $statusCode);
+									$this->yellow->processRequest(
+										$serverScheme, $serverName, $base, $location, $fileName, false, $statusCode);
 								}
 							}
 		}
 		return $statusCode;
 	}
 	
-	// Check web interface location
-	function checkLocation($location)
+	// Check web interface request
+	function checkRequest($location)
 	{
-		$locationLength = strlenu($this->yellow->config->get("webinterfaceLocation"));
-		$this->active = substru($location, 0, $locationLength) == $this->yellow->config->get("webinterfaceLocation");
+		if($this->yellow->toolbox->getServerScheme()==$this->yellow->config->get("webinterfaceServerScheme") &&
+		   $this->yellow->toolbox->getServerName()==$this->yellow->config->get("webinterfaceServerName"))
+		{
+			$locationLength = strlenu($this->yellow->config->get("webinterfaceLocation"));
+			$this->active = substru($location, 0, $locationLength) == $this->yellow->config->get("webinterfaceLocation");
+		}
 		return $this->isActive();
 	}
 	
@@ -268,16 +287,13 @@ class YellowWebinterface
 		return $permissions;
 	}
 	
-	// Check if web interface location
-	function isActive()
+	// Return request information
+	function getRequestInformation()
 	{
-		return $this->active;
-	}
-	
-	// Check if user is logged in
-	function isUser()
-	{
-		return !empty($this->users->email);
+		$serverScheme = $this->yellow->config->get("webinterfaceServerScheme");
+		$serverName = $this->yellow->config->get("webinterfaceServerName");
+		$base = rtrim($this->yellow->config->get("serverBase").$this->yellow->config->get("webinterfaceLocation"), '/');
+		return $this->yellow->getRequestInformation($serverScheme, $serverName, $base);
 	}
 	
 	// Return configuration data including information of current user
@@ -287,9 +303,22 @@ class YellowWebinterface
 					  "userName" => $this->users->getName(),
 					  "userLanguage" => $this->users->getLanguage(),
 					  "userHome" => $this->users->getHome(),
+					  "serverScheme" => $this->yellow->config->get("serverScheme"),
 					  "serverName" => $this->yellow->config->get("serverName"),
 					  "serverBase" => $this->yellow->config->get("serverBase"));
 		return array_merge($data, $this->yellow->config->getData("Location"));
+	}
+	
+	// Check if web interface request
+	function isActive()
+	{
+		return $this->active;
+	}
+	
+	// Check if user is logged in
+	function isUser()
+	{
+		return !empty($this->users->email);
 	}
 }
 
@@ -388,7 +417,9 @@ class YellowWebinterfaceUsers
 			$location = $this->yellow->config->get("serverBase").$this->yellow->config->get("webinterfaceLocation");
 			$session = $this->yellow->toolbox->createHash($this->users[$email]["hash"], "sha256");
 			if(empty($session)) $session = "error-hash-algorithm-sha256";
-			setcookie($cookieName, "$email,$session", time()+60*60*24*30*365, $location);
+			setcookie($cookieName, "$email,$session", time()+60*60*24*30*365, $location,
+				$this->yellow->config->get("webinterfaceServerName"),
+				$this->yellow->config->get("webinterfaceServerScheme")=="https");
 		}
 	}
 	
@@ -396,7 +427,9 @@ class YellowWebinterfaceUsers
 	function destroyCookie($cookieName)
 	{
 		$location = $this->yellow->config->get("serverBase").$this->yellow->config->get("webinterfaceLocation");
-		setcookie($cookieName, "", time()-3600, $location);
+		setcookie($cookieName, "", time()-3600,
+			$location, $this->yellow->config->get("webinterfaceServerName"),
+			$this->yellow->config->get("webinterfaceServerScheme")=="https");
 	}
 	
 	// Return information from browser cookie

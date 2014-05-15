@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.2.18";
+	const Version = "0.2.19";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -26,6 +26,7 @@ class Yellow
 		$this->config->setDefault("template", "default");
 		$this->config->setDefault("style", "default");
 		$this->config->setDefault("parser", "markdownextra");
+		$this->config->setDefault("serverScheme", $this->toolbox->getServerScheme());
 		$this->config->setDefault("serverName", $this->toolbox->getServerName());
 		$this->config->setDefault("serverBase", $this->toolbox->getServerBase());
 		$this->config->setDefault("styleLocation", "/media/styles/");
@@ -53,29 +54,28 @@ class Yellow
 	}
 	
 	// Handle request
-	function request($statusCodeRequest = 200)
+	function request($statusCodeRequest = 0)
 	{
 		$this->toolbox->timerStart($time);
 		ob_start();
 		$statusCode = 0;
-		list($serverName, $serverBase, $location, $fileName) = $this->getRequestInformation();
-		$this->page = new YellowPage($this, $location);
+		list($serverScheme, $serverName, $base, $location, $fileName) = $this->getRequestInformation();
+		$this->page = new YellowPage($this, $serverScheme, $serverName, $base, $location);
 		foreach($this->plugins->plugins as $key=>$value)
 		{
 			if(method_exists($value["obj"], "onRequest"))
 			{
 				$this->pages->requestHandler = $key;
-				$statusCode = $value["obj"]->onRequest($serverName, $serverBase, $location, $fileName);
+				$statusCode = $value["obj"]->onRequest($serverScheme, $serverName, $base, $location, $fileName);
 				if($statusCode != 0) break;
 			}
 		}
 		if($statusCode == 0)
 		{
 			$this->pages->requestHandler = "core";
-			$statusCode = $this->processRequest($serverName, $serverBase, $location, $fileName, true, $statusCode);
+			$statusCode = $this->processRequest($serverScheme, $serverName, $base, $location, $fileName, true, $statusCode);
 		}
-		if($statusCodeRequest > 200) $this->page->error($statusCodeRequest, "Request error");
-		if($this->isRequestError()) $statusCode = $this->processRequestError();
+		if($this->isRequestError() || $statusCodeRequest>=400) $statusCode = $this->processRequestError($statusCodeRequest);
 		ob_end_flush();
 		$this->toolbox->timerStop($time);
 		if(defined("DEBUG") && DEBUG>=1) echo "Yellow::request status:$statusCode location:$location<br>\n";
@@ -84,34 +84,36 @@ class Yellow
 	}
 	
 	// Process request
-	function processRequest($serverName, $serverBase, $location, $fileName, $cacheable, $statusCode)
+	function processRequest($serverScheme, $serverName, $base, $location, $fileName, $cacheable, $statusCode)
 	{
 		$handler = $this->getRequestHandler();
 		if($statusCode == 0)
 		{
 			if(is_readable($fileName))
 			{
-				if(!$this->isRequestCleanUrl())
+				if($this->isRequestCleanUrl())
 				{
-					$statusCode = 200;
-					$fileName = $this->readPage($serverBase, $location, $fileName, $cacheable, $statusCode);
-				} else {
 					$statusCode = 303;
 					$locationArgs = $this->toolbox->getLocationArgsCleanUrl($location, $this->config->get("contentPagination"));
-					$this->sendStatus($statusCode, $this->toolbox->getHttpLocationHeader($serverName, $serverBase, $location.$locationArgs));
+					$locationHeader = $this->toolbox->getLocationHeader($serverScheme, $serverName, $base, $location.$locationArgs);
+					$this->sendStatus($statusCode, $locationHeader);
+				} else {
+					$statusCode = 200;
+					$fileName = $this->readPage($serverScheme, $serverName, $base, $location, $fileName, $cacheable, $statusCode);
 				}
 			} else {
 				if($this->toolbox->isFileLocation($location) && $this->isContentDirectory("$location/"))
 				{
 					$statusCode = 301;
-					$this->sendStatus($statusCode, $this->toolbox->getHttpLocationHeader($serverName, $serverBase, "$location/"));
+					$locationHeader = $this->toolbox->getLocationHeader($serverScheme, $serverName, $base, "$location/");
+					$this->sendStatus($statusCode, $locationHeader);
 				} else {
 					$statusCode = 404;
-					$fileName = $this->readPage($serverBase, $location, $fileName, $cacheable, $statusCode);
+					$fileName = $this->readPage($serverScheme, $serverName, $base, $location, $fileName, $cacheable, $statusCode);
 				}
 			}
 		} else if($statusCode >= 400) {
-			$fileName = $this->readPage($serverBase, $location, $fileName, $cacheable, $statusCode);
+			$fileName = $this->readPage($serverScheme, $serverName, $base, $location, $fileName, $cacheable, $statusCode);
 		}
 		if($this->page->statusCode != 0) $statusCode = $this->sendPage();
 		if(defined("DEBUG") && DEBUG>=1) echo "Yellow::processRequest handler:$handler file:$fileName<br>\n";
@@ -119,19 +121,20 @@ class Yellow
 	}
 	
 	// Process request with error
-	function processRequestError()
+	function processRequestError($statusCodeRequest)
 	{
 		ob_clean();
 		$handler = $this->getRequestHandler();
-		$fileName = $this->readPage($this->pages->serverBase, $this->page->location, $this->page->fileName,
-			$this->page->cacheable, $this->page->statusCode, $this->page->get("pageError"));
+		if($statusCodeRequest >= 400) $this->page->error($statusCodeRequest, "Request error");
+		$fileName = $this->readPage($this->page->serverScheme, $this->page->serverName, $this->page->base, $this->page->location,
+			$this->page->fileName, $this->page->cacheable, $this->page->statusCode, $this->page->get("pageError"));
 		$statusCode = $this->sendPage();
 		if(defined("DEBUG") && DEBUG>=1) echo "Yellow::processRequestError handler:$handler file:$fileName<br>\n";
 		return $statusCode;		
 	}
 	
 	// Read page from file
-	function readPage($serverBase, $location, $fileName, $cacheable, $statusCode, $pageError = "")
+	function readPage($serverScheme, $serverName, $base, $location, $fileName, $cacheable, $statusCode, $pageError = "")
 	{
 		if($statusCode >= 400)
 		{
@@ -145,8 +148,7 @@ class Yellow
 			$fileData = fread($fileHandle, filesize($fileName));
 			fclose($fileHandle);
 		}
-		$this->pages->serverBase = $serverBase;
-		$this->page = new YellowPage($this, $location);
+		$this->page = new YellowPage($this, $serverScheme, $serverName, $base, $location);
 		$this->page->parseData($fileName, $fileData, $cacheable, $statusCode, $pageError);
 		$this->page->setHeader("Content-Type", "text/html; charset=UTF-8");
 		$this->page->setHeader("Last-Modified", $this->page->getModified(true));
@@ -174,8 +176,12 @@ class Yellow
 		{
 			$statusCode = 301;
 			$location = $this->page->get("redirect");
-			if(preg_match("/^[^\/]+$/", $location)) $location = $this->toolbox->getDirectoryLocation($this->page->getLocation()).$location;
-			$this->page->clean($statusCode, $this->toolbox->getHttpLocationHeader($this->config->get("serverName"), "", $location));
+			if(preg_match("/^[^\/]+$/", $location))
+			{
+				$location = $this->toolbox->getDirectoryLocation($this->page->getLocation()).$location;
+			}
+			$locationHeader = $this->toolbox->getLocationHeader($this->page->serverScheme, $this->page->serverName, "", $location);
+			$this->page->clean($statusCode, $locationHeader);
 			$this->page->setHeader("Last-Modified", $this->page->getModified(true));
 			$this->page->setHeader("Cache-Control", "no-cache, must-revalidate");
 		}
@@ -219,13 +225,13 @@ class Yellow
 	}
 	
 	// Return request information
-	function getRequestInformation($serverBaseLocation = "")
+	function getRequestInformation($serverScheme = "", $serverName = "", $base = "")
 	{
-		$serverName = $this->config->get("serverName");
-		$serverBase = $this->config->get("serverBase");
-		if(!empty($serverBaseLocation)) $serverBase .= rtrim($serverBaseLocation, '/');
+		$serverScheme = empty($serverScheme) ? $this->config->get("serverScheme") : $serverScheme;
+		$serverName = empty($serverName) ? $this->config->get("serverName") : $serverName;
+		$base = empty($base) ? $this->config->get("serverBase") : $base;
 		$location = $this->toolbox->getLocationNormalised();
-		$location = substru($location, strlenu($serverBase));
+		$location = substru($location, strlenu($base));
 		$fileName = $this->toolbox->findFileFromLocation($location,
 			$this->config->get("contentDir"), $this->config->get("contentHomeDir"),
 			$this->config->get("contentDefaultFile"), $this->config->get("contentExtension"));
@@ -236,7 +242,7 @@ class Yellow
 				$this->config->get("contentDir"), $this->config->get("contentHomeDir"),
 				$this->config->get("contentDefaultFile"), $this->config->get("contentExtension"));
 		}
-		return array($serverName, $serverBase, $location, $fileName);
+		return array($serverScheme, $serverName, $base, $location, $fileName);
 	}
 	
 	// Return request handler
@@ -260,7 +266,8 @@ class Yellow
 	// Check if content directory exists
 	function isContentDirectory($location)
 	{
-		$path = $this->toolbox->findFileFromLocation($location, $this->config->get("contentDir"), $this->config->get("contentHomeDir"), "", "");
+		$path = $this->toolbox->findFileFromLocation($location,
+			$this->config->get("contentDir"), $this->config->get("contentHomeDir"), "", "");
 		return is_dir($path);
 	}
 	
@@ -334,6 +341,9 @@ class Yellow
 class YellowPage
 {
 	var $yellow;				//access to API
+	var $serverScheme;			//server scheme
+	var $serverName;			//server name
+	var $base;					//base location
 	var $location;				//page location
 	var $fileName;				//content file name
 	var $rawData;				//raw data of page
@@ -347,9 +357,12 @@ class YellowPage
 	var $cacheable;				//page is cacheable? (boolean)
 	var $statusCode;			//status code
 
-	function __construct($yellow, $location)
+	function __construct($yellow, $serverScheme, $serverName, $base, $location)
 	{
 		$this->yellow = $yellow;
+		$this->serverScheme = $serverScheme;
+		$this->serverName = $serverName;
+		$this->base = $base;
 		$this->location = $location;
 		$this->metaData = array();
 		$this->headerData = array();
@@ -361,10 +374,9 @@ class YellowPage
 	{
 		$this->fileName = $fileName;
 		$this->rawData = $rawData;
-		$this->active = $this->yellow->toolbox->isActiveLocation($this->yellow->pages->serverBase, $this->location,
-			$this->yellow->page->location);
-		$this->visible = $this->yellow->toolbox->isVisibleLocation($this->yellow->pages->serverBase, $this->location,
-			$fileName, $this->yellow->config->get("contentDir"));
+		$this->active = $this->yellow->toolbox->isActiveLocation($this->location, $this->yellow->page->location);
+		$this->visible = $this->yellow->toolbox->isVisibleLocation($this->location, $fileName,
+			$this->yellow->config->get("contentDir"));
 		$this->cacheable = $cacheable;
 		$this->statusCode = $statusCode;
 		if(!empty($pageError)) $this->error($statusCode, $pageError);
@@ -403,9 +415,11 @@ class YellowPage
 		if(!$this->isExisting("titleHeader")) $this->set("titleHeader", $titleHeader);
 		if(!$this->isExisting("titleNavigation")) $this->set("titleNavigation", $this->get("title"));
 		if(!$this->isExisting("titleContent")) $this->set("titleContent", $this->get("title"));
-		$this->set("pageRead", $this->yellow->toolbox->getHttpUrl($this->yellow->config->get("serverName"),
+		$this->set("pageRead", $this->yellow->toolbox->getUrl(
+			$this->yellow->config->get("serverScheme"), $this->yellow->config->get("serverName"),
 			$this->yellow->config->get("serverBase"), $this->location));
-		$this->set("pageEdit", $this->yellow->toolbox->getHttpUrl($this->yellow->config->get("serverName"),
+		$this->set("pageEdit", $this->yellow->toolbox->getUrl(
+			$this->yellow->config->get("webinterfaceServerScheme"), $this->yellow->config->get("webinterfaceServerName"),
 			$this->yellow->config->get("serverBase"), rtrim($this->yellow->config->get("webinterfaceLocation"), '/').$this->location));
 		foreach($this->yellow->plugins->plugins as $key=>$value)
 		{
@@ -560,14 +574,13 @@ class YellowPage
 	// Return absolute page location
 	function getLocation()
 	{
-		return $this->yellow->pages->serverBase.$this->location;
+		return $this->base.$this->location;
 	}
 	
-	// Return full page URL, with server name
+	// Return page URL, with server scheme and server name
 	function getUrl()
 	{
-		return $this->yellow->toolbox->getHttpUrl($this->yellow->config->get("serverName"),
-			$this->yellow->pages->serverBase, $this->location);
+		return $this->yellow->toolbox->getUrl($this->serverScheme, $this->serverName, $this->base, $this->location);
 	}
 	
 	// Return page modification time, Unix time
@@ -839,7 +852,6 @@ class YellowPages
 	var $yellow;			//access to API
 	var $pages;				//scanned pages
 	var $requestHandler;	//request handler name
-	var $serverBase;		//requested server base
 	var $snippetArgs;		//requested snippet arguments
 	
 	function __construct($yellow)
@@ -869,7 +881,7 @@ class YellowPages
 	// Return page collection with path ancestry
 	function path($location, $absoluteLocation = false)
 	{
-		if($absoluteLocation) $location = substru($location, strlenu($this->serverBase));
+		if($absoluteLocation) $location = substru($location, strlenu($this->yellow->page->base));
 		$pages = $this->find($location, false);
 		for($page=$pages->first(); $page; $page=$parent)
 		{
@@ -882,7 +894,7 @@ class YellowPages
 	// Return page collection with one specific page
 	function find($location, $absoluteLocation = false)
 	{
-		if($absoluteLocation) $location = substru($location, strlenu($this->serverBase));
+		if($absoluteLocation) $location = substru($location, strlenu($this->yellow->page->base));
 		$parentLocation = $this->getParentLocation($location);
 		$this->scanChildren($parentLocation);
 		$pages = new YellowPageCollection($this->yellow);
@@ -941,7 +953,9 @@ class YellowPages
 					$fileData = "";
 					$statusCode = 0;
 				}
-				$page = new YellowPage($this->yellow, $this->yellow->toolbox->findLocationFromFile($fileName,
+				$page = new YellowPage($this->yellow,
+					$this->yellow->page->serverScheme, $this->yellow->page->serverName, $this->yellow->page->base,
+					$this->yellow->toolbox->findLocationFromFile($fileName,
 					$this->yellow->config->get("contentDir"), $this->yellow->config->get("contentHomeDir"),
 					$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension")));
 				$page->parseData($fileName, $fileData, false, $statusCode);
@@ -1181,6 +1195,18 @@ class YellowText
 // Yellow toolbox with helpers
 class YellowToolbox
 {
+	// Return server scheme from current HTTP request
+	function getServerScheme()
+	{
+		$serverScheme = "";
+		if(preg_match("/^HTTP\//", $_SERVER["SERVER_PROTOCOL"]))
+		{
+			$secure = isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"]!="off";
+			$serverScheme = $secure ? "https" : "http";
+		}
+		return $serverScheme;
+	}
+	
 	// Return server name from current HTTP request
 	function getServerName()
 	{
@@ -1295,6 +1321,12 @@ class YellowToolbox
 		return $locationArgs;
 	}
 	
+	// Return location header with URL
+	function getLocationHeader($serverScheme, $serverName, $base, $location)
+	{
+		return "Location: ".$this->getUrl($serverScheme, $serverName, $base, $location);
+	}
+	
 	// Check if location contains location arguments
 	function isLocationArgs($location)
 	{
@@ -1351,7 +1383,7 @@ class YellowToolbox
 	}
 	
 	// Check if location is within current HTTP request
-	function isActiveLocation($serverBase, $location, $currentLocation)
+	function isActiveLocation($location, $currentLocation)
 	{
 		if($location != "/")
 		{
@@ -1363,7 +1395,7 @@ class YellowToolbox
 	}
 	
 	// Check if location is visible in navigation
-	function isVisibleLocation($serverBase, $location, $fileName, $pathBase)
+	function isVisibleLocation($location, $fileName, $pathBase)
 	{
 		$visible = true;
 		if(substru($fileName, 0, strlenu($pathBase)) == $pathBase) $fileName = substru($fileName, strlenu($pathBase));
@@ -1549,22 +1581,16 @@ class YellowToolbox
 		return gmdate("D, d M Y H:i:s", $timestamp)." GMT";
 	}
 	
-	// Return HTTP URL
-	function getHttpUrl($serverName, $serverBase, $location)
+	// Return URL
+	function getUrl($serverScheme, $serverName, $base, $location)
 	{
-		if(preg_match("/^(http|https):\/\//", $location))
+		if(!preg_match("/^\w+:/", $location))
 		{
-			$url = $location;
+			$url = "$serverScheme://$serverName$base$location";
 		} else {
-			$url = "http://$serverName$serverBase$location";
+			$url = $location;
 		}
 		return $url;
-	}
-	
-	// Return HTTP location header
-	function getHttpLocationHeader($serverName, $serverBase, $location)
-	{
-		return "Location: ".$this->getHttpUrl($serverName, $serverBase, $location);
 	}
 	
 	// Return directory location
