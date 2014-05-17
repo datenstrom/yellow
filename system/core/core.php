@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.2.19";
+	const Version = "0.2.20";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -175,11 +175,7 @@ class Yellow
 		if($statusCode==200 && $this->getRequestHandler()=="core" && $this->page->isExisting("redirect"))
 		{
 			$statusCode = 301;
-			$location = $this->page->get("redirect");
-			if(preg_match("/^[^\/]+$/", $location))
-			{
-				$location = $this->toolbox->getDirectoryLocation($this->page->getLocation()).$location;
-			}
+			$location = $this->toolbox->normaliseLocation($this->page->get("redirect"), $this->page->base, $this->page->location);
 			$locationHeader = $this->toolbox->getLocationHeader($this->page->serverScheme, $this->page->serverName, "", $location);
 			$this->page->clean($statusCode, $locationHeader);
 			$this->page->setHeader("Last-Modified", $this->page->getModified(true));
@@ -230,7 +226,7 @@ class Yellow
 		$serverScheme = empty($serverScheme) ? $this->config->get("serverScheme") : $serverScheme;
 		$serverName = empty($serverName) ? $this->config->get("serverName") : $serverName;
 		$base = empty($base) ? $this->config->get("serverBase") : $base;
-		$location = $this->toolbox->getLocationNormalised();
+		$location = $this->toolbox->getLocationClean();
 		$location = substru($location, strlenu($base));
 		$fileName = $this->toolbox->findFileFromLocation($location,
 			$this->config->get("contentDir"), $this->config->get("contentHomeDir"),
@@ -1229,7 +1225,7 @@ class YellowToolbox
 	}
 	
 	// Return location from current HTTP request, remove unwanted path tokens
-	function getLocationNormalised()
+	function getLocationClean()
 	{
 		$string = $this->getLocation();
 		$location = ($string[0]=='/') ? '' : '/';
@@ -1533,6 +1529,23 @@ class YellowToolbox
 		if($removeExtension) $text = ($pos = strrposu($text, '.')) ? substru($text, 0, $pos) : $text;
 		if($filterStrict) $text = strreplaceu('.', '-', strtoloweru($text));
 		return preg_replace("/[^\pL\d\-\_\.]/u", "-", $text);
+	}
+	
+	// Normalise location, make absolute page location
+	function normaliseLocation($location, $pageBase, $pageLocation)
+	{
+		if(!preg_match("/^\w+:/", $location))
+		{
+			if(preg_match("/^[^\/]+$/", $location))
+			{
+				$location = $this->getDirectoryLocation($pageBase.$pageLocation).$location;
+			}
+			else if(!preg_match("#^$pageBase#", $location))
+			{
+				$location = $pageBase.$location;
+			}
+		}
+		return $location;
 	}
 	
 	// Normalise location arguments

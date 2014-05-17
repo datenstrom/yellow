@@ -5,7 +5,7 @@
 // Markdown extra core plugin
 class YellowMarkdownExtra
 {
-	const Version = "0.2.9";
+	const Version = "0.2.10";
 	var $yellow;		//access to API
 	
 	// Initialise plugin
@@ -38,12 +38,15 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser
 	// Transform page text
 	function transformPage($page, $text)
 	{
-		$location = $this->yellow->toolbox->getDirectoryLocation($page->getLocation());
 		$text = preg_replace("/@pageRead/i", $page->get("pageRead"), $text);
 		$text = preg_replace("/@pageEdit/i", $page->get("pageEdit"), $text);
 		$text = preg_replace("/@pageError/i", $page->get("pageError"), $text);
-		return preg_replace("/<a(.*?)href=\"(?!javascript:)([^\/\"]+)\"(.*?)>/i",
-							"<a$1href=\"$location$2\"$3>", $this->transform($text));
+		$callback = function($matches) use ($page)
+		{
+			$matches[2] = $page->yellow->toolbox->normaliseLocation($matches[2], $page->base, $page->location);
+			return "<a$matches[1]href=\"$matches[2]\"$matches[3]>";
+		};
+		return preg_replace_callback("/<a(.*?)href=\"([^\"]+)\"(.*?)>/i", $callback, $this->transform($text));
 	}
 
 	// Return unique id attribute
