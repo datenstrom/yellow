@@ -4,6 +4,7 @@ Yellow
 Yellow is **for people** who make websites.
 
 [![Build Status](https://travis-ci.org/markseu/yellowcms.svg)](https://travis-ci.org/markseu/yellowcms)
+[![Online demo](https://github.com/markseu/yellowcms-extensions/blob/master/documentation/yellowdemo.png?raw=true)](http://demo.datenstrom.se/)
 
 How do I install this?
 ----------------------
@@ -15,7 +16,7 @@ Installation requirements are Apache, mod_rewrite, mod_ssl, PHP 5.3+.
 
 How do I get started?
 ---------------------
-You already have everything you need. Edit your website or the [online demo](http://demo.datenstrom.se).  
+You already have everything you need. Edit your website or the [Yellow demo](http://demo.datenstrom.se).  
 There are [Yellow extensions](https://github.com/markseu/yellowcms-extensions). For more information see [Yellow documentation](https://github.com/markseu/yellowcms-extensions/blob/master/documentation/README.md).
 
 License and thanks
