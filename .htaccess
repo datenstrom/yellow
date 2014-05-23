@@ -5,14 +5,14 @@ RewriteEngine on
 
 RewriteCond %{ENV:REDIRECT_STATUS} ^$
 RewriteRule ^(content|system)/ error404 [L]
-RewriteCond %{DOCUMENT_ROOT}/yellow.php -f
+RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_URI} \.(css|js|png)$
 RewriteRule ^media/plugins/(core-.+) system/core/$1 [L]
-RewriteCond %{DOCUMENT_ROOT}/yellow.php -f
+RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_URI} \.(css|js|png)$
 RewriteRule ^media/plugins/(.+) system/plugins/$1 [L]
 
-RewriteCond %{DOCUMENT_ROOT}/yellow.php -f
+RewriteCond yellow.php -F
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ yellow.php [L]
