@@ -1,7 +1,6 @@
 Yellow
 ======
-
-Yellow is **for people** who make websites.
+Yellow is for people who make websites.
 
 [![Build Status](https://travis-ci.org/markseu/yellowcms.svg)](https://travis-ci.org/markseu/yellowcms)
 [![Online demo](https://github.com/markseu/yellowcms-extensions/blob/master/documentation/yellowdemo.png?raw=true)](http://demo.datenstrom.se/)
@@ -20,7 +19,11 @@ How do I get started?
 You already have everything you need. Edit your website or the [online demo](http://demo.datenstrom.se).  
 That's it. For more information see [Yellow documentation](https://github.com/markseu/yellowcms-extensions/blob/master/documentation/README.md).
 
-License and thanks
-------------------
+How to use it?
+--------------
+Yellow is for people who make websites. It's a flat-file content management system. Everything is made of files and folders. You can create web pages, blogs, wikis. There's a web interface, static content generation, Markdown and Dropbox support.
+
+License 
+-------
 * Yellow by Mark Seuffert and David Fehrmann is licensed under [GPLv2](http://opensource.org/licenses/GPL-2.0). 
 * [PHP Markdown Extra](https://github.com/michelf/php-markdown) by Michel Fortin is licensed under [BSD license](http://opensource.org/licenses/BSD-3-Clause).
