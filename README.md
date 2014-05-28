@@ -12,16 +12,15 @@ How do I install this?
 3. Open your website in a browser.
 
 Installation requirements are Apache, mod_rewrite, mod_ssl, PHP 5.3+.  
-Yellow doesn't come with a lot of stuff. There are [Yellow extensions](https://github.com/markseu/yellowcms-extensions). 
+Yellow doesn't come with a lot of stuff. [Download Yellow extensions](https://github.com/markseu/yellowcms-extensions). 
 
 How do I get started?
 ---------------------
-You already have everything you need. Edit your website or the [online demo](http://demo.datenstrom.se).  
-That's it. For more information see [Yellow documentation](https://github.com/markseu/yellowcms-extensions/blob/master/documentation/README.md).
+You already have everything you need. Edit your website. [Test online demo](http://demo.datenstrom.se).  
 
 How to use it?
 --------------
-It's a flat-file content management system. Everything is made of files and folders. You can create web pages, blogs, wikis. There's support for Markdown, Dropbox and static content generation.
+It's a flat-file content management system. Everything is made of files and folders. You can create web pages, blogs, wikis. There's support for Markdown, Dropbox and static content generation. [Read documentation](https://github.com/markseu/yellowcms-extensions/blob/master/documentation/README.md).
 
 License 
 -------
