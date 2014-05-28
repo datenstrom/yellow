@@ -21,7 +21,7 @@ That's it. For more information see [Yellow documentation](https://github.com/ma
 
 How to use it?
 --------------
-Yellow is for people who make websites. It's a flat-file content management system. Everything is made of files and folders. You can create web pages, blogs, wikis. There's a web interface, static content generation, Markdown and Dropbox support.
+It's a flat-file content management system. Everything is made of files and folders. You can create web pages, blogs, wikis. There's support for Markdown, Dropbox and static content generation.
 
 License 
 -------
