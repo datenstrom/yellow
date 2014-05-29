@@ -5,14 +5,14 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.2.9";
+	const Version = "0.2.10";
 	var $yellow;				//access to API
 	var $users;					//web interface users
 	var $active;				//web interface is active? (boolean)
 	var $loginFailed;			//web interface login failed? (boolean)
 	var $rawDataOriginal;		//raw data of page in case of errors
 
-	// Initialise plugin
+	// Handle plugin initialisation
 	function onLoad($yellow)
 	{
 		$this->yellow = $yellow;
@@ -27,7 +27,7 @@ class YellowWebinterface
 		$this->users->load($this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile"));
 	}
 
-	// Handle web interface location
+	// Handle request
 	function onRequest($serverScheme, $serverName, $base, $location, $fileName)
 	{
 		$statusCode = 0;
@@ -96,8 +96,8 @@ class YellowWebinterface
 		return $output;
 	}
 	
-	// Handle extra HTML header lines
-	function onHeaderExtra()
+	// Handle page extra header
+	function onHeaderExtra($page)
 	{
 		$header = "";
 		if($this->isActive())
@@ -109,12 +109,12 @@ class YellowWebinterface
 			$header .= "// <![CDATA[\n";
 			if($this->isUser())
 			{
-				$permissions = $this->checkPermissions($this->yellow->page->location, $this->yellow->page->fileName);
-				$header .= "yellow.page.rawData = ".json_encode($this->yellow->page->rawData).";\n";
+				$permissions = $this->checkPermissions($page->location, $page->fileName);
+				$header .= "yellow.page.rawData = ".json_encode($page->rawData).";\n";
 				$header .= "yellow.page.permissions = " .json_encode($permissions).";\n";
 				$header .= "yellow.config = ".json_encode($this->getConfigData()).";\n";
 			}
-			$language = $this->isUser() ? $this->users->getLanguage() : $this->yellow->page->get("language");
+			$language = $this->isUser() ? $this->users->getLanguage() : $page->get("language");
 			$header .= "yellow.text = ".json_encode($this->yellow->text->getData("webinterface", $language)).";\n";
 			if(defined("DEBUG")) $header .= "yellow.debug = ".json_encode(DEBUG).";\n";
 			$header .= "// ]]>\n";

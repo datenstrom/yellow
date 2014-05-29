@@ -5,7 +5,7 @@
 // Command line core plugin
 class YellowCommandline
 {
-	const Version = "0.2.8";
+	const Version = "0.2.9";
 	var $yellow;				//access to API
 	var $content;				//number of content pages
 	var $media;					//number of media files
@@ -15,7 +15,7 @@ class YellowCommandline
 	var $locationsPagination;	//locations with pagination detected
 	var $fileNamesPlugin;		//plugin files detected
 	
-	// Initialise plugin
+	// Handle plugin initialisation
 	function onLoad($yellow)
 	{
 		$this->yellow = $yellow;

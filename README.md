@@ -16,7 +16,7 @@ Yellow doesn't come with a lot of stuff. [Download Yellow extensions](https://gi
 
 How do I get started?
 ---------------------
-You already have everything you need. Edit your website. [Test online demo](http://demo.datenstrom.se).  
+You already have everything you need. Edit your website. [Test demo](http://demo.datenstrom.se).  
 
 How to use it?
 --------------

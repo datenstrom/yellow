@@ -5,20 +5,20 @@
 // Markdown extra core plugin
 class YellowMarkdownExtra
 {
-	const Version = "0.2.10";
+	const Version = "0.2.11";
 	var $yellow;		//access to API
 	
-	// Initialise plugin
+	// Handle plugin initialisation
 	function onLoad($yellow)
 	{
 		$this->yellow = $yellow;
 	}
 	
-	// Handle page parsing
-	function onParse($page, $text)
+	// Handle page text parsing, raw format
+	function onParseText($page, $text)
 	{
 		$markdown = new YellowMarkdownExtraParser($this->yellow);
-		return $markdown->transformPage($page, $text);
+		return $markdown->transformText($page, $text);
 	}
 }
 
@@ -36,7 +36,7 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser
 	}
 	
 	// Transform page text
-	function transformPage($page, $text)
+	function transformText($page, $text)
 	{
 		$text = preg_replace("/@pageRead/i", $page->get("pageRead"), $text);
 		$text = preg_replace("/@pageEdit/i", $page->get("pageEdit"), $text);

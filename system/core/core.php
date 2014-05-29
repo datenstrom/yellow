@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.2.20";
+	const Version = "0.2.21";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -300,15 +300,10 @@ class Yellow
 		return $this->pages->snippetArgs;
 	}
 	
-	// Return extra HTML header lines
+	// Return page extra header, OBSOLETE WILL BE REMOVED
 	function getHeaderExtra()
 	{
-		$header = "";
-		foreach($this->plugins->plugins as $key=>$value)
-		{
-			if(method_exists($value["obj"], "onHeaderExtra")) $header .= $value["obj"]->onHeaderExtra();
-		}
-		return $header;
+		return $this->page->getHeaderExtra();
 	}
 	
 	// Execute plugin command
@@ -453,10 +448,10 @@ class YellowPage
 			if($this->yellow->plugins->isExisting($this->get("parser")))
 			{
 				$plugin = $this->yellow->plugins->plugins[$this->get("parser")];
-				if(method_exists($plugin["obj"], "onParse"))
+				if(method_exists($plugin["obj"], "onParseText"))
 				{
 					$this->parser = $plugin["obj"];
-					$this->parserData = $this->parser->onParse($this, $this->getContent(true));
+					$this->parserData = $this->parser->onParseText($this, $this->getContent(true));
 					foreach($this->yellow->plugins->plugins as $key=>$value)
 					{
 						if(method_exists($value["obj"], "onParseContent"))
@@ -537,6 +532,17 @@ class YellowPage
 			$text = $this->parserData;
 		}
 		return $text;
+	}
+	
+	// Return page extra header, HTML encoded
+	function getHeaderExtra()
+	{
+		$header = "";
+		foreach($this->yellow->plugins->plugins as $key=>$value)
+		{
+			if(method_exists($value["obj"], "onHeaderExtra")) $header .= $value["obj"]->onHeaderExtra($this);
+		}
+		return $header;
 	}
 	
 	// Return parent page relative to current page
