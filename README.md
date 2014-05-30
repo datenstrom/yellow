@@ -16,11 +16,9 @@ Yellow doesn't come with a lot of stuff. [Download Yellow extensions](https://gi
 
 How do I get started?
 ---------------------
-You already have everything you need. Edit your website. [Test demo](http://demo.datenstrom.se).  
+You already have everything you need. Start by editing your website. 
 
-How to use it?
---------------
-It's a flat-file content management system. Everything is made of files and folders. You can create web pages, blogs, wikis. There's support for Markdown, Dropbox and static content generation. [Read documentation](https://github.com/markseu/yellowcms-extensions/blob/master/documentation/README.md).
+Yellow is a flat-file content management system. Everything is made of files and folders. You can create web pages, blogs, wikis. There's support for Markdown, Dropbox and static content generation. [Read documentation](https://github.com/markseu/yellowcms-extensions/blob/master/documentation/README.md).
 
 License 
 -------
