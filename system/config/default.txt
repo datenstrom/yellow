@@ -1,0 +1,4 @@
+---
+Title: New page
+---
+Write text here

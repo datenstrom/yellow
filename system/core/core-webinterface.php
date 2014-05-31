@@ -5,7 +5,7 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.2.10";
+	const Version = "0.2.11";
 	var $yellow;				//access to API
 	var $users;					//web interface users
 	var $active;				//web interface is active? (boolean)
@@ -16,6 +16,7 @@ class YellowWebinterface
 	function onLoad($yellow)
 	{
 		$this->yellow = $yellow;
+		$this->yellow->config->setDefault("webinterfacePage", "default");
 		$this->yellow->config->setDefault("webinterfaceLocation", "/edit/");
 		$this->yellow->config->setDefault("webinterfaceUserFile", "user.ini");
 		$this->yellow->config->setDefault("webinterfaceUserHome", "/");
@@ -74,13 +75,7 @@ class YellowWebinterface
 			{
 				switch($page->statusCode)
 				{
-					case 424:	$language = $this->isUser() ? $this->users->getLanguage() : $page->get("language");
-								$page->rawData = "---\r\n";
-								$page->rawData .= "Title: ".$this->yellow->text->getText("webinterface424Title", $language)."\r\n";
-								$page->rawData .= "Author: ".$this->users->getName()."\r\n";
-								$page->rawData .= "---\r\n";
-								$page->rawData .= $this->yellow->text->getText("webinterface424Text", $language);
-								break;
+					case 424:	$page->rawData = $this->getPageData(); break;
 					case 500:	$page->rawData = $this->rawDataOriginal; break;
 				}
 			}
@@ -294,6 +289,25 @@ class YellowWebinterface
 		$serverName = $this->yellow->config->get("webinterfaceServerName");
 		$base = rtrim($this->yellow->config->get("serverBase").$this->yellow->config->get("webinterfaceLocation"), '/');
 		return $this->yellow->getRequestInformation($serverScheme, $serverName, $base);
+	}
+	
+	// Return content data for new page
+	function getPageData()
+	{
+		$fileData = "";
+		$fileName = $this->yellow->toolbox->findFileFromLocation($this->yellow->page->location,
+			$this->yellow->config->get("contentDir"), $this->yellow->config->get("contentHomeDir"),
+			$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
+		$fileName = $this->yellow->toolbox->findNameFromFile($fileName,
+			$this->yellow->config->get("configDir"), $this->yellow->config->get("webinterfacePage"),
+			$this->yellow->config->get("contentExtension"), true);
+		$fileHandle = @fopen($fileName, "r");
+		if($fileHandle)
+		{
+			$fileData = fread($fileHandle, filesize($fileName));
+			fclose($fileHandle);
+		}
+		return $fileData;
 	}
 	
 	// Return configuration data including information of current user

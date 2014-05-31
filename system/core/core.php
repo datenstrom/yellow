@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.2.21";
+	const Version = "0.2.22";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -384,9 +384,10 @@ class YellowPage
 		$this->set("sitename", $this->yellow->config->get("sitename"));
 		$this->set("author", $this->yellow->config->get("author"));
 		$this->set("language", $this->yellow->config->get("language"));
-		$this->set("template", $this->yellow->toolbox->findTemplateFromFile($this->fileName,
-			$this->yellow->config->get("templateDir"), $this->yellow->config->get("template")));
-		$this->set("style", $this->yellow->config->get("style"));
+		$this->set("template", $this->yellow->toolbox->findNameFromFile($this->fileName,
+			$this->yellow->config->get("templateDir"), $this->yellow->config->get("template"), ".php"));
+		$this->set("style", $this->yellow->toolbox->findNameFromFile($this->fileName,
+			$this->yellow->config->get("styleDir"), $this->yellow->config->get("style"), ".css"));
 		$this->set("parser", $this->yellow->config->get("parser"));
 		
 		if(preg_match("/^(\-\-\-[\r\n]+)(.+?)([\r\n]+\-\-\-[\r\n]+)/s", $this->rawData, $parsed))
@@ -1521,14 +1522,16 @@ class YellowToolbox
 		return $fileNames;
 	}
 	
-	// Return template from file path
-	function findTemplateFromFile($fileName, $templateDir, $templateDefault)
+	// Return file/template/style name from file path
+	function findNameFromFile($fileName, $pathBase, $nameDefault, $fileExtension, $includeFileName = false)
 	{
-		if(preg_match("/^.*\/(.+?)$/", dirname($fileName), $matches)) $templateFolder = $this->normaliseName($matches[1]);
-		return is_file("$templateDir$templateFolder.php") ? $templateFolder : $templateDefault;
+		$name = "";
+		if(preg_match("/^.*\/(.+?)$/", dirname($fileName), $matches)) $name = $this->normaliseName($matches[1]);
+		if(!is_file("$pathBase$name$fileExtension")) $name = $this->normaliseName($nameDefault);
+		return $includeFileName ? "$pathBase$name$fileExtension" : $name;
 	}
 	
-	// Normalise directory/file/attribute name
+	// Normalise file/directory/attribute name
 	function normaliseName($text, $removeExtension = false, $filterStrict = false)
 	{
 		if(preg_match("/^[\d\-\_\.]+(.*)$/", $text, $matches)) $text = $matches[1];
