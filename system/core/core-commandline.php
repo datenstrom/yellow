@@ -5,7 +5,7 @@
 // Command line core plugin
 class YellowCommandline
 {
-	const Version = "0.2.9";
+	const Version = "0.3.1";
 	var $yellow;				//access to API
 	var $content;				//number of content pages
 	var $media;					//number of media files

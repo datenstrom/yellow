@@ -5,7 +5,7 @@
 // Markdown extra core plugin
 class YellowMarkdownExtra
 {
-	const Version = "0.2.11";
+	const Version = "0.3.1";
 	var $yellow;		//access to API
 	
 	// Handle plugin initialisation

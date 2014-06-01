@@ -1,9 +1,8 @@
-Yellow
-======
-Yellow is for people who make websites.
+Yellow 0.3.1
+============
+Yellow is for people who make websites.  
 
-[![Build Status](https://travis-ci.org/markseu/yellowcms.svg)](https://travis-ci.org/markseu/yellowcms)
-[![Online demo](https://github.com/markseu/yellowcms-extensions/blob/master/documentation/yellowdemo.png?raw=true)](http://demo.datenstrom.se/)
+[![Build Status](https://travis-ci.org/markseu/yellowcms.svg)](https://travis-ci.org/markseu/yellowcms) [![Online demo](https://github.com/markseu/yellowcms-extensions/blob/master/documentation/yellowdemo.png?raw=true)](http://demo.datenstrom.se/)
 
 How do I install this?
 ----------------------

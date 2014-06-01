@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.2.22";
+	const Version = "0.3.1";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -298,12 +298,6 @@ class Yellow
 	function getSnippetArgs()
 	{
 		return $this->pages->snippetArgs;
-	}
-	
-	// Return page extra header, OBSOLETE WILL BE REMOVED
-	function getHeaderExtra()
-	{
-		return $this->page->getHeaderExtra();
 	}
 	
 	// Execute plugin command
