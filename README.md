@@ -2,7 +2,7 @@ Yellow 0.3.1
 ============
 Yellow is for people who make websites.  
 
-[![Build Status](https://travis-ci.org/markseu/yellowcms.svg)](https://travis-ci.org/markseu/yellowcms) [![Online demo](https://github.com/markseu/yellowcms-extensions/blob/master/documentation/yellowdemo.png?raw=true)](http://demo.datenstrom.se/)
+[![Build Status](https://travis-ci.org/markseu/yellowcms.svg)](https://travis-ci.org/markseu/yellowcms) [![Online demo](https://github.com/markseu/yellowcms-extensions/raw/master/documentation/yellowdemo.png?raw=true)](http://demo.datenstrom.se/)
 
 How do I install this?
 ----------------------
@@ -15,9 +15,8 @@ Yellow doesn't come with a lot of stuff. [Download Yellow extensions](https://gi
 
 How do I get started?
 ---------------------
-You already have everything you need. Start by editing your website. 
-
-Yellow is a flat-file content management system. Everything is made of files and folders. You can create web pages, blogs and wikis. There's support for Dropbox and Markdown. Yellow adapts to you, not the other way around. [Learn more about it](https://github.com/markseu/yellowcms-extensions/blob/master/documentation/README.md).
+You already have everything you need. Start by editing your website.  
+Yellow is a flat-file content management system. [Learn more about it](https://github.com/markseu/yellowcms-extensions/blob/master/documentation/README.md).
 
 License
 -------
