@@ -5,7 +5,7 @@
 // Command line core plugin
 class YellowCommandline
 {
-	const Version = "0.3.1";
+	const Version = "0.3.2";
 	var $yellow;				//access to API
 	var $content;				//number of content pages
 	var $media;					//number of media files
@@ -20,9 +20,8 @@ class YellowCommandline
 	{
 		$this->yellow = $yellow;
 		$this->yellow->config->setDefault("commandlineDefaultFile", "index.html");
-		$this->yellow->config->setDefault("commandlineMediaFile", "(.*).txt");
 		$this->yellow->config->setDefault("commandlineErrorFile", "error404.html");
-		$this->yellow->config->setDefault("commandlineServerFile", ".htaccess");
+		$this->yellow->config->setDefault("commandlineSystemFile", "");
 	}
 	
 	// Handle command help
@@ -102,10 +101,8 @@ class YellowCommandline
 			$pages = $this->yellow->pages->index(true);
 			$fileNamesMedia = $this->yellow->toolbox->getDirectoryEntriesRecursive(
 				$this->yellow->config->get("mediaDir"), "/.*/", false, false);
-			$fileNamesMedia = array_merge($fileNamesMedia, $this->yellow->toolbox->getDirectoryEntries(
-				".", "/".$this->yellow->config->get("commandlineMediaFile")."/", false, false, false));
-			$fileNamesSystem = array($this->yellow->config->get("commandlineErrorFile"),
-				$this->yellow->config->get("commandlineServerFile"));
+			$fileNamesSystem = preg_split("/,\s*/", $this->yellow->config->get(commandlineSystemFile));
+			array_push($fileNamesSystem, $this->yellow->config->get("commandlineErrorFile"));
 		} else {
 			$pages = new YellowPageCollection($this->yellow);
 			$pages->append(new YellowPage($this->yellow, "", "", "", $location));
@@ -138,7 +135,7 @@ class YellowCommandline
 		}
 		foreach($fileNamesSystem as $fileName)
 		{
-			$statusCodeMax = max($statusCodeMax, $this->buildStaticFile($fileName, "$path/$fileName", false));
+			$statusCodeMax = max($statusCodeMax, $this->buildStaticFile($fileName, "$path/".basename($fileName), false));
 		}
 		$this->yellow->toolbox->timerStop($time);
 		if(defined("DEBUG") && DEBUG>=1) echo "YellowCommandline::buildStatic time:$time ms\n";

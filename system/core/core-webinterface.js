@@ -4,7 +4,7 @@
 // Yellow main API
 var yellow =
 {
-	version: "0.3.1",
+	version: "0.3.2",
 	onClick: function(e) { yellow.webinterface.hidePanesOnClick(yellow.toolbox.getEventElement(e)); },
 	onKeydown: function(e) { yellow.webinterface.hidePanesOnKeydown(yellow.toolbox.getEventKeycode(e)); },
 	onResize: function() { yellow.webinterface.resizePanes(); },
@@ -70,7 +70,6 @@ yellow.webinterface =
 			var location = yellow.config.serverBase+yellow.config.pluginLocation;			
 			elementBar.innerHTML =
 				"<div class=\"yellow-bar-left\">"+
-				"<a href=\"https://github.com/markseu/yellowcms-extensions/blob/master/documentation/README.md\" target=\"_blank\"><i class=\"yellow-icon\"></i> Yellow</a>"+
 				"<a href=\"#\" onclick=\"yellow.onShow('yellow-pane-edit'); return false;\">"+this.getText("Edit")+"</a>"+
 				"</div>"+
 				"<div class=\"yellow-bar-right\">"+
@@ -114,6 +113,7 @@ yellow.webinterface =
 		} else if(id == "yellow-pane-user") {
 			elementDiv.innerHTML =
 				"<p>"+yellow.config.userEmail+"</p>"+
+				"<p><a href=\""+this.getText("UserHelpUrl")+"\">"+this.getText("UserHelp")+"</a></p>" +
 				"<p><a href=\"#\" onclick=\"yellow.onLogout(); return false;\">"+this.getText("UserLogout")+"</a></p>";
 		}
 

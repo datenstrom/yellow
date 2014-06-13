@@ -5,7 +5,7 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.3.1";
+	const Version = "0.3.2";
 	var $yellow;				//access to API
 	var $users;					//web interface users
 	var $active;				//web interface is active? (boolean)
@@ -16,14 +16,13 @@ class YellowWebinterface
 	function onLoad($yellow)
 	{
 		$this->yellow = $yellow;
-		$this->yellow->config->setDefault("webinterfacePage", "default");
 		$this->yellow->config->setDefault("webinterfaceLocation", "/edit/");
-		$this->yellow->config->setDefault("webinterfaceUserFile", "user.ini");
-		$this->yellow->config->setDefault("webinterfaceUserHome", "/");
-		$this->yellow->config->setDefault("webinterfaceUserHashAlgorithm", "bcrypt");
-		$this->yellow->config->setDefault("webinterfaceUserHashCost", "10");
 		$this->yellow->config->setDefault("webinterfaceServerScheme", "https");
 		$this->yellow->config->setDefault("webinterfaceServerName", $this->yellow->config->get("serverName"));
+		$this->yellow->config->setDefault("webinterfaceUserHashAlgorithm", "bcrypt");
+		$this->yellow->config->setDefault("webinterfaceUserHashCost", "10");
+		$this->yellow->config->setDefault("webinterfaceUserFile", "user.ini");
+		$this->yellow->config->setDefault("webinterfaceNewPage", "default");
 		$this->users = new YellowWebinterfaceUsers($yellow);
 		$this->users->load($this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile"));
 	}
@@ -299,7 +298,7 @@ class YellowWebinterface
 			$this->yellow->config->get("contentDir"), $this->yellow->config->get("contentHomeDir"),
 			$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
 		$fileName = $this->yellow->toolbox->findNameFromFile($fileName,
-			$this->yellow->config->get("configDir"), $this->yellow->config->get("webinterfacePage"),
+			$this->yellow->config->get("configDir"), $this->yellow->config->get("webinterfaceNewPage"),
 			$this->yellow->config->get("contentExtension"), true);
 		$fileHandle = @fopen($fileName, "r");
 		if($fileHandle)
@@ -410,7 +409,7 @@ class YellowWebinterfaceUsers
 		{
 			$name = strreplaceu(',', '-', empty($name) ? $this->yellow->config->get("sitename") : $name);
 			$language = strreplaceu(',', '-', empty($language) ? $this->yellow->config->get("language") : $language);
-			$home = strreplaceu(',', '-', empty($home) ? $this->yellow->config->get("webinterfaceUserHome") : $home);
+			$home = strreplaceu(',', '-', empty($home) ? "/" : $home);
 			$fileDataNew .= "$email,$hash,$name,$language,$home\n";
 		}
 		return $this->yellow->toolbox->createFile($fileName, $fileDataNew);

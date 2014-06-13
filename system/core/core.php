@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.3.1";
+	const Version = "0.3.2";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -51,6 +51,7 @@ class Yellow
 		$this->config->setDefault("textStringFile", "text(.*).ini");
 		$this->config->load($this->config->get("configDir").$this->config->get("configFile"));
 		$this->text->load($this->config->get("configDir").$this->config->get("textStringFile"));
+		$this->updateConfig();
 	}
 	
 	// Handle request
@@ -75,7 +76,7 @@ class Yellow
 			$this->pages->requestHandler = "core";
 			$statusCode = $this->processRequest($serverScheme, $serverName, $base, $location, $fileName, true, $statusCode);
 		}
-		if($this->isRequestError() || $statusCodeRequest>=400) $statusCode = $this->processRequestError($statusCodeRequest);
+		if($this->page->isError() || $statusCodeRequest>=400) $statusCode = $this->processRequestError($statusCodeRequest);
 		ob_end_flush();
 		$this->toolbox->timerStop($time);
 		if(defined("DEBUG") && DEBUG>=1) echo "Yellow::request status:$statusCode location:$location<br>\n";
@@ -219,6 +220,21 @@ class Yellow
 			if(!empty($responseHeader)) @header($responseHeader);
 		}
 	}
+
+	// Update configuration
+	function updateConfig()
+	{
+		if(!$this->isContentDirectory("/"))
+		{
+			$path = $this->config->get("contentDir");
+			foreach($this->toolbox->getDirectoryEntries($path, "/.*/", true, true, false) as $entry)
+			{
+				$name = $this->toolbox->normaliseName($entry);
+				$this->config->set("contentHomeDir", $name."/");
+				break;
+			}
+		}
+	}
 	
 	// Return request information
 	function getRequestInformation($serverScheme = "", $serverName = "", $base = "")
@@ -252,13 +268,7 @@ class Yellow
 	{
 		return isset($_GET["clean-url"]) || isset($_POST["clean-url"]);
 	}
-	
-	// Check if request error happened
-	function isRequestError()
-	{
-		return $this->page->isExisting("pageError");
-	}
-	
+		
 	// Check if content directory exists
 	function isContentDirectory($location)
 	{
@@ -368,6 +378,23 @@ class YellowPage
 		$this->parseMeta();
 	}
 	
+	// Parse page data update
+	function parseDataUpdate()
+	{
+		if($this->statusCode == 0)
+		{
+			$fileHandle = @fopen($this->fileName, "r");
+			if($fileHandle)
+			{
+				$this->statusCode = 200;
+				$this->rawData = fread($fileHandle, filesize($this->fileName));
+				$this->metaData = array();
+				fclose($fileHandle);
+				$this->parseMeta();
+			}
+		}
+	}
+	
 	// Parse page meta data
 	function parseMeta()
 	{
@@ -414,24 +441,6 @@ class YellowPage
 				$output = $value["obj"]->onParseMeta($this, $this->rawData);
 				if(!is_null($output)) break;
 			}
-		}
-	}
-	
-	// Parse page update if necessary
-	function parseUpdate()
-	{
-		if($this->statusCode == 0)
-		{
-			$fileHandle = @fopen($this->fileName, "r");
-			if($fileHandle)
-			{
-				$this->statusCode = 200;
-				$this->rawData = fread($fileHandle, filesize($this->fileName));
-				$this->metaData = array();
-				fclose($fileHandle);
-				$this->parseMeta();
-			}
-			if(defined("DEBUG") && DEBUG>=2) echo "YellowPage::parseUpdate location:".$this->location."<br/>\n";
 		}
 	}
 	
@@ -520,7 +529,7 @@ class YellowPage
 	{
 		if($rawFormat)
 		{
-			$this->parseUpdate();
+			$this->parseDataUpdate();
 			$text = substrb($this->rawData, $this->metaDataOffsetBytes);
 		} else {
 			$this->parseContent();
@@ -638,6 +647,12 @@ class YellowPage
 	function isExisting($key)
 	{
 		return !is_null($this->metaData[$key]);
+	}
+	
+	// Check if page with error
+	function isError()
+	{
+		return $this->isExisting("pageError");
 	}
 	
 	// Check if page is within current HTTP request
@@ -1525,6 +1540,14 @@ class YellowToolbox
 		return $includeFileName ? "$pathBase$name$fileExtension" : $name;
 	}
 	
+	// Normalise location arguments
+	function normaliseArgs($text, $appendSlash = true, $filterStrict = true)
+	{
+		if($appendSlash) $text .= '/';
+		if($filterStrict) $text = strreplaceu(' ', '-', strtoloweru($text));
+		return strreplaceu(array('%3A','%2F'), array(':','/'), rawurlencode($text));
+	}
+	
 	// Normalise file/directory/attribute name
 	function normaliseName($text, $removeExtension = false, $filterStrict = false)
 	{
@@ -1534,7 +1557,7 @@ class YellowToolbox
 		return preg_replace("/[^\pL\d\-\_\.]/u", "-", $text);
 	}
 	
-	// Normalise location, make absolute page location
+	// Normalise location, make absolute location
 	function normaliseLocation($location, $pageBase, $pageLocation)
 	{
 		if(!preg_match("/^\w+:/", $location))
@@ -1549,14 +1572,6 @@ class YellowToolbox
 			}
 		}
 		return $location;
-	}
-	
-	// Normalise location arguments
-	function normaliseArgs($text, $appendSlash = true, $filterStrict = true)
-	{
-		if($appendSlash) $text .= '/';
-		if($filterStrict) $text = strreplaceu(' ', '-', strtoloweru($text));
-		return strreplaceu(array('%3A','%2F'), array(':','/'), rawurlencode($text));
 	}
 	
 	// Normalise text into UTF-8 NFC
@@ -1776,46 +1791,6 @@ class YellowToolbox
 		return $text;
 	}
 
-	// Detect PNG and JPG image dimensions
-	function detectImageDimensions($fileName)
-	{
-		$width = $height = 0;
-		$fileHandle = @fopen($fileName, "rb");
-		if($fileHandle)
-		{
-			if(substru($fileName, -3) == "png")
-			{
-				$dataSignature = fread($fileHandle, 8);
-				$dataHeader = fread($fileHandle, 16);
-				if(!feof($fileHandle) && $dataSignature=="\x89PNG\r\n\x1a\n")
-				{
-					$width = (ord($dataHeader[10])<<8) + ord($dataHeader[11]);
-					$height = (ord($dataHeader[14])<<8) + ord($dataHeader[15]);
-				}
-			} else if(substru($fileName, -3) == "jpg") {
-				$dataBufferSize = min(filesize($fileName), 8192);
-				$dataBuffer = fread($fileHandle, $dataBufferSize);
-				$dataSignature = substrb($dataBuffer, 0, 11);
-				if(!feof($fileHandle) && $dataSignature=="\xff\xd8\xff\xe0\x00\x10JFIF\0")
-				{
-					for($pos=20; $pos+8<$dataBufferSize; $pos+=$length)
-					{
-						if($dataBuffer[$pos] != "\xff") break;
-						if($dataBuffer[$pos+1]=="\xc0" || $dataBuffer[$pos+1]=="\xc2")
-						{
-							$width = (ord($dataBuffer[$pos+7])<<8) + ord($dataBuffer[$pos+8]);
-							$height = (ord($dataBuffer[$pos+5])<<8) + ord($dataBuffer[$pos+6]);
-							break;
-						}
-						$length = (ord($dataBuffer[$pos+2])<<8) + ord($dataBuffer[$pos+3]) + 2;
-					}
-				}
-			}
-			fclose($fileHandle);
-		}
-		return array($width, $height);
-	}
-	
 	// Create random text for cryptography
 	function createSalt($length, $bcryptFormat = false)
 	{
@@ -1844,7 +1819,7 @@ class YellowToolbox
 		return $salt;
 	}
 	
-	// Create hash with random salt
+	// Create hash with random salt, bcrypt or sha256
 	function createHash($text, $algorithm, $cost = 0)
 	{
 		$hash = "";
@@ -1884,13 +1859,53 @@ class YellowToolbox
 		return $ok;
 	}
 	
+	// Detect image dimensions, PNG or JPG
+	function detectImageDimensions($fileName)
+	{
+		$width = $height = 0;
+		$fileHandle = @fopen($fileName, "rb");
+		if($fileHandle)
+		{
+			if(substru($fileName, -3) == "png")
+			{
+				$dataSignature = fread($fileHandle, 8);
+				$dataHeader = fread($fileHandle, 16);
+				if(!feof($fileHandle) && $dataSignature=="\x89PNG\r\n\x1a\n")
+				{
+					$width = (ord($dataHeader[10])<<8) + ord($dataHeader[11]);
+					$height = (ord($dataHeader[14])<<8) + ord($dataHeader[15]);
+				}
+			} else if(substru($fileName, -3) == "jpg") {
+				$dataBufferSize = min(filesize($fileName), 8192);
+				$dataBuffer = fread($fileHandle, $dataBufferSize);
+				$dataSignature = substrb($dataBuffer, 0, 11);
+				if(!feof($fileHandle) && $dataSignature=="\xff\xd8\xff\xe0\x00\x10JFIF\0")
+				{
+					for($pos=20; $pos+8<$dataBufferSize; $pos+=$length)
+					{
+						if($dataBuffer[$pos] != "\xff") break;
+						if($dataBuffer[$pos+1]=="\xc0" || $dataBuffer[$pos+1]=="\xc2")
+						{
+							$width = (ord($dataBuffer[$pos+7])<<8) + ord($dataBuffer[$pos+8]);
+							$height = (ord($dataBuffer[$pos+5])<<8) + ord($dataBuffer[$pos+6]);
+							break;
+						}
+						$length = (ord($dataBuffer[$pos+2])<<8) + ord($dataBuffer[$pos+3]) + 2;
+					}
+				}
+			}
+			fclose($fileHandle);
+		}
+		return array($width, $height);
+	}
+	
 	// Start timer
 	function timerStart(&$time)
 	{
 		$time = microtime(true);
 	}
 	
-	// Stop timer and calcuate elapsed time (milliseconds)
+	// Stop timer and calculate elapsed time in milliseconds
 	function timerStop(&$time)
 	{
 		$time = intval((microtime(true)-$time) * 1000);
@@ -1941,24 +1956,24 @@ class YellowPlugins
 	}
 }
 
-// Unicode support for PHP 5
+// Unicode support for PHP
 mb_internal_encoding("UTF-8");
 function strempty($string) { return is_null($string) || $string===""; }
-function strlenu() { return call_user_func_array("mb_strlen", func_get_args()); }
-function strposu() { return call_user_func_array("mb_strpos", func_get_args()); }
-function strrposu() { return call_user_func_array("mb_strrpos", func_get_args()); }
 function strreplaceu() { return call_user_func_array("str_replace", func_get_args()); }
 function strtoloweru() { return call_user_func_array("mb_strtolower", func_get_args()); }
 function strtoupperu() { return call_user_func_array("mb_strtoupper", func_get_args()); }
-function substru() { return call_user_func_array("mb_substr", func_get_args()); }
+function strlenu() { return call_user_func_array("mb_strlen", func_get_args()); }
 function strlenb() { return call_user_func_array("strlen", func_get_args()); }
+function strposu() { return call_user_func_array("mb_strpos", func_get_args()); }
 function strposb() { return call_user_func_array("strpos", func_get_args()); }
+function strrposu() { return call_user_func_array("mb_strrpos", func_get_args()); }
 function strrposb() { return call_user_func_array("strrpos", func_get_args()); }
+function substru() { return call_user_func_array("mb_substr", func_get_args()); }
 function substrb() { return call_user_func_array("substr", func_get_args()); }
 
-// Default timezone for PHP 5
+// Default timezone for PHP
 date_default_timezone_set(@date_default_timezone_get());
 	
-// Error reporting for PHP 5
+// Error reporting for PHP
 error_reporting(E_ALL ^ E_NOTICE);
 ?>

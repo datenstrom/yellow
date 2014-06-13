@@ -6,6 +6,8 @@ RewriteEngine on
 RewriteCond %{ENV:REDIRECT_STATUS} ^$
 RewriteRule ^(content|system)/ error404 [L]
 RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^robots.txt$ system/config/robots.txt [L]
+RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_URI} \.(css|js|png)$
 RewriteRule ^media/plugins/(core-.+) system/core/$1 [L]
 RewriteCond %{REQUEST_FILENAME} !-f

@@ -1,8 +1,8 @@
-Yellow 0.3.1
+Yellow 0.3.2
 ============
-Yellow is for people who make websites.  
+Yellow is for people who make websites.
 
-[![Build Status](https://travis-ci.org/markseu/yellowcms.svg)](https://travis-ci.org/markseu/yellowcms) [![Online demo](https://github.com/markseu/yellowcms-extensions/raw/master/documentation/yellowdemo.png?raw=true)](http://demo.datenstrom.se/)
+[![Build Status](https://travis-ci.org/markseu/yellowcms.svg)](https://travis-ci.org/markseu/yellowcms) [![Online demo](https://github.com/markseu/yellowcms-extensions/raw/master/documentation/english/yellowdemo.png?raw=true)](http://demo.datenstrom.se/)
 
 How do I install this?
 ----------------------
@@ -16,9 +16,10 @@ Yellow doesn't come with a lot of stuff. [Download Yellow extensions](https://gi
 How do I get started?
 ---------------------
 You already have everything you need. Start by editing your website.  
-Yellow is a flat-file content management system. [Learn more about it](https://github.com/markseu/yellowcms-extensions/blob/master/documentation/README.md).
+Yellow is a flat-file content management system. [Learn more about it](https://github.com/markseu/yellowcms-extensions/blob/master/documentation/english/README.md). 
 
 License
 -------
-* Yellow by Mark Seuffert and David Fehrmann is licensed under [GPLv2](http://opensource.org/licenses/GPL-2.0). 
+* Yellow by Mark Seuffert and David Fehrmann is licensed under [GPLv2](http://opensource.org/licenses/GPL-2.0).
+* Yellow extensions are licensed under [GPLv2](http://opensource.org/licenses/GPL-2.0) unless stated otherwise.
 * [PHP Markdown Extra](https://github.com/michelf/php-markdown) by Michel Fortin is licensed under [BSD license](http://opensource.org/licenses/BSD-3-Clause).
