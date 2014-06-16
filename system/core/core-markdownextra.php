@@ -5,7 +5,7 @@
 // Markdown extra core plugin
 class YellowMarkdownExtra
 {
-	const Version = "0.3.1";
+	const Version = "0.3.2";
 	var $yellow;		//access to API
 	
 	// Handle plugin initialisation
@@ -68,6 +68,8 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser
 		$text = preg_replace_callback("/<(\w+:[^\'\">\s]+)>/", array(&$this, "_doAutoLinks_url_callback"), $text);
 		$text = preg_replace_callback("/<(\w+@[\w\-\.]+)>/", array(&$this, "_doAutoLinks_email_callback"), $text);
 		$text = preg_replace_callback("/\[(\w+)\s+(.*?)\]/", array(&$this, "_doAutoLinks_shortcut_callback"), $text);
+		$text = preg_replace_callback("/((http|https|ftp):\/\/\S+[^\'\"\,\.\;\:\s]+)/", array(&$this, "_doAutoLinks_url_callback"), $text);
+		$text = preg_replace_callback("/(\w+@[\w\-\.]+\.[\w]{2,4})/", array(&$this, "_doAutoLinks_email_callback"), $text);
 		return $text;
 	}
 	

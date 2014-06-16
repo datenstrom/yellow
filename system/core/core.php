@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.3.2";
+	const Version = "0.3.3";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -1560,7 +1560,7 @@ class YellowToolbox
 	// Normalise location, make absolute location
 	function normaliseLocation($location, $pageBase, $pageLocation)
 	{
-		if(!preg_match("/^\w+:/", $location))
+		if(!preg_match("/^\w+:/", html_entity_decode($location, ENT_QUOTES, "UTF-8")))
 		{
 			if(preg_match("/^[^\/]+$/", $location))
 			{
