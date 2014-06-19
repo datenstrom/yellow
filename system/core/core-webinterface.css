@@ -1,4 +1,4 @@
-/* Yellow web interface 0.3.1 */
+/* Yellow web interface 0.3.2 */
 
 .yellow-bar { position:relative; overflow:hidden; line-height:2.0em; }
 .yellow-bar-left { display:block; float:left; }
@@ -22,24 +22,29 @@
 
 .yellow-btn {
 	margin:0; padding:4px 22px; 
-	background-color:#eaeaea; color:#333333; 
+	display:inline-block;
+	background-color:#eaeaea; color:#333333;
 	background-image:linear-gradient(to bottom, #ffffff, #e1e1e1); 
 	background-repeat:repeat-x; 
 	border:1px solid #bbb; 
 	border-color:#d1d1d1 #d1d1d1 #aaaaaa; 
 	border-radius:4px; 
 	outline-offset:-2px; 
-	font-size:0.9em; 
+	font-size:0.9em; font-family:inherit; font-weight:normal; line-height:1;
+	text-align:center; text-decoration:none;
 }
-.yellow-btn:hover, .yellow-btn:focus, .yellow-btn:active { background-image:none; }
+.yellow-btn:hover, .yellow-btn:focus, .yellow-btn:active { 
+	color:#333333;
+	background-image:none; 
+	text-decoration:none;
+}
 .yellow-btn:active { box-shadow:inset 0 2px 4px rgba(0, 0, 0, 0.1); }
-.yellow-btn-warn {
+.yellow-btn-red {
 	background-color:#c33c35; color:#ffffff; 
 	background-image:linear-gradient(to bottom, #ee5f5b, #bd362f); 
 	border-color:#b13121 #b13121 #802020; 
-	text-shadow:0 -1px 0 rgba(0, 0, 0, 0.25); 
 }
-.yellow-btn-warn:active { box-shadow:inset 0 2px 4px rgba(0, 0, 0, 0.3); }
+.yellow-btn-red:hover, .yellow-btn-red:focus, .yellow-btn-red:active { color:#ffffff; }
 
 #yellow-pane-login { }
 #yellow-pane-login h1 { margin:0.5em 0.5em; }
@@ -49,5 +54,3 @@
 #yellow-pane-edit #yellow-edit-info { margin:0; padding:5px; border:1px solid #bbb; display:none; }
 #yellow-pane-edit #yellow-edit-buttons { margin:5px 0; }
 #yellow-pane-user { }
-
-.yellow-icon { width:16px; height:16px; display:inline-block; background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAA4UlEQVQoFZWQPQrCQBBGv80qwfyIIoKFhYWl1/EGFl5A7EyhIFgIgnZewpt4A5uAgoWIS0SMiRlJlqzZJtPMtzPvMbAsPqNUGaXoBC4tVJQL9gIsROQj2Kdzc4hqH2Ipsb8LTTge6lvwzo+w4O7AJExBFYI5ohtgwp7Q0hzBeEFsKGelCvEFYk2r2hi8B2cK4SEOMpg6K3yri/YJvIWPD9xxHeTpJKsXaPmAWFHnXYgZBbWKAvA8pMz7qML00glxWOTkRCfwRrpmXHIy6ATDyoTMlLjul3JLXdRd0HFyVlr4AhXBLDxuCuBRAAAAAElFTkSuQmCC); }
