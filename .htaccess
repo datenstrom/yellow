@@ -8,10 +8,10 @@ RewriteRule ^(content|system)/ error404 [L]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^robots.txt$ system/config/robots.txt [L]
 RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_URI} \.(css|js|png)$
+RewriteCond %{REQUEST_URI} \.(css|js|png|woff)$
 RewriteRule ^media/plugins/(core-.+) system/core/$1 [L]
 RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_URI} \.(css|js|png)$
+RewriteCond %{REQUEST_URI} \.(css|js|png|woff)$
 RewriteRule ^media/plugins/(.+) system/plugins/$1 [L]
 
 RewriteCond yellow.php -F
