@@ -2,7 +2,7 @@ Yellow 0.3.5
 ============
 Yellow is for people who make websites.
 
-[![Build Status](https://travis-ci.org/markseu/yellowcms.svg)](https://travis-ci.org/markseu/yellowcms) [![Online demo](https://github.com/markseu/yellowcms-extensions/raw/master/documentation/english/yellowdemo.png?raw=true)](http://demo.datenstrom.se/)
+[![Status](https://travis-ci.org/markseu/yellowcms.svg)](https://travis-ci.org/markseu/yellowcms)
 
 How do I install this?
 ----------------------
