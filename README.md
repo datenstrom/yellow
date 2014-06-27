@@ -1,4 +1,4 @@
-Yellow 0.3.5
+Yellow 0.3.6
 ============
 Yellow is for people who make websites.
 

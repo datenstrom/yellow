@@ -5,7 +5,7 @@
 // Markdown extra core plugin
 class YellowMarkdownExtra
 {
-	const Version = "0.3.2";
+	const Version = "0.3.3";
 	var $yellow;		//access to API
 	
 	// Handle plugin initialisation
@@ -138,7 +138,7 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser
 		$src = $matches[3]=="" ? $matches[4] : $matches[3];
 		if(!preg_match("/^\w+:/", $src))
 		{
-			list($width, $height) = $this->yellow->toolbox->detectImageDimensions($this->yellow->config->get("imageDir").$src);
+			list($width, $height) = $this->yellow->toolbox->detectImageInfo($this->yellow->config->get("imageDir").$src);
 			$src = $this->yellow->config->get("serverBase").$this->yellow->config->get("imageLocation").$src;
 		}
 		$alt = $matches[2];

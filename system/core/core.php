@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.3.5";
+	const Version = "0.3.6";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -1105,7 +1105,7 @@ class YellowText
 	function load($fileName)
 	{
 		$path = dirname($fileName);
-		$regex = "/".basename($fileName)."/";
+		$regex = "/^".basename($fileName)."$/";
 		foreach($this->yellow->toolbox->getDirectoryEntries($path, $regex, true, false) as $entry)
 		{
 			$fileData = @file($entry);
@@ -1520,7 +1520,7 @@ class YellowToolbox
 		if(!empty($location))
 		{
 			$fileFolder = $this->normaliseName(basename($path)).$fileExtension;
-			$regex = "/.*\\".$fileExtension."/";
+			$regex = "/^.*\\".$fileExtension."$/";
 			foreach($this->getDirectoryEntries($path, $regex, true, false, false) as $entry)
 			{
 				if($this->normaliseName($entry) == $fileDefault) continue;
@@ -1703,10 +1703,24 @@ class YellowToolbox
 		return @copy($fileNameSource, $fileNameDest);
 	}
 
+	// Delete file
+	function deleteFile($fileName)
+	{
+		return @unlink($fileName);
+	}
+	
 	// Set file modification time, Unix time
 	function modifyFile($fileName, $modified)
 	{
 		return @touch($fileName, $modified);
+	}
+	
+	// Return arguments from text string
+	function getTextArgs($text, $optional = "-")
+	{
+		$tokens = str_getcsv(trim($text), ' ', '"');
+		foreach($tokens as $key=>$value) if($value == $optional) $tokens[$key] = "";
+		return $tokens;
 	}
 	
 	// Create description from text string
@@ -1859,10 +1873,11 @@ class YellowToolbox
 		return $ok;
 	}
 	
-	// Detect image dimensions, PNG or JPG
-	function detectImageDimensions($fileName)
+	// Detect image dimensions and type, png or jpg
+	function detectImageInfo($fileName)
 	{
 		$width = $height = 0;
+		$type = "";
 		$fileHandle = @fopen($fileName, "rb");
 		if($fileHandle)
 		{
@@ -1874,6 +1889,7 @@ class YellowToolbox
 				{
 					$width = (ord($dataHeader[10])<<8) + ord($dataHeader[11]);
 					$height = (ord($dataHeader[14])<<8) + ord($dataHeader[15]);
+					$type = "png";
 				}
 			} else if(substru($fileName, -3) == "jpg") {
 				$dataBufferSize = min(filesize($fileName), 8192);
@@ -1888,6 +1904,7 @@ class YellowToolbox
 						{
 							$width = (ord($dataBuffer[$pos+7])<<8) + ord($dataBuffer[$pos+8]);
 							$height = (ord($dataBuffer[$pos+5])<<8) + ord($dataBuffer[$pos+6]);
+							$type = "jpg";
 							break;
 						}
 						$length = (ord($dataBuffer[$pos+2])<<8) + ord($dataBuffer[$pos+3]) + 2;
@@ -1896,7 +1913,7 @@ class YellowToolbox
 			}
 			fclose($fileHandle);
 		}
-		return array($width, $height);
+		return array($width, $height, $type);
 	}
 	
 	// Start timer
@@ -1927,9 +1944,9 @@ class YellowPlugins
 	{
 		global $yellow;
 		$path = dirname(__FILE__);
-		foreach($yellow->toolbox->getDirectoryEntries($path, "/core-.*\.php/", true, false) as $entry) require_once($entry);
+		foreach($yellow->toolbox->getDirectoryEntries($path, "/^core-.*\.php$/", true, false) as $entry) require_once($entry);
 		$path = $yellow->config->get("pluginDir");
-		foreach($yellow->toolbox->getDirectoryEntries($path, "/.*\.php/", true, false) as $entry) require_once($entry);
+		foreach($yellow->toolbox->getDirectoryEntries($path, "/^.*\.php$/", true, false) as $entry) require_once($entry);
 		foreach($this->plugins as $key=>$value)
 		{
 			$this->plugins[$key]["obj"] = new $value["class"];
