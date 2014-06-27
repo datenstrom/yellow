@@ -5,7 +5,7 @@
 // Command line core plugin
 class YellowCommandline
 {
-	const Version = "0.3.2";
+	const Version = "0.3.3";
 	var $yellow;				//access to API
 	var $content;				//number of content pages
 	var $media;					//number of media files
@@ -92,50 +92,47 @@ class YellowCommandline
 	function buildStatic($location, $path)
 	{
 		$this->yellow->toolbox->timerStart($time);
-		$this->content = $this->media = $this->system = $this->error = $statusCodeMax = 0;
-		$this->locationsArguments = $this->locationsPagination = $this->fileNamesPlugin = array();
 		$pluginDir = $this->yellow->config->get("pluginDir");
 		$pathPlugin = rtrim($path.$this->yellow->config->get("pluginLocation"), '/');
+		$this->content = $this->media = $this->system = $this->error = $statusCodeMax = 0;
+		$this->locationsArguments = $this->locationsPagination = $this->fileNamesPlugin = array();
 		if(empty($location))
 		{
-			$pages = $this->yellow->pages->index(true);
+			foreach($this->yellow->pages->index(true) as $page)
+			{
+				$statusCodeMax = max($statusCodeMax, $this->buildStaticLocation($page->location, $path, true));
+			}
+			foreach($this->locationsArguments as $location)
+			{
+				$statusCodeMax = max($statusCodeMax, $this->buildStaticLocation($location, $path, true));
+			}
+			foreach($this->locationsPagination as $location)
+			{
+				for($pageNumber=2; $pageNumber<=999; ++$pageNumber)
+				{
+					$statusCode = $this->buildStaticLocation($location.$pageNumber, $path, false, true);
+					$statusCodeMax = max($statusCodeMax, $statusCode);
+					if($statusCode == 0) break;
+				}
+			}
 			$fileNamesMedia = $this->yellow->toolbox->getDirectoryEntriesRecursive(
 				$this->yellow->config->get("mediaDir"), "/.*/", false, false);
 			$fileNamesSystem = preg_split("/,\s*/", $this->yellow->config->get(commandlineSystemFile));
 			array_push($fileNamesSystem, $this->yellow->config->get("commandlineErrorFile"));
-		} else {
-			$pages = new YellowPageCollection($this->yellow);
-			$pages->append(new YellowPage($this->yellow, "", "", "", $location));
-			$fileNamesMedia = $fileNamesSystem = array();
-		}
-		foreach($pages as $page)
-		{
-			$statusCodeMax = max($statusCodeMax, $this->buildStaticLocation($page->location, $path, empty($location)));
-		}
-		foreach($this->locationsArguments as $location)
-		{
-			$statusCodeMax = max($statusCodeMax, $this->buildStaticLocation($location, $path, true));
-		}
-		foreach($this->locationsPagination as $location)
-		{
-			for($pageNumber=2; $pageNumber<=999; ++$pageNumber)
+			foreach($fileNamesMedia as $fileName)
 			{
-				$statusCode = $this->buildStaticLocation($location.$pageNumber, $path, false, true);
-				$statusCodeMax = max($statusCodeMax, $statusCode);
-				if($statusCode == 0) break;
+				$statusCodeMax = max($statusCodeMax, $this->buildStaticFile($fileName, "$path/$fileName"));
 			}
-		}
-		foreach($fileNamesMedia as $fileName)
-		{
-			$statusCodeMax = max($statusCodeMax, $this->buildStaticFile($fileName, "$path/$fileName"));
-		}
-		foreach($this->fileNamesPlugin as $fileName)
-		{
-			$statusCodeMax = max($statusCodeMax, $this->buildStaticFile("$pluginDir$fileName", "$pathPlugin/$fileName"));
-		}
-		foreach($fileNamesSystem as $fileName)
-		{
-			$statusCodeMax = max($statusCodeMax, $this->buildStaticFile($fileName, "$path/".basename($fileName), false));
+			foreach($this->fileNamesPlugin as $fileName)
+			{
+				$statusCodeMax = max($statusCodeMax, $this->buildStaticFile("$pluginDir$fileName", "$pathPlugin/$fileName"));
+			}
+			foreach($fileNamesSystem as $fileName)
+			{
+				$statusCodeMax = max($statusCodeMax, $this->buildStaticFile($fileName, "$path/".basename($fileName), false));
+			}
+		} else {
+			$statusCodeMax = $this->buildStaticLocation($location, $path);
 		}
 		$this->yellow->toolbox->timerStop($time);
 		if(defined("DEBUG") && DEBUG>=1) echo "YellowCommandline::buildStatic time:$time ms\n";
