@@ -5,7 +5,7 @@
 // Markdown extra core plugin
 class YellowMarkdownExtra
 {
-	const Version = "0.3.3";
+	const Version = "0.3.4";
 	var $yellow;		//access to API
 	
 	// Handle plugin initialisation
@@ -135,6 +135,7 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser
 	// Handle inline images
 	function _doImages_inline_callback($matches)
 	{
+		$width = $height = 0;
 		$src = $matches[3]=="" ? $matches[4] : $matches[3];
 		if(!preg_match("/^\w+:/", $src))
 		{
@@ -142,7 +143,7 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser
 			$src = $this->yellow->config->get("serverBase").$this->yellow->config->get("imageLocation").$src;
 		}
 		$alt = $matches[2];
-		$title = $matches[7];
+		$title = $matches[7]=="" ? $matches[2] : $matches[7];
 		$attr = $this->doExtraAttributes("img", $dummy =& $matches[8]);
 		$output = "<img src=\"".$this->encodeAttribute($src)."\"";
 		if($width && $height) $output .= " width=\"$width\" height=\"$height\"";
