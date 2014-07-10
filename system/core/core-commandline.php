@@ -5,7 +5,7 @@
 // Command line core plugin
 class YellowCommandline
 {
-	const Version = "0.3.4";
+	const Version = "0.3.5";
 	var $yellow;				//access to API
 	var $content;				//number of content pages
 	var $media;					//number of media files
@@ -49,7 +49,7 @@ class YellowCommandline
 	// Show available commands
 	function helpCommand()
 	{
-		echo "Yellow command line ".YellowCommandline::Version."\n";
+		echo "Yellow ".Yellow::Version."\n";
 		foreach($this->getCommandHelp() as $line) echo (++$lineCounter>1 ? "        " : "Syntax: ")."yellow.php $line\n";
 		return 200;
 	}
