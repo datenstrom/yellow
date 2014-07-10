@@ -8,5 +8,5 @@ class YellowExample
 	const Version = "0.0.0";
 }
 
-$yellow->registerPlugin("example", "YellowExample", YellowExample::Version);
+$yellow->plugins->register("example", "YellowExample", YellowExample::Version);
 ?>

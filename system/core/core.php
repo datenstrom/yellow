@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.3.6";
+	const Version = "0.3.7";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -221,7 +221,7 @@ class Yellow
 		}
 	}
 
-	// Update configuration
+	// Update dynamic configuration
 	function updateConfig()
 	{
 		if(!$this->isContentDirectory("/"))
@@ -277,6 +277,21 @@ class Yellow
 		return is_dir($path);
 	}
 	
+	// Execute command
+	function command($name, $args = NULL)
+	{
+		$statusCode = 0;
+		if($this->plugins->isExisting($name))
+		{
+			$plugin = $this->plugins->plugins[$name];
+			if(method_exists($plugin["obj"], "onCommand")) $statusCode = $plugin["obj"]->onCommand(func_get_args());
+		} else {
+			$statusCode = 500;
+			$this->page->error($statusCode, "Plugin '$name' does not exist!");
+		}
+		return $statusCode;
+	}
+	
 	// Execute template
 	function template($name)
 	{
@@ -310,22 +325,7 @@ class Yellow
 		return $this->pages->snippetArgs;
 	}
 	
-	// Execute plugin command
-	function plugin($name, $args = NULL)
-	{
-		$statusCode = 0;
-		if($this->plugins->isExisting($name))
-		{
-			$plugin = $this->plugins->plugins[$name];
-			if(method_exists($plugin["obj"], "onCommand")) $statusCode = $plugin["obj"]->onCommand(func_get_args());
-		} else {
-			$statusCode = 500;
-			$this->page->error($statusCode, "Plugin '$name' does not exist!");
-		}
-		return $statusCode;
-	}
-	
-	// Register plugin
+	// Register plugin, OBSOLETE AND WILL BE REMOVED SOON
 	function registerPlugin($name, $class, $version)
 	{
 		$this->plugins->register($name, $class, $version);
@@ -452,10 +452,10 @@ class YellowPage
 			if($this->yellow->plugins->isExisting($this->get("parser")))
 			{
 				$plugin = $this->yellow->plugins->plugins[$this->get("parser")];
-				if(method_exists($plugin["obj"], "onParseText"))
+				if(method_exists($plugin["obj"], "onParseContentText"))
 				{
 					$this->parser = $plugin["obj"];
-					$this->parserData = $this->parser->onParseText($this, $this->getContent(true));
+					$this->parserData = $this->parser->onParseContentText($this, $this->getContent(true));
 					foreach($this->yellow->plugins->plugins as $key=>$value)
 					{
 						if(method_exists($value["obj"], "onParseContent"))
@@ -478,7 +478,7 @@ class YellowPage
 		}
 	}
 	
-	// Parse custom type
+	// Parse page custom type
 	function parseType($name, $text, $typeShortcut)
 	{
 		$output = NULL;
@@ -486,7 +486,7 @@ class YellowPage
 		{
 			if(method_exists($value["obj"], "onParseType"))
 			{
-				$output = $value["obj"]->onParseType($name, $text, $typeShortcut);
+				$output = $value["obj"]->onParseType($this, $name, $text, $typeShortcut);
 				if(!is_null($output)) break;
 			}
 		}

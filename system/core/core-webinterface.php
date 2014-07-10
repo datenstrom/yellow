@@ -5,7 +5,7 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.3.2";
+	const Version = "0.3.3";
 	var $yellow;				//access to API
 	var $users;					//web interface users
 	var $active;				//web interface is active? (boolean)
@@ -485,5 +485,5 @@ class YellowWebinterfaceUsers
 	}
 }
 
-$yellow->registerPlugin("webinterface", "YellowWebinterface", YellowWebinterface::Version);
+$yellow->plugins->register("webinterface", "YellowWebinterface", YellowWebinterface::Version);
 ?>

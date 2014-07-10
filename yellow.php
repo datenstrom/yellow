@@ -1,6 +1,6 @@
 <?php
-// Yellow is for people who make websites. https://github.com/markseu/yellowcms
-// For more information see Yellow documentation.
+// Yellow is for people who make websites. http://datenstrom.se/yellow
+// This file may be used and distributed under the terms of the public license.
 
 require_once("system/core/core.php");
 if(PHP_SAPI != "cli")
@@ -11,7 +11,7 @@ if(PHP_SAPI != "cli")
 } else {
 	$yellow = new Yellow();
 	$yellow->plugins->load();
-	$statusCode = $yellow->plugin("commandline", $argv[1], $argv[2], $argv[3], $argv[4], $argv[5], $argv[6]);
+	$statusCode = $yellow->command("commandline", $argv[1], $argv[2], $argv[3], $argv[4], $argv[5], $argv[6]);
 	exit($statusCode<=200 ? 0 : 1);
 }
 ?>

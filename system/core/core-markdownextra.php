@@ -5,7 +5,7 @@
 // Markdown extra core plugin
 class YellowMarkdownExtra
 {
-	const Version = "0.3.4";
+	const Version = "0.3.5";
 	var $yellow;		//access to API
 	
 	// Handle plugin initialisation
@@ -14,11 +14,11 @@ class YellowMarkdownExtra
 		$this->yellow = $yellow;
 	}
 	
-	// Handle page text parsing, raw format
-	function onParseText($page, $text)
+	// Handle page content parsing of raw format
+	function onParseContentText($page, $text)
 	{
-		$markdown = new YellowMarkdownExtraParser($this->yellow);
-		return $markdown->transformText($page, $text);
+		$markdown = new YellowMarkdownExtraParser($this->yellow, $page);
+		return $markdown->transformText($text);
 	}
 }
 
@@ -26,24 +26,26 @@ class YellowMarkdownExtra
 class YellowMarkdownExtraParser extends MarkdownExtraParser
 {
 	var $yellow;		//access to API
+	var $page;			//access to page
 	var $idAttributes;	//id attributes
 
-	function __construct($yellow)
+	function __construct($yellow, $page)
 	{
 		$this->yellow = $yellow;
+		$this->page = $page;
 		$this->idAttributes = array();
 		parent::__construct();
 	}
 	
 	// Transform page text
-	function transformText($page, $text)
+	function transformText($text)
 	{
-		$text = preg_replace("/@pageRead/i", $page->get("pageRead"), $text);
-		$text = preg_replace("/@pageEdit/i", $page->get("pageEdit"), $text);
-		$text = preg_replace("/@pageError/i", $page->get("pageError"), $text);
-		$callback = function($matches) use ($page)
+		$text = preg_replace("/@pageRead/i", $this->page->get("pageRead"), $text);
+		$text = preg_replace("/@pageEdit/i", $this->page->get("pageEdit"), $text);
+		$text = preg_replace("/@pageError/i", $this->page->get("pageError"), $text);
+		$callback = function($matches)
 		{
-			$matches[2] = $page->yellow->toolbox->normaliseLocation($matches[2], $page->base, $page->location);
+			$matches[2] = $this->yellow->toolbox->normaliseLocation($matches[2], $this->page->base, $this->page->location);
 			return "<a$matches[1]href=\"$matches[2]\"$matches[3]>";
 		};
 		return preg_replace_callback("/<a(.*?)href=\"([^\"]+)\"(.*?)>/i", $callback, $this->transform($text));
@@ -77,7 +79,7 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser
 	function _doAutoLinks_shortcut_callback($matches)
 	{
 		$text = preg_replace("/\s+/s", " ", $matches[2]);
-		$output = $this->yellow->page->parseType($matches[1], $text, true);
+		$output = $this->page->parseType($matches[1], $text, true);
 		if(is_null($output)) $output = $matches[0];
 		return $this->hashBlock($output);
 	}
@@ -86,7 +88,7 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser
 	function _doFencedCodeBlocks_callback($matches)
 	{
 		$text = $matches[4];
-		$output = $this->yellow->page->parseType($matches[2], $text, false);
+		$output = $this->page->parseType($matches[2], $text, false);
 		if(is_null($output))
 		{
 			$attr = $this->doExtraAttributes("pre", $dummy =& $matches[3]);
@@ -3243,5 +3245,5 @@ class MarkdownExtraParser extends MarkdownParser {
 
 }
 
-$yellow->registerPlugin("markdownextra", "YellowMarkdownExtra", YellowMarkdownExtra::Version);
+$yellow->plugins->register("markdownextra", "YellowMarkdownExtra", YellowMarkdownExtra::Version);
 ?>

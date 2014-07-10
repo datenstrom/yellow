@@ -5,7 +5,7 @@
 // Command line core plugin
 class YellowCommandline
 {
-	const Version = "0.3.3";
+	const Version = "0.3.4";
 	var $yellow;				//access to API
 	var $content;				//number of content pages
 	var $media;					//number of media files
@@ -358,5 +358,5 @@ class YellowCommandline
 	}
 }
 	
-$yellow->registerPlugin("commandline", "YellowCommandline", YellowCommandline::Version);
+$yellow->plugins->register("commandline", "YellowCommandline", YellowCommandline::Version);
 ?>
