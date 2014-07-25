@@ -5,7 +5,7 @@
 // Command line core plugin
 class YellowCommandline
 {
-	const Version = "0.3.6";
+	const Version = "0.3.7";
 	var $yellow;				//access to API
 	var $content;				//number of content pages
 	var $media;					//number of media files
@@ -428,8 +428,8 @@ class YellowCommandline
 	// Check if directory contains Yellow files
 	function isYellowDirectory($path)
 	{
-		$systemFile = preg_split("/,\s*/", $this->yellow->config->get("commandlineSystemFile"))[0];
-		return is_file("$path/yellow.php") || is_file("$path/$systemFile");
+		$fileNamesSystem = preg_split("/,\s*/", $this->yellow->config->get("commandlineSystemFile"));
+		return is_file("$path/yellow.php") || is_file("$path/$fileNamesSystem[0]");
 	}
 }
 	

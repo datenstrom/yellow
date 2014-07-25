@@ -1,4 +1,4 @@
 ---
-Title: New page
+Title: Page
 ---
-Write text here
+This is a new page.
