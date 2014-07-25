@@ -4,92 +4,103 @@
 // Yellow main API
 var yellow =
 {
-	version: "0.3.2",
+	version: "0.3.3",
+	action: function(text) { yellow.webinterface.action(text); },
 	onClick: function(e) { yellow.webinterface.hidePanesOnClick(yellow.toolbox.getEventElement(e)); },
 	onKeydown: function(e) { yellow.webinterface.hidePanesOnKeydown(yellow.toolbox.getEventKeycode(e)); },
 	onResize: function() { yellow.webinterface.resizePanes(); },
-	onShow: function(id) { yellow.webinterface.showPane(id); },
-	onHide: function(id) { yellow.webinterface.hidePane(id); },
-	onLogout: function() { yellow.toolbox.submitForm({"action":"logout"}); },
-	webinterface:{}, page:{}, toolbox:{}, config:{}, text:{}
+	onUpdate: function() { yellow.webinterface.updatePane(yellow.webinterface.paneId, yellow.webinterface.paneType); },
+	webinterface:{}, toolbox:{}, page:{}, config:{}, text:{}
 }
 
 // Yellow web interface
 yellow.webinterface =
 {
-	created: false,		//interface created? (boolean)
-	intervalId: 0,		//interface timer interval ID
+	loaded: false,		//web interface loaded? (boolean)
+	intervalId: 0,		//timer interval ID
+	paneId: 0,			//visible pane ID
+	paneType: 0,		//visible pane type
 
 	// Initialise web interface
 	init: function()
 	{
-		this.intervalId = setInterval("yellow.webinterface.create()", 1);
-		yellow.toolbox.addEvent(window, "resize", yellow.onResize);
+		this.intervalId = setInterval("yellow.webinterface.load()", 1);
 		yellow.toolbox.addEvent(document, "click", yellow.onClick);
 		yellow.toolbox.addEvent(document, "keydown", yellow.onKeydown);
+		yellow.toolbox.addEvent(window, "resize", yellow.onResize);
 	},
 	
-	// Create web interface
-	create: function()
+	// Load web interface
+	load: function()
 	{
 		var body = document.getElementsByTagName("body")[0];
-		if(body && body.firstChild && !this.created)
+		if(body && body.firstChild && !this.loaded)
 		{
-			this.created = true;
-			if(yellow.debug) console.log("yellow.webinterface.create email:"+yellow.config.userEmail+" "+yellow.config.userName);
+			this.loaded = true;
+			if(yellow.debug) console.log("yellow.webinterface.load email:"+yellow.config.userEmail+" "+yellow.config.userName);
 			if(yellow.config.userEmail)
 			{
-				yellow.toolbox.insertBefore(this.createBar("yellow-bar"), body.firstChild);
-				yellow.toolbox.insertAfter(this.createPane("yellow-pane-edit"), body.firstChild);
-				yellow.toolbox.insertAfter(this.createPane("yellow-pane-user"), body.firstChild);
-				yellow.toolbox.setText(document.getElementById("yellow-edit-text"), yellow.page.rawData);
-				if(yellow.page.permissions)
-				{
-					document.getElementById("yellow-edit-cancel").style.display = "none";
-				} else {
-					document.getElementById("yellow-edit-save").style.display = "none";
-				}
+				this.createBar("yellow-bar", true, body.firstChild);
+				this.createPane("yellow-pane-edit", true, body.firstChild);
+				this.createPane("yellow-pane-user", true, body.firstChild);
+				yellow.toolbox.addEvent(document.getElementById("yellow-pane-edit-page"), "keyup", yellow.onUpdate);
+				yellow.toolbox.addEvent(document.getElementById("yellow-pane-edit-page"), "change", yellow.onUpdate);
 			} else {
-				yellow.toolbox.insertBefore(this.createBar("yellow-bar", true), body.firstChild);
-				yellow.toolbox.insertAfter(this.createPane("yellow-pane-login", true), body.firstChild);
+				this.createBar("yellow-bar", false, body.firstChild);
+				this.createPane("yellow-pane-login", false, body.firstChild);
 				this.showPane("yellow-pane-login");
 			}
 			clearInterval(this.intervalId);
 		}
 	},
 	
+	// Execute action
+	action: function(text)
+	{
+		// edit and new should be like two panes
+		switch(text)
+		{
+			case "edit":	this.togglePane("yellow-pane-edit", "edit"); break;
+			case "new":		this.togglePane("yellow-pane-edit", "new"); break;
+			case "user":	this.togglePane("yellow-pane-user"); break;
+			case "send":	this.sendPane(this.paneId, this.paneType); break;
+			case "logout":	yellow.toolbox.submitForm({"action":"logout"}); break;
+		}
+	},
+	
 	// Create bar
-	createBar: function(id, simple)
+	createBar: function(id, normal, elementReference)
 	{
 		if(yellow.debug) console.log("yellow.webinterface.createBar id:"+id);
 		var elementBar = document.createElement("div");
 		elementBar.className = "yellow-bar yellow";
 		elementBar.setAttribute("id", id);
-		if(!simple)
+		if(normal)
 		{
 			var location = yellow.config.serverBase+yellow.config.pluginLocation;			
 			elementBar.innerHTML =
 				"<div class=\"yellow-bar-left\">"+
-				"<a href=\"#\" onclick=\"yellow.onShow('yellow-pane-edit'); return false;\">"+this.getText("Edit")+"</a>"+
+				"<a href=\"#\" onclick=\"yellow.action('edit'); return false;\">"+this.getText("Edit")+"</a>"+
 				"</div>"+
 				"<div class=\"yellow-bar-right\">"+
-				"<a href=\"#\" onclick=\"yellow.onShow('yellow-pane-user'); return false;\" id=\"yellow-username\">"+yellow.config.userName+" &#9662;</a>"+
+				"<a href=\"#\" onclick=\"yellow.action('new'); return false;\">"+this.getText("New")+"</a>"+
+				"<a href=\"#\" onclick=\"yellow.action('user'); return false;\">"+yellow.config.userName+" &#9662;</a>"+
 				"</div>";
 		}
-		return elementBar;
+		yellow.toolbox.insertBefore(elementBar, elementReference);
 	},
 	
 	// Create pane
-	createPane: function(id, simple)
+	createPane: function(paneId, normal, elementReference)
 	{
-		if(yellow.debug) console.log("yellow.webinterface.createPane id:"+id);
+		if(yellow.debug) console.log("yellow.webinterface.createPane id:"+paneId);
 		var elementPane = document.createElement("div");
-		elementPane.className = simple ? "yellow-pane" : "yellow-pane yellow-pane-bubble";
-		elementPane.setAttribute("id", id);
+		elementPane.className = normal ? "yellow-pane yellow-pane-bubble" : "yellow-pane";
+		elementPane.setAttribute("id", paneId);
 		elementPane.style.display = "none";
 		var elementDiv = document.createElement("div");
-		elementDiv.setAttribute("id", id+"-content");
-		if(id == "yellow-pane-login")
+		elementDiv.setAttribute("id", paneId+"-content");
+		if(paneId == "yellow-pane-login")
 		{
 			elementDiv.innerHTML =
 				"<h1>"+this.getText("LoginText")+"</h1>"+
@@ -99,53 +110,108 @@ yellow.webinterface =
 				"<p><label for=\"password\">"+this.getText("LoginPassword")+"</label> <input type=\"password\" name=\"password\" id=\"password\" maxlength=\"64\" /></p>"+
 				"<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("LoginButton")+"\" /></p>"+
 				"</form>";
-		} else if(id == "yellow-pane-edit") {
+		} else if(paneId == "yellow-pane-edit") {
 			elementDiv.innerHTML =
 				"<form method=\"post\">"+
-				"<input type=\"hidden\" name=\"action\" value=\"edit\" />"+
-				"<textarea id=\"yellow-edit-text\" name=\"rawdata\"></textarea>"+
-				"<div id=\"yellow-edit-info\" /></div>"+
-				"<div id=\"yellow-edit-buttons\">"+
-				"<input id=\"yellow-edit-save\" class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("SaveButton")+"\" />"+
-				"<input id=\"yellow-edit-cancel\" class=\"yellow-btn\" type=\"button\" onclick=\"yellow.onHide('yellow-pane-edit'); return false;\" value=\""+this.getText("CancelButton")+"\" />"+
+				"<textarea id=\"yellow-pane-edit-page\" name=\"rawdataedit\"></textarea>"+
+				"<div id=\"yellow-pane-edit-buttons\">"+
+				"<input id=\"yellow-pane-edit-send\" class=\"yellow-btn\" type=\"button\" onclick=\"yellow.action('send'); return false;\" value=\""+this.getText("EditButton")+"\" />"+
 				"</div>"+
 				"</form>";
-		} else if(id == "yellow-pane-user") {
+		} else if(paneId == "yellow-pane-user") {
 			elementDiv.innerHTML =
 				"<p>"+yellow.config.userEmail+"</p>"+
 				"<p><a href=\""+this.getText("UserHelpUrl")+"\">"+this.getText("UserHelp")+"</a></p>" +
-				"<p><a href=\"#\" onclick=\"yellow.onLogout(); return false;\">"+this.getText("UserLogout")+"</a></p>";
+				"<p><a href=\"#\" onclick=\"yellow.action('logout'); return false;\">"+this.getText("UserLogout")+"</a></p>";
 		}
 
 		elementPane.appendChild(elementDiv);
-		return elementPane;
+		yellow.toolbox.insertAfter(elementPane, elementReference);
+	},
+
+	// Update pane
+	updatePane: function(paneId, paneType, init)
+	{
+		if(yellow.debug) console.log("yellow.webinterface.updatePane id:"+paneId);
+		if(paneId == "yellow-pane-edit")
+		{
+			if(init)
+			{
+				var string = paneType=="new" ? yellow.page.rawDataNew : yellow.page.rawDataEdit;
+				document.getElementById("yellow-pane-edit-page").value = string;
+			}
+			var key, className;
+			switch(this.getPaneAction(paneId, paneType))
+			{
+				case "create":	key = "CreateButton"; className = "yellow-btn yellow-btn-green"; break;
+				case "edit":	key = "EditButton"; className = "yellow-btn"; break;
+				case "delete":	key = "DeleteButton"; className = "yellow-btn yellow-btn-red"; break;
+				default:		key = "CancelButton"; className = "yellow-btn";
+			}
+			document.getElementById("yellow-pane-edit-send").value = this.getText(key);
+			document.getElementById("yellow-pane-edit-send").className = className;
+		}
+	},
+	
+	// Send pane
+	sendPane: function(paneId, paneType)
+	{
+		if(yellow.debug) console.log("yellow.webinterface.sendPane id:"+paneId);
+		if(paneId == "yellow-pane-edit")
+		{
+			var action = this.getPaneAction(paneId, paneType);
+			if(action)
+			{
+				var params = {};
+				params.action = action;
+				params.rawdatasource = yellow.page.rawDataSource;
+				params.rawdataedit = document.getElementById("yellow-pane-edit-page").value;
+				yellow.toolbox.submitForm(params, true);
+			} else {
+				this.hidePane(paneId);
+			}
+		}
 	},
 	
 	// Show or hide pane
-	showPane: function(id)
+	togglePane: function(paneId, paneType)
 	{
-		var element = document.getElementById(id);
+		if(this.paneId!=paneId || this.paneType!=paneType)
+		{
+			this.hidePane(this.paneId);
+			this.showPane(paneId, paneType);
+		} else {
+			this.hidePane(paneId);
+		}
+	},
+	
+	// Show pane
+	showPane: function(paneId, paneType)
+	{
+		var element = document.getElementById(paneId);
 		if(!yellow.toolbox.isVisible(element))
 		{
-			this.hidePanes();
-			if(yellow.debug) console.log("yellow.webinterface.showPane id:"+id);
+			if(yellow.debug) console.log("yellow.webinterface.showPane id:"+paneId);
 			element.style.display = "block";
 			yellow.toolbox.addClass(document.body, "yellow-body-modal-open");
 			this.resizePanes();
-		} else {
-			this.hidePane(id);
+			this.updatePane(paneId, paneType, true);
+			this.paneId = paneId;
+			this.paneType = paneType;
 		}
 	},
 
 	// Hide pane
-	hidePane: function(id)
+	hidePane: function(paneId)
 	{
-		var element = document.getElementById(id);
+		var element = document.getElementById(paneId);
 		if(yellow.toolbox.isVisible(element))
 		{
-			if(yellow.debug) console.log("yellow.webinterface.hidePane id:"+id);
+			if(yellow.debug) console.log("yellow.webinterface.hidePane id:"+paneId);
 			element.style.display = "none";
 			yellow.toolbox.removeClass(document.body, "yellow-body-modal-open");
+			this.paneId = 0;
+			this.paneType = 0;
 		}
 	},
 
@@ -198,11 +264,11 @@ yellow.webinterface =
 				yellow.toolbox.setOuterTop(document.getElementById("yellow-pane-edit"), paneTop);
 				yellow.toolbox.setOuterHeight(document.getElementById("yellow-pane-edit"), paneHeight);
 				yellow.toolbox.setOuterWidth(document.getElementById("yellow-pane-edit"), paneWidth);
-				yellow.toolbox.setOuterWidth(document.getElementById("yellow-edit-text"), yellow.toolbox.getWidth(document.getElementById("yellow-pane-edit")));
+				yellow.toolbox.setOuterWidth(document.getElementById("yellow-pane-edit-page"), yellow.toolbox.getWidth(document.getElementById("yellow-pane-edit")));
 				var height1 = yellow.toolbox.getHeight(document.getElementById("yellow-pane-edit"));
 				var height2 = yellow.toolbox.getOuterHeight(document.getElementById("yellow-pane-edit-content"));
-				var height3 = yellow.toolbox.getOuterHeight(document.getElementById("yellow-edit-text"));
-				yellow.toolbox.setOuterHeight(document.getElementById("yellow-edit-text"), height1 - height2 + height3);
+				var height3 = yellow.toolbox.getOuterHeight(document.getElementById("yellow-pane-edit-page"));
+				yellow.toolbox.setOuterHeight(document.getElementById("yellow-pane-edit-page"), height1 - height2 + height3);
 			}
 			if(yellow.toolbox.isVisible(document.getElementById("yellow-pane-user")))
 			{
@@ -212,6 +278,26 @@ yellow.webinterface =
 			}
 			if(yellow.debug) console.log("yellow.webinterface.resizePanes bar:"+elementBar.offsetWidth+"/"+elementBar.offsetHeight);
 		}
+	},
+	
+	// Return pane action
+	getPaneAction: function(paneId, paneType)
+	{
+		var action = "";
+		if(paneId == "yellow-pane-edit")
+		{
+			if(yellow.page.userPermission)
+			{
+				var string = document.getElementById("yellow-pane-edit-page").value;
+				if(yellow.page.statusCode==424 || paneType=="new")
+				{
+					action = string ? "create" : "";
+				} else {
+					action = string ? "edit" : "delete";
+				}
+			}
+		}
+		return action;
 	},
 	
 	// Return text string
@@ -224,23 +310,16 @@ yellow.webinterface =
 // Yellow toolbox with helpers
 yellow.toolbox =
 {
-	// Set element text
-	setText: function(element, text)
+	// Insert element before reference element
+	insertBefore: function(element, elementReference)
 	{
-		while(element.firstChild !== null) element.removeChild(element.firstChild);
-		element.appendChild(document.createTextNode(text));
-	},
-	
-	// Insert element before element
-	insertBefore: function(newElement, referenceElement)
-	{
-		referenceElement.parentNode.insertBefore(newElement, referenceElement);
+		elementReference.parentNode.insertBefore(element, elementReference);
 	},
 
-	// Insert element after element
-	insertAfter: function(newElement, referenceElement)
+	// Insert element after reference element
+	insertAfter: function(element, elementReference)
 	{
-		referenceElement.parentNode.insertBefore(newElement, referenceElement.nextSibling);
+		elementReference.parentNode.insertBefore(element, elementReference.nextSibling);
 	},
 
 	// Add element class
@@ -420,18 +499,28 @@ yellow.toolbox =
 		return element && element.style.display != "none";
 	},
 	
+	// Encode newline characters
+	encodeNewline: function(string)
+	{
+		return string
+			.replace(/[\\]/g, "\\\\")
+			.replace(/[\r]/g, "\\r")
+			.replace(/[\n]/g, "\\n");
+	},
+	
 	// Submit form with post method
-	submitForm: function(params)
+	submitForm: function(params, encodeNewline)
 	{
 		var elementForm = document.createElement("form");
 		elementForm.setAttribute("method", "post");
 		for(var key in params)
 		{
 			if(!params.hasOwnProperty(key)) continue;
+			var value = encodeNewline ? this.encodeNewline(params[key]) : params[key];
 			var elementInput = document.createElement("input");
 			elementInput.setAttribute("type", "hidden");
 			elementInput.setAttribute("name", key);
-			elementInput.setAttribute("value", params[key]);
+			elementInput.setAttribute("value", value);
 			elementForm.appendChild(elementInput);
 		}
 		document.body.appendChild(elementForm);

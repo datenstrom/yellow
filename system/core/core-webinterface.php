@@ -9,8 +9,10 @@ class YellowWebinterface
 	var $yellow;				//access to API
 	var $users;					//web interface users
 	var $active;				//web interface is active? (boolean)
-	var $loginFailed;			//web interface login failed? (boolean)
-	var $rawDataOriginal;		//raw data of page in case of errors
+	var $userLoginFailed;		//web interface login failed? (boolean)
+	var $userPermission;		//web interface can modify page? (boolean)
+	var $rawDataSource;			//raw data of page for comparison
+	var $rawDataEdit;			//raw data of page for editing
 
 	// Handle plugin initialisation
 	function onLoad($yellow)
@@ -33,10 +35,8 @@ class YellowWebinterface
 		$statusCode = 0;
 		if($this->checkRequest($location))
 		{
-			list($serverScheme, $serverName, $base, $location, $fileName) = $this->getRequestInformation();
-			if($this->checkUser()) $statusCode = $this->processRequestAction($serverScheme, $serverName, $base, $location, $fileName);
-			if($statusCode == 0) $statusCode = $this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName,
-													false, $this->loginFailed ? 401 : 0);
+			list($serverScheme, $serverName, $base, $location, $fileName) = $this->updateRequestInformation();
+			$statusCode = $this->processRequest($serverScheme, $serverName, $base, $location, $fileName);
 		} else {
 			$activeLocation = $this->yellow->config->get("webinterfaceLocation");
 			if(rtrim($location, '/') == rtrim($activeLocation, '/'))
@@ -44,8 +44,7 @@ class YellowWebinterface
 				$statusCode = 301;
 				$locationHeader = $this->yellow->toolbox->getLocationHeader(
 					$this->yellow->config->get("webinterfaceServerScheme"),
-					$this->yellow->config->get("webinterfaceServerName"),
-					$base, $activeLocation);
+					$this->yellow->config->get("webinterfaceServerName"), $base, $activeLocation);
 				$this->yellow->sendStatus($statusCode, $locationHeader);
 			}
 		}
@@ -59,7 +58,13 @@ class YellowWebinterface
 		{
 			if($page == $this->yellow->page)
 			{
-				if(empty($this->rawDataOriginal)) $this->rawDataOriginal = $page->rawData;
+				if(empty($this->rawDataSource)) $this->rawDataSource = $page->rawData;
+				if(empty($this->rawDataEdit)) $this->rawDataEdit = $page->rawData;
+				if($page->statusCode == 424)
+				{
+					$title = $this->yellow->toolbox->createTextTitle($page->location);
+					$this->rawDataEdit = $this->getDataNew($title);
+				}
 			}
 		}
 	}
@@ -70,14 +75,6 @@ class YellowWebinterface
 		$output = NULL;
 		if($this->isActive() && $this->isUser())
 		{
-			if($page == $this->yellow->page)
-			{
-				switch($page->statusCode)
-				{
-					case 424:	$page->rawData = $this->getPageData(); break;
-					case 500:	$page->rawData = $this->rawDataOriginal; break;
-				}
-			}
 			$serverBase = $this->yellow->config->get("serverBase");
 			$activePath = trim($this->yellow->config->get("webinterfaceLocation"), '/');
 			$callback = function($matches) use ($serverBase, $activePath)
@@ -103,10 +100,12 @@ class YellowWebinterface
 			$header .= "// <![CDATA[\n";
 			if($this->isUser())
 			{
-				$permissions = $this->checkPermissions($page->location, $page->fileName);
-				$header .= "yellow.page.rawData = ".json_encode($page->rawData).";\n";
-				$header .= "yellow.page.permissions = " .json_encode($permissions).";\n";
-				$header .= "yellow.config = ".json_encode($this->getConfigData()).";\n";
+				$header .= "yellow.page.userPermission = " .json_encode($this->userPermission).";\n";
+				$header .= "yellow.page.rawDataSource = ".json_encode($this->rawDataSource).";\n";
+				$header .= "yellow.page.rawDataEdit = ".json_encode($this->rawDataEdit).";\n";
+				$header .= "yellow.page.rawDataNew = ".json_encode($this->getDataNew()).";\n";
+				$header .= "yellow.page.statusCode = ".json_encode($page->statusCode).";\n";
+				$header .= "yellow.config = ".json_encode($this->getDataConfig()).";\n";
 			}
 			$language = $this->isUser() ? $this->users->getLanguage() : $page->get("language");
 			$header .= "yellow.text = ".json_encode($this->yellow->text->getData("webinterface", $language)).";\n";
@@ -151,7 +150,7 @@ class YellowWebinterface
 				$statusCode = 500;
 				echo "ERROR creating hash: Algorithm '$algorithm' not supported!\n";
 			} else {
-				$statusCode = $this->users->createUser($fileName, $email, $hash, $name, $language, $home)  ? 200 : 500;
+				$statusCode = $this->users->createUser($fileName, $email, $hash, $name, $language, $home) ? 200 : 500;
 				if($statusCode != 200) echo "ERROR updating configuration: Can't write file '$fileName'!\n";
 			}
 			echo "Yellow $command: User account ".($statusCode!=200 ? "not " : "");
@@ -163,70 +162,182 @@ class YellowWebinterface
 		return $statusCode;
 	}
 	
-	// Process request for an action
-	function processRequestAction($serverScheme, $serverName, $base, $location, $fileName)
+	// Process request
+	function processRequest($serverScheme, $serverName, $base, $location, $fileName)
 	{
 		$statusCode = 0;
-		switch($_POST["action"])
+		if($this->checkUser($location, $fileName))
 		{
-			case "edit":	if(!empty($_POST["rawdata"]) && $this->checkPermissions($location, $fileName))
-							{
-								$this->rawDataOriginal = $_POST["rawdata"];
-								if($this->yellow->toolbox->createFile($fileName, $_POST["rawdata"]))
-								{
-									$statusCode = 303;
-									$locationHeader = $this->yellow->toolbox->getLocationHeader(
-										$serverScheme, $serverName, $base, $location);
-									$this->yellow->sendStatus($statusCode, $locationHeader);
-								} else {
-									$statusCode = 500;
-									$this->yellow->processRequest(
-										$serverScheme, $serverName, $base, $location, $fileName, false, $statusCode);
-									$this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
-								}
-							}
-							break;
-			case "login":	$home = $this->users->getHome();
-							if(substru($location, 0, strlenu($home)) == $home)
-							{
-								$statusCode = 303;
-								$locationHeader = $this->yellow->toolbox->getLocationHeader(
-									$serverScheme, $serverName, $base, $location);
-								$this->yellow->sendStatus($statusCode, $locationHeader);
-							} else {
-								$statusCode = 302;
-								$locationHeader = $this->yellow->toolbox->getLocationHeader(
-									$serverScheme, $serverName, $base, $home);
-								$this->yellow->sendStatus($statusCode, $locationHeader);
-							}
-							break;
-			case "logout":	$this->users->destroyCookie("login");
-							$this->users->email = "";
-							$statusCode = 302;
-							$locationHeader = $this->yellow->toolbox->getLocationHeader(
-								$this->yellow->config->get("serverScheme"),
-								$this->yellow->config->get("serverName"),
-								$this->yellow->config->get("serverBase"), $location);
-							$this->yellow->sendStatus($statusCode, $locationHeader);
-							break;
-			default:		if(!is_readable($fileName))
-							{
-								if($this->yellow->toolbox->isFileLocation($location) && $this->yellow->isContentDirectory("$location/"))
-								{
-									$statusCode = 301;
-									$locationHeader = $this->yellow->toolbox->getLocationHeader(
-										$serverScheme, $serverName, $base, "$location/");
-									$this->yellow->sendStatus($statusCode, $locationHeader);
-								} else {
-									$statusCode = $this->checkPermissions($location, $fileName) ? 424 : 404;
-									$this->yellow->processRequest(
-										$serverScheme, $serverName, $base, $location, $fileName, false, $statusCode);
-								}
-							}
+			switch($_POST["action"])
+			{
+				case "":		$statusCode = $this->processRequestShow($serverScheme, $serverName, $base, $location, $fileName); break;
+				case "create":	$statusCode = $this->processRequestCreate($serverScheme, $serverName, $base, $location, $fileName); break;
+				case "edit":	$statusCode = $this->processRequestEdit($serverScheme, $serverName, $base, $location, $fileName); break;
+				case "delete":	$statusCode = $this->processRequestDelete($serverScheme, $serverName, $base, $location, $fileName); break;
+				case "login":	$statusCode = $this->processRequestLogin($serverScheme, $serverName, $base, $location, $fileName); break;
+				case "logout":	$statusCode = $this->processRequestLogout($serverScheme, $serverName, $base, $location, $fileName); break;
+			}
+		}
+		if($statusCode == 0)
+		{
+			$statusCode = $this->userLoginFailed ? 401 : 0;
+			$statusCode = $this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false, $statusCode);
 		}
 		return $statusCode;
 	}
 	
+	// Process request to show page
+	function processRequestShow($serverScheme, $serverName, $base, $location, $fileName)
+	{
+		$statusCode = 0;
+		if(is_readable($fileName))
+		{
+			$statusCode = $this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false, 0);
+		} else {
+			if($this->yellow->toolbox->isFileLocation($location) && $this->yellow->isContentDirectory("$location/"))
+			{
+				$statusCode = 301;
+				$locationHeader = $this->yellow->toolbox->getLocationHeader($serverScheme, $serverName, $base, "$location/");
+				$this->yellow->sendStatus($statusCode, $locationHeader);
+			} else {
+				$statusCode = $this->userPermission ? 424 : 404;
+				$this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false, $statusCode);
+			}
+		}
+		return $statusCode;
+	}
+
+	// Process request to create page
+	function processRequestCreate($serverScheme, $serverName, $base, $location, $fileName)
+	{
+		$statusCode = 0;
+		$page = $this->getPageNew($serverScheme, $serverName, $base, $location, $fileName, stripcslashes($_POST["rawdataedit"]));
+		if($this->userPermission && $this->getUserPermission($page->location, $page->fileName) && !empty($page->rawData))
+		{
+			$this->rawDataSource = $this->rawDataEdit = stripcslashes($_POST["rawdatasource"]);
+			if(is_file($page->fileName) || $this->yellow->toolbox->createFile($page->fileName, $page->rawData))
+			{
+				$statusCode = 303;
+				$locationHeader = $this->yellow->toolbox->getLocationHeader($serverScheme, $serverName, $base, $page->location);
+				$this->yellow->sendStatus($statusCode, $locationHeader);
+			} else {
+				$statusCode = 500;
+				$this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false, $statusCode);
+				$this->yellow->page->error($statusCode, "Can't write file '$page->fileName'!");
+			}
+		}
+		return $statusCode;
+	}
+	
+	// Process request to edit page
+	function processRequestEdit($serverScheme, $serverName, $base, $location, $fileName)
+	{
+		$statusCode = 0;
+		if($this->userPermission && !empty($_POST["rawdataedit"]))
+		{
+			$this->rawDataSource = stripcslashes($_POST["rawdatasource"]);
+			$this->rawDataEdit = stripcslashes($_POST["rawdataedit"]);
+			$fileData = $this->mergeText($location, $this->rawDataSource, $this->rawDataEdit, $fileName);
+			if(!empty($fileData))
+			{
+				if($this->yellow->toolbox->createFile($fileName, $fileData))
+				{
+					$statusCode = 303;
+					$locationHeader = $this->yellow->toolbox->getLocationHeader($serverScheme, $serverName, $base, $location);
+					$this->yellow->sendStatus($statusCode, $locationHeader);
+				} else {
+					$statusCode = 500;
+					$this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false, $statusCode);
+					$this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
+				}
+			} else {
+				$statusCode = 500;
+				$this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false, $statusCode);
+				$this->yellow->page->error($statusCode, "Page has been modified by someone else!");
+			}
+		}
+		return $statusCode;
+	}
+
+	// Process request to delete page
+	function processRequestDelete($serverScheme, $serverName, $base, $location, $fileName)
+	{
+		$statusCode = 0;
+		if($this->userPermission)
+		{
+			$this->rawDataSource = $this->rawDataEdit = stripcslashes($_POST["rawdatasource"]);
+			if(!is_file($fileName) || $this->yellow->toolbox->deleteFile($fileName))
+			{
+				$statusCode = 303;
+				$locationHeader = $this->yellow->toolbox->getLocationHeader($serverScheme, $serverName, $base, $location);
+				$this->yellow->sendStatus($statusCode, $locationHeader);
+			} else {
+				$statusCode = 500;
+				$this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false, $statusCode);
+				$this->yellow->page->error($statusCode, "Can't delete file '$fileName'!");
+			}
+		}
+		return $statusCode;
+	}
+
+	// Process request for user login
+	function processRequestLogin($serverScheme, $serverName, $base, $location, $fileName)
+	{
+		$statusCode = 0;
+		$home = $this->users->getHome();
+		if(substru($location, 0, strlenu($home)) == $home)
+		{
+			$statusCode = 303;
+			$locationHeader = $this->yellow->toolbox->getLocationHeader($serverScheme, $serverName, $base, $location);
+			$this->yellow->sendStatus($statusCode, $locationHeader);
+		} else {
+			$statusCode = 302;
+			$locationHeader = $this->yellow->toolbox->getLocationHeader($serverScheme, $serverName, $base, $home);
+			$this->yellow->sendStatus($statusCode, $locationHeader);
+		}
+		return $statusCode;
+	}
+
+	// Process request for user logout
+	function processRequestLogout($serverScheme, $serverName, $base, $location, $fileName)
+	{
+		$statusCode = 302;
+		$this->users->destroyCookie("login");
+		$this->users->email = "";
+		$locationHeader = $this->yellow->toolbox->getLocationHeader(
+			$this->yellow->config->get("serverScheme"),
+			$this->yellow->config->get("serverName"),
+			$this->yellow->config->get("serverBase"), $location);
+		$this->yellow->sendStatus($statusCode, $locationHeader);
+		return $statusCode;
+	}
+	
+	// Merge text
+	function mergeText($location, $textSource, $textLocal, $fileName)
+	{
+		$fileHandle = @fopen($fileName, "r");
+		if($fileHandle)
+		{
+			$fileData = fread($fileHandle, filesize($fileName));
+			fclose($fileHandle);
+		}
+		if(!empty($fileData) && $fileData!=$textSource && $fileData!=$textLocal)
+		{
+			$output = NULL;
+			foreach($this->yellow->plugins->plugins as $key=>$value)
+			{
+				if(method_exists($value["obj"], "onMergeText"))
+				{
+					$output = $value["obj"]->onMergeText($location, $textSource, $textLocal, $fileData);
+					if(!is_null($output)) break;
+				}
+			}
+		} else {
+			$output = $textLocal;
+		}
+		return $output;
+	}
+
 	// Check web interface request
 	function checkRequest($location)
 	{
@@ -240,7 +351,7 @@ class YellowWebinterface
 	}
 	
 	// Check web interface user
-	function checkUser()
+	function checkUser($location, $fileName)
 	{
 		if($_POST["action"] == "login")
 		{
@@ -250,50 +361,97 @@ class YellowWebinterface
 			{
 				$this->users->createCookie("login", $email);
 				$this->users->email = $email;
+				$this->userPermission = $this->getUserPermission($location, $fileName);
 			} else {
-				$this->loginFailed = true;
+				$this->userLoginFailed = true;
 			}
 		} else if(isset($_COOKIE["login"])) {
 			list($email, $session) = $this->users->getCookieInformation($_COOKIE["login"]);
 			if($this->users->checkCookie($email, $session))
 			{
 				$this->users->email = $email;
+				$this->userPermission = $this->getUserPermission($location, $fileName);
 			} else {
-				$this->loginFailed = true;
+				$this->userLoginFailed = true;
 			}
 		}
 		return $this->isUser();
 	}
 
-	// Check permissions for changing page
-	function checkPermissions($location, $fileName)
+	// Return permission to modify page
+	function getUserPermission($location, $fileName)
 	{
-		$permissions = true;
+		$userPermission = true;
 		foreach($this->yellow->plugins->plugins as $key=>$value)
 		{
-			if(method_exists($value["obj"], "onCheckPermissions"))
+			if(method_exists($value["obj"], "onUserPermission"))
 			{
-				$permissions = $value["obj"]->onCheckPermissions($location, $fileName, $this->users);
-				if(!$permissions) break;
+				$userPermission = $value["obj"]->onUserPermission($location, $fileName, $this->users);
+				if(!$userPermission) break;
 			}
 		}
-		$permissions &= is_dir(dirname($fileName)) && strlenu(basename($fileName))<128;
-		return $permissions;
+		$userPermission &= is_dir(dirname($fileName)) && strlenu(basename($fileName))<128;
+		return $userPermission;
 	}
 	
-	// Return request information
-	function getRequestInformation()
+	// Update request information
+	function updateRequestInformation()
 	{
 		$serverScheme = $this->yellow->config->get("webinterfaceServerScheme");
 		$serverName = $this->yellow->config->get("webinterfaceServerName");
 		$base = rtrim($this->yellow->config->get("serverBase").$this->yellow->config->get("webinterfaceLocation"), '/');
+		$this->yellow->page->base = $base;
 		return $this->yellow->getRequestInformation($serverScheme, $serverName, $base);
 	}
 	
-	// Return content data for new page
-	function getPageData()
+	// Update page data with title
+	function updateDataTitle($rawData, $title)
 	{
-		$fileData = "";
+		foreach(preg_split("/([\r\n]+)/", $rawData, -1, PREG_SPLIT_DELIM_CAPTURE) as $line)
+		{
+			if(preg_match("/^(\s*Title\s*:\s*)(.*?)(\s*)$/i", $line, $matches)) $line = $matches[1].$title.$matches[3];
+			$rawDataNew .= $line;
+		}
+		return $rawDataNew;
+	}
+	
+	// Return new page
+	function getPageNew($serverScheme, $serverName, $base, $location, $fileName, $rawData)
+	{
+		$page = new YellowPage($this->yellow, $serverScheme, $serverName, $base, $location, $fileName);
+		$page->parseData($rawData, false, 0);
+		$page->fileName = $this->yellow->toolbox->findFileFromTitle($page->get("title"), $fileName,
+			$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
+		$page->location = $this->yellow->toolbox->findLocationFromFile($page->fileName,
+			$this->yellow->config->get("contentDir"), $this->yellow->config->get("contentHomeDir"),
+			$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
+		if($this->yellow->pages->find($page->location))
+		{
+			if(preg_match("/^(.*?)(\d+)$/", $page->get("title"), $matches))
+			{
+				$pageTitle = $matches[1];
+				$pageNumber = max(2, $matches[2]);
+			} else {
+				$pageTitle = $page->get("title").' ';
+				$pageNumber = 2;
+			}
+			for(; $pageNumber<=999; ++$pageNumber)
+			{
+				$page->rawData = $this->updateDataTitle($rawData, $pageTitle.$pageNumber);
+				$page->fileName = $this->yellow->toolbox->findFileFromTitle($pageTitle.$pageNumber, $fileName,
+					$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
+				$page->location = $this->yellow->toolbox->findLocationFromFile($page->fileName,
+					 $this->yellow->config->get("contentDir"), $this->yellow->config->get("contentHomeDir"),
+					 $this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
+				if(!$this->yellow->pages->find($page->location)) break;
+			}
+		}
+		return $page;
+	}
+	
+	// Return content data for new page
+	function getDataNew($title = "")
+	{
 		$fileName = $this->yellow->toolbox->findFileFromLocation($this->yellow->page->location,
 			$this->yellow->config->get("contentDir"), $this->yellow->config->get("contentHomeDir"),
 			$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
@@ -304,13 +462,14 @@ class YellowWebinterface
 		if($fileHandle)
 		{
 			$fileData = fread($fileHandle, filesize($fileName));
+			if(!empty($title)) $fileData = $this->updateDataTitle($fileData, $title);
 			fclose($fileHandle);
 		}
 		return $fileData;
 	}
 	
 	// Return configuration data including information of current user
-	function getConfigData()
+	function getDataConfig()
 	{
 		$data = array("userEmail" => $this->users->email,
 					  "userName" => $this->users->getName(),
@@ -383,7 +542,6 @@ class YellowWebinterfaceUsers
 	{
 		$email = strreplaceu(',', '-', $email);
 		$hash = strreplaceu(',', '-', $hash);
-		$fileNewUser = true;
 		$fileData = @file($fileName);
 		if($fileData)
 		{
@@ -398,14 +556,14 @@ class YellowWebinterfaceUsers
 						$language = strreplaceu(',', '-', empty($language) ? $matches[4] : $language);
 						$home = strreplaceu(',', '-', empty($home) ? $matches[5] : $home);
 						$fileDataNew .= "$email,$hash,$name,$language,$home\n";
-						$fileNewUser = false;
+						$found = true;
 						continue;
 					}
 				}
 				$fileDataNew .= $line;
 			}
 		}
-		if($fileNewUser)
+		if(!$found)
 		{
 			$name = strreplaceu(',', '-', empty($name) ? $this->yellow->config->get("sitename") : $name);
 			$language = strreplaceu(',', '-', empty($language) ? $this->yellow->config->get("language") : $language);

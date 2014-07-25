@@ -5,7 +5,7 @@
 // Command line core plugin
 class YellowCommandline
 {
-	const Version = "0.3.5";
+	const Version = "0.3.6";
 	var $yellow;				//access to API
 	var $content;				//number of content pages
 	var $media;					//number of media files
@@ -21,7 +21,7 @@ class YellowCommandline
 		$this->yellow = $yellow;
 		$this->yellow->config->setDefault("commandlineDefaultFile", "index.html");
 		$this->yellow->config->setDefault("commandlineErrorFile", "error404.html");
-		$this->yellow->config->setDefault("commandlineSystemFile", "");
+		$this->yellow->config->setDefault("commandlineSystemFile", ".htaccess");
 	}
 	
 	// Handle command help
@@ -29,6 +29,7 @@ class YellowCommandline
 	{
 		$help .= "version\n";
 		$help .= "build DIRECTORY [LOCATION]\n";
+		$help .= "clean DIRECTORY [LOCATION]\n";
 		return $help;
 	}
 	
@@ -41,7 +42,13 @@ class YellowCommandline
 			case "":		$statusCode = $this->helpCommand(); break;
 			case "version":	$statusCode = $this->versionCommand(); break;
 			case "build":	$statusCode = $this->buildCommand($args); break;
-			default:		$statusCode = $this->pluginCommand($args); break;
+			case "clean":	$statusCode = $this->cleanCommand($args); break;
+			default:		$statusCode = $this->pluginCommand($args);
+		}
+		if($statusCode == 0)
+		{
+			$statusCode = 400;
+			echo "Yellow $command: Command not found\n";
 		}
 		return $statusCode;
 	}
@@ -94,49 +101,50 @@ class YellowCommandline
 		$this->yellow->toolbox->timerStart($time);
 		$pluginDir = $this->yellow->config->get("pluginDir");
 		$pathPlugin = rtrim($path.$this->yellow->config->get("pluginLocation"), '/');
-		$this->content = $this->media = $this->system = $this->error = $statusCodeMax = 0;
+		$this->content = $this->media = $this->system = $this->error = $statusCode = 0;
 		$this->locationsArguments = $this->locationsPagination = $this->fileNamesPlugin = array();
 		if(empty($location))
 		{
+			$statusCode = $this->cleanStatic($location, $path);
 			foreach($this->yellow->pages->index(true) as $page)
 			{
-				$statusCodeMax = max($statusCodeMax, $this->buildStaticLocation($page->location, $path, true));
+				$statusCode = max($statusCode, $this->buildStaticLocation($page->location, $path, true));
 			}
 			foreach($this->locationsArguments as $location)
 			{
-				$statusCodeMax = max($statusCodeMax, $this->buildStaticLocation($location, $path, true));
+				$statusCode = max($statusCode, $this->buildStaticLocation($location, $path, true));
 			}
 			foreach($this->locationsPagination as $location)
 			{
 				for($pageNumber=2; $pageNumber<=999; ++$pageNumber)
 				{
-					$statusCode = $this->buildStaticLocation($location.$pageNumber, $path, false, true);
-					$statusCodeMax = max($statusCodeMax, $statusCode);
-					if($statusCode == 0) break;
+					$statusCodeLocation = $this->buildStaticLocation($location.$pageNumber, $path, false, true);
+					$statusCode = max($statusCode, $statusCodeLocation);
+					if($statusCodeLocation == 0) break;
 				}
 			}
 			$fileNamesMedia = $this->yellow->toolbox->getDirectoryEntriesRecursive(
 				$this->yellow->config->get("mediaDir"), "/.*/", false, false);
-			$fileNamesSystem = preg_split("/,\s*/", $this->yellow->config->get(commandlineSystemFile));
+			$fileNamesSystem = preg_split("/,\s*/", $this->yellow->config->get("commandlineSystemFile"));
 			array_push($fileNamesSystem, $this->yellow->config->get("commandlineErrorFile"));
 			foreach($fileNamesMedia as $fileName)
 			{
-				$statusCodeMax = max($statusCodeMax, $this->buildStaticFile($fileName, "$path/$fileName"));
+				$statusCode = max($statusCode, $this->buildStaticFile($fileName, "$path/$fileName"));
 			}
 			foreach($this->fileNamesPlugin as $fileName)
 			{
-				$statusCodeMax = max($statusCodeMax, $this->buildStaticFile("$pluginDir$fileName", "$pathPlugin/$fileName"));
+				$statusCode = max($statusCode, $this->buildStaticFile("$pluginDir$fileName", "$pathPlugin/$fileName"));
 			}
 			foreach($fileNamesSystem as $fileName)
 			{
-				$statusCodeMax = max($statusCodeMax, $this->buildStaticFile($fileName, "$path/".basename($fileName), false));
+				$statusCode = max($statusCode, $this->buildStaticFile($fileName, "$path/".basename($fileName), false));
 			}
 		} else {
-			$statusCodeMax = $this->buildStaticLocation($location, $path);
+			$statusCode = $this->buildStaticLocation($location, $path);
 		}
 		$this->yellow->toolbox->timerStop($time);
 		if(defined("DEBUG") && DEBUG>=1) echo "YellowCommandline::buildStatic time:$time ms\n";
-		return $statusCodeMax;
+		return $statusCode;
 	}
 	
 	// Build static location
@@ -282,6 +290,87 @@ class YellowCommandline
 		}
 	}
 	
+	// Clean static pages
+	function cleanCommand($args)
+	{
+		$statusCode = 0;
+		list($dummy, $command, $path, $location) = $args;
+		if(!empty($path) && $path!="/" && (empty($location) || $location[0]=='/'))
+		{
+			$statusCode = $this->cleanStatic($location, $path);
+			echo "Yellow $command: Static page".(empty($location) ? "s" : "")." ".($statusCode!=200 ? "not " : "")."cleaned\n";
+		} else {
+			$statusCode = 400;
+			echo "Yellow $command: Invalid arguments\n";
+		}
+		return $statusCode;
+	}
+	
+	// Clean static directory and files
+	function cleanStatic($location, $path)
+	{
+		$statusCode = 200;
+		if(empty($location))
+		{
+			$statusCode = max($statusCode, $this->pluginCommand(array("all", "clean")));
+			$statusCode = max($statusCode, $this->cleanStaticDirectory($path));
+		} else {
+			$statusCode = $this->cleanStaticFile($location, $path);
+		}
+		return $statusCode;
+	}
+	
+	// Clean static directory
+	function cleanStaticDirectory($path)
+	{
+		$statusCode = 200;
+		if($this->isYellowDirectory($path))
+		{
+			if(is_file("$path/yellow.php") || !$this->yellow->toolbox->deleteDirectory($path, true))
+			{
+				$statusCode = 500;
+				echo "ERROR cleaning pages: Can't delete directory '$path'!\n";
+			}
+		}
+		return $statusCode;
+	}
+	
+	// Clean static file
+	function cleanStaticFile($location, $path)
+	{
+		$statusCode = 200;
+		$fileName = $this->getStaticFileName($location, $path);
+		if($this->isYellowDirectory($path) && is_file($fileName))
+		{
+			$entry = basename($fileName);
+			if($entry!="yellow.php" && substru($entry, 0, 1)!=".")
+			{
+				if(!$this->yellow->toolbox->deleteFile($fileName))
+				{
+					$statusCode = 500;
+					echo "ERROR cleaning pages: Can't delete file '$fileName'!\n";
+				}
+			}
+		}
+		return $statusCode;
+	}
+	
+	// Forward plugin command
+	function pluginCommand($args)
+	{
+		$statusCode = 0;
+		foreach($this->yellow->plugins->plugins as $key=>$value)
+		{
+			if($key == "commandline") continue;
+			if(method_exists($value["obj"], "onCommand"))
+			{
+				$statusCode = $value["obj"]->onCommand($args);
+				if($statusCode != 0) break;
+			}
+		}
+		return $statusCode;
+	}
+	
 	// Check static configuration
 	function checkStaticConfig()
 	{
@@ -336,25 +425,11 @@ class YellowCommandline
 		return $data;
 	}
 	
-	// Forward plugin command
-	function pluginCommand($args)
+	// Check if directory contains Yellow files
+	function isYellowDirectory($path)
 	{
-		$statusCode = 0;
-		foreach($this->yellow->plugins->plugins as $key=>$value)
-		{
-			if($key == "commandline") continue;
-			if(method_exists($value["obj"], "onCommand"))
-			{
-				$statusCode = $value["obj"]->onCommand($args);
-				if($statusCode != 0) break;
-			}
-		}
-		if($statusCode == 0)
-		{
-			$statusCode = 400;
-			echo "Yellow command line: Invalid arguments\n";
-		}
-		return $statusCode;
+		$systemFile = preg_split("/,\s*/", $this->yellow->config->get("commandlineSystemFile"))[0];
+		return is_file("$path/yellow.php") || is_file("$path/$systemFile");
 	}
 }
 	

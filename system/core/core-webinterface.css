@@ -1,9 +1,10 @@
-/* Yellow web interface 0.3.2 */
+/* Yellow web interface 0.3.3 */
 
 .yellow-bar { position:relative; overflow:hidden; line-height:2.0em; }
 .yellow-bar-left { display:block; float:left; }
 .yellow-bar-left a { margin-right:1em; }
 .yellow-bar-right { display:block; float:right; }
+.yellow-bar-right a { margin-left:1em; }
 .yellow-body-modal-open { overflow:hidden; }
 
 .yellow-pane { 
@@ -45,12 +46,17 @@
 	border-color:#b13121 #b13121 #802020; 
 }
 .yellow-btn-red:hover, .yellow-btn-red:focus, .yellow-btn-red:active { color:#ffffff; }
+.yellow-btn-green {
+	background-color:#3cc335; color:#ffffff;
+	background-image:linear-gradient(to bottom, #5fee5b, #36bd2f); 
+	border-color:#31b121 #31b121 #20b020; 
+}
+.yellow-btn-green:hover, .yellow-btn-green:focus, .yellow-btn-green:active { color:#ffffff; }
 
 #yellow-pane-login { }
 #yellow-pane-login h1 { margin:0.5em 0.5em; }
 #yellow-pane-login p { margin:0.5em; text-align:right; }
 #yellow-pane-edit { }
-#yellow-pane-edit #yellow-edit-text { margin:0; padding:5px; border:1px solid #bbb; resize:none; font-size:0.9em }
-#yellow-pane-edit #yellow-edit-info { margin:0; padding:5px; border:1px solid #bbb; display:none; }
-#yellow-pane-edit #yellow-edit-buttons { margin:5px 0; }
+#yellow-pane-edit-page { margin:0; padding:5px; border:1px solid #bbb; resize:none; font-size:0.9em; }
+#yellow-pane-edit-buttons { margin:5px 0; }
 #yellow-pane-user { }
