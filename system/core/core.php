@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.3.8";
+	const Version = "0.3.9";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -1510,31 +1510,34 @@ class YellowToolbox
 	function findChildrenFromLocation($location, $pathBase, $pathHome, $fileDefault, $fileExtension)
 	{
 		$fileNames = array();
-		$path = empty($location) ? $pathBase : $this->findFileFromLocation($location, $pathBase, $pathHome, "", "");
-		foreach($this->getDirectoryEntries($path, "/.*/", true, true, false) as $entry)
+		if(empty($location) || !$this->isFileLocation($location))
 		{
-			$token = $fileDefault;
-			if(!is_file($path.$entry."/".$fileDefault))
+			$path = empty($location) ? $pathBase : $this->findFileFromLocation($location, $pathBase, $pathHome, "", "");
+			foreach($this->getDirectoryEntries($path, "/.*/", true, true, false) as $entry)
 			{
-				$fileFolder = $this->normaliseName($entry).$fileExtension;
-				$regex = "/^[\d\-\_\.]*($fileDefault|$fileFolder)$/";
-				foreach($this->getDirectoryEntries($path.$entry, $regex, true, false, false) as $entry2)
+				$token = $fileDefault;
+				if(!is_file($path.$entry."/".$fileDefault))
 				{
-					if($this->normaliseName($entry2) == $fileDefault) { $token = $entry2; break; }
-					if($this->normaliseName($entry2) == $fileFolder) { $token = $entry2; break; }
+					$fileFolder = $this->normaliseName($entry).$fileExtension;
+					$regex = "/^[\d\-\_\.]*($fileDefault|$fileFolder)$/";
+					foreach($this->getDirectoryEntries($path.$entry, $regex, true, false, false) as $entry2)
+					{
+						if($this->normaliseName($entry2) == $fileDefault) { $token = $entry2; break; }
+						if($this->normaliseName($entry2) == $fileFolder) { $token = $entry2; break; }
+					}
 				}
+				array_push($fileNames, $path.$entry."/".$token);
 			}
-			array_push($fileNames, $path.$entry."/".$token);
-		}
-		if(!empty($location))
-		{
-			$fileFolder = $this->normaliseName(basename($path)).$fileExtension;
-			$regex = "/^.*\\".$fileExtension."$/";
-			foreach($this->getDirectoryEntries($path, $regex, true, false, false) as $entry)
+			if(!empty($location))
 			{
-				if($this->normaliseName($entry) == $fileDefault) continue;
-				if($this->normaliseName($entry) == $fileFolder) continue;
-				array_push($fileNames, $path.$entry);
+				$fileFolder = $this->normaliseName(basename($path)).$fileExtension;
+				$regex = "/^.*\\".$fileExtension."$/";
+				foreach($this->getDirectoryEntries($path, $regex, true, false, false) as $entry)
+				{
+					if($this->normaliseName($entry) == $fileDefault) continue;
+					if($this->normaliseName($entry) == $fileFolder) continue;
+					array_push($fileNames, $path.$entry);
+				}
 			}
 		}
 		return $fileNames;
