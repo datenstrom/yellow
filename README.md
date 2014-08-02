@@ -1,5 +1,5 @@
-Yellow 0.3.9
-============
+Yellow 0.3.10
+=============
 Yellow is for people who make websites. [Visit website](http://datenstrom.se/yellow).
 
 [![Status](https://travis-ci.org/markseu/yellowcms.svg)](https://travis-ci.org/markseu/yellowcms)

@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.3.9";
+	const Version = "0.3.10";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -92,10 +92,10 @@ class Yellow
 		{
 			if(is_readable($fileName))
 			{
-				if($this->isRequestCleanUrl())
+				if($this->toolbox->isRequestCleanUrl($location))
 				{
 					$statusCode = 303;
-					$locationArgs = $this->toolbox->getLocationArgsCleanUrl($location, $this->config->get("contentPagination"));
+					$locationArgs = $this->toolbox->getLocationArgsCleanUrl($this->config->get("contentPagination"));
 					$locationHeader = $this->toolbox->getLocationHeader($serverScheme, $serverName, $base, $location.$locationArgs);
 					$this->sendStatus($statusCode, $locationHeader);
 				} else {
@@ -247,13 +247,6 @@ class Yellow
 		$fileName = $this->toolbox->findFileFromLocation($location,
 			$this->config->get("contentDir"), $this->config->get("contentHomeDir"),
 			$this->config->get("contentDefaultFile"), $this->config->get("contentExtension"));
-		if(!is_file($fileName) && $this->toolbox->isLocationArgs($this->toolbox->getLocation()))
-		{
-			$location = rtrim($location, '/');
-			$fileName = $this->toolbox->findFileFromLocation($location,
-				$this->config->get("contentDir"), $this->config->get("contentHomeDir"),
-				$this->config->get("contentDefaultFile"), $this->config->get("contentExtension"));
-		}
 		return array($serverScheme, $serverName, $base, $location, $fileName);
 	}
 	
@@ -263,12 +256,6 @@ class Yellow
 		return $this->pages->requestHandler;
 	}
 	
-	// Check if clean URL is requested
-	function isRequestCleanUrl()
-	{
-		return isset($_GET["clean-url"]) || isset($_POST["clean-url"]);
-	}
-		
 	// Check if content directory exists
 	function isContentDirectory($location)
 	{
@@ -323,12 +310,6 @@ class Yellow
 	function getSnippetArgs()
 	{
 		return $this->pages->snippetArgs;
-	}
-	
-	// Register plugin, OBSOLETE AND WILL BE REMOVED SOON
-	function registerPlugin($name, $class, $version)
-	{
-		$this->plugins->register($name, $class, $version);
 	}
 }
 	
@@ -400,7 +381,6 @@ class YellowPage
 	{
 		$fileDate = date("c", is_readable($this->fileName) ? filemtime($this->fileName) : 0);
 		$this->set("modified", $fileDate);
-		$this->set("published", $fileDate);
 		$this->set("title", $this->yellow->toolbox->createTextTitle($this->location));
 		$this->set("sitename", $this->yellow->config->get("sitename"));
 		$this->set("author", $this->yellow->config->get("author"));
@@ -417,7 +397,7 @@ class YellowPage
 			foreach(preg_split("/[\r\n]+/", $parsed[2]) as $line)
 			{
 				preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
-				if(!empty($matches[1]) && !empty($matches[2])) $this->set(lcfirst($matches[1]), $matches[2]);
+				if(!empty($matches[1]) && !strempty($matches[2])) $this->set(lcfirst($matches[1]), $matches[2]);
 			}
 		} else if(preg_match("/^([^\r\n]+)([\r\n]+=+[\r\n]+)/", $this->rawData, $parsed)) {
 			$this->metaDataOffsetBytes = strlenb($parsed[0]);
@@ -803,7 +783,7 @@ class YellowPageCollection extends ArrayObject
 		{
 			$pagination = $this->yellow->config->get("contentPagination");
 			$location = $this->yellow->page->getLocation();
-			$locationArgs = $this->yellow->toolbox->getLocationArgs($location, $pagination,
+			$locationArgs = $this->yellow->toolbox->getLocationArgs($pagination,
 				$pageNumber>1 ? "$pagination:$pageNumber" : "$pagination:");
 		}
 		return $location.$locationArgs;
@@ -1118,7 +1098,7 @@ class YellowText
 				foreach($fileData as $line)
 				{
 					preg_match("/^\s*(.*?)\s*=\s*(.*?)\s*$/", $line, $matches);
-					if($matches[1]=="language" && !empty($matches[2])) { $language = $matches[2]; break; }
+					if($matches[1]=="language" && !strempty($matches[2])) { $language = $matches[2]; break; }
 				}
 				foreach($fileData as $line)
 				{
@@ -1282,8 +1262,8 @@ class YellowToolbox
 	}
 	
 	// Return location arguments from current HTTP request
-	function getLocationArgs($location, $pagination, $arg = "")
-	{		
+	function getLocationArgs($pagination, $arg = "")
+	{
 		preg_match("/^(.*?):(.*)$/", $arg, $args);
 		if(preg_match("/^(.*?\/)([^\/]+:.*)$/", $this->getLocation(), $matches))
 		{
@@ -1305,7 +1285,6 @@ class YellowToolbox
 		}
 		if(!empty($locationArgs))
 		{
-			if($this->isFileLocation($location)) $locationArgs = '/'.$locationArgs;
 			if(!$this->isPaginationLocation($locationArgs, $pagination)) $locationArgs .= '/';
 			$locationArgs = $this->normaliseArgs($locationArgs, false, false);
 		}
@@ -1313,7 +1292,7 @@ class YellowToolbox
 	}
 	
 	// Return location arguments from current HTTP request, convert form into clean URL
-	function getLocationArgsCleanUrl($location, $pagination)
+	function getLocationArgsCleanUrl($pagination)
 	{
 		foreach(array_merge($_GET, $_POST) as $key=>$value)
 		{
@@ -1327,7 +1306,6 @@ class YellowToolbox
 		}
 		if(!empty($locationArgs))
 		{
-			if($this->isFileLocation($location)) $locationArgs = '/'.$locationArgs;
 			if(!$this->isPaginationLocation($locationArgs, $pagination)) $locationArgs .= '/';
 			$locationArgs = $this->normaliseArgs($locationArgs, false, false);
 		}
@@ -1362,6 +1340,12 @@ class YellowToolbox
 	function isFileNotModified($lastModified)
 	{
 		return isset($_SERVER["HTTP_IF_MODIFIED_SINCE"]) && $_SERVER["HTTP_IF_MODIFIED_SINCE"]==$lastModified;
+	}
+	
+	// Check if clean URL is requested
+	function isRequestCleanUrl($location)
+	{
+		return (isset($_GET["clean-url"]) || isset($_POST["clean-url"])) && !$this->isFileLocation($location);
 	}
 	
 	// Check if content type is valid for location
@@ -1498,14 +1482,6 @@ class YellowToolbox
 		return $invalid ? "" : $path;
 	}
 	
-	// Return file path from title
-	function findFileFromTitle($title, $fileName, $fileDefault, $fileExtension)
-	{
-		$token = $this->normaliseName($title, false, true);
-		$path = dirname($fileName)."/".(empty($token) ? $fileDefault : $token.$fileExtension);
-		return $path;
-	}
-	
 	// Return file path of children from location
 	function findChildrenFromLocation($location, $pathBase, $pathHome, $fileDefault, $fileExtension)
 	{
@@ -1536,6 +1512,7 @@ class YellowToolbox
 				{
 					if($this->normaliseName($entry) == $fileDefault) continue;
 					if($this->normaliseName($entry) == $fileFolder) continue;
+					if($this->normaliseName($entry, true) == "") continue;
 					array_push($fileNames, $path.$entry);
 				}
 			}
@@ -1552,6 +1529,14 @@ class YellowToolbox
 		return $includeFileName ? "$pathBase$name$fileExtension" : $name;
 	}
 	
+	// Return file path from title
+	function findFileFromTitle($title, $fileName, $fileDefault, $fileExtension)
+	{
+		$token = $this->normaliseName($title, false, true);
+		$path = dirname($fileName)."/".(empty($token) ? $fileDefault : $token.$fileExtension);
+		return $path;
+	}
+		
 	// Normalise location arguments
 	function normaliseArgs($text, $appendSlash = true, $filterStrict = true)
 	{
@@ -1580,8 +1565,8 @@ class YellowToolbox
 	// Normalise file/directory/other name
 	function normaliseName($text, $removeExtension = false, $filterStrict = false)
 	{
-		if(preg_match("/^[\d\-\_\.]+(.*)$/", $text, $matches)) $text = $matches[1];
 		if($removeExtension) $text = ($pos = strrposu($text, '.')) ? substru($text, 0, $pos) : $text;
+		if(preg_match("/^[\d\-\_\.]+(.*)$/", $text, $matches)) $text = $matches[1];
 		if($filterStrict) $text = strreplaceu('.', '-', strtoloweru($text));
 		return preg_replace("/[^\pL\d\-\_\.]/u", "-", $text);
 	}
@@ -1733,6 +1718,17 @@ class YellowToolbox
 			if(!empty($path) && !is_dir($path)) @mkdir($path, 0777, true);
 		}
 		return @copy($fileNameSource, $fileNameDest);
+	}
+	
+	// Rename file
+	function renameFile($fileNameSource, $fileNameDest, $mkdir = false)
+	{
+		if($mkdir)
+		{
+			$path = dirname($fileNameDest);
+			if(!empty($path) && !is_dir($path)) @mkdir($path, 0777, true);
+		}
+		return @rename($fileNameSource, $fileNameDest);
 	}
 	
 	// Set file modification time, Unix time
