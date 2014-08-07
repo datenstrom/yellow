@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.3.10";
+	const Version = "0.3.11";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -1550,7 +1550,7 @@ class YellowToolbox
 	{
 		if(!preg_match("/^\w+:/", html_entity_decode($location, ENT_QUOTES, "UTF-8")))
 		{
-			if(preg_match("/^[^\/]+$/", $location))
+			if(!preg_match("/^\//", $location))
 			{
 				$location = $this->getDirectoryLocation($pageBase.$pageLocation).$location;
 			}
