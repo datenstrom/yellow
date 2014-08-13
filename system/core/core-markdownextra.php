@@ -5,7 +5,7 @@
 // Markdown extra core plugin
 class YellowMarkdownExtra
 {
-	const Version = "0.3.6";
+	const Version = "0.3.7";
 	var $yellow;		//access to API
 	
 	// Handle plugin initialisation
@@ -54,7 +54,7 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser
 	// Return unique id attribute
 	function getIdAttribute($text)
 	{
-		$text = $this->yellow->toolbox->normaliseName($text, false, true);
+		$text = $this->yellow->toolbox->normaliseName($text, true, false, true);
 		$text = trim(preg_replace("/-+/", "-", $text), "-");
 		if(is_null($this->idAttributes[$text]))
 		{

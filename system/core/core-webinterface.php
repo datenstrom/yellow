@@ -5,7 +5,7 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.3.3";
+	const Version = "0.3.4";
 	var $yellow;				//access to API
 	var $users;					//web interface users
 	var $active;				//web interface is active? (boolean)
@@ -25,6 +25,7 @@ class YellowWebinterface
 		$this->yellow->config->setDefault("webinterfaceUserHashCost", "10");
 		$this->yellow->config->setDefault("webinterfaceUserFile", "user.ini");
 		$this->yellow->config->setDefault("webinterfaceNewPage", "default");
+		$this->yellow->config->setDefault("webinterfaceFilePrefix", "published");
 		$this->users = new YellowWebinterfaceUsers($yellow);
 		$this->users->load($this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile"));
 	}
@@ -211,19 +212,26 @@ class YellowWebinterface
 	function processRequestCreate($serverScheme, $serverName, $base, $location, $fileName)
 	{
 		$statusCode = 0;
-		$page = $this->getPageNew($serverScheme, $serverName, $base, $location, $fileName, stripcslashes($_POST["rawdataedit"]));
-		if($this->userPermission && $this->getUserPermission($page->location, $page->fileName) && !empty($page->rawData))
+		if($this->userPermission && !empty($_POST["rawdataedit"]))
 		{
 			$this->rawDataSource = $this->rawDataEdit = stripcslashes($_POST["rawdatasource"]);
-			if(is_file($page->fileName) || $this->yellow->toolbox->createFile($page->fileName, $page->rawData))
+			$page = $this->getPageNew($serverScheme, $serverName, $base, $location, $fileName, stripcslashes($_POST["rawdataedit"]));
+			if(!$page->isError())
 			{
-				$statusCode = 303;
-				$locationHeader = $this->yellow->toolbox->getLocationHeader($serverScheme, $serverName, $base, $page->location);
-				$this->yellow->sendStatus($statusCode, $locationHeader);
+				if($this->yellow->toolbox->createFile($page->fileName, $page->rawData))
+				{
+					$statusCode = 303;
+					$locationHeader = $this->yellow->toolbox->getLocationHeader($serverScheme, $serverName, $base, $page->location);
+					$this->yellow->sendStatus($statusCode, $locationHeader);
+				} else {
+					$statusCode = 500;
+					$this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false, $statusCode);
+					$this->yellow->page->error($statusCode, "Can't write file '$page->fileName'!");
+				}
 			} else {
 				$statusCode = 500;
 				$this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false, $statusCode);
-				$this->yellow->page->error($statusCode, "Can't write file '$page->fileName'!");
+				$this->yellow->page->error($statusCode, $page->get("pageError"));
 			}
 		}
 		return $statusCode;
@@ -237,23 +245,24 @@ class YellowWebinterface
 		{
 			$this->rawDataSource = stripcslashes($_POST["rawdatasource"]);
 			$this->rawDataEdit = stripcslashes($_POST["rawdataedit"]);
-			$fileData = $this->mergeText($location, $this->rawDataSource, $this->rawDataEdit, $fileName);
-			if(!empty($fileData))
+			$page = $this->getPageUpdate($serverScheme, $serverName, $base, $location, $fileName, $this->rawDataSource, $this->rawDataEdit);
+			if(!$page->isError())
 			{
-				if($this->yellow->toolbox->createFile($fileName, $fileData))
+				if($this->yellow->toolbox->renameFile($fileName, $page->fileName) &&
+				   $this->yellow->toolbox->createFile($page->fileName, $page->rawData))
 				{
 					$statusCode = 303;
-					$locationHeader = $this->yellow->toolbox->getLocationHeader($serverScheme, $serverName, $base, $location);
+					$locationHeader = $this->yellow->toolbox->getLocationHeader($serverScheme, $serverName, $base, $page->location);
 					$this->yellow->sendStatus($statusCode, $locationHeader);
 				} else {
 					$statusCode = 500;
 					$this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false, $statusCode);
-					$this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
+					$this->yellow->page->error($statusCode, "Can't write file '$page->fileName'!");
 				}
 			} else {
 				$statusCode = 500;
 				$this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false, $statusCode);
-				$this->yellow->page->error($statusCode, "Page has been modified by someone else!");
+				$this->yellow->page->error($statusCode, $page->get("pageError"));
 			}
 		}
 		return $statusCode;
@@ -420,32 +429,61 @@ class YellowWebinterface
 	{
 		$page = new YellowPage($this->yellow, $serverScheme, $serverName, $base, $location, $fileName);
 		$page->parseData($rawData, false, 0);
-		$page->fileName = $this->yellow->toolbox->findFileFromTitle($page->get("title"), $fileName,
+		$page->fileName = $this->yellow->toolbox->findFileFromTitle(
+			$page->get($this->yellow->config->get("webinterfaceFilePrefix")), $page->get("title"), $fileName,
 			$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
 		$page->location = $this->yellow->toolbox->findLocationFromFile($page->fileName,
 			$this->yellow->config->get("contentDir"), $this->yellow->config->get("contentHomeDir"),
 			$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
 		if($this->yellow->pages->find($page->location))
 		{
-			if(preg_match("/^(.*?)(\d+)$/", $page->get("title"), $matches))
+			preg_match("/^(.*?)(\d*)$/", $page->get("title"), $matches);
+			$titleText = $matches[1];
+			$titleNumber = $matches[2];
+			if(strempty($titleNumber)) { $titleNumber = 2; $titleText = $titleText.' '; }
+			for(; $titleNumber<=999; ++$titleNumber)
 			{
-				$pageTitle = $matches[1];
-				$pageNumber = max(2, $matches[2]);
-			} else {
-				$pageTitle = $page->get("title").' ';
-				$pageNumber = 2;
-			}
-			for(; $pageNumber<=999; ++$pageNumber)
-			{
-				$page->rawData = $this->updateDataTitle($rawData, $pageTitle.$pageNumber);
-				$page->fileName = $this->yellow->toolbox->findFileFromTitle($pageTitle.$pageNumber, $fileName,
+				$page->rawData = $this->updateDataTitle($rawData, $titleText.$titleNumber);
+				$page->fileName = $this->yellow->toolbox->findFileFromTitle(
+					$page->get($this->yellow->config->get("webinterfaceFilePrefix")), $titleText.$titleNumber, $fileName,
 					$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
 				$page->location = $this->yellow->toolbox->findLocationFromFile($page->fileName,
-					 $this->yellow->config->get("contentDir"), $this->yellow->config->get("contentHomeDir"),
-					 $this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
-				if(!$this->yellow->pages->find($page->location)) break;
+					$this->yellow->config->get("contentDir"), $this->yellow->config->get("contentHomeDir"),
+					$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
+				if(!$this->yellow->pages->find($page->location)) { $ok = true; break; }
+			}
+			if(!$ok) $page->error(500, "Page '".$page->get("title")."' can not be created!");
+		}
+		if(!$this->getUserPermission($page->location, $page->fileName)) $page->error(500, "Page '".$page->get("title")."' is not allowed!");
+		return $page;
+	}
+	
+	// Return modified page
+	function getPageUpdate($serverScheme, $serverName, $base, $location, $fileName, $rawDataSource, $rawDataEdit)
+	{
+		$page = new YellowPage($this->yellow, $serverScheme, $serverName, $base, $location, $fileName);
+		$page->parseData($this->mergeText($location, $rawDataSource, $rawDataEdit, $fileName), false, 0);
+		if(empty($page->rawData)) $page->error(500, "Page has been modified by someone else!");
+		if($this->yellow->toolbox->isFileLocation($location) && !$page->isError())
+		{
+			$pageSource = new YellowPage($this->yellow, $serverScheme, $serverName, $base, $location, $fileName);
+			$pageSource->parseData($rawDataSource, false, 0);
+			$prefix = $this->yellow->config->get("webinterfaceFilePrefix");
+			if($pageSource->get($prefix)!=$page->get($prefix) || $pageSource->get("title")!=$page->get("title"))
+			{
+				$page->fileName = $this->yellow->toolbox->findFileFromTitle(
+					$page->get($prefix), $page->get("title"), $fileName,
+					$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
+				$page->location = $this->yellow->toolbox->findLocationFromFile($page->fileName,
+					$this->yellow->config->get("contentDir"), $this->yellow->config->get("contentHomeDir"),
+					$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
+				if($pageSource->location!=$page->location && $this->yellow->pages->find($page->location))
+				{
+					$page->error(500, "Page '".$page->get("title")."' already exists!");
+				}
 			}
 		}
+		if(!$this->getUserPermission($page->location, $page->fileName)) $page->error(500, "Page '".$page->get("title")."' is not allowed!");
 		return $page;
 	}
 	

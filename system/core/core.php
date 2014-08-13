@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.3.11";
+	const Version = "0.3.12";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -193,7 +193,7 @@ class Yellow
 		if($statusCode==200 && !$this->toolbox->isValidContentType($contentType, $this->page->getLocation()))
 		{
 			$statusCode = 500;
-			$this->page->error($statusCode, "Type '$contentType' does not match name!");
+			$this->page->error($statusCode, "Type '$contentType' does not match file name!");
 		}
 		if($this->page->isExisting("pageClean")) ob_clean();
 		if(PHP_SAPI != "cli")
@@ -1417,7 +1417,7 @@ class YellowToolbox
 		}
 		$token = $this->normaliseName($tokens[$i]);
 		$fileFolder = $this->normaliseName($tokens[$i-1]).$fileExtension;
-		if($token!=$fileDefault && $token!=$fileFolder) $location .= $this->normaliseName($tokens[$i], true);
+		if($token!=$fileDefault && $token!=$fileFolder) $location .= $this->normaliseName($tokens[$i], true, true);
 		return $location;
 	}
 	
@@ -1512,7 +1512,7 @@ class YellowToolbox
 				{
 					if($this->normaliseName($entry) == $fileDefault) continue;
 					if($this->normaliseName($entry) == $fileFolder) continue;
-					if($this->normaliseName($entry, true) == "") continue;
+					if($this->normaliseName($entry, true, true) == "") continue;
 					array_push($fileNames, $path.$entry);
 				}
 			}
@@ -1530,11 +1530,15 @@ class YellowToolbox
 	}
 	
 	// Return file path from title
-	function findFileFromTitle($title, $fileName, $fileDefault, $fileExtension)
+	function findFileFromTitle($titlePrefix, $titleText, $fileName, $fileDefault, $fileExtension)
 	{
-		$token = $this->normaliseName($title, false, true);
-		$path = dirname($fileName)."/".(empty($token) ? $fileDefault : $token.$fileExtension);
-		return $path;
+		preg_match("/^([\d\-\_\.]*)(.*)$/", $titlePrefix, $matches);
+		if(preg_match("/\d$/", $matches[1])) $matches[1] .= '-';
+		$titleText = $this->normaliseName($titleText, false, false, true);
+		preg_match("/^([\d\-\_\.]*)(.*)$/", $matches[1].$titleText, $matches);
+		$fileNamePrefix = $matches[1];
+		$fileNameText = empty($matches[2]) ? $fileDefault : $matches[2].$fileExtension;
+		return dirname($fileName)."/".$fileNamePrefix.$fileNameText;
 	}
 		
 	// Normalise location arguments
@@ -1563,10 +1567,10 @@ class YellowToolbox
 	}
 
 	// Normalise file/directory/other name
-	function normaliseName($text, $removeExtension = false, $filterStrict = false)
+	function normaliseName($text, $removePrefix = true, $removeExtension = false, $filterStrict = false)
 	{
 		if($removeExtension) $text = ($pos = strrposu($text, '.')) ? substru($text, 0, $pos) : $text;
-		if(preg_match("/^[\d\-\_\.]+(.*)$/", $text, $matches)) $text = $matches[1];
+		if($removePrefix) if(preg_match("/^[\d\-\_\.]+(.*)$/", $text, $matches)) $text = $matches[1];
 		if($filterStrict) $text = strreplaceu('.', '-', strtoloweru($text));
 		return preg_replace("/[^\pL\d\-\_\.]/u", "-", $text);
 	}
