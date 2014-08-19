@@ -5,7 +5,7 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.3.4";
+	const Version = "0.3.5";
 	var $yellow;				//access to API
 	var $users;					//web interface users
 	var $active;				//web interface is active? (boolean)
@@ -19,7 +19,7 @@ class YellowWebinterface
 	{
 		$this->yellow = $yellow;
 		$this->yellow->config->setDefault("webinterfaceLocation", "/edit/");
-		$this->yellow->config->setDefault("webinterfaceServerScheme", "https");
+		$this->yellow->config->setDefault("webinterfaceServerScheme", "http");
 		$this->yellow->config->setDefault("webinterfaceServerName", $this->yellow->config->get("serverName"));
 		$this->yellow->config->setDefault("webinterfaceUserHashAlgorithm", "bcrypt");
 		$this->yellow->config->setDefault("webinterfaceUserHashCost", "10");
