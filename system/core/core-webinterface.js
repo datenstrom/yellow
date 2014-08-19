@@ -4,7 +4,7 @@
 // Yellow main API
 var yellow =
 {
-	version: "0.3.4",
+	version: "0.3.5",
 	action: function(text) { yellow.webinterface.action(text); },
 	onClick: function(e) { yellow.webinterface.hidePanesOnClick(yellow.toolbox.getEventElement(e)); },
 	onKeydown: function(e) { yellow.webinterface.hidePanesOnKeydown(yellow.toolbox.getEventKeycode(e)); },
@@ -79,24 +79,31 @@ yellow.webinterface =
 			var location = yellow.config.serverBase+yellow.config.pluginLocation;			
 			elementBar.innerHTML =
 				"<div class=\"yellow-bar-left\">"+
-				"<a href=\"#\" onclick=\"yellow.action('edit'); return false;\">"+this.getText("Edit")+"</a>"+
+				"<a href=\"#\" onclick=\"yellow.action('edit'); return false;\" id=\"yellow-pane-edit-link\">"+this.getText("Edit")+"</a>"+
 				"</div>"+
 				"<div class=\"yellow-bar-right\">"+
-				"<a href=\"#\" onclick=\"yellow.action('new'); return false;\">"+this.getText("New")+"</a>"+
-				"<a href=\"#\" onclick=\"yellow.action('user'); return false;\">"+yellow.config.userName+" &#9662;</a>"+
+				"<a href=\"#\" onclick=\"yellow.action('new'); return false;\" id=\"yellow-pane-new-link\">"+this.getText("New")+"</a>"+
+				"<a href=\"#\" onclick=\"yellow.action('user'); return false;\" id=\"yellow-pane-user-link\">"+yellow.config.userName+" &#9662;</a>"+
 				"</div>";
 		}
 		yellow.toolbox.insertBefore(elementBar, elementReference);
 	},
 	
 	// Create pane
-	createPane: function(paneId, normal, elementReference)
+	createPane: function(paneId, bubble, elementReference)
 	{
 		if(yellow.debug) console.log("yellow.webinterface.createPane id:"+paneId);
 		var elementPane = document.createElement("div");
-		elementPane.className = normal ? "yellow-pane yellow-pane-bubble" : "yellow-pane";
+		elementPane.className = "yellow-pane";
 		elementPane.setAttribute("id", paneId);
 		elementPane.style.display = "none";
+		if(bubble)
+		{
+			var elementArrow = document.createElement("span");
+			elementArrow.className = "yellow-arrow";
+			elementArrow.setAttribute("id", paneId+"-arrow");
+			elementPane.appendChild(elementArrow);
+		}
 		var elementDiv = document.createElement("div");
 		elementDiv.setAttribute("id", paneId+"-content");
 		if(paneId == "yellow-pane-login")
@@ -123,7 +130,6 @@ yellow.webinterface =
 				"<p><a href=\""+this.getText("UserHelpUrl")+"\">"+this.getText("UserHelp")+"</a></p>" +
 				"<p><a href=\"#\" onclick=\"yellow.action('logout'); return false;\">"+this.getText("UserLogout")+"</a></p>";
 		}
-
 		elementPane.appendChild(elementDiv);
 		yellow.toolbox.insertAfter(elementPane, elementReference);
 	},
@@ -143,7 +149,7 @@ yellow.webinterface =
 			switch(this.getPaneAction(paneId, paneType))
 			{
 				case "create":	key = "CreateButton"; className = "yellow-btn yellow-btn-green"; break;
-				case "edit":	key = "EditButton"; className = "yellow-btn"; break;
+				case "edit":	key = "EditButton"; className = "yellow-btn yellow-btn-yellow"; break;
 				case "delete":	key = "DeleteButton"; className = "yellow-btn yellow-btn-red"; break;
 				default:		key = "CancelButton"; className = "yellow-btn";
 			}
@@ -193,10 +199,10 @@ yellow.webinterface =
 			if(yellow.debug) console.log("yellow.webinterface.showPane id:"+paneId);
 			element.style.display = "block";
 			yellow.toolbox.addClass(document.body, "yellow-body-modal-open");
-			this.resizePanes();
-			this.updatePane(paneId, paneType, true);
 			this.paneId = paneId;
 			this.paneType = paneType;
+			this.resizePanes();
+			this.updatePane(paneId, paneType, true);
 		}
 	},
 
@@ -268,12 +274,20 @@ yellow.webinterface =
 				var height2 = yellow.toolbox.getOuterHeight(document.getElementById("yellow-pane-edit-content"));
 				var height3 = yellow.toolbox.getOuterHeight(document.getElementById("yellow-pane-edit-page"));
 				yellow.toolbox.setOuterHeight(document.getElementById("yellow-pane-edit-page"), height1 - height2 + height3);
+				var elementLink = document.getElementById(this.paneType=="new" ? "yellow-pane-new-link" : "yellow-pane-edit-link");
+				var position = yellow.toolbox.getOuterLeft(elementLink) + yellow.toolbox.getOuterWidth(elementLink)/2;
+				position -= yellow.toolbox.getOuterLeft(document.getElementById("yellow-pane-edit"));
+				yellow.toolbox.setOuterLeft(document.getElementById("yellow-pane-edit-arrow"), position);
 			}
 			if(yellow.toolbox.isVisible(document.getElementById("yellow-pane-user")))
 			{
 				yellow.toolbox.setOuterTop(document.getElementById("yellow-pane-user"), paneTop);
 				yellow.toolbox.setOuterHeight(document.getElementById("yellow-pane-user"), paneHeight, true);
 				yellow.toolbox.setOuterLeft(document.getElementById("yellow-pane-user"), paneWidth - yellow.toolbox.getOuterWidth(document.getElementById("yellow-pane-user")), true);
+				var elementLink = document.getElementById("yellow-pane-user-link");
+				var position = yellow.toolbox.getOuterLeft(elementLink) + yellow.toolbox.getOuterWidth(elementLink)/2;
+				position -= yellow.toolbox.getOuterLeft(document.getElementById("yellow-pane-user"));
+				yellow.toolbox.setOuterLeft(document.getElementById("yellow-pane-user-arrow"), position);
 			}
 			if(yellow.debug) console.log("yellow.webinterface.resizePanes bar:"+elementBar.offsetWidth+"/"+elementBar.offsetHeight);
 		}
