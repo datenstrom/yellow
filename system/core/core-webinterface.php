@@ -5,7 +5,7 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.3.5";
+	const Version = "0.3.6";
 	var $yellow;				//access to API
 	var $users;					//web interface users
 	var $active;				//web interface is active? (boolean)
@@ -24,6 +24,8 @@ class YellowWebinterface
 		$this->yellow->config->setDefault("webinterfaceUserHashAlgorithm", "bcrypt");
 		$this->yellow->config->setDefault("webinterfaceUserHashCost", "10");
 		$this->yellow->config->setDefault("webinterfaceUserFile", "user.ini");
+		$this->yellow->config->setDefault("webinterfaceDefaultEmail", "");
+		$this->yellow->config->setDefault("webinterfaceDefaultPassword", "");
 		$this->yellow->config->setDefault("webinterfaceNewPage", "default");
 		$this->yellow->config->setDefault("webinterfaceFilePrefix", "published");
 		$this->users = new YellowWebinterfaceUsers($yellow);
@@ -106,8 +108,8 @@ class YellowWebinterface
 				$header .= "yellow.page.rawDataEdit = ".json_encode($this->rawDataEdit).";\n";
 				$header .= "yellow.page.rawDataNew = ".json_encode($this->getDataNew()).";\n";
 				$header .= "yellow.page.statusCode = ".json_encode($page->statusCode).";\n";
-				$header .= "yellow.config = ".json_encode($this->getDataConfig()).";\n";
 			}
+			$header .= "yellow.config = ".json_encode($this->getDataConfig()).";\n";
 			$language = $this->isUser() ? $this->users->getLanguage() : $page->get("language");
 			$header .= "yellow.text = ".json_encode($this->yellow->text->getData("webinterface", $language)).";\n";
 			if(defined("DEBUG")) $header .= "yellow.debug = ".json_encode(DEBUG).";\n";
@@ -509,14 +511,21 @@ class YellowWebinterface
 	// Return configuration data including information of current user
 	function getDataConfig()
 	{
-		$data = array("userEmail" => $this->users->email,
-					  "userName" => $this->users->getName(),
-					  "userLanguage" => $this->users->getLanguage(),
-					  "userHome" => $this->users->getHome(),
-					  "serverScheme" => $this->yellow->config->get("serverScheme"),
-					  "serverName" => $this->yellow->config->get("serverName"),
-					  "serverBase" => $this->yellow->config->get("serverBase"));
-		return array_merge($data, $this->yellow->config->getData("Location"));
+		$data = $this->yellow->config->getData("", "Location");
+		if($this->isUser())
+		{
+			$data["userEmail"] = $this->users->email;
+			$data["userName"] = $this->users->getName();
+			$data["userLanguage"] = $this->users->getLanguage();
+			$data["userHome"] = $this->users->getHome();
+			$data["serverScheme"] = $this->yellow->config->get("serverScheme");
+			$data["serverName"] = $this->yellow->config->get("serverName");
+			$data["serverBase"] = $this->yellow->config->get("serverBase");
+		} else {
+			$data["webinterfaceDefaultEmail"] = $this->yellow->config->get("webinterfaceDefaultEmail");
+			$data["webinterfaceDefaultPassword"] = $this->yellow->config->get("webinterfaceDefaultPassword");
+		}
+		return $data;
 	}
 	
 	// Check if web interface request

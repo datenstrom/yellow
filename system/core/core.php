@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.3.13";
+	const Version = "0.3.14";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -1039,16 +1039,17 @@ class YellowConfig
 	}
 	
 	// Return configuration strings
-	function getData($filterEnd = "")
+	function getData($filterStart = "", $filterEnd = "")
 	{
 		$config = array();
-		if(empty($filterEnd))
+		if(empty($filterStart) && empty($filterEnd))
 		{
 			$config = $this->config;
 		} else {
 			foreach($this->config as $key=>$value)
 			{
-				if(substru($key, -strlenu($filterEnd)) == $filterEnd) $config[$key] = $value;
+				if(!empty($filterStart) && substru($key, 0, strlenu($filterStart))==$filterStart) $config[$key] = $value;
+				if(!empty($filterEnd) && substru($key, -strlenu($filterEnd))==$filterEnd) $config[$key] = $value;
 			}
 		}
 		return $config;

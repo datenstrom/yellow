@@ -4,7 +4,7 @@
 // Yellow main API
 var yellow =
 {
-	version: "0.3.5",
+	version: "0.3.6",
 	action: function(text) { yellow.webinterface.action(text); },
 	onClick: function(e) { yellow.webinterface.hidePanesOnClick(yellow.toolbox.getEventElement(e)); },
 	onKeydown: function(e) { yellow.webinterface.hidePanesOnKeydown(yellow.toolbox.getEventKeycode(e)); },
@@ -112,8 +112,8 @@ yellow.webinterface =
 				"<h1>"+this.getText("LoginText")+"</h1>"+
 				"<form method=\"post\">"+
 				"<input type=\"hidden\" name=\"action\" value=\"login\" />"+
-				"<p><label for=\"email\">"+this.getText("LoginEmail")+"</label> <input name=\"email\" id=\"email\" maxlength=\"64\" /></p>"+
-				"<p><label for=\"password\">"+this.getText("LoginPassword")+"</label> <input type=\"password\" name=\"password\" id=\"password\" maxlength=\"64\" /></p>"+
+				"<p><label for=\"email\">"+this.getText("LoginEmail")+"</label> <input name=\"email\" id=\"email\" maxlength=\"64\" value=\""+yellow.config.webinterfaceDefaultEmail+"\" /></p>"+
+				"<p><label for=\"password\">"+this.getText("LoginPassword")+"</label> <input type=\"password\" name=\"password\" id=\"password\" maxlength=\"64\" value=\""+yellow.config.webinterfaceDefaultPassword+"\" /></p>"+
 				"<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("LoginButton")+"\" /></p>"+
 				"</form>";
 		} else if(paneId == "yellow-pane-edit") {
