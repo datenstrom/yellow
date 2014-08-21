@@ -34,6 +34,8 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser
 		$this->yellow = $yellow;
 		$this->page = $page;
 		$this->idAttributes = array();
+		$this->no_markup = (bool)$this->yellow->config->get("contentRemoveHtml");
+		$this->no_entities = (bool)$this->yellow->config->get("contentRemoveHtml");
 		parent::__construct();
 	}
 	
@@ -43,12 +45,13 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser
 		$text = preg_replace("/@pageRead/i", $page->get("pageRead"), $text);
 		$text = preg_replace("/@pageEdit/i", $page->get("pageEdit"), $text);
 		$text = preg_replace("/@pageError/i", $page->get("pageError"), $text);
+		$text = $this->transform($text);
 		$callback = function($matches) use ($page)
 		{
 			$matches[2] = $page->yellow->toolbox->normaliseLocation($matches[2], $page->base, $page->location);
 			return "<a$matches[1]href=\"$matches[2]\"$matches[3]>";
 		};
-		return preg_replace_callback("/<a(.*?)href=\"([^\"]+)\"(.*?)>/i", $callback, $this->transform($text));
+		return preg_replace_callback("/<a(.*?)href=\"([^\"]+)\"(.*?)>/i", $callback, $text);
 	}
 
 	// Return unique id attribute
@@ -68,10 +71,11 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser
 	function doAutoLinks($text)
 	{
 		$text = preg_replace_callback("/<(\w+:[^\'\">\s]+)>/", array(&$this, "_doAutoLinks_url_callback"), $text);
-		$text = preg_replace_callback("/<(\w+@[\w\-\.]+)>/", array(&$this, "_doAutoLinks_email_callback"), $text);
+		$text = preg_replace_callback("/<([\w\-\.]+@[\w\-\.]+)>/", array(&$this, "_doAutoLinks_email_callback"), $text);
 		$text = preg_replace_callback("/\[(\w+)\s+(.*?)\]/", array(&$this, "_doAutoLinks_shortcut_callback"), $text);
+		$text = preg_replace_callback("/\[\-\-(.*?)\-\-\]/", array(&$this, "_doAutoLinks_comment_callback"), $text);
 		$text = preg_replace_callback("/((http|https|ftp):\/\/\S+[^\'\"\,\.\;\:\s]+)/", array(&$this, "_doAutoLinks_url_callback"), $text);
-		$text = preg_replace_callback("/(\w+@[\w\-\.]+\.[\w]{2,4})/", array(&$this, "_doAutoLinks_email_callback"), $text);
+		$text = preg_replace_callback("/([\w\-\.]+@[\w\-\.]+\.[\w]{2,4})/", array(&$this, "_doAutoLinks_email_callback"), $text);
 		return $text;
 	}
 	
@@ -81,6 +85,15 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser
 		$text = preg_replace("/\s+/s", " ", $matches[2]);
 		$output = $this->page->parseType($matches[1], $text, true);
 		if(is_null($output)) $output = $matches[0];
+		return $this->hashBlock($output);
+	}
+
+	// Handle comments
+	function _doAutoLinks_comment_callback($matches)
+	{
+		$text = $matches[1];
+		$output = "<!--".htmlspecialchars($text, ENT_NOQUOTES)."-->";
+		if($text[0] == '-') $output = "";
 		return $this->hashBlock($output);
 	}
 	

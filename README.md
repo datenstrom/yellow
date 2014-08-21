@@ -1,4 +1,4 @@
-Yellow 0.3.14
+Yellow 0.3.15
 =============
 Yellow is for people who make websites. [Visit website](http://datenstrom.se/yellow).
 

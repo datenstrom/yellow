@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.3.14";
+	const Version = "0.3.15";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -44,6 +44,7 @@ class Yellow
 		$this->config->setDefault("contentHomeDir", "home/");
 		$this->config->setDefault("contentDefaultFile", "page.txt");
 		$this->config->setDefault("contentPagination", "page");
+		$this->config->setDefault("contentRemoveHtml", "0");
 		$this->config->setDefault("contentExtension", ".txt");
 		$this->config->setDefault("configExtension", ".ini");
 		$this->config->setDefault("configFile", "config.ini");
