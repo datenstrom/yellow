@@ -5,7 +5,7 @@
 // Markdown extra core plugin
 class YellowMarkdownExtra
 {
-	const Version = "0.3.7";
+	const Version = "0.3.8";
 	var $yellow;		//access to API
 	
 	// Handle plugin initialisation
@@ -18,7 +18,7 @@ class YellowMarkdownExtra
 	function onParseContentText($page, $text)
 	{
 		$markdown = new YellowMarkdownExtraParser($this->yellow, $page);
-		return $markdown->transformText($page, $text);
+		return $markdown->transformText($text);
 	}
 }
 
@@ -36,22 +36,20 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser
 		$this->idAttributes = array();
 		$this->no_markup = (bool)$this->yellow->config->get("contentRemoveHtml");
 		$this->no_entities = (bool)$this->yellow->config->get("contentRemoveHtml");
+		$this->url_filter_func = function($url) use ($yellow, $page)
+		{
+			return $yellow->toolbox->normaliseLocation($url, $page->base, $page->location);
+		};
 		parent::__construct();
 	}
 	
 	// Transform page text
-	function transformText($page, $text)
+	function transformText($text)
 	{
-		$text = preg_replace("/@pageRead/i", $page->get("pageRead"), $text);
-		$text = preg_replace("/@pageEdit/i", $page->get("pageEdit"), $text);
-		$text = preg_replace("/@pageError/i", $page->get("pageError"), $text);
-		$text = $this->transform($text);
-		$callback = function($matches) use ($page)
-		{
-			$matches[2] = $page->yellow->toolbox->normaliseLocation($matches[2], $page->base, $page->location);
-			return "<a$matches[1]href=\"$matches[2]\"$matches[3]>";
-		};
-		return preg_replace_callback("/<a(.*?)href=\"([^\"]+)\"(.*?)>/i", $callback, $text);
+		$text = preg_replace("/@pageRead/i", $this->page->get("pageRead"), $text);
+		$text = preg_replace("/@pageEdit/i", $this->page->get("pageEdit"), $text);
+		$text = preg_replace("/@pageError/i", $this->page->get("pageError"), $text);
+		return $this->transform($text);
 	}
 
 	// Return unique id attribute
@@ -140,7 +138,7 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser
 		$text = $matches[2];
 		$title = $matches[7];
 		$attr = $this->doExtraAttributes("a", $dummy =& $matches[8]);
-		$output = "<a href=\"".$this->encodeAttribute($url)."\"";
+		$output = "<a href=\"".$this->encodeURLAttribute($url)."\"";
 		if(!empty($title)) $output .= " title=\"".$this->encodeAttribute($title)."\"";
 		$output .= $attr;
 		$output .= ">".$this->runSpanGamut($text)."</a>";
@@ -160,7 +158,7 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser
 		$alt = $matches[2];
 		$title = $matches[7]=="" ? $matches[2] : $matches[7];
 		$attr = $this->doExtraAttributes("img", $dummy =& $matches[8]);
-		$output = "<img src=\"".$this->encodeAttribute($src)."\"";
+		$output = "<img src=\"".$this->encodeURLAttribute($src)."\"";
 		if($width && $height) $output .= " width=\"$width\" height=\"$height\"";
 		if(!empty($alt)) $output .= " alt=\"".$this->encodeAttribute($alt)."\"";
 		if(!empty($title)) $output .= " title=\"".$this->encodeAttribute($title)."\"";
@@ -209,7 +207,29 @@ class MarkdownParser {
 
 	### Version ###
 
-	const MARKDOWNLIB_VERSION  =  "1.4.0";
+	const  MARKDOWNLIB_VERSION  =  "1.4.1";
+
+	### Simple Function Interface ###
+
+	public static function defaultTransform($text) {
+	#
+	# Initialize the parser and return the result of its transform method.
+	# This will work fine for derived classes too.
+	#
+		# Take parser class on which this function was called.
+		$parser_class = \get_called_class();
+
+		# try to take parser from the static parser list
+		static $parser_list;
+		$parser =& $parser_list[$parser_class];
+
+		# create the parser it not already set
+		if (!$parser)
+			$parser = new $parser_class;
+
+		# Transform text using parser.
+		return $parser->transform($text);
+	}
 
 	### Configuration Variables ###
 
@@ -224,6 +244,9 @@ class MarkdownParser {
 	# Predefined urls and titles for reference links and images.
 	public $predef_urls = array();
 	public $predef_titles = array();
+
+	# Optional filter function for URLs
+	public $url_filter_func = null;
 
 
 	### Parser Implementation ###
@@ -375,7 +398,7 @@ class MarkdownParser {
 							)?	# title is optional
 							(?:\n+|\Z)
 			}xm',
-			array(&$this, '_stripLinkDefinitions_callback'),
+			array($this, '_stripLinkDefinitions_callback'),
 			$text);
 		return $text;
 	}
@@ -408,7 +431,7 @@ class MarkdownParser {
 		#
 		$block_tags_a_re = 'ins|del';
 		$block_tags_b_re = 'p|div|h[1-6]|blockquote|pre|table|dl|ol|ul|address|'.
-						   'script|noscript|form|fieldset|iframe|math|svg|'.
+						   'script|noscript|style|form|fieldset|iframe|math|svg|'.
 						   'article|section|nav|aside|hgroup|header|footer|'.
 						   'figure';
 
@@ -463,9 +486,9 @@ class MarkdownParser {
 		# match will start at the first `<div>` and stop at the first `</div>`.
 		$text = preg_replace_callback('{(?>
 			(?>
-				(?<=\n\n)		# Starting after a blank line
+				(?<=\n)			# Starting on its own line
 				|				# or
-				\A\n?			# the beginning of the doc
+				\A\n?			# the at beginning of the doc
 			)
 			(						# save in $1
 
@@ -522,7 +545,7 @@ class MarkdownParser {
 					
 			)
 			)}Sxmi',
-			array(&$this, '_hashHTMLBlocks_callback'),
+			array($this, '_hashHTMLBlocks_callback'),
 			$text);
 
 		return $text;
@@ -666,7 +689,7 @@ class MarkdownParser {
 	protected function doHardBreaks($text) {
 		# Do hard breaks:
 		return preg_replace_callback('/ {2,}\n/', 
-			array(&$this, '_doHardBreaks_callback'), $text);
+			array($this, '_doHardBreaks_callback'), $text);
 	}
 	protected function _doHardBreaks_callback($matches) {
 		return $this->hashPart("<br$this->empty_element_suffix\n");
@@ -697,7 +720,7 @@ class MarkdownParser {
 			  \]
 			)
 			}xs',
-			array(&$this, '_doAnchors_reference_callback'), $text);
+			array($this, '_doAnchors_reference_callback'), $text);
 
 		#
 		# Next, inline-style links: [link text](url "optional title")
@@ -724,7 +747,7 @@ class MarkdownParser {
 			  \)
 			)
 			}xs',
-			array(&$this, '_doAnchors_inline_callback'), $text);
+			array($this, '_doAnchors_inline_callback'), $text);
 
 		#
 		# Last, handle reference-style shortcuts: [link text]
@@ -738,7 +761,7 @@ class MarkdownParser {
 			  \]
 			)
 			}xs',
-			array(&$this, '_doAnchors_reference_callback'), $text);
+			array($this, '_doAnchors_reference_callback'), $text);
 
 		$this->in_anchor = false;
 		return $text;
@@ -759,7 +782,7 @@ class MarkdownParser {
 
 		if (isset($this->urls[$link_id])) {
 			$url = $this->urls[$link_id];
-			$url = $this->encodeAttribute($url);
+			$url = $this->encodeURLAttribute($url);
 			
 			$result = "<a href=\"$url\"";
 			if ( isset( $this->titles[$link_id] ) ) {
@@ -783,7 +806,13 @@ class MarkdownParser {
 		$url			=  $matches[3] == '' ? $matches[4] : $matches[3];
 		$title			=& $matches[7];
 
-		$url = $this->encodeAttribute($url);
+		// if the URL was of the form <s p a c e s> it got caught by the HTML
+		// tag parser and hashed. Need to reverse the process before using the URL.
+		$unhashed = $this->unhash($url);
+		if ($unhashed != $url)
+			$url = preg_replace('/^<(.*)>$/', '\1', $unhashed);
+
+		$url = $this->encodeURLAttribute($url);
 
 		$result = "<a href=\"$url\"";
 		if (isset($title)) {
@@ -820,7 +849,7 @@ class MarkdownParser {
 
 			)
 			}xs', 
-			array(&$this, '_doImages_reference_callback'), $text);
+			array($this, '_doImages_reference_callback'), $text);
 
 		#
 		# Next, handle inline images:  ![alt text](url "optional title")
@@ -849,7 +878,7 @@ class MarkdownParser {
 			  \)
 			)
 			}xs',
-			array(&$this, '_doImages_inline_callback'), $text);
+			array($this, '_doImages_inline_callback'), $text);
 
 		return $text;
 	}
@@ -864,7 +893,7 @@ class MarkdownParser {
 
 		$alt_text = $this->encodeAttribute($alt_text);
 		if (isset($this->urls[$link_id])) {
-			$url = $this->encodeAttribute($this->urls[$link_id]);
+			$url = $this->encodeURLAttribute($this->urls[$link_id]);
 			$result = "<img src=\"$url\" alt=\"$alt_text\"";
 			if (isset($this->titles[$link_id])) {
 				$title = $this->titles[$link_id];
@@ -888,7 +917,7 @@ class MarkdownParser {
 		$title			=& $matches[7];
 
 		$alt_text = $this->encodeAttribute($alt_text);
-		$url = $this->encodeAttribute($url);
+		$url = $this->encodeURLAttribute($url);
 		$result = "<img src=\"$url\" alt=\"$alt_text\"";
 		if (isset($title)) {
 			$title = $this->encodeAttribute($title);
@@ -909,7 +938,7 @@ class MarkdownParser {
 		#	  --------
 		#
 		$text = preg_replace_callback('{ ^(.+?)[ ]*\n(=+|-+)[ ]*\n+ }mx',
-			array(&$this, '_doHeaders_callback_setext'), $text);
+			array($this, '_doHeaders_callback_setext'), $text);
 
 		# atx-style headers:
 		#	# Header 1
@@ -926,7 +955,7 @@ class MarkdownParser {
 				\#*			# optional closing #\'s (not counted)
 				\n+
 			}xm',
-			array(&$this, '_doHeaders_callback_atx'), $text);
+			array($this, '_doHeaders_callback_atx'), $text);
 
 		return $text;
 	}
@@ -955,7 +984,6 @@ class MarkdownParser {
 		# Re-usable patterns to match list item bullets and number markers:
 		$marker_ul_re  = '[*+-]';
 		$marker_ol_re  = '\d+[\.]';
-		$marker_any_re = "(?:$marker_ul_re|$marker_ol_re)";
 
 		$markers_relist = array(
 			$marker_ul_re => $marker_ol_re,
@@ -999,14 +1027,14 @@ class MarkdownParser {
 						^
 						'.$whole_list_re.'
 					}mx',
-					array(&$this, '_doLists_callback'), $text);
+					array($this, '_doLists_callback'), $text);
 			}
 			else {
 				$text = preg_replace_callback('{
 						(?:(?<=\n)\n|\A\n?) # Must eat the newline
 						'.$whole_list_re.'
 					}mx',
-					array(&$this, '_doLists_callback'), $text);
+					array($this, '_doLists_callback'), $text);
 			}
 		}
 
@@ -1073,7 +1101,7 @@ class MarkdownParser {
 			(?:(\n+(?=\n))|\n)				# tailing blank line = $5
 			(?= \n* (\z | \2 ('.$marker_any_re.') (?:[ ]+|(?=\n))))
 			}xm',
-			array(&$this, '_processListItems_callback'), $list_str);
+			array($this, '_processListItems_callback'), $list_str);
 
 		$this->list_level--;
 		return $list_str;
@@ -1117,7 +1145,7 @@ class MarkdownParser {
 				)
 				((?=^[ ]{0,'.$this->tab_width.'}\S)|\Z)	# Lookahead for non-space at line-start, or end of doc
 			}xm',
-			array(&$this, '_doCodeBlocks_callback'), $text);
+			array($this, '_doCodeBlocks_callback'), $text);
 
 		return $text;
 	}
@@ -1145,19 +1173,19 @@ class MarkdownParser {
 
 
 	protected $em_relist = array(
-		''  => '(?:(?<!\*)\*(?!\*)|(?<!_)_(?!_))(?=\S|$)(?![\.,:;]\s)',
-		'*' => '(?<=\S|^)(?<!\*)\*(?!\*)',
-		'_' => '(?<=\S|^)(?<!_)_(?!_)',
+		''  => '(?:(?<!\*)\*(?!\*)|(?<!_)_(?!_))(?![\.,:;]?\s)',
+		'*' => '(?<![\s*])\*(?!\*)',
+		'_' => '(?<![\s_])_(?!_)',
 		);
 	protected $strong_relist = array(
-		''   => '(?:(?<!\*)\*\*(?!\*)|(?<!_)__(?!_))(?=\S|$)(?![\.,:;]\s)',
-		'**' => '(?<=\S|^)(?<!\*)\*\*(?!\*)',
-		'__' => '(?<=\S|^)(?<!_)__(?!_)',
+		''   => '(?:(?<!\*)\*\*(?!\*)|(?<!_)__(?!_))(?![\.,:;]?\s)',
+		'**' => '(?<![\s*])\*\*(?!\*)',
+		'__' => '(?<![\s_])__(?!_)',
 		);
 	protected $em_strong_relist = array(
-		''    => '(?:(?<!\*)\*\*\*(?!\*)|(?<!_)___(?!_))(?=\S|$)(?![\.,:;]\s)',
-		'***' => '(?<=\S|^)(?<!\*)\*\*\*(?!\*)',
-		'___' => '(?<=\S|^)(?<!_)___(?!_)',
+		''    => '(?:(?<!\*)\*\*\*(?!\*)|(?<!_)___(?!_))(?![\.,:;]?\s)',
+		'***' => '(?<![\s*])\*\*\*(?!\*)',
+		'___' => '(?<![\s_])___(?!_)',
 		);
 	protected $em_strong_prepared_relist;
 	
@@ -1317,7 +1345,7 @@ class MarkdownParser {
 				)+
 			  )
 			/xm',
-			array(&$this, '_doBlockQuotes_callback'), $text);
+			array($this, '_doBlockQuotes_callback'), $text);
 
 		return $text;
 	}
@@ -1331,7 +1359,7 @@ class MarkdownParser {
 		# These leading spaces cause problem with <pre> content, 
 		# so we need to fix that:
 		$bq = preg_replace_callback('{(\s*<pre>.+?</pre>)}sx', 
-			array(&$this, '_doBlockQuotes_callback2'), $bq);
+			array($this, '_doBlockQuotes_callback2'), $bq);
 
 		return "\n". $this->hashBlock("<blockquote>\n$bq\n</blockquote>")."\n\n";
 	}
@@ -1421,6 +1449,33 @@ class MarkdownParser {
 		$text = str_replace('"', '&quot;', $text);
 		return $text;
 	}
+
+
+	protected function encodeURLAttribute($url, &$text = null) {
+	#
+	# Encode text for a double-quoted HTML attribute containing a URL,
+	# applying the URL filter if set. Also generates the textual
+	# representation for the URL (removing mailto: or tel:) storing it in $text.
+	# This function is *not* suitable for attributes enclosed in single quotes.
+	#
+		if ($this->url_filter_func)
+			$url = call_user_func($this->url_filter_func, $url);
+
+		if (preg_match('{^mailto:}i', $url))
+			$url = $this->encodeEntityObfuscatedAttribute($url, $text, 7);
+		else if (preg_match('{^tel:}i', $url))
+		{
+			$url = $this->encodeAttribute($url);
+			$text = substr($url, 4);
+		}
+		else
+		{
+			$url = $this->encodeAttribute($url);
+			$text = $url;
+		}
+
+		return $url;
+	}
 	
 	
 	protected function encodeAmpsAndAngles($text) {
@@ -1445,8 +1500,8 @@ class MarkdownParser {
 
 
 	protected function doAutoLinks($text) {
-		$text = preg_replace_callback('{<((https?|ftp|dict):[^\'">\s]+)>}i', 
-			array(&$this, '_doAutoLinks_url_callback'), $text);
+		$text = preg_replace_callback('{<((https?|ftp|dict|tel):[^\'">\s]+)>}i',
+			array($this, '_doAutoLinks_url_callback'), $text);
 
 		# Email addresses: <address@domain.foo>
 		$text = preg_replace_callback('{
@@ -1467,49 +1522,47 @@ class MarkdownParser {
 			)
 			>
 			}xi',
-			array(&$this, '_doAutoLinks_email_callback'), $text);
-		$text = preg_replace_callback('{<(tel:([^\'">\s]+))>}i',array(&$this, '_doAutoLinks_tel_callback'), $text);
+			array($this, '_doAutoLinks_email_callback'), $text);
 
 		return $text;
 	}
-	protected function _doAutoLinks_tel_callback($matches) {
-		$url = $this->encodeAttribute($matches[1]);
-		$tel = $this->encodeAttribute($matches[2]);
-		$link = "<a href=\"$url\">$tel</a>";
-		return $this->hashPart($link);
-	}
 	protected function _doAutoLinks_url_callback($matches) {
-		$url = $this->encodeAttribute($matches[1]);
-		$link = "<a href=\"$url\">$url</a>";
+		$url = $this->encodeURLAttribute($matches[1], $text);
+		$link = "<a href=\"$url\">$text</a>";
 		return $this->hashPart($link);
 	}
 	protected function _doAutoLinks_email_callback($matches) {
-		$address = $matches[1];
-		$link = $this->encodeEmailAddress($address);
+		$addr = $matches[1];
+		$url = $this->encodeURLAttribute("mailto:$addr", $text);
+		$link = "<a href=\"$url\">$text</a>";
 		return $this->hashPart($link);
 	}
 
 
-	protected function encodeEmailAddress($addr) {
+	protected function encodeEntityObfuscatedAttribute($text, &$tail = null, $head_length = 0) {
 	#
-	#	Input: an email address, e.g. "foo@example.com"
+	#	Input: some text to obfuscate, e.g. "mailto:foo@example.com"
 	#
-	#	Output: the email address as a mailto link, with each character
-	#		of the address encoded as either a decimal or hex entity, in
-	#		the hopes of foiling most address harvesting spam bots. E.g.:
+	#	Output: the same text but with most characters encoded as either a
+	#		decimal or hex entity, in the hopes of foiling most address
+	#		harvesting spam bots. E.g.:
 	#
-	#	  <p><a href="&#109;&#x61;&#105;&#x6c;&#116;&#x6f;&#58;&#x66;o&#111;
+	#        &#109;&#x61;&#105;&#x6c;&#116;&#x6f;&#58;&#x66;o&#111;
 	#        &#x40;&#101;&#x78;&#97;&#x6d;&#112;&#x6c;&#101;&#46;&#x63;&#111;
-	#        &#x6d;">&#x66;o&#111;&#x40;&#101;&#x78;&#97;&#x6d;&#112;&#x6c;
-	#        &#101;&#46;&#x63;&#111;&#x6d;</a></p>
+	#        &#x6d;
+	#
+	#	Note: the additional output $tail is assigned the same value as the
+	#	ouput, minus the number of characters specified by $head_length.
 	#
 	#	Based by a filter by Matthew Wickline, posted to BBEdit-Talk.
-	#   With some optimizations by Milian Wolff.
+	#   With some optimizations by Milian Wolff. Forced encoding of HTML
+	#	attribute special characters by Allan Odgaard.
 	#
-		$addr = "mailto:" . $addr;
-		$chars = preg_split('/(?<!^)(?!$)/', $addr);
-		$seed = (int)abs(crc32($addr) / strlen($addr)); # Deterministic seed.
-		
+		if ($text == "") return $tail = "";
+
+		$chars = preg_split('/(?<!^)(?!$)/', $text);
+		$seed = (int)abs(crc32($text) / strlen($text)); # Deterministic seed.
+
 		foreach ($chars as $key => $char) {
 			$ord = ord($char);
 			# Ignore non-ascii chars.
@@ -1517,17 +1570,17 @@ class MarkdownParser {
 				$r = ($seed * (1 + $key)) % 100; # Pseudo-random function.
 				# roughly 10% raw, 45% hex, 45% dec
 				# '@' *must* be encoded. I insist.
-				if ($r > 90 && $char != '@') /* do nothing */;
+				# '"' and '>' have to be encoded inside the attribute
+				if ($r > 90 && strpos('@"&>', $char) === false) /* do nothing */;
 				else if ($r < 45) $chars[$key] = '&#x'.dechex($ord).';';
 				else              $chars[$key] = '&#'.$ord.';';
 			}
 		}
-		
-		$addr = implode('', $chars);
-		$text = implode('', array_slice($chars, 7)); # text without `mailto:`
-		$addr = "<a href=\"$addr\">$text</a>";
 
-		return $addr;
+		$text = implode('', $chars);
+		$tail = $head_length ? implode('', array_slice($chars, $head_length)) : $text;
+
+		return $text;
 	}
 
 
@@ -1636,7 +1689,7 @@ class MarkdownParser {
 		# appropriate number of space between each blocks.
 		
 		$text = preg_replace_callback('/^.*\t.*$/m',
-			array(&$this, '_detab_callback'), $text);
+			array($this, '_detab_callback'), $text);
 
 		return $text;
 	}
@@ -1676,7 +1729,7 @@ class MarkdownParser {
 	# Swap back in all the tags hashed by _HashHTMLBlocks.
 	#
 		return preg_replace_callback('/(.)\x1A[0-9]+\1/', 
-			array(&$this, '_unhash_callback'), $text);
+			array($this, '_unhash_callback'), $text);
 	}
 	protected function _unhash_callback($matches) {
 		return $this->html_hashes[$matches[0]];
@@ -1869,7 +1922,7 @@ class MarkdownExtraParser extends MarkdownParser {
 					(?:[ ]* '.$this->id_class_attr_catch_re.' )?  # $5 = extra id & class attr
 							(?:\n+|\Z)
 			}xm',
-			array(&$this, '_stripLinkDefinitions_callback'),
+			array($this, '_stripLinkDefinitions_callback'),
 			$text);
 		return $text;
 	}
@@ -1886,17 +1939,17 @@ class MarkdownExtraParser extends MarkdownParser {
 	### HTML Block Parser ###
 	
 	# Tags that are always treated as block tags:
-	protected $block_tags_re = 'p|div|h[1-6]|blockquote|pre|table|dl|ol|ul|address|form|fieldset|iframe|hr|legend|article|section|nav|aside|hgroup|header|footer|figcaption';
+	protected $block_tags_re = 'p|div|h[1-6]|blockquote|pre|table|dl|ol|ul|address|form|fieldset|iframe|hr|legend|article|section|nav|aside|hgroup|header|footer|figcaption|figure';
 						   
 	# Tags treated as block tags only if the opening tag is alone on its line:
-	protected $context_block_tags_re = 'script|noscript|ins|del|iframe|object|source|track|param|math|svg|canvas|audio|video';
+	protected $context_block_tags_re = 'script|noscript|style|ins|del|iframe|object|source|track|param|math|svg|canvas|audio|video';
 	
 	# Tags where markdown="1" default to span mode:
 	protected $contain_span_tags_re = 'p|h[1-6]|li|dd|dt|td|th|legend|address';
 	
 	# Tags which must not have their contents modified, no matter where 
 	# they appear:
-	protected $clean_tags_re = 'script|math|svg';
+	protected $clean_tags_re = 'script|style|math|svg';
 	
 	# Tags that do not need to be closed.
 	protected $auto_close_tags_re = 'hr|img|param|source|track';
@@ -2380,7 +2433,7 @@ class MarkdownExtraParser extends MarkdownParser {
 			  \]
 			)
 			}xs',
-			array(&$this, '_doAnchors_reference_callback'), $text);
+			array($this, '_doAnchors_reference_callback'), $text);
 
 		#
 		# Next, inline-style links: [link text](url "optional title")
@@ -2408,7 +2461,7 @@ class MarkdownExtraParser extends MarkdownParser {
 			  (?:[ ]? '.$this->id_class_attr_catch_re.' )?	 # $8 = id/class attributes
 			)
 			}xs',
-			array(&$this, '_doAnchors_inline_callback'), $text);
+			array($this, '_doAnchors_inline_callback'), $text);
 
 		#
 		# Last, handle reference-style shortcuts: [link text]
@@ -2422,7 +2475,7 @@ class MarkdownExtraParser extends MarkdownParser {
 			  \]
 			)
 			}xs',
-			array(&$this, '_doAnchors_reference_callback'), $text);
+			array($this, '_doAnchors_reference_callback'), $text);
 
 		$this->in_anchor = false;
 		return $text;
@@ -2443,7 +2496,7 @@ class MarkdownExtraParser extends MarkdownParser {
 
 		if (isset($this->urls[$link_id])) {
 			$url = $this->urls[$link_id];
-			$url = $this->encodeAttribute($url);
+			$url = $this->encodeURLAttribute($url);
 			
 			$result = "<a href=\"$url\"";
 			if ( isset( $this->titles[$link_id] ) ) {
@@ -2470,8 +2523,13 @@ class MarkdownExtraParser extends MarkdownParser {
 		$title			=& $matches[7];
 		$attr  = $this->doExtraAttributes("a", $dummy =& $matches[8]);
 
+		// if the URL was of the form <s p a c e s> it got caught by the HTML
+		// tag parser and hashed. Need to reverse the process before using the URL.
+		$unhashed = $this->unhash($url);
+		if ($unhashed != $url)
+			$url = preg_replace('/^<(.*)>$/', '\1', $unhashed);
 
-		$url = $this->encodeAttribute($url);
+		$url = $this->encodeURLAttribute($url);
 
 		$result = "<a href=\"$url\"";
 		if (isset($title)) {
@@ -2509,7 +2567,7 @@ class MarkdownExtraParser extends MarkdownParser {
 
 			)
 			}xs', 
-			array(&$this, '_doImages_reference_callback'), $text);
+			array($this, '_doImages_reference_callback'), $text);
 
 		#
 		# Next, handle inline images:  ![alt text](url "optional title")
@@ -2539,7 +2597,7 @@ class MarkdownExtraParser extends MarkdownParser {
 			  (?:[ ]? '.$this->id_class_attr_catch_re.' )?	 # $8 = id/class attributes
 			)
 			}xs',
-			array(&$this, '_doImages_inline_callback'), $text);
+			array($this, '_doImages_inline_callback'), $text);
 
 		return $text;
 	}
@@ -2554,7 +2612,7 @@ class MarkdownExtraParser extends MarkdownParser {
 
 		$alt_text = $this->encodeAttribute($alt_text);
 		if (isset($this->urls[$link_id])) {
-			$url = $this->encodeAttribute($this->urls[$link_id]);
+			$url = $this->encodeURLAttribute($this->urls[$link_id]);
 			$result = "<img src=\"$url\" alt=\"$alt_text\"";
 			if (isset($this->titles[$link_id])) {
 				$title = $this->titles[$link_id];
@@ -2581,7 +2639,7 @@ class MarkdownExtraParser extends MarkdownParser {
 		$attr  = $this->doExtraAttributes("img", $dummy =& $matches[8]);
 
 		$alt_text = $this->encodeAttribute($alt_text);
-		$url = $this->encodeAttribute($url);
+		$url = $this->encodeURLAttribute($url);
 		$result = "<img src=\"$url\" alt=\"$alt_text\"";
 		if (isset($title)) {
 			$title = $this->encodeAttribute($title);
@@ -2611,7 +2669,7 @@ class MarkdownExtraParser extends MarkdownParser {
 				(?:[ ]+ '.$this->id_class_attr_catch_re.' )?	 # $3 = id/class attributes
 				[ ]*\n(=+|-+)[ ]*\n+				# $3: Header footer
 			}mx',
-			array(&$this, '_doHeaders_callback_setext'), $text);
+			array($this, '_doHeaders_callback_setext'), $text);
 
 		# atx-style headers:
 		#	# Header 1        {#header1}
@@ -2630,7 +2688,7 @@ class MarkdownExtraParser extends MarkdownParser {
 				[ ]*
 				\n+
 			}xm',
-			array(&$this, '_doHeaders_callback_atx'), $text);
+			array($this, '_doHeaders_callback_atx'), $text);
 
 		return $text;
 	}
@@ -2681,7 +2739,7 @@ class MarkdownExtraParser extends MarkdownParser {
 				)
 				(?=\n|\Z)					# Stop at final double newline.
 			}xm',
-			array(&$this, '_doTable_leadingPipe_callback'), $text);
+			array($this, '_doTable_leadingPipe_callback'), $text);
 		
 		#
 		# Find tables without leading pipe.
@@ -2707,7 +2765,7 @@ class MarkdownExtraParser extends MarkdownParser {
 				)
 				(?=\n|\Z)					# Stop at final double newline.
 			}xm',
-			array(&$this, '_DoTable_callback'), $text);
+			array($this, '_DoTable_callback'), $text);
 
 		return $text;
 	}
@@ -2831,7 +2889,7 @@ class MarkdownExtraParser extends MarkdownParser {
 				(?>\A\n?|(?<=\n\n))
 				'.$whole_list_re.'
 			}mx',
-			array(&$this, '_doDefLists_callback'), $text);
+			array($this, '_doDefLists_callback'), $text);
 
 		return $text;
 	}
@@ -2869,7 +2927,7 @@ class MarkdownExtraParser extends MarkdownParser {
 			(?=\n?[ ]{0,3}:[ ])				# lookahead for following line feed 
 											#   with a definition mark.
 			}xm',
-			array(&$this, '_processDefListItems_callback_dt'), $list_str);
+			array($this, '_processDefListItems_callback_dt'), $list_str);
 
 		# Process actual definitions.
 		$list_str = preg_replace_callback('{
@@ -2886,7 +2944,7 @@ class MarkdownExtraParser extends MarkdownParser {
 				)						
 			)					
 			}xm',
-			array(&$this, '_processDefListItems_callback_dd'), $list_str);
+			array($this, '_processDefListItems_callback_dd'), $list_str);
 
 		return $list_str;
 	}
@@ -2954,7 +3012,7 @@ class MarkdownExtraParser extends MarkdownParser {
 				# Closing marker.
 				\1 [ ]* (?= \n )
 			}xm',
-			array(&$this, '_doFencedCodeBlocks_callback'), $text);
+			array($this, '_doFencedCodeBlocks_callback'), $text);
 
 		return $text;
 	}
@@ -2964,7 +3022,7 @@ class MarkdownExtraParser extends MarkdownParser {
 		$codeblock = $matches[4];
 		$codeblock = htmlspecialchars($codeblock, ENT_NOQUOTES);
 		$codeblock = preg_replace_callback('/^\n+/',
-			array(&$this, '_doFencedCodeBlocks_newlines'), $codeblock);
+			array($this, '_doFencedCodeBlocks_newlines'), $codeblock);
 
 		if ($classname != "") {
 			if ($classname{0} == '.')
@@ -2990,19 +3048,19 @@ class MarkdownExtraParser extends MarkdownParser {
 	# work in the middle of a word.
 	#
 	protected $em_relist = array(
-		''  => '(?:(?<!\*)\*(?!\*)|(?<![a-zA-Z0-9_])_(?!_))(?=\S|$)(?![\.,:;]\s)',
-		'*' => '(?<=\S|^)(?<!\*)\*(?!\*)',
-		'_' => '(?<=\S|^)(?<!_)_(?![a-zA-Z0-9_])',
+		''  => '(?:(?<!\*)\*(?!\*)|(?<![a-zA-Z0-9_])_(?!_))(?![\.,:;]?\s)',
+		'*' => '(?<![\s*])\*(?!\*)',
+		'_' => '(?<![\s_])_(?![a-zA-Z0-9_])',
 		);
 	protected $strong_relist = array(
-		''   => '(?:(?<!\*)\*\*(?!\*)|(?<![a-zA-Z0-9_])__(?!_))(?=\S|$)(?![\.,:;]\s)',
-		'**' => '(?<=\S|^)(?<!\*)\*\*(?!\*)',
-		'__' => '(?<=\S|^)(?<!_)__(?![a-zA-Z0-9_])',
+		''   => '(?:(?<!\*)\*\*(?!\*)|(?<![a-zA-Z0-9_])__(?!_))(?![\.,:;]?\s)',
+		'**' => '(?<![\s*])\*\*(?!\*)',
+		'__' => '(?<![\s_])__(?![a-zA-Z0-9_])',
 		);
 	protected $em_strong_relist = array(
-		''    => '(?:(?<!\*)\*\*\*(?!\*)|(?<![a-zA-Z0-9_])___(?!_))(?=\S|$)(?![\.,:;]\s)',
-		'***' => '(?<=\S|^)(?<!\*)\*\*\*(?!\*)',
-		'___' => '(?<=\S|^)(?<!_)___(?![a-zA-Z0-9_])',
+		''    => '(?:(?<!\*)\*\*\*(?!\*)|(?<![a-zA-Z0-9_])___(?!_))(?![\.,:;]?\s)',
+		'***' => '(?<![\s*])\*\*\*(?!\*)',
+		'___' => '(?<![\s_])___(?![a-zA-Z0-9_])',
 		);
 
 
@@ -3061,13 +3119,13 @@ class MarkdownExtraParser extends MarkdownParser {
 					.+				# actual text
 				|
 					\n				# newlines but 
-					(?!\[\^.+?\]:\s)# negative lookahead for footnote marker.
+					(?!\[.+?\][ ]?:\s)# negative lookahead for footnote or link definition marker.
 					(?!\n+[ ]{0,3}\S)# ensure line is not blank and followed 
 									# by non-indented content
 				)*
 			)		
 			}xm',
-			array(&$this, '_stripFootnotes_callback'),
+			array($this, '_stripFootnotes_callback'),
 			$text);
 		return $text;
 	}
@@ -3095,7 +3153,7 @@ class MarkdownExtraParser extends MarkdownParser {
 	# Append footnote list to text.
 	#
 		$text = preg_replace_callback('{F\x1Afn:(.*?)\x1A:}', 
-			array(&$this, '_appendFootnotes_callback'), $text);
+			array($this, '_appendFootnotes_callback'), $text);
 	
 		if (!empty($this->footnotes_ordered)) {
 			$text .= "\n\n";
@@ -3127,7 +3185,7 @@ class MarkdownExtraParser extends MarkdownParser {
 				$footnote .= "\n"; # Need to append newline before parsing.
 				$footnote = $this->runBlockGamut("$footnote\n");				
 				$footnote = preg_replace_callback('{F\x1Afn:(.*?)\x1A:}', 
-					array(&$this, '_appendFootnotes_callback'), $footnote);
+					array($this, '_appendFootnotes_callback'), $footnote);
 				
 				$attr = str_replace("%%", ++$num, $attr);
 				$note_id = $this->encodeAttribute($note_id);
@@ -3210,7 +3268,7 @@ class MarkdownExtraParser extends MarkdownParser {
 			^[ ]{0,'.$less_than_tab.'}\*\[(.+?)\][ ]?:	# abbr_id = $1
 			(.*)					# text = $2 (no blank lines allowed)	
 			}xm',
-			array(&$this, '_stripAbbreviations_callback'),
+			array($this, '_stripAbbreviations_callback'),
 			$text);
 		return $text;
 	}
@@ -3237,7 +3295,7 @@ class MarkdownExtraParser extends MarkdownParser {
 				'(?:'.$this->abbr_word_re.')'.
 				'(?![\w\x1A])'.
 				'}', 
-				array(&$this, '_doAbbreviations_callback'), $text);
+				array($this, '_doAbbreviations_callback'), $text);
 		}
 		return $text;
 	}
