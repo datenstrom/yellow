@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.3.16";
+	const Version = "0.3.17";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -44,7 +44,7 @@ class Yellow
 		$this->config->setDefault("contentHomeDir", "home/");
 		$this->config->setDefault("contentDefaultFile", "page.txt");
 		$this->config->setDefault("contentPagination", "page");
-		$this->config->setDefault("contentRemoveHtml", "0");
+		$this->config->setDefault("contentHtmlFilter", "0");
 		$this->config->setDefault("contentExtension", ".txt");
 		$this->config->setDefault("configExtension", ".ini");
 		$this->config->setDefault("configFile", "config.ini");
@@ -1435,7 +1435,7 @@ class YellowToolbox
 			{
 				$token = $tokens[$i];
 				if($this->normaliseName($token) != $token) $invalid = true;
-				$regex = "/^[\d\-\_\.]*".strreplaceu('-', '.', $token)."$/";
+				$regex = $invalid ? "//" : "/^[\d\-\_\.]*".strreplaceu('-', '.', $token)."$/";
 				foreach($this->getDirectoryEntries($path, $regex, false, true, false) as $entry)
 				{
 					if($this->normaliseName($entry) == $token) { $token = $entry; break; }
@@ -1446,7 +1446,7 @@ class YellowToolbox
 			$i = 1;
 			$token = $tokens[0] = rtrim($pathHome, '/');
 			if($this->normaliseName($token) != $token) $invalid = true;
-			$regex = "/^[\d\-\_\.]*".strreplaceu('-', '.', $token)."$/";
+			$regex = $invalid ? "//" : "/^[\d\-\_\.]*".strreplaceu('-', '.', $token)."$/";
 			foreach($this->getDirectoryEntries($path, $regex, false, true, false) as $entry)
 			{
 				if($this->normaliseName($entry) == $token) { $token = $entry; break; }
@@ -1461,7 +1461,7 @@ class YellowToolbox
 				$fileFolder = $tokens[$i-1].$fileExtension;
 				if($token==$fileDefault || $token==$fileFolder) $invalid = true;
 				if($this->normaliseName($token) != $token) $invalid = true;
-				$regex = "/^[\d\-\_\.]*".strreplaceu('-', '.', $token)."$/";
+				$regex = $invalid ? "//" : "/^[\d\-\_\.]*".strreplaceu('-', '.', $token)."$/";
 				foreach($this->getDirectoryEntries($path, $regex, false, false, false) as $entry)
 				{
 					if($this->normaliseName($entry) == $token) { $token = $entry; break; }
@@ -1542,18 +1542,14 @@ class YellowToolbox
 		$fileNameText = empty($matches[2]) ? $fileDefault : $matches[2].$fileExtension;
 		return dirname($fileName)."/".$fileNamePrefix.$fileNameText;
 	}
-		
-	// Normalise location arguments
-	function normaliseArgs($text, $appendSlash = true, $filterStrict = true)
-	{
-		if($appendSlash) $text .= '/';
-		if($filterStrict) $text = strreplaceu(' ', '-', strtoloweru($text));
-		return strreplaceu(array('%3A','%2F'), array(':','/'), rawurlencode($text));
-	}
 	
 	// Normalise location, make absolute location
-	function normaliseLocation($location, $pageBase, $pageLocation)
+	function normaliseLocation($location, $pageBase, $pageLocation, $filterStrict = true)
 	{
+		if($filterStrict)
+		{
+			if(preg_match("/^javascript:/i", $location)) $location = "xss";
+		}
 		if(!preg_match("/^\w+:/", html_entity_decode($location, ENT_QUOTES, "UTF-8")))
 		{
 			if(!preg_match("/^\//", $location))
@@ -1567,7 +1563,15 @@ class YellowToolbox
 		}
 		return $location;
 	}
-
+	
+	// Normalise location arguments
+	function normaliseArgs($text, $appendSlash = true, $filterStrict = true)
+	{
+		if($appendSlash) $text .= '/';
+		if($filterStrict) $text = strreplaceu(' ', '-', strtoloweru($text));
+		return strreplaceu(array('%3A','%2F'), array(':','/'), rawurlencode($text));
+	}
+	
 	// Normalise file/directory/other name
 	function normaliseName($text, $removePrefix = true, $removeExtension = false, $filterStrict = false)
 	{

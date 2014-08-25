@@ -5,7 +5,7 @@
 // Markdown extra core plugin
 class YellowMarkdownExtra
 {
-	const Version = "0.3.8";
+	const Version = "0.3.9";
 	var $yellow;		//access to API
 	
 	// Handle plugin initialisation
@@ -34,11 +34,12 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser
 		$this->yellow = $yellow;
 		$this->page = $page;
 		$this->idAttributes = array();
-		$this->no_markup = (bool)$this->yellow->config->get("contentRemoveHtml");
-		$this->no_entities = (bool)$this->yellow->config->get("contentRemoveHtml");
+		$this->no_markup = (bool)$this->yellow->config->get("contentHtmlFilter");
+		$this->no_entities = (bool)$this->yellow->config->get("contentHtmlFilter");
 		$this->url_filter_func = function($url) use ($yellow, $page)
 		{
-			return $yellow->toolbox->normaliseLocation($url, $page->base, $page->location);
+			return $yellow->toolbox->normaliseLocation($url, $page->base, $page->location,
+				(bool)$yellow->config->get("contentHtmlFilter") && $page->statusCode!=424);
 		};
 		parent::__construct();
 	}
