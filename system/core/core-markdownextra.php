@@ -5,7 +5,7 @@
 // Markdown extra core plugin
 class YellowMarkdownExtra
 {
-	const Version = "0.3.9";
+	const Version = "0.3.10";
 	var $yellow;		//access to API
 	
 	// Handle plugin initialisation
@@ -18,7 +18,7 @@ class YellowMarkdownExtra
 	function onParseContentText($page, $text)
 	{
 		$markdown = new YellowMarkdownExtraParser($this->yellow, $page);
-		return $markdown->transformText($text);
+		return $markdown->transform($text);
 	}
 }
 
@@ -44,13 +44,13 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser
 		parent::__construct();
 	}
 	
-	// Transform page text
-	function transformText($text)
+	// Transform text
+	function transform($text)
 	{
 		$text = preg_replace("/@pageRead/i", $this->page->get("pageRead"), $text);
 		$text = preg_replace("/@pageEdit/i", $this->page->get("pageEdit"), $text);
 		$text = preg_replace("/@pageError/i", $this->page->get("pageError"), $text);
-		return $this->transform($text);
+		return parent::transform($text);
 	}
 
 	// Return unique id attribute
@@ -83,7 +83,7 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser
 	{
 		$text = preg_replace("/\s+/s", " ", $matches[2]);
 		$output = $this->page->parseType($matches[1], $text, true);
-		if(is_null($output)) $output = $matches[0];
+		if(is_null($output)) $output = htmlspecialchars($matches[0], ENT_NOQUOTES);
 		return $this->hashBlock($output);
 	}
 
