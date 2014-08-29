@@ -5,7 +5,7 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.3.6";
+	const Version = "0.3.7";
 	var $yellow;				//access to API
 	var $users;					//web interface users
 	var $active;				//web interface is active? (boolean)
@@ -103,10 +103,11 @@ class YellowWebinterface
 			$header .= "// <![CDATA[\n";
 			if($this->isUser())
 			{
-				$header .= "yellow.page.userPermission = " .json_encode($this->userPermission).";\n";
+				$header .= "yellow.page.userPermission = ".json_encode($this->userPermission).";\n";
 				$header .= "yellow.page.rawDataSource = ".json_encode($this->rawDataSource).";\n";
 				$header .= "yellow.page.rawDataEdit = ".json_encode($this->rawDataEdit).";\n";
 				$header .= "yellow.page.rawDataNew = ".json_encode($this->getDataNew()).";\n";
+				$header .= "yellow.page.parserSafeMode = ".json_encode($page->parserSafeMode).";\n";
 				$header .= "yellow.page.statusCode = ".json_encode($page->statusCode).";\n";
 			}
 			$header .= "yellow.config = ".json_encode($this->getDataConfig()).";\n";

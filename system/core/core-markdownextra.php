@@ -5,7 +5,7 @@
 // Markdown extra core plugin
 class YellowMarkdownExtra
 {
-	const Version = "0.3.10";
+	const Version = "0.3.11";
 	var $yellow;		//access to API
 	
 	// Handle plugin initialisation
@@ -34,12 +34,12 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser
 		$this->yellow = $yellow;
 		$this->page = $page;
 		$this->idAttributes = array();
-		$this->no_markup = (bool)$this->yellow->config->get("contentHtmlFilter");
-		$this->no_entities = (bool)$this->yellow->config->get("contentHtmlFilter");
+		$this->no_markup = $page->parserSafeMode;
+		$this->no_entities = $page->parserSafeMode;
 		$this->url_filter_func = function($url) use ($yellow, $page)
 		{
 			return $yellow->toolbox->normaliseLocation($url, $page->base, $page->location,
-				(bool)$yellow->config->get("contentHtmlFilter") && $page->statusCode!=424);
+				$page->parserSafeMode && $page->statusCode==200);
 		};
 		parent::__construct();
 	}
@@ -2947,6 +2947,11 @@ class MarkdownExtraParser extends MarkdownParser {
 			}xm',
 			array($this, '_processDefListItems_callback_dd'), $list_str);
 
+		# Catch unescaped text, security bugfix for https://github.com/michelf/php-markdown/issues/175
+		if(preg_match("/^(?!\n<dt>)(.*?)(<dd>.*)$/s", $list_str, $matches))
+		{
+			$list_str = "<dt>".$this->runSpanGamut($matches[1])."</dt>\n".$matches[2];
+		}
 		return $list_str;
 	}
 	protected function _processDefListItems_callback_dt($matches) {

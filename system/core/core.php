@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.3.17";
+	const Version = "0.3.18";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -23,9 +23,8 @@ class Yellow
 		$this->config->setDefault("sitename", "Yellow");
 		$this->config->setDefault("author", "Yellow");
 		$this->config->setDefault("language", "en");
-		$this->config->setDefault("template", "default");
 		$this->config->setDefault("style", "default");
-		$this->config->setDefault("parser", "markdownextra");
+		$this->config->setDefault("template", "default");
 		$this->config->setDefault("serverScheme", $this->toolbox->getServerScheme());
 		$this->config->setDefault("serverName", $this->toolbox->getServerName());
 		$this->config->setDefault("serverBase", $this->toolbox->getServerBase());
@@ -44,12 +43,13 @@ class Yellow
 		$this->config->setDefault("contentHomeDir", "home/");
 		$this->config->setDefault("contentDefaultFile", "page.txt");
 		$this->config->setDefault("contentPagination", "page");
-		$this->config->setDefault("contentHtmlFilter", "0");
 		$this->config->setDefault("contentExtension", ".txt");
 		$this->config->setDefault("configExtension", ".ini");
 		$this->config->setDefault("configFile", "config.ini");
 		$this->config->setDefault("errorPageFile", "error(.*).txt");
 		$this->config->setDefault("textStringFile", "text(.*).ini");
+		$this->config->setDefault("parser", "markdownextra");
+		$this->config->setDefault("parserSafeMode", "0");
 		$this->config->load($this->config->get("configDir").$this->config->get("configFile"));
 		$this->text->load($this->config->get("configDir").$this->config->get("textStringFile"));
 		$this->updateConfig();
@@ -329,6 +329,7 @@ class YellowPage
 	var $headerData;			//response header
 	var $parserData;			//content data of page
 	var $parser;				//content parser
+	var $parserSafeMode;		//page is parsed in safe mode? (boolean)
 	var $active;				//page is active location? (boolean)
 	var $visible;				//page is visible location? (boolean)
 	var $cacheable;				//page is cacheable? (boolean)
@@ -351,6 +352,7 @@ class YellowPage
 	function parseData($rawData, $cacheable, $statusCode, $pageError = "")
 	{
 		$this->rawData = $rawData;
+		$this->parserSafeMode = $this->yellow->config->get("parserSafeMode");
 		$this->active = $this->yellow->toolbox->isActiveLocation($this->location, $this->yellow->page->location);
 		$this->visible = $this->yellow->toolbox->isVisibleLocation($this->location, $this->fileName,
 			$this->yellow->config->get("contentDir"));
@@ -386,10 +388,10 @@ class YellowPage
 		$this->set("sitename", $this->yellow->config->get("sitename"));
 		$this->set("author", $this->yellow->config->get("author"));
 		$this->set("language", $this->yellow->config->get("language"));
-		$this->set("template", $this->yellow->toolbox->findNameFromFile($this->fileName,
-			$this->yellow->config->get("templateDir"), $this->yellow->config->get("template"), ".php"));
 		$this->set("style", $this->yellow->toolbox->findNameFromFile($this->fileName,
 			$this->yellow->config->get("styleDir"), $this->yellow->config->get("style"), ".css"));
+		$this->set("template", $this->yellow->toolbox->findNameFromFile($this->fileName,
+			$this->yellow->config->get("templateDir"), $this->yellow->config->get("template"), ".php"));
 		$this->set("parser", $this->yellow->config->get("parser"));
 		
 		if(preg_match("/^(\-\-\-[\r\n]+)(.+?)([\r\n]+\-\-\-[\r\n]+)/s", $this->rawData, $parsed))
@@ -1522,7 +1524,7 @@ class YellowToolbox
 		return $fileNames;
 	}
 	
-	// Return file/template/style name from file path
+	// Return file/style/template name from file path
 	function findNameFromFile($fileName, $pathBase, $nameDefault, $fileExtension, $includeFileName = false)
 	{
 		$name = "";
@@ -1546,10 +1548,6 @@ class YellowToolbox
 	// Normalise location, make absolute location
 	function normaliseLocation($location, $pageBase, $pageLocation, $filterStrict = true)
 	{
-		if($filterStrict)
-		{
-			if(preg_match("/^javascript:/i", $location)) $location = "xss";
-		}
 		if(!preg_match("/^\w+:/", html_entity_decode($location, ENT_QUOTES, "UTF-8")))
 		{
 			if(!preg_match("/^\//", $location))
@@ -1560,6 +1558,8 @@ class YellowToolbox
 			{
 				$location = $pageBase.$location;
 			}
+		} else {
+			if($filterStrict && !preg_match("/^(http|https|ftp|mailto):/", $location)) $location = "error-xss-filter";
 		}
 		return $location;
 	}
