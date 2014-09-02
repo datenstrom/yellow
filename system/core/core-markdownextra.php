@@ -5,7 +5,7 @@
 // Markdown extra core plugin
 class YellowMarkdownExtra
 {
-	const Version = "0.3.11";
+	const Version = "0.3.12";
 	var $yellow;		//access to API
 	
 	// Handle plugin initialisation
@@ -2856,6 +2856,9 @@ class MarkdownExtraParser extends MarkdownParser {
 	#
 	# Form HTML definition lists.
 	#
+		# Prevent unescaped text, security bugfix for https://github.com/michelf/php-markdown/issues/175
+		if ($this->no_markup) return $text;
+									  
 		$less_than_tab = $this->tab_width - 1;
 
 		# Re-usable pattern to match any entire dl list:
@@ -2947,11 +2950,6 @@ class MarkdownExtraParser extends MarkdownParser {
 			}xm',
 			array($this, '_processDefListItems_callback_dd'), $list_str);
 
-		# Catch unescaped text, security bugfix for https://github.com/michelf/php-markdown/issues/175
-		if(preg_match("/^(?!\n<dt>)(.*?)(<dd>.*)$/s", $list_str, $matches))
-		{
-			$list_str = "<dt>".$this->runSpanGamut($matches[1])."</dt>\n".$matches[2];
-		}
 		return $list_str;
 	}
 	protected function _processDefListItems_callback_dt($matches) {

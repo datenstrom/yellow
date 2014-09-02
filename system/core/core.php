@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.3.18";
+	const Version = "0.3.19";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -1399,11 +1399,16 @@ class YellowToolbox
 	function isVisibleLocation($location, $fileName, $pathBase)
 	{
 		$visible = true;
-		if(substru($fileName, 0, strlenu($pathBase)) == $pathBase) $fileName = substru($fileName, strlenu($pathBase));
-		$tokens = explode('/', $fileName);
-		for($i=0; $i<count($tokens)-1; ++$i)
+		if(substru($fileName, 0, strlenu($pathBase)) == $pathBase)
 		{
-			if(!preg_match("/^[\d\-\_\.]+(.*)$/", $tokens[$i])) { $visible = false; break; }
+			$fileName = substru($fileName, strlenu($pathBase));
+			$tokens = explode('/', $fileName);
+			for($i=0; $i<count($tokens)-1; ++$i)
+			{
+				if(!preg_match("/^[\d\-\_\.]+(.*)$/", $tokens[$i])) { $visible = false; break; }
+			}
+		} else {
+			$visible = false;
 		}
 		return $visible;
 	}
@@ -1412,17 +1417,24 @@ class YellowToolbox
 	function findLocationFromFile($fileName, $pathBase, $pathHome, $fileDefault, $fileExtension)
 	{
 		$location = "/";
-		if(substru($fileName, 0, strlenu($pathBase)) == $pathBase) $fileName = substru($fileName, strlenu($pathBase));
-		$tokens = explode('/', $fileName);
-		for($i=0; $i<count($tokens)-1; ++$i)
+		if(substru($fileName, 0, strlenu($pathBase)) == $pathBase)
 		{
-			$token = $this->normaliseName($tokens[$i]).'/';
-			if($i || $token!=$pathHome) $location .= $token;
+			$fileName = substru($fileName, strlenu($pathBase));
+			$tokens = explode('/', $fileName);
+			for($i=0; $i<count($tokens)-1; ++$i)
+			{
+				$token = $this->normaliseName($tokens[$i]).'/';
+				if($i || $token!=$pathHome) $location .= $token;
+			}
+			$token = $this->normaliseName($tokens[$i]);
+			$fileFolder = $this->normaliseName($tokens[$i-1]).$fileExtension;
+			if($token!=$fileDefault && $token!=$fileFolder) $location .= $this->normaliseName($tokens[$i], true, true);
+			$extension = ($pos = strrposu($fileName, '.')) ? substru($fileName, $pos) : "";
+			if($extension != $fileExtension) $invalid = true;
+		} else {
+			$invalid = true;
 		}
-		$token = $this->normaliseName($tokens[$i]);
-		$fileFolder = $this->normaliseName($tokens[$i-1]).$fileExtension;
-		if($token!=$fileDefault && $token!=$fileFolder) $location .= $this->normaliseName($tokens[$i], true, true);
-		return $location;
+		return $invalid ? "" : $location;
 	}
 	
 	// Return file path from location
@@ -1548,7 +1560,7 @@ class YellowToolbox
 	// Normalise location, make absolute location
 	function normaliseLocation($location, $pageBase, $pageLocation, $filterStrict = true)
 	{
-		if(!preg_match("/^\w+:/", html_entity_decode($location, ENT_QUOTES, "UTF-8")))
+		if(!preg_match("/^\w+:/", trim(html_entity_decode($location, ENT_QUOTES, "UTF-8"))))
 		{
 			if(!preg_match("/^\//", $location))
 			{
