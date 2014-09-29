@@ -5,7 +5,7 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.3.7";
+	const Version = "0.4.1";
 	var $yellow;				//access to API
 	var $users;					//web interface users
 	var $active;				//web interface is active? (boolean)
@@ -24,8 +24,8 @@ class YellowWebinterface
 		$this->yellow->config->setDefault("webinterfaceUserHashAlgorithm", "bcrypt");
 		$this->yellow->config->setDefault("webinterfaceUserHashCost", "10");
 		$this->yellow->config->setDefault("webinterfaceUserFile", "user.ini");
-		$this->yellow->config->setDefault("webinterfaceDefaultEmail", "");
-		$this->yellow->config->setDefault("webinterfaceDefaultPassword", "");
+		$this->yellow->config->setDefault("webinterfaceEmail", "");
+		$this->yellow->config->setDefault("webinterfacePassword", "");
 		$this->yellow->config->setDefault("webinterfaceNewPage", "default");
 		$this->yellow->config->setDefault("webinterfaceFilePrefix", "published");
 		$this->users = new YellowWebinterfaceUsers($yellow);
@@ -435,8 +435,9 @@ class YellowWebinterface
 		$page->fileName = $this->yellow->toolbox->findFileFromTitle(
 			$page->get($this->yellow->config->get("webinterfaceFilePrefix")), $page->get("title"), $fileName,
 			$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
-		$page->location = $this->yellow->toolbox->findLocationFromFile($page->fileName,
-			$this->yellow->config->get("contentDir"), $this->yellow->config->get("contentHomeDir"),
+		$page->location = $this->yellow->toolbox->findLocationFromFile(
+			$page->fileName, $this->yellow->config->get("contentDir"),
+			$this->yellow->config->get("contentRootDir"), $this->yellow->config->get("contentHomeDir"),
 			$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
 		if($this->yellow->pages->find($page->location))
 		{
@@ -450,8 +451,9 @@ class YellowWebinterface
 				$page->fileName = $this->yellow->toolbox->findFileFromTitle(
 					$page->get($this->yellow->config->get("webinterfaceFilePrefix")), $titleText.$titleNumber, $fileName,
 					$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
-				$page->location = $this->yellow->toolbox->findLocationFromFile($page->fileName,
-					$this->yellow->config->get("contentDir"), $this->yellow->config->get("contentHomeDir"),
+				$page->location = $this->yellow->toolbox->findLocationFromFile(
+					$page->fileName, $this->yellow->config->get("contentDir"),
+					$this->yellow->config->get("contentRootDir"), $this->yellow->config->get("contentHomeDir"),
 					$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
 				if(!$this->yellow->pages->find($page->location)) { $ok = true; break; }
 			}
@@ -477,8 +479,9 @@ class YellowWebinterface
 				$page->fileName = $this->yellow->toolbox->findFileFromTitle(
 					$page->get($prefix), $page->get("title"), $fileName,
 					$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
-				$page->location = $this->yellow->toolbox->findLocationFromFile($page->fileName,
-					$this->yellow->config->get("contentDir"), $this->yellow->config->get("contentHomeDir"),
+				$page->location = $this->yellow->toolbox->findLocationFromFile(
+					$page->fileName, $this->yellow->config->get("contentDir"),
+					$this->yellow->config->get("contentRootDir"), $this->yellow->config->get("contentHomeDir"),
 					$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
 				if($pageSource->location!=$page->location && $this->yellow->pages->find($page->location))
 				{
@@ -493,8 +496,9 @@ class YellowWebinterface
 	// Return content data for new page
 	function getDataNew($title = "")
 	{
-		$fileName = $this->yellow->toolbox->findFileFromLocation($this->yellow->page->location,
-			$this->yellow->config->get("contentDir"), $this->yellow->config->get("contentHomeDir"),
+		$fileName = $this->yellow->toolbox->findFileFromLocation(
+			$this->yellow->page->location, $this->yellow->config->get("contentDir"),
+			$this->yellow->config->get("contentRootDir"), $this->yellow->config->get("contentHomeDir"),
 			$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
 		$fileName = $this->yellow->toolbox->findNameFromFile($fileName,
 			$this->yellow->config->get("configDir"), $this->yellow->config->get("webinterfaceNewPage"),
@@ -523,8 +527,8 @@ class YellowWebinterface
 			$data["serverName"] = $this->yellow->config->get("serverName");
 			$data["serverBase"] = $this->yellow->config->get("serverBase");
 		} else {
-			$data["webinterfaceDefaultEmail"] = $this->yellow->config->get("webinterfaceDefaultEmail");
-			$data["webinterfaceDefaultPassword"] = $this->yellow->config->get("webinterfaceDefaultPassword");
+			$data["webinterfaceEmail"] = $this->yellow->config->get("webinterfaceEmail");
+			$data["webinterfacePassword"] = $this->yellow->config->get("webinterfacePassword");
 		}
 		return $data;
 	}

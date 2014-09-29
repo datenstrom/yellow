@@ -5,7 +5,7 @@
 // Command line core plugin
 class YellowCommandline
 {
-	const Version = "0.3.7";
+	const Version = "0.4.1";
 	var $yellow;				//access to API
 	var $content;				//number of content pages
 	var $media;					//number of media files
@@ -106,7 +106,7 @@ class YellowCommandline
 		if(empty($location))
 		{
 			$statusCode = $this->cleanStatic($location, $path);
-			foreach($this->yellow->pages->index(true) as $page)
+			foreach($this->yellow->pages->index(true, true) as $page)
 			{
 				$statusCode = max($statusCode, $this->buildStaticLocation($page->location, $path, true));
 			}
