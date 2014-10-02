@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.4.1";
+	const Version = "0.4.2";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -82,8 +82,8 @@ class Yellow
 		if($this->page->isError() || $statusCodeRequest>=400) $statusCode = $this->processRequestError($statusCodeRequest);
 		ob_end_flush();
 		$this->toolbox->timerStop($time);
-		if(defined("DEBUG") && DEBUG>=1) echo "Yellow::request status:$statusCode location:$location<br>\n";
-		if(defined("DEBUG") && DEBUG>=1) echo "Yellow::request time:$time ms<br>\n";
+		if(defined("DEBUG") && DEBUG>=1) echo "Yellow::request status:$statusCode location:$location<br/>\n";
+		if(defined("DEBUG") && DEBUG>=1) echo "Yellow::request time:$time ms<br/>\n";
 		return $statusCode;
 	}
 	
@@ -106,10 +106,12 @@ class Yellow
 					$fileName = $this->readPage($serverScheme, $serverName, $base, $location, $fileName, $cacheable, $statusCode);
 				}
 			} else {
-				if($this->toolbox->isFileLocation($location) && $this->isContentDirectory("$location/"))
+				if(($this->toolbox->isFileLocation($location) && $this->isContentDirectory("$location/")) ||
+				   ($location=="/" && $this->config->get("multiLanguageMode")))
 				{
 					$statusCode = 301;
-					$locationHeader = $this->toolbox->getLocationHeader($serverScheme, $serverName, $base, "$location/");
+					$location = $this->toolbox->isFileLocation($location) ? "$location/" : "/".$this->config->get("language")."/";
+					$locationHeader = $this->toolbox->getLocationHeader($serverScheme, $serverName, $base, $location);
 					$this->sendStatus($statusCode, $locationHeader);
 				} else {
 					$statusCode = 404;
@@ -120,7 +122,7 @@ class Yellow
 			$fileName = $this->readPage($serverScheme, $serverName, $base, $location, $fileName, $cacheable, $statusCode);
 		}
 		if($this->page->statusCode != 0) $statusCode = $this->sendPage();
-		if(defined("DEBUG") && DEBUG>=1) echo "Yellow::processRequest handler:$handler file:$fileName<br>\n";
+		if(defined("DEBUG") && DEBUG>=1) echo "Yellow::processRequest handler:$handler file:$fileName<br/>\n";
 		return $statusCode;
 	}
 	
@@ -133,7 +135,7 @@ class Yellow
 		$fileName = $this->readPage($this->page->serverScheme, $this->page->serverName, $this->page->base, $this->page->location,
 			$this->page->fileName, $this->page->cacheable, $this->page->statusCode, $this->page->get("pageError"));
 		$statusCode = $this->sendPage();
-		if(defined("DEBUG") && DEBUG>=1) echo "Yellow::processRequestError handler:$handler file:$fileName<br>\n";
+		if(defined("DEBUG") && DEBUG>=1) echo "Yellow::processRequestError handler:$handler file:$fileName<br/>\n";
 		return $statusCode;		
 	}
 	
@@ -203,13 +205,15 @@ class Yellow
 		{
 			@header($this->toolbox->getHttpStatusFormatted($statusCode));
 			foreach($this->page->headerData as $key=>$value) @header("$key: $value");
+		} else {
+			if($statusCode>=301 && $statusCode<=303) $this->sendStaticRedirect();
 		}
 		if(defined("DEBUG") && DEBUG>=1)
 		{
-			foreach($this->page->headerData as $key=>$value) echo "Yellow::sendPage $key: $value<br>\n";
+			foreach($this->page->headerData as $key=>$value) echo "Yellow::sendPage $key: $value<br/>\n";
 			$fileNameTemplate = $this->config->get("templateDir").$this->page->get("template").".php";
 			$parserName = $this->page->get("parser");
-			echo "Yellow::sendPage template:$fileNameTemplate style:$fileNameStyle parser:$parserName<br>\n";
+			echo "Yellow::sendPage template:$fileNameTemplate style:$fileNameStyle parser:$parserName<br/>\n";
 		}
 		return $statusCode;
 	}
@@ -221,9 +225,25 @@ class Yellow
 		{
 			@header($this->toolbox->getHttpStatusFormatted($statusCode));
 			if(!empty($responseHeader)) @header($responseHeader);
+		} else {
+			if(!empty($responseHeader))
+			{
+				$this->page->header($responseHeader);
+				$this->page->header("Last-Modified: ".$this->toolbox->getHttpTimeFormatted(time()));
+				if($statusCode>=301 && $statusCode<=303) $this->sendStaticRedirect();
+			}
 		}
 	}
 
+	// Send static redirect response
+	function sendStaticRedirect()
+	{
+		echo "<!DOCTYPE html><html>\n<head>\n";
+		echo "<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" />\n";
+		echo "<meta http-equiv=\"refresh\" content=\"0;url=".htmlspecialchars($this->page->getHeader("Location"))."\" />\n";
+		echo "</head>\n</html>";
+	}
+	
 	// Return request information
 	function getRequestInformation($serverScheme = "", $serverName = "", $base = "")
 	{
@@ -350,7 +370,8 @@ class YellowPage
 	{
 		$this->rawData = $rawData;
 		$this->parserSafeMode = $this->yellow->config->get("parserSafeMode");
-		$this->active = $this->yellow->toolbox->isActiveLocation($this->location, $this->yellow->page->location);
+		$this->active = $this->yellow->toolbox->isActiveLocation($this->location, $this->yellow->page->location,
+			$this->yellow->pages->getHomeLocation($this->yellow->page->location));
 		$this->visible = $this->yellow->toolbox->isVisibleLocation($this->location, $this->fileName,
 			$this->yellow->config->get("contentDir"));
 		$this->cacheable = $cacheable;
@@ -1454,13 +1475,13 @@ class YellowToolbox
 	}
 	
 	// Check if location is within current HTTP request
-	function isActiveLocation($location, $currentLocation)
+	function isActiveLocation($location, $currentLocation, $homeLocation)
 	{
-		if($location != "/")
+		if($location != $homeLocation)
 		{
 			$active = substru($currentLocation, 0, strlenu($location))==$location;
 		} else {
-			$active = $currentLocation==$location;
+			$active = $this->getDirectoryLocation($currentLocation)==$location;
 		}
 		return $active;
 	}
@@ -1831,7 +1852,7 @@ class YellowToolbox
 	// Return directory location
 	function getDirectoryLocation($location)
 	{
-		return ($pos = strrposu($location, '/')) ? substru($location, 0, $pos+1) : "/";
+		return ($pos = strrposu($location, '/')) ? substru($location, 0, $pos+1) : "";
 	}
 	
 	// Return files and directories

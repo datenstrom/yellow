@@ -5,7 +5,7 @@
 // Command line core plugin
 class YellowCommandline
 {
-	const Version = "0.4.1";
+	const Version = "0.4.2";
 	var $yellow;				//access to API
 	var $content;				//number of content pages
 	var $media;					//number of media files
@@ -106,9 +106,9 @@ class YellowCommandline
 		if(empty($location))
 		{
 			$statusCode = $this->cleanStatic($location, $path);
-			foreach($this->yellow->pages->index(true, true) as $page)
+			foreach($this->getStaticLocations() as $location)
 			{
-				$statusCode = max($statusCode, $this->buildStaticLocation($page->location, $path, true));
+				$statusCode = max($statusCode, $this->buildStaticLocation($location, $path, true));
 			}
 			foreach($this->locationsArguments as $location)
 			{
@@ -162,7 +162,6 @@ class YellowCommandline
 			$modified = strtotime($this->yellow->page->getHeader("Last-Modified"));
 			$fileName = $this->getStaticFileName($location, $path);
 			$fileData = ob_get_contents();
-			if($statusCode>=301 && $statusCode<=303) $fileData = $this->getStaticRedirect($this->yellow->page->getHeader("Location"));
 			if(!$this->yellow->toolbox->createFile($fileName, $fileData, true) ||
 			   !$this->yellow->toolbox->modifyFile($fileName, $modified))
 			{
@@ -183,6 +182,7 @@ class YellowCommandline
 			++$this->error;
 			echo "ERROR building content location '$location', ".$this->yellow->page->getStatusCode(true)."\n";
 		}
+		if(defined("DEBUG") && DEBUG>=3) echo $fileData;
 		if(defined("DEBUG") && DEBUG>=1) echo "YellowCommandline::buildStaticLocation status:$statusCode location:$location\n";
 		return $statusCode;
 	}
@@ -380,6 +380,15 @@ class YellowCommandline
 		return !empty($serverScheme) && !empty($serverName) && $this->yellow->toolbox->isValidLocation($serverBase) && $serverBase!="/";
 	}
 	
+	// Return all static locations from file system
+	function getStaticLocations()
+	{
+		$locations = array();
+		foreach($this->yellow->pages->index(true, true) as $page) array_push($locations, $page->location);
+		if(!$this->yellow->pages->find("/") && $this->yellow->config->get("multiLanguageMode")) array_unshift($locations, "/");
+		return $locations;
+	}
+	
 	// Return static file name from location
 	function getStaticFileName($location, $path)
 	{
@@ -389,21 +398,6 @@ class YellowCommandline
 			$fileName .= $this->yellow->config->get("commandlineDefaultFile");
 		}
 		return $fileName;
-	}
-	
-	// Return static redirect data
-	function getStaticRedirect($location)
-	{
-		$serverScheme = $this->yellow->config->get("serverScheme");
-		$serverName = $this->yellow->config->get("serverName");
-		$url = $this->yellow->toolbox->getUrl($serverScheme, $serverName, "", $location);
-		$text  = "<!DOCTYPE html><html>\n";
-		$text .= "<head>\n";
-		$text .= "<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" />\n";
-		$text .= "<meta http-equiv=\"refresh\" content=\"0;url=$url\" />\n";
-		$text .= "</head>\n";
-		$text .= "</html>\n";
-		return $text;
 	}
 	
 	// Return command help
