@@ -1852,7 +1852,7 @@ class YellowToolbox
 	// Return directory location
 	function getDirectoryLocation($location)
 	{
-		return ($pos = strrposu($location, '/')) ? substru($location, 0, $pos+1) : "";
+		return ($pos = strrposu($location, '/')) ? substru($location, 0, $pos+1) : "/";
 	}
 	
 	// Return files and directories
