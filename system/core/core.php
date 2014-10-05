@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.4.2";
+	const Version = "0.4.3";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -810,8 +810,8 @@ class YellowPageCollection extends ArrayObject
 		{
 			$pagination = $this->yellow->config->get("contentPagination");
 			$location = $this->yellow->page->getLocation();
-			$locationArgs = $this->yellow->toolbox->getLocationArgs($pagination,
-				$pageNumber>1 ? "$pagination:$pageNumber" : "$pagination:");
+			$locationArgs = $this->yellow->toolbox->getLocationArgsNew(
+				$pageNumber>1 ? "$pagination:$pageNumber" : "$pagination:", $pagination);
 		}
 		return $location.$locationArgs;
 	}
@@ -887,22 +887,10 @@ class YellowPages
 	}
 	
 	// Return page collection with top-level navigation
-	function top($showInvisible = false, $showLanguages = false)
+	function top($showInvisible = false)
 	{
-		$rootLocation = $showLanguages ? "" : $this->getRootLocation($this->yellow->page->location);
-		$pages = $this->findChildren($rootLocation, $showInvisible);
-		if($showLanguages)
-		{
-			$this->scanChildren($rootLocation);
-			foreach($this->pages[$rootLocation] as $page)
-			{
-				if($home = $this->find(substru($page->location, 4)))
-				{
-					if($home->isVisible() || $showInvisible) $pages->append($home);
-				}
-			}
-		}
-		return $pages;
+		$rootLocation = $this->getRootLocation($this->yellow->page->location);
+		return $this->findChildren($rootLocation, $showInvisible);
 	}
 	
 	// Return page collection with path ancestry
@@ -915,6 +903,23 @@ class YellowPages
 			for(; $parent = $page->getParent(); $page=$parent) $pages->prepend($parent);
 			$home = $this->find($this->getHomeLocation($page->location));
 			if($home && $home->location!=$page->location) $pages->prepend($home);
+		}
+		return $pages;
+	}
+	
+	// Return page collection with multiple languages
+	function translation($location, $absoluteLocation = false, $showInvisible = false)
+	{
+		$pages = new YellowPageCollection($this->yellow);
+		if($absoluteLocation) $location = substru($location, strlenu($this->yellow->page->base));
+		$postfix = substru($location, strlenu($this->getRootLocation($location)) - 4);
+		$this->scanChildren("");
+		foreach($this->pages[""] as $page)
+		{
+			if($content = $this->find(substru($page->location, 4).$postfix))
+			{
+				if($content->isVisible() || $showInvisible) $pages->append($content);
+			}
 		}
 		return $pages;
 	}
@@ -1222,6 +1227,12 @@ class YellowText
 		return ($this->isText($key, $language)) ? $this->text[$language][$key] : "[$key]";
 	}
 	
+	// Return text string for specific language, HTML encoded
+	function getTextHtml($key, $language)
+	{
+		return htmlspecialchars($this->getText($key, $language));
+	}
+	
 	// Return text string
 	function get($key)
 	{
@@ -1351,7 +1362,14 @@ class YellowToolbox
 	}
 	
 	// Return location arguments from current HTTP request
-	function getLocationArgs($pagination, $arg = "")
+	function getLocationArgs()
+	{
+		if(preg_match("/^(.*?\/)([^\/]+:.*)$/", $this->getLocation(), $matches)) $locationArgs = $matches[2];
+		return $locationArgs;
+	}
+	
+	// Return location arguments from current HTTP request, modify an argument
+	function getLocationArgsNew($arg, $pagination)
 	{
 		preg_match("/^(.*?):(.*)$/", $arg, $args);
 		if(preg_match("/^(.*?\/)([^\/]+:.*)$/", $this->getLocation(), $matches))
