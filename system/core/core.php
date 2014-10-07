@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.4.3";
+	const Version = "0.4.4";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -77,7 +77,7 @@ class Yellow
 		if($statusCode == 0)
 		{
 			$this->pages->requestHandler = "core";
-			$statusCode = $this->processRequest($serverScheme, $serverName, $base, $location, $fileName, true, $statusCode);
+			$statusCode = $this->processRequest($serverScheme, $serverName, $base, $location, $fileName, $statusCode, true);
 		}
 		if($this->page->isError() || $statusCodeRequest>=400) $statusCode = $this->processRequestError($statusCodeRequest);
 		ob_end_flush();
@@ -88,7 +88,7 @@ class Yellow
 	}
 	
 	// Process request
-	function processRequest($serverScheme, $serverName, $base, $location, $fileName, $cacheable, $statusCode)
+	function processRequest($serverScheme, $serverName, $base, $location, $fileName, $statusCode, $cacheable)
 	{
 		$handler = $this->getRequestHandler();
 		if($statusCode == 0)
@@ -100,26 +100,26 @@ class Yellow
 					$statusCode = 303;
 					$locationArgs = $this->toolbox->getLocationArgsCleanUrl($this->config->get("contentPagination"));
 					$locationHeader = $this->toolbox->getLocationHeader($serverScheme, $serverName, $base, $location.$locationArgs);
-					$this->sendStatus($statusCode, $locationHeader);
+					$this->sendStatus($statusCode, false, $locationHeader);
 				} else {
 					$statusCode = 200;
-					$fileName = $this->readPage($serverScheme, $serverName, $base, $location, $fileName, $cacheable, $statusCode);
+					$fileName = $this->readPage($serverScheme, $serverName, $base, $location, $fileName, $statusCode, $cacheable);
 				}
 			} else {
 				if(($this->toolbox->isFileLocation($location) && $this->isContentDirectory("$location/")) ||
 				   ($location=="/" && $this->config->get("multiLanguageMode")))
 				{
 					$statusCode = 301;
-					$location = $this->toolbox->isFileLocation($location) ? "$location/" : "/".$this->config->get("language")."/";
+					$location = $this->toolbox->isFileLocation($location) ? "$location/" : "/".$this->getRequestLanguage()."/";
 					$locationHeader = $this->toolbox->getLocationHeader($serverScheme, $serverName, $base, $location);
-					$this->sendStatus($statusCode, $locationHeader);
+					$this->sendStatus($statusCode, false, $locationHeader);
 				} else {
 					$statusCode = 404;
-					$fileName = $this->readPage($serverScheme, $serverName, $base, $location, $fileName, $cacheable, $statusCode);
+					$fileName = $this->readPage($serverScheme, $serverName, $base, $location, $fileName, $statusCode, $cacheable);
 				}
 			}
 		} else if($statusCode >= 400) {
-			$fileName = $this->readPage($serverScheme, $serverName, $base, $location, $fileName, $cacheable, $statusCode);
+			$fileName = $this->readPage($serverScheme, $serverName, $base, $location, $fileName, $statusCode, $cacheable);
 		}
 		if($this->page->statusCode != 0) $statusCode = $this->sendPage();
 		if(defined("DEBUG") && DEBUG>=1) echo "Yellow::processRequest handler:$handler file:$fileName<br/>\n";
@@ -133,14 +133,14 @@ class Yellow
 		$handler = $this->getRequestHandler();
 		if($statusCodeRequest >= 400) $this->page->error($statusCodeRequest, "Request error");
 		$fileName = $this->readPage($this->page->serverScheme, $this->page->serverName, $this->page->base, $this->page->location,
-			$this->page->fileName, $this->page->cacheable, $this->page->statusCode, $this->page->get("pageError"));
+			$this->page->fileName, $this->page->statusCode, $this->page->cacheable, $this->page->get("pageError"));
 		$statusCode = $this->sendPage();
 		if(defined("DEBUG") && DEBUG>=1) echo "Yellow::processRequestError handler:$handler file:$fileName<br/>\n";
 		return $statusCode;		
 	}
 	
 	// Read page from file
-	function readPage($serverScheme, $serverName, $base, $location, $fileName, $cacheable, $statusCode, $pageError = "")
+	function readPage($serverScheme, $serverName, $base, $location, $fileName, $statusCode, $cacheable, $pageError = "")
 	{
 		if($statusCode >= 400)
 		{
@@ -155,7 +155,7 @@ class Yellow
 			fclose($fileHandle);
 		}
 		$this->page = new YellowPage($this, $serverScheme, $serverName, $base, $location, $fileName);
-		$this->page->parseData($fileData, $cacheable, $statusCode, $pageError);
+		$this->page->parseData($fileData, $statusCode, $cacheable, $pageError);
 		$this->page->setHeader("Content-Type", "text/html; charset=UTF-8");
 		$this->page->setHeader("Last-Modified", $this->page->getModified(true));
 		if(!$this->page->isCacheable()) $this->page->setHeader("Cache-Control", "no-cache, must-revalidate");
@@ -219,11 +219,12 @@ class Yellow
 	}
 
 	// Send status response
-	function sendStatus($statusCode, $responseHeader = "")
+	function sendStatus($statusCode, $cacheable, $responseHeader = "")
 	{
 		if(PHP_SAPI != "cli")
 		{
 			@header($this->toolbox->getHttpStatusFormatted($statusCode));
+			if(!$cacheable) @header("Cache-Control: no-cache, must-revalidate");
 			if(!empty($responseHeader)) @header($responseHeader);
 		} else {
 			if(!empty($responseHeader))
@@ -256,6 +257,13 @@ class Yellow
 			$this->config->get("contentRootDir"), $this->config->get("contentHomeDir"),
 			$this->config->get("contentDefaultFile"), $this->config->get("contentExtension"));
 		return array($serverScheme, $serverName, $base, $location, $fileName);
+	}
+	
+	// Return request language
+	function getRequestLanguage()
+	{
+		$languages = $this->toolbox->findRootLanguages($this->config->get("contentDir"), $this->config->get("contentRootDir"));
+		return $this->toolbox->detectBrowserLanguage($languages, $this->config->get("language"));
 	}
 	
 	// Return request handler
@@ -366,7 +374,7 @@ class YellowPage
 	}
 	
 	// Parse page data
-	function parseData($rawData, $cacheable, $statusCode, $pageError = "")
+	function parseData($rawData, $statusCode, $cacheable, $pageError = "")
 	{
 		$this->rawData = $rawData;
 		$this->parserSafeMode = $this->yellow->config->get("parserSafeMode");
@@ -994,7 +1002,7 @@ class YellowPages
 					$page = new YellowPage($this->yellow,
 						$this->yellow->page->serverScheme, $this->yellow->page->serverName, $this->yellow->page->base,
 						$rootLocation, "");
-					$page->parseData("", false, 0);
+					$page->parseData("", 0, false);
 					array_push($this->pages[$location], $page);
 				}
 			} else {
@@ -1019,7 +1027,7 @@ class YellowPages
 						$this->yellow->config->get("contentRootDir"), $this->yellow->config->get("contentHomeDir"),
 						$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension")),
 						$fileName);
-					$page->parseData($fileData, false, $statusCode);
+					$page->parseData($fileData, $statusCode, false);
 					array_push($this->pages[$location], $page);
 				}
 			}
@@ -1551,6 +1559,24 @@ class YellowToolbox
 		return array($pathRoot, $pathHome);
 	}
 	
+	// Return root languages
+	function findRootLanguages($pathBase, $pathRoot, $includeInvisible = false)
+	{
+		$languages = array();
+		if(!empty($pathRoot))
+		{
+			foreach($this->getDirectoryEntries($pathBase, "/.*/", true, true, false) as $entry)
+			{
+				if($includeInvisible || preg_match("/^[\d\-\_\.]+(.*)$/", $entry))
+				{
+					$token = $this->normaliseName($entry);
+					if(strlenu($token) == 2) array_push($languages, $token);
+				}
+			}
+		}
+		return $languages;
+	}
+	
 	// Return root locations
 	function findRootLocations($pathBase, $pathRoot)
 	{
@@ -1663,7 +1689,7 @@ class YellowToolbox
 				}
 			} else {
 				$i = 1;
-				$token = rtrim($pathHome, '/');
+				$token = $tokens[0] = rtrim($pathHome, '/');
 				if($this->normaliseName($token) != $token) $invalid = true;
 				$regex = $invalid ? "//" : "/^[\d\-\_\.]*".strreplaceu('-', '.', $token)."$/";
 				foreach($this->getDirectoryEntries($path, $regex, false, true, false) as $entry)
@@ -2145,6 +2171,21 @@ class YellowToolbox
 		$ok = !empty($hashCalculated) && strlenb($hashCalculated)==strlenb($hash);
 		if($ok) for($i=0; $i<strlenb($hashCalculated); ++$i) $ok &= $hashCalculated[$i] == $hash[$i];
 		return $ok;
+	}
+	
+	// Detect web browser language
+	function detectBrowserLanguage($languages, $languageDefault)
+	{
+		$language = $languageDefault;
+		if(isset($_SERVER["HTTP_ACCEPT_LANGUAGE"]))
+		{
+			foreach(preg_split("/,\s*/", $_SERVER["HTTP_ACCEPT_LANGUAGE"]) as $string)
+			{
+				$tokens = explode(';', $string);
+				if(in_array($tokens[0], $languages)) { $language = $tokens[0]; break; }
+			}
+		}
+		return $language;
 	}
 	
 	// Detect image dimensions and type, png or jpg
