@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.4.4";
+	const Version = "0.4.5";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -22,22 +22,22 @@ class Yellow
 		$this->plugins = new YellowPlugins();
 		$this->config->setDefault("sitename", "Yellow");
 		$this->config->setDefault("author", "Yellow");
-		$this->config->setDefault("style", "default");
+		$this->config->setDefault("theme", "default");
 		$this->config->setDefault("template", "default");
 		$this->config->setDefault("language", "en");
 		$this->config->setDefault("serverScheme", $this->toolbox->getServerScheme());
 		$this->config->setDefault("serverName", $this->toolbox->getServerName());
 		$this->config->setDefault("serverBase", $this->toolbox->getServerBase());
-		$this->config->setDefault("styleLocation", "/media/styles/");
 		$this->config->setDefault("imageLocation", "/media/images/");
 		$this->config->setDefault("pluginLocation", "/media/plugins/");
+		$this->config->setDefault("themeLocation", "/media/themes/");
 		$this->config->setDefault("systemDir", "system/");
 		$this->config->setDefault("configDir", "system/config/");
 		$this->config->setDefault("pluginDir", "system/plugins/");
 		$this->config->setDefault("snippetDir", "system/snippets/");
 		$this->config->setDefault("templateDir", "system/templates/");
+		$this->config->setDefault("themeDir", "system/themes/");
 		$this->config->setDefault("mediaDir", "media/");
-		$this->config->setDefault("styleDir", "media/styles/");
 		$this->config->setDefault("imageDir", "media/images/");
 		$this->config->setDefault("contentDir", "content/");
 		$this->config->setDefault("contentRootDir", "default/");
@@ -168,10 +168,10 @@ class Yellow
 	function sendPage()
 	{
 		$this->template($this->page->get("template"));
-		$fileNameStyle = $this->config->get("styleDir").$this->page->get("style").".css";
-		if(!is_file($fileNameStyle))
+		$fileNameTheme = $this->config->get("themeDir").$this->page->get("theme").".css";
+		if(!is_file($fileNameTheme))
 		{
-			$this->page->error(500, "Style '".$this->page->get("style")."' does not exist!");
+			$this->page->error(500, "Theme '".$this->page->get("theme")."' does not exist!");
 		}
 		if(!is_object($this->page->parser))
 		{
@@ -213,7 +213,7 @@ class Yellow
 			foreach($this->page->headerData as $key=>$value) echo "Yellow::sendPage $key: $value<br/>\n";
 			$fileNameTemplate = $this->config->get("templateDir").$this->page->get("template").".php";
 			$parserName = $this->page->get("parser");
-			echo "Yellow::sendPage template:$fileNameTemplate style:$fileNameStyle parser:$parserName<br/>\n";
+			echo "Yellow::sendPage template:$fileNameTemplate theme:$fileNameTheme parser:$parserName<br/>\n";
 		}
 		return $statusCode;
 	}
@@ -413,8 +413,8 @@ class YellowPage
 		$this->set("title", $this->yellow->toolbox->createTextTitle($this->location));
 		$this->set("sitename", $this->yellow->config->get("sitename"));
 		$this->set("author", $this->yellow->config->get("author"));
-		$this->set("style", $this->yellow->toolbox->findNameFromFile($this->fileName,
-			$this->yellow->config->get("styleDir"), $this->yellow->config->get("style"), ".css"));
+		$this->set("theme", $this->yellow->toolbox->findNameFromFile($this->fileName,
+			$this->yellow->config->get("themeDir"), $this->yellow->config->get("theme"), ".css"));
 		$this->set("template", $this->yellow->toolbox->findNameFromFile($this->fileName,
 			$this->yellow->config->get("templateDir"), $this->yellow->config->get("template"), ".php"));
 		$this->set("language", $this->yellow->toolbox->findLanguageFromFile($this->fileName,
@@ -1773,7 +1773,7 @@ class YellowToolbox
 		return $fileNames;
 	}
 	
-	// Return file/style/template name from file path
+	// Return file/theme/template name from file path
 	function findNameFromFile($fileName, $pathBase, $nameDefault, $fileExtension, $includeFileName = false)
 	{
 		$name = "";

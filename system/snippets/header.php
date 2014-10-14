@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title><?php echo $yellow->page->getHtml("titleHeader") ?></title>
 <link rel="shortcut icon" href="<?php echo $yellow->config->get("serverBase").$yellow->config->get("imageLocation")."icon.png" ?>" />
-<link rel="stylesheet" type="text/css" media="all" href="<?php echo $yellow->config->get("serverBase").$yellow->config->get("styleLocation").$yellow->page->get("style").".css" ?>" />
+<link rel="stylesheet" type="text/css" media="all" href="<?php echo $yellow->config->get("serverBase").$yellow->config->get("themeLocation").$yellow->page->get("theme").".css" ?>" />
 <?php echo $yellow->page->getHeaderExtra() ?>
 </head>
 <body>

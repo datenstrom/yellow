@@ -97,7 +97,7 @@ class YellowWebinterface
 		if($this->isActive())
 		{
 			$location = $this->yellow->config->getHtml("serverBase").$this->yellow->config->getHtml("pluginLocation");
-			$header .= "<link rel=\"styleSheet\" type=\"text/css\" media=\"all\" href=\"{$location}core-webinterface.css\" />\n";
+			$header .= "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"{$location}core-webinterface.css\" />\n";
 			$header .= "<script type=\"text/javascript\" src=\"{$location}core-webinterface.js\"></script>\n";
 			$header .= "<script type=\"text/javascript\">\n";
 			$header .= "// <![CDATA[\n";
