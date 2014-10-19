@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.4.5";
+	const Version = "0.4.6";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -1632,99 +1632,49 @@ class YellowToolbox
 	function findFileFromLocation($location, $pathBase, $pathRoot, $pathHome, $fileDefault, $fileExtension)
 	{
 		$path = $pathBase;
+		$tokens = explode('/', $location);
 		if($this->isRootLocation($location))
 		{
 			if(!empty($pathRoot))
 			{
-				$token = rtrim(substru($location, 5), '/');
-				if(empty($token)) $token = rtrim($pathRoot, '/');
-				if($this->normaliseName($token) != $token) $invalid = true;
-				$regex = $invalid ? "//" : "/^[\d\-\_\.]*".strreplaceu('-', '.', $token)."$/";
-				foreach($this->getDirectoryEntries($path, $regex, false, true, false) as $entry)
-				{
-					if($this->normaliseName($entry) == $token) { $token = $entry; break; }
-				}
-				$path .= "$token/";
+				$token = (count($tokens) > 2) ? $tokens[1] : rtrim($pathRoot, '/');
+				$path .= $this->findFileDirectory($path, $token, true, true, $found, $invalid);
 			}
 		} else {
-			$tokens = explode('/', $location);
 			if(!empty($pathRoot))
 			{
 				if(count($tokens) > 2)
 				{
-					$root = $tokens[1];
-					if($this->normaliseName($root) == $this->normaliseName($pathRoot)) $invalid = true;
-					if($this->normaliseName($root) != $root) $invalid = true;
-					$regex = $invalid ? "//" : "/^[\d\-\_\.]*".strreplaceu('-', '.', $root)."$/";
-					foreach($this->getDirectoryEntries($path, $regex, false, true, false) as $entry)
-					{
-						if($this->normaliseName($entry) == $root) { $token = $entry; array_shift($tokens); break; }
-					}
+					if($this->normaliseName($tokens[1]) == $this->normaliseName($pathRoot)) $invalid = true;
+					$path .= $this->findFileDirectory($path, $tokens[1], false, true, $found, $invalid);
+					if($found) array_shift($tokens);
 				}
-				if(empty($token))
-				{
-					$token = rtrim($pathRoot, '/');
-					if($this->normaliseName($token) != $token) $invalid = true;
-					$regex = $invalid ? "//" : "/^[\d\-\_\.]*".strreplaceu('-', '.', $token)."$/";
-					foreach($this->getDirectoryEntries($path, $regex, false, true, false) as $entry)
-					{
-						if($this->normaliseName($entry) == $token) { $token = $entry; break; }
-					}
-				}
-				$path .= "$token/";
+				if(!$found) $path .= $this->findFileDirectory($path, rtrim($pathRoot, '/'), true, true, $found, $invalid);
+				
 			}
 			if(count($tokens) > 2)
 			{
 				if($this->normaliseName($tokens[1]) == $this->normaliseName($pathHome)) $invalid = true;
 				for($i=1; $i<count($tokens)-1; ++$i)
 				{
-					$token = $tokens[$i];
-					if($this->normaliseName($token) != $token) $invalid = true;
-					$regex = $invalid ? "//" : "/^[\d\-\_\.]*".strreplaceu('-', '.', $token)."$/";
-					foreach($this->getDirectoryEntries($path, $regex, false, true, false) as $entry)
-					{
-						if($this->normaliseName($entry) == $token) { $token = $entry; break; }
-					}
-					$path .= "$token/";
+					$path .= $this->findFileDirectory($path, $tokens[$i], true, true, $found, $invalid);
 				}
 			} else {
 				$i = 1;
-				$token = $tokens[0] = rtrim($pathHome, '/');
-				if($this->normaliseName($token) != $token) $invalid = true;
-				$regex = $invalid ? "//" : "/^[\d\-\_\.]*".strreplaceu('-', '.', $token)."$/";
-				foreach($this->getDirectoryEntries($path, $regex, false, true, false) as $entry)
-				{
-					if($this->normaliseName($entry) == $token) { $token = $entry; break; }
-				}
-				$path .= "$token/";
+				$tokens[0] = rtrim($pathHome, '/');
+				$path .= $this->findFileDirectory($path, $tokens[0], true, true, $found, $invalid);
 			}
 			if(!empty($fileDefault) && !empty($fileExtension))
 			{
+				$fileFolder = $tokens[$i-1].$fileExtension;
 				if(!empty($tokens[$i]))
 				{
 					$token = $tokens[$i].$fileExtension;
-					$fileFolder = $tokens[$i-1].$fileExtension;
 					if($token==$fileDefault || $token==$fileFolder) $invalid = true;
-					if($this->normaliseName($token) != $token) $invalid = true;
-					$regex = $invalid ? "//" : "/^[\d\-\_\.]*".strreplaceu('-', '.', $token)."$/";
-					foreach($this->getDirectoryEntries($path, $regex, false, false, false) as $entry)
-					{
-						if($this->normaliseName($entry) == $token) { $token = $entry; break; }
-					}
+					$path .= $this->findFileDirectory($path, $token, true, false, $found, $invalid);
 				} else {
-					$token = $fileDefault;
-					if(!is_file($path."/".$fileDefault))
-					{
-						$fileFolder = $tokens[$i-1].$fileExtension;
-						$regex = "/^[\d\-\_\.]*($fileDefault|$fileFolder)$/";
-						foreach($this->getDirectoryEntries($path, $regex, true, false, false) as $entry)
-						{
-							if($this->normaliseName($entry) == $fileDefault) { $token = $entry; break; }
-							if($this->normaliseName($entry) == $fileFolder) { $token = $entry; break; }
-						}
-					}
+					$path .= $this->findFileDefault($path, $fileDefault, $fileFolder);
 				}
-				$path .= $token;
 				if(defined("DEBUG") && DEBUG>=2)
 				{
 					$debug = "$location -> ".($invalid ? "INVALID" : $path);
@@ -1733,6 +1683,38 @@ class YellowToolbox
 			}
 		}
 		return $invalid ? "" : $path;
+	}
+
+	// Return file or directory that matches token
+	function findFileDirectory($path, $token, $tokenFailback, $directory, &$found, &$invalid)
+	{
+		if($this->normaliseName($token) != $token) $invalid = true;
+		if(!$invalid)
+		{
+			$regex = "/^[\d\-\_\.]*".strreplaceu('-', '.', $token)."$/";
+			foreach($this->getDirectoryEntries($path, $regex, false, $directory, false) as $entry)
+			{
+				if($this->normaliseName($entry) == $token) { $token = $entry; $found = true; break; }
+			}
+		}
+		if($directory) $token .= '/';
+		return ($tokenFailback || $found) ? $token : "";
+	}
+	
+	// Return default file in directory
+	function findFileDefault($path, $fileDefault, $fileFolder)
+	{
+		$token = $fileDefault;
+		if(!is_file($path."/".$fileDefault))
+		{
+			$regex = "/^[\d\-\_\.]*($fileDefault|$fileFolder)$/";
+			foreach($this->getDirectoryEntries($path, $regex, true, false, false) as $entry)
+			{
+				if($this->normaliseName($entry) == $fileDefault) { $token = $entry; break; }
+				if($this->normaliseName($entry) == $fileFolder) { $token = $entry; break; }
+			}
+		}
+		return $token;
 	}
 	
 	// Return children from location
@@ -1744,17 +1726,8 @@ class YellowToolbox
 			$path = $this->findFileFromLocation($location, $pathBase, $pathRoot, $pathHome, "", "");
 			foreach($this->getDirectoryEntries($path, "/.*/", true, true, false) as $entry)
 			{
-				$token = $fileDefault;
-				if(!is_file($path.$entry."/".$fileDefault))
-				{
-					$fileFolder = $this->normaliseName($entry).$fileExtension;
-					$regex = "/^[\d\-\_\.]*($fileDefault|$fileFolder)$/";
-					foreach($this->getDirectoryEntries($path.$entry, $regex, true, false, false) as $entry2)
-					{
-						if($this->normaliseName($entry2) == $fileDefault) { $token = $entry2; break; }
-						if($this->normaliseName($entry2) == $fileFolder) { $token = $entry2; break; }
-					}
-				}
+				$fileFolder = $this->normaliseName($entry).$fileExtension;
+				$token = $this->findFileDefault($path.$entry, $fileDefault, $fileFolder);
 				array_push($fileNames, $path.$entry."/".$token);
 			}
 			if(!$this->isRootLocation($location))

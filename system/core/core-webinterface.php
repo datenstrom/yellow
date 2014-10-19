@@ -5,7 +5,7 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.4.2";
+	const Version = "0.4.3";
 	var $yellow;				//access to API
 	var $users;					//web interface users
 	var $active;				//web interface is active? (boolean)
@@ -24,8 +24,6 @@ class YellowWebinterface
 		$this->yellow->config->setDefault("webinterfaceUserHashAlgorithm", "bcrypt");
 		$this->yellow->config->setDefault("webinterfaceUserHashCost", "10");
 		$this->yellow->config->setDefault("webinterfaceUserFile", "user.ini");
-		$this->yellow->config->setDefault("webinterfaceEmail", "");
-		$this->yellow->config->setDefault("webinterfacePassword", "");
 		$this->yellow->config->setDefault("webinterfaceNewPage", "default");
 		$this->yellow->config->setDefault("webinterfaceFilePrefix", "published");
 		$this->users = new YellowWebinterfaceUsers($yellow);
@@ -527,8 +525,8 @@ class YellowWebinterface
 			$data["serverName"] = $this->yellow->config->get("serverName");
 			$data["serverBase"] = $this->yellow->config->get("serverBase");
 		} else {
-			$data["webinterfaceEmail"] = $this->yellow->config->get("webinterfaceEmail");
-			$data["webinterfacePassword"] = $this->yellow->config->get("webinterfacePassword");
+			$data["loginEmail"] = $this->yellow->config->get("loginEmail");
+			$data["loginPassword"] = $this->yellow->config->get("loginPassword");
 		}
 		return $data;
 	}
