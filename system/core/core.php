@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.4.6";
+	const Version = "0.4.7";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -2180,7 +2180,8 @@ class YellowToolbox
 					$type = "png";
 				}
 			} else if(substru($fileName, -3) == "jpg") {
-				$dataBufferSize = min(filesize($fileName), 8192);
+				$dataBufferSizeMax = filesize($fileName);
+				$dataBufferSize = min($dataBufferSizeMax, 4096);
 				$dataBuffer = fread($fileHandle, $dataBufferSize);
 				$dataSignature = substrb($dataBuffer, 0, 11);
 				if(!feof($fileHandle) && $dataSignature=="\xff\xd8\xff\xe0\x00\x10JFIF\0")
@@ -2196,6 +2197,14 @@ class YellowToolbox
 							break;
 						}
 						$length = (ord($dataBuffer[$pos+2])<<8) + ord($dataBuffer[$pos+3]) + 2;
+						while($pos+$length+8 >= $dataBufferSize)
+						{
+							if($dataBufferSize == $dataBufferSizeMax) break;
+							$dataBufferDiff = min($dataBufferSizeMax, $dataBufferSize*2) - $dataBufferSize;
+							$dataBufferSize += $dataBufferDiff;
+							$dataBuffer .= fread($fileHandle, $dataBufferDiff);
+							if(feof($fileHandle)) { $dataBufferSize = 0; break; }
+						}
 					}
 				}
 			}
