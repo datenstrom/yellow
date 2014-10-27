@@ -1,4 +1,4 @@
-/* Yellow default theme 0.3.11 */
+/* Yellow default theme 0.4.1 */
 
 html, body, div, form, pre, span, tr, th, td { margin:0; padding:0; border:0; vertical-align:baseline; }
 body { 
@@ -52,5 +52,5 @@ a, img { border:none; text-decoration:none; }
 @media print {
 	body, h1, h2, h3, h4, h5, h6 { background-color:white; color:black; }
 	.page { border:none !important; }
-	.navigation, .footer { display:none !important; }
+	.navigation, .navigationsub, .navigationtree, .footer { display:none !important; }
 }
