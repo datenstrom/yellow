@@ -1,5 +1,6 @@
 <div class="footer">
-&copy; 2014 <?php echo $yellow->page->getHtml("sitename") ?>. <a href="http://datenstrom.se/yellow">Made with Yellow</a>.
+<a href="<?php echo $yellow->page->base."/" ?>">&copy; 2014 <?php echo $yellow->page->getHtml("sitename") ?></a>.
+<a href="http://datenstrom.se/yellow">Made with Yellow</a>.
 </div>
 </div>
 </body>
