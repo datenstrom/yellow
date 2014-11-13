@@ -5,12 +5,13 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.4.3";
+	const Version = "0.4.4";
 	var $yellow;				//access to API
-	var $users;					//web interface users
 	var $active;				//web interface is active? (boolean)
 	var $userLoginFailed;		//web interface login failed? (boolean)
 	var $userPermission;		//web interface can modify page? (boolean)
+	var $users;					//web interface users
+	var $merge;					//web interface merge
 	var $rawDataSource;			//raw data of page for comparison
 	var $rawDataEdit;			//raw data of page for editing
 
@@ -18,6 +19,8 @@ class YellowWebinterface
 	function onLoad($yellow)
 	{
 		$this->yellow = $yellow;
+		$this->users = new YellowWebinterfaceUsers($yellow);
+		$this->merge = new YellowWebinterfaceMerge($yellow);
 		$this->yellow->config->setDefault("webinterfaceLocation", "/edit/");
 		$this->yellow->config->setDefault("webinterfaceServerScheme", "http");
 		$this->yellow->config->setDefault("webinterfaceServerName", $this->yellow->config->get("serverName"));
@@ -26,7 +29,6 @@ class YellowWebinterface
 		$this->yellow->config->setDefault("webinterfaceUserFile", "user.ini");
 		$this->yellow->config->setDefault("webinterfaceNewPage", "default");
 		$this->yellow->config->setDefault("webinterfaceFilePrefix", "published");
-		$this->users = new YellowWebinterfaceUsers($yellow);
 		$this->users->load($this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile"));
 	}
 
@@ -246,7 +248,8 @@ class YellowWebinterface
 		{
 			$this->rawDataSource = stripcslashes($_POST["rawdatasource"]);
 			$this->rawDataEdit = stripcslashes($_POST["rawdataedit"]);
-			$page = $this->getPageUpdate($serverScheme, $serverName, $base, $location, $fileName, $this->rawDataSource, $this->rawDataEdit);
+			$page = $this->getPageUpdate($serverScheme, $serverName, $base, $location, $fileName,
+				$this->rawDataSource, $this->rawDataEdit, $this->yellow->toolbox->getFileData($fileName));
 			if(!$page->isError())
 			{
 				if($this->yellow->toolbox->renameFile($fileName, $page->fileName) &&
@@ -321,32 +324,6 @@ class YellowWebinterface
 		$this->yellow->sendStatus($statusCode, false, $locationHeader);
 		return $statusCode;
 	}
-	
-	// Merge text
-	function mergeText($location, $textSource, $textLocal, $fileName)
-	{
-		$fileHandle = @fopen($fileName, "r");
-		if($fileHandle)
-		{
-			$fileData = fread($fileHandle, filesize($fileName));
-			fclose($fileHandle);
-		}
-		if(!empty($fileData) && $fileData!=$textSource && $fileData!=$textLocal)
-		{
-			$output = NULL;
-			foreach($this->yellow->plugins->plugins as $key=>$value)
-			{
-				if(method_exists($value["obj"], "onMergeText"))
-				{
-					$output = $value["obj"]->onMergeText($location, $textSource, $textLocal, $fileData);
-					if(!is_null($output)) break;
-				}
-			}
-		} else {
-			$output = $textLocal;
-		}
-		return $output;
-	}
 
 	// Check web interface request
 	function checkRequest($location)
@@ -417,7 +394,7 @@ class YellowWebinterface
 	// Update page data with title
 	function updateDataTitle($rawData, $title)
 	{
-		foreach(preg_split("/([\r\n]+)/", $rawData, -1, PREG_SPLIT_DELIM_CAPTURE) as $line)
+		foreach($this->yellow->toolbox->getTextLines($rawData) as $line)
 		{
 			if(preg_match("/^(\s*Title\s*:\s*)(.*?)(\s*)$/i", $line, $matches)) $line = $matches[1].$title.$matches[3];
 			$rawDataNew .= $line;
@@ -462,10 +439,10 @@ class YellowWebinterface
 	}
 	
 	// Return modified page
-	function getPageUpdate($serverScheme, $serverName, $base, $location, $fileName, $rawDataSource, $rawDataEdit)
+	function getPageUpdate($serverScheme, $serverName, $base, $location, $fileName, $rawDataSource, $rawDataEdit, $rawDataFile)
 	{
 		$page = new YellowPage($this->yellow, $serverScheme, $serverName, $base, $location, $fileName);
-		$page->parseData($this->mergeText($location, $rawDataSource, $rawDataEdit, $fileName), 0, false);
+		$page->parseData($this->merge->merge($rawDataSource, $rawDataEdit, $rawDataFile), 0, false);
 		if(empty($page->rawData)) $page->error(500, "Page has been modified by someone else!");
 		if($this->yellow->toolbox->isFileLocation($location) && !$page->isError())
 		{
@@ -501,13 +478,8 @@ class YellowWebinterface
 		$fileName = $this->yellow->toolbox->findNameFromFile($fileName,
 			$this->yellow->config->get("configDir"), $this->yellow->config->get("webinterfaceNewPage"),
 			$this->yellow->config->get("contentExtension"), true);
-		$fileHandle = @fopen($fileName, "r");
-		if($fileHandle)
-		{
-			$fileData = fread($fileHandle, filesize($fileName));
-			if(!empty($title)) $fileData = $this->updateDataTitle($fileData, $title);
-			fclose($fileHandle);
-		}
+		$fileData = $this->yellow->toolbox->getFileData($fileName);
+		if(!empty($title)) $fileData = $this->updateDataTitle($fileData, $title);
 		return $fileData;
 	}
 	
@@ -690,6 +662,189 @@ class YellowWebinterfaceUsers
 	function isExisting($email)
 	{
 		return !is_null($this->users[$email]);
+	}
+}
+	
+// Yellow web interface merge
+class YellowWebinterfaceMerge
+{
+	var $yellow;		//access to API
+	const Add = '+';	//merge types
+	const Modify = '*';
+	const Remove = '-';
+	const Same = ' ';
+	
+	function __construct($yellow)
+	{
+		$this->yellow = $yellow;
+	}
+	
+	// Merge text, NULL if not possible
+	function merge($textSource, $textMine, $textYours, $showDiff = false)
+	{
+		if($textMine != $textYours)
+		{
+			$diffMine = $this->buildDiff($textSource, $textMine);
+			$diffYours = $this->buildDiff($textSource, $textYours);
+			$diff = $this->mergeDiff($diffMine, $diffYours);
+			$output = $this->getOutput($diff, $showDiff);
+		} else {
+			$output = $textMine;
+		}
+		return $output;
+	}
+	
+	// Build differences to common source
+	function buildDiff($textSource, $textOther)
+	{
+		$diff = array();
+		$lastRemove = -1;
+		$textStart = 0;
+		$textSource = $this->yellow->toolbox->getTextLines($textSource);
+		$textOther = $this->yellow->toolbox->getTextLines($textOther);
+		$sourceEnd = $sourceSize = count($textSource);
+		$otherEnd = $otherSize = count($textOther);
+		while($textStart<$sourceEnd && $textStart<$otherEnd && $textSource[$textStart]==$textOther[$textStart]) ++$textStart;
+		while($textStart<$sourceEnd && $textStart<$otherEnd && $textSource[$sourceEnd-1]==$textOther[$otherEnd-1])
+		{
+			--$sourceEnd; --$otherEnd;
+		}
+		for($pos=0; $pos<$textStart; ++$pos) array_push($diff, array(YellowWebinterfaceMerge::Same, $textSource[$pos], false));
+		$lcs = $this->buildDiffLCS($textSource, $textOther, $textStart, $sourceEnd-$textStart, $otherEnd-$textStart);
+		for($x=0,$y=0,$xEnd=$otherEnd-$textStart,$yEnd=$sourceEnd-$textStart; $x<$xEnd || $y<$yEnd;)
+		{
+			$max = $lcs[$y][$x];
+			if($y<$yEnd && $lcs[$y+1][$x]==$max)
+			{
+				array_push($diff, array(YellowWebinterfaceMerge::Remove, $textSource[$textStart+$y], false));
+				if($lastRemove == -1) $lastRemove = count($diff)-1;
+				++$y;
+				continue;
+			}
+			if($x<$xEnd && $lcs[$y][$x+1]==$max)
+			{
+				if($lastRemove==-1 || $diff[$lastRemove][0]!=YellowWebinterfaceMerge::Remove)
+				{
+					array_push($diff, array(YellowWebinterfaceMerge::Add, $textOther[$textStart+$x], false));
+					$lastRemove = -1;
+				} else {
+					$diff[$lastRemove] = array(YellowWebinterfaceMerge::Modify, $textOther[$textStart+$x], false);
+					++$lastRemove; if(count($diff)==$lastRemove) $lastRemove = -1;
+				}
+				++$x;
+				continue;
+			}
+			array_push($diff, array(YellowWebinterfaceMerge::Same, $textSource[$textStart+$y], false));
+			$lastRemove = -1;
+			++$x;
+			++$y;
+		}
+		for($pos=$sourceEnd;$pos<$sourceSize; ++$pos) array_push($diff, array(YellowWebinterfaceMerge::Same, $textSource[$pos], false));
+		return $diff;
+	}
+	
+	// Build longest common subsequence
+	function buildDiffLCS($textSource, $textOther, $textStart, $yEnd, $xEnd)
+	{
+		$lcs = array_fill(0, $yEnd+1, array_fill(0, $xEnd+1, 0));
+		for($y=$yEnd-1; $y>=0; --$y)
+		{
+			for($x=$xEnd-1; $x>=0; --$x)
+			{
+				if($textSource[$textStart+$y] == $textOther[$textStart+$x])
+				{
+					$lcs[$y][$x] = $lcs[$y+1][$x+1]+1;
+				} else {
+					$lcs[$y][$x] = max($lcs[$y][$x+1], $lcs[$y+1][$x]);
+				}
+			}
+		}
+		return $lcs;
+	}
+	
+	// Merge differences
+	function mergeDiff($diffMine, $diffYours)
+	{
+		$diff = array();
+		$posMine = $posYours = 0;
+		while($posMine<count($diffMine) && $posYours<count($diffYours))
+		{
+			$typeMine = $diffMine[$posMine][0];
+			$typeYours = $diffYours[$posYours][0];
+			if($typeMine==YellowWebinterfaceMerge::Same)
+			{
+				array_push($diff, $diffYours[$posYours]);
+			} else if($typeYours==YellowWebinterfaceMerge::Same) {
+				array_push($diff, $diffMine[$posMine]);
+			} else if($typeMine==YellowWebinterfaceMerge::Add && $typeYours==YellowWebinterfaceMerge::Add) {
+				$this->mergeConflict($diff, $diffMine[$posMine], $diffYours[$posYours], false);
+			} else if($typeMine==YellowWebinterfaceMerge::Modify && $typeYours==YellowWebinterfaceMerge::Modify) {
+				$this->mergeConflict($diff, $diffMine[$posMine], $diffYours[$posYours], false);
+			} else if($typeMine==YellowWebinterfaceMerge::Remove && $typeYours==YellowWebinterfaceMerge::Remove) {
+				array_push($diff, $diffMine[$posMine]);
+			} else if($typeMine==YellowWebinterfaceMerge::Add) {
+				array_push($diff, $diffMine[$posMine]);
+			} else if($typeYours==YellowWebinterfaceMerge::Add) {
+				array_push($diff, $diffYours[$posYours]);
+			} else {
+				$this->mergeConflict($diff, $diffMine[$posMine], $diffYours[$posYours], true);
+			}
+			if(defined("DEBUG") && DEBUG>=2) echo "YellowWebinterfaceMerge::mergeDiff $typeMine $typeYours pos:$posMine\t$posYours<br/>\n";
+			if($typeMine==YellowWebinterfaceMerge::Add || $typeYours==YellowWebinterfaceMerge::Add)
+			{
+				if($typeMine==YellowWebinterfaceMerge::Add) ++$posMine;
+				if($typeYours==YellowWebinterfaceMerge::Add) ++$posYours;
+			} else {
+				++$posMine;
+				++$posYours;
+			}
+		}
+		for(;$posMine<count($diffMine); ++$posMine)
+		{
+			array_push($diff, $diffMine[$posMine]);
+			$typeMine = $diffMine[$posMine][0]; $typeYours = ' ';
+			if(defined("DEBUG") && DEBUG>=2) echo "YellowWebinterfaceMerge::mergeDiff $typeMine $typeYours pos:$posMine\t$posYours<br/>\n";
+		}
+		for(;$posYours<count($diffYours); ++$posYours)
+		{
+			array_push($diff, $diffYours[$posYours]);
+			$typeYours = $diffYours[$posYours][0]; $typeMine = ' ';
+			if(defined("DEBUG") && DEBUG>=2) echo "YellowWebinterfaceMerge::mergeDiff $typeMine $typeYours pos:$posMine\t$posYours<br/>\n";
+		}
+		return $diff;
+	}
+	
+	// Merge potential conflict
+	function mergeConflict(&$diff, $diffMine, $diffYours, $conflict)
+	{
+		if(!$conflict && $diffMine[1]==$diffYours[1])
+		{
+			array_push($diff, $diffMine);
+		} else {
+			array_push($diff, array($diffMine[0], $diffMine[1], true));
+			array_push($diff, array($diffYours[0], $diffYours[1], true));
+		}
+	}
+	
+	// Return merged text, NULL if not possible
+	function getOutput($diff, $showDiff = false)
+	{
+		$output = "";
+		if(!$showDiff)
+		{
+			for($i=0; $i<count($diff); ++$i)
+			{
+				if($diff[$i][0] != YellowWebinterfaceMerge::Remove) $output .= $diff[$i][1];
+				$conflict |= $diff[$i][2];
+			}
+		} else {
+			for($i=0; $i<count($diff); ++$i)
+			{
+				$output .= $diff[$i][2] ? "! " : $diff[$i][0].' ';
+				$output .= $diff[$i][1];
+			}
+		}
+		return !$conflict ? $output : NULL;
 	}
 }
 

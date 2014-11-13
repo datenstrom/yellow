@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.4.7";
+	const Version = "0.4.8";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -148,14 +148,8 @@ class Yellow
 			$fileName = strreplaceu("(.*)", $statusCode, $fileName);
 			$cacheable = false;
 		}
-		$fileHandle = @fopen($fileName, "r");
-		if($fileHandle)
-		{
-			$fileData = fread($fileHandle, filesize($fileName));
-			fclose($fileHandle);
-		}
 		$this->page = new YellowPage($this, $serverScheme, $serverName, $base, $location, $fileName);
-		$this->page->parseData($fileData, $statusCode, $cacheable, $pageError);
+		$this->page->parseData($this->toolbox->getFileData($fileName), $statusCode, $cacheable, $pageError);
 		$this->page->setHeader("Content-Type", "text/html; charset=UTF-8");
 		$this->page->setHeader("Last-Modified", $this->page->getModified(true));
 		if(!$this->page->isCacheable()) $this->page->setHeader("Cache-Control", "no-cache, must-revalidate");
@@ -1934,6 +1928,19 @@ class YellowToolbox
 		}
 		return @rmdir($path);
 	}
+	
+	// Return file data
+	function getFileData($fileName)
+	{
+		$fileData = "";
+		$fileHandle = @fopen($fileName, "r");
+		if($fileHandle)
+		{
+			$fileData = fread($fileHandle, filesize($fileName));
+			fclose($fileHandle);
+		}
+		return $fileData;
+	}
 
 	// Create file
 	function createFile($fileName, $fileData, $mkdir = false)
@@ -2069,6 +2076,16 @@ class YellowToolbox
 		$tokens = preg_split("/[,\s\(\)]/", strtoloweru($text));
 		foreach($tokens as $key=>$value) if(strlenu($value) < 3) unset($tokens[$key]);
 		return implode(", ", array_slice(array_unique($tokens), 0, $keywordsMax));
+	}
+	
+	// Return lines from text string
+	function getTextLines($text)
+	{
+		$lines = array();
+		$split = preg_split("/(\R)/", $text, -1, PREG_SPLIT_DELIM_CAPTURE);
+		for($i=0; $i<count($split)-1; $i+=2) array_push($lines, $split[$i].$split[$i+1]);
+		if($split[$i] != '') array_push($lines, $split[$i]);
+		return $lines;
 	}
 	
 	// Create title from text string
