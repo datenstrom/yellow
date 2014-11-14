@@ -5,7 +5,7 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.4.4";
+	const Version = "0.4.5";
 	var $yellow;				//access to API
 	var $active;				//web interface is active? (boolean)
 	var $userLoginFailed;		//web interface login failed? (boolean)
@@ -27,7 +27,6 @@ class YellowWebinterface
 		$this->yellow->config->setDefault("webinterfaceUserHashAlgorithm", "bcrypt");
 		$this->yellow->config->setDefault("webinterfaceUserHashCost", "10");
 		$this->yellow->config->setDefault("webinterfaceUserFile", "user.ini");
-		$this->yellow->config->setDefault("webinterfaceNewPage", "default");
 		$this->yellow->config->setDefault("webinterfaceFilePrefix", "published");
 		$this->users->load($this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile"));
 	}
@@ -475,10 +474,13 @@ class YellowWebinterface
 			$this->yellow->page->location, $this->yellow->config->get("contentDir"),
 			$this->yellow->config->get("contentRootDir"), $this->yellow->config->get("contentHomeDir"),
 			$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
-		$fileName = $this->yellow->toolbox->findNameFromFile($fileName,
-			$this->yellow->config->get("configDir"), $this->yellow->config->get("webinterfaceNewPage"),
-			$this->yellow->config->get("contentExtension"), true);
+		$fileName = $this->yellow->toolbox->findFileNew($fileName,
+			$this->yellow->config->get("configDir"), $this->yellow->config->get("newPageFile"),
+			$this->yellow->config->get("contentDefaultFile"));
 		$fileData = $this->yellow->toolbox->getFileData($fileName);
+		$fileData = preg_replace("/@date/i", date("Y-m-d"), $fileData);
+		$fileData = preg_replace("/@username/i", $this->users->getName(), $fileData);
+		$fileData = preg_replace("/@userlanguage/i", $this->users->getLanguage(), $fileData);
 		if(!empty($title)) $fileData = $this->updateDataTitle($fileData, $title);
 		return $fileData;
 	}

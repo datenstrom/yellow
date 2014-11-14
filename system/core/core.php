@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.4.8";
+	const Version = "0.4.9";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -48,6 +48,7 @@ class Yellow
 		$this->config->setDefault("configExtension", ".ini");
 		$this->config->setDefault("configFile", "config.ini");
 		$this->config->setDefault("errorPageFile", "error(.*).txt");
+		$this->config->setDefault("newPageFile", "new(.*).txt");
 		$this->config->setDefault("textStringFile", "text(.*).ini");
 		$this->config->setDefault("parser", "markdownextra");
 		$this->config->setDefault("parserSafeMode", "0");
@@ -1740,13 +1741,13 @@ class YellowToolbox
 		return $fileNames;
 	}
 	
-	// Return file/theme/template name from file path
-	function findNameFromFile($fileName, $pathBase, $nameDefault, $fileExtension, $includeFileName = false)
+	// Return theme/template name from file path
+	function findNameFromFile($fileName, $pathBase, $nameDefault, $fileExtension)
 	{
 		$name = "";
 		if(preg_match("/^.*\/(.+?)$/", dirname($fileName), $matches)) $name = $this->normaliseName($matches[1]);
 		if(!is_file("$pathBase$name$fileExtension")) $name = $this->normaliseName($nameDefault);
-		return $includeFileName ? "$pathBase$name$fileExtension" : $name;
+		return $name;
 	}
 
 	// Return language from file path
@@ -1760,6 +1761,19 @@ class YellowToolbox
 			if(strlenu($name) == 2) $language = $name;
 		}
 		return $language;
+	}
+	
+	// Return file path for new page
+	function findFileNew($fileName, $pathBase, $fileNew, $fileDefault)
+	{
+		if(preg_match("/^.*\/(.+?)$/", dirname($fileName), $matches)) $name = $this->normaliseName($matches[1]);
+		$fileName = strreplaceu("(.*)", $name, $pathBase.$fileNew);
+		if(!is_file($fileName))
+		{
+			$name = $this->normaliseName($fileDefault, true, true);
+			$fileName = strreplaceu("(.*)", $name, $pathBase.$fileNew);
+		}
+		return $fileName;
 	}
 	
 	// Return file path from title
