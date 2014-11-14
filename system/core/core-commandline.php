@@ -5,7 +5,7 @@
 // Command line core plugin
 class YellowCommandline
 {
-	const Version = "0.4.2";
+	const Version = "0.4.3";
 	var $yellow;				//access to API
 	var $content;				//number of content pages
 	var $media;					//number of media files
@@ -65,7 +65,7 @@ class YellowCommandline
 	function versionCommand()
 	{
 		echo "Yellow ".Yellow::Version."\n";
-		foreach($this->yellow->plugins->plugins as $key=>$value) echo "$value[class] $value[version]\n";
+		foreach($this->getPluginVersion() as $line) echo "$line\n";
 		return 200;
 	}
 	
@@ -416,6 +416,15 @@ class YellowCommandline
 			}
 		}
 		uksort($data, strnatcasecmp);
+		return $data;
+	}
+	
+	// Return plugin version
+	function getPluginVersion()
+	{
+		$data = array();
+		foreach($this->yellow->plugins->plugins as $key=>$value) $data[$key] = "$value[class] $value[version]";
+		usort($data, strnatcasecmp);
 		return $data;
 	}
 	
