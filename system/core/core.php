@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.4.9";
+	const Version = "0.4.10";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -2200,7 +2200,7 @@ class YellowToolbox
 		$fileHandle = @fopen($fileName, "rb");
 		if($fileHandle)
 		{
-			if(substru($fileName, -3) == "png")
+			if(substru(strtoloweru($fileName), -3) == "png")
 			{
 				$dataSignature = fread($fileHandle, 8);
 				$dataHeader = fread($fileHandle, 16);
@@ -2210,14 +2210,14 @@ class YellowToolbox
 					$height = (ord($dataHeader[14])<<8) + ord($dataHeader[15]);
 					$type = "png";
 				}
-			} else if(substru($fileName, -3) == "jpg") {
+			} else if(substru(strtoloweru($fileName), -3) == "jpg") {
 				$dataBufferSizeMax = filesize($fileName);
 				$dataBufferSize = min($dataBufferSizeMax, 4096);
 				$dataBuffer = fread($fileHandle, $dataBufferSize);
-				$dataSignature = substrb($dataBuffer, 0, 11);
-				if(!feof($fileHandle) && $dataSignature=="\xff\xd8\xff\xe0\x00\x10JFIF\0")
+				$dataSignature = substrb($dataBuffer, 0, 4);
+				if(!feof($fileHandle) && ($dataSignature=="\xff\xd8\xff\xe0" || $dataSignature=="\xff\xd8\xff\xe1"))
 				{
-					for($pos=20; $pos+8<$dataBufferSize; $pos+=$length)
+					for($pos=2; $pos+8<$dataBufferSize; $pos+=$length)
 					{
 						if($dataBuffer[$pos] != "\xff") break;
 						if($dataBuffer[$pos+1]=="\xc0" || $dataBuffer[$pos+1]=="\xc2")
