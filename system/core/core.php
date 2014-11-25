@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.4.10";
+	const Version = "0.4.11";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -443,11 +443,7 @@ class YellowPage
 			$this->yellow->config->get("serverBase"), rtrim($this->yellow->config->get("webinterfaceLocation"), '/').$this->location));
 		foreach($this->yellow->plugins->plugins as $key=>$value)
 		{
-			if(method_exists($value["obj"], "onParseMeta"))
-			{
-				$output = $value["obj"]->onParseMeta($this, $this->rawData);
-				if(!is_null($output)) break;
-			}
+			if(method_exists($value["obj"], "onParseMeta")) $value["obj"]->onParseMeta($this, $this->rawData);
 		}
 	}
 	
@@ -468,7 +464,7 @@ class YellowPage
 						if(method_exists($value["obj"], "onParseContent"))
 						{
 							$output = $value["obj"]->onParseContent($this, $this->parserData);
-							if(!is_null($output)) { $this->parserData = $output; break; }
+							if(!is_null($output)) { $this->parserData = $output; }
 						}
 					}
 					if(!$this->isExisting("description"))
