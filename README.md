@@ -18,6 +18,11 @@ How do I get started?
 You already have everything you need. Start by editing your website.  
 Yellow is made of files and folders. A flat-file CMS. [Learn more about it](https://github.com/markseu/yellowcms-extensions/blob/master/documentation/english/README.md). 
 
+Contributing
+------------
+Feedback is much appreciated. Let us know about bugs and improvements.  
+You can [report issues](https://github.com/markseu/yellowcms/issues) on Github and send your improvements via pull requests.
+
 License
 -------
 * Yellow by Mark Seuffert and David Fehrmann is licensed under [GPLv2](http://opensource.org/licenses/GPL-2.0).
