@@ -1,8 +1,6 @@
-Yellow 0.4.12
+Yellow 0.4.12 [![Status](https://travis-ci.org/markseu/yellowcms.svg)](https://travis-ci.org/markseu/yellowcms)
 =============
 Yellow is for people who make websites. [Visit website](http://datenstrom.se/yellow).
-
-[![Status](https://travis-ci.org/markseu/yellowcms.svg)](https://travis-ci.org/markseu/yellowcms)
 
 How do I install this?
 ----------------------
