@@ -19,7 +19,7 @@ Yellow is made of files and folders. A flat-file CMS. [Learn more about it](http
 Contributing
 ------------
 Feedback is much appreciated. Let us know about bugs and improvements.  
-You can [report issues](https://github.com/markseu/yellowcms/issues) on Github and send your improvements as [pull requests](https://help.github.com/articles/using-pull-requests/).
+You can [report issues](https://github.com/markseu/yellowcms/issues) on Github and send [pull requests](https://help.github.com/articles/using-pull-requests/) for improvements.
 
 License
 -------
