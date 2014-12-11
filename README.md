@@ -1,4 +1,4 @@
-Yellow 0.4.12 [![Status](https://travis-ci.org/markseu/yellowcms.svg)](https://travis-ci.org/markseu/yellowcms)
+Yellow 0.4.13 [![Status](https://travis-ci.org/markseu/yellowcms.svg)](https://travis-ci.org/markseu/yellowcms)
 =============
 Yellow is for people who make websites. [Visit website](http://datenstrom.se/yellow).
 
@@ -18,7 +18,7 @@ Yellow is made of files and folders. A flat-file CMS. [Learn more about it](http
 
 Contributing
 ------------
-Feedback is much appreciated. Let us know about bugs and improvements.  
+Feedback is much appreciated. Let us know about problems and ideas.  
 You can [report issues](https://github.com/markseu/yellowcms/issues) on Github and send [pull requests](https://help.github.com/articles/using-pull-requests/) for improvements.
 
 License

@@ -2,7 +2,7 @@
 // Copyright (c) 2013-2014 Datenstrom, http://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
-// Markdown extra core plugin
+// Markdown extra plugin
 class YellowMarkdownExtra
 {
 	const Version = "0.4.1";
