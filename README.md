@@ -1,5 +1,8 @@
-Yellow 0.4.13 [![Status](https://travis-ci.org/markseu/yellowcms.svg)](https://travis-ci.org/markseu/yellowcms)
+Yellow 0.4.13
 =============
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/markseu/yellowcms) 
+[![Status](https://travis-ci.org/markseu/yellowcms.svg)](https://travis-ci.org/markseu/yellowcms)
+
 Yellow is for people who make websites. [Visit website](http://datenstrom.se/yellow).
 
 How do I install this?
