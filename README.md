@@ -16,10 +16,11 @@ How do I get started?
 You already have everything you need. Start by editing your website.  
 Yellow is made of files and folders. A flat-file CMS. [Learn more about it](https://github.com/markseu/yellowcms-extensions/blob/master/documentation/english/README.md). 
 
-Contributing
-------------
-Feedback is much appreciated. Let us know about problems and ideas.  
-You can [report issues](https://github.com/markseu/yellowcms/issues) on Github and send [pull requests](https://help.github.com/articles/using-pull-requests/) for improvements.
+How can I contribute?
+---------------------
+Your feedback is much appreciated. Let us know about problems and ideas.  
+Everything is open source, made by the people who use Yellow. [Thank you](https://github.com/markseu/yellowcms/wiki/Yellow-contributors).  
+You can [report issues](https://github.com/markseu/yellowcms/issues) on Github and send [pull requests](https://help.github.com/articles/using-pull-requests/) for improvements.  
 
 License
 -------
