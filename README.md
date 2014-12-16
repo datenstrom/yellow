@@ -1,7 +1,6 @@
-Yellow 0.4.13
+Yellow 0.4.14
 =============
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/markseu/yellowcms) 
-[![Status](https://travis-ci.org/markseu/yellowcms.svg)](https://travis-ci.org/markseu/yellowcms)
 
 Yellow is for people who make websites. [Visit website](http://datenstrom.se/yellow).
 
@@ -26,6 +25,5 @@ You can [report issues](https://github.com/markseu/yellowcms/issues) on Github a
 
 License
 -------
-* Yellow by Mark Seuffert and David Fehrmann is licensed under [GPLv2](http://opensource.org/licenses/GPL-2.0).
-* Yellow extensions are licensed under [GPLv2](http://opensource.org/licenses/GPL-2.0) unless stated otherwise.
-* [PHP Markdown Extra](https://github.com/michelf/php-markdown) by Michel Fortin is licensed under [BSD license](http://opensource.org/licenses/BSD-3-Clause).
+Yellow by Mark Seuffert and David Fehrmann is licensed under [GPLv2](http://opensource.org/licenses/GPL-2.0).  
+Yellow extensions are licensed under [GPLv2](http://opensource.org/licenses/GPL-2.0) unless stated otherwise.

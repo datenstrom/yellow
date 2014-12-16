@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.4.13";
+	const Version = "0.4.14";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -417,7 +417,7 @@ class YellowPage
 			$this->yellow->config->get("language")));
 		$this->set("parser", $this->yellow->config->get("parser"));
 		
-		if(preg_match("/^(\-\-\-[\r\n]+)(.+?)([\r\n]+\-\-\-[\r\n]+)/s", $this->rawData, $parsed))
+		if(preg_match("/^(\xEF\xBB\xBF)?\-\-\-[\r\n]+(.+?)[\r\n]+\-\-\-[\r\n]+/s", $this->rawData, $parsed))
 		{
 			$this->metaDataOffsetBytes = strlenb($parsed[0]);
 			foreach(preg_split("/[\r\n]+/", $parsed[2]) as $line)
@@ -425,9 +425,9 @@ class YellowPage
 				preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
 				if(!empty($matches[1]) && !strempty($matches[2])) $this->set(lcfirst($matches[1]), $matches[2]);
 			}
-		} else if(preg_match("/^([^\r\n]+)([\r\n]+=+[\r\n]+)/", $this->rawData, $parsed)) {
+		} else if(preg_match("/^(\xEF\xBB\xBF)?([^\r\n]+)[\r\n]+=+[\r\n]+/", $this->rawData, $parsed)) {
 			$this->metaDataOffsetBytes = strlenb($parsed[0]);
-			$this->set("title", $parsed[1]);
+			$this->set("title", $parsed[2]);
 		}
 		
 		$shortHeader = $this->location == $this->yellow->pages->getHomeLocation($this->location);
