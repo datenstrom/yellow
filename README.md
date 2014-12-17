@@ -16,7 +16,7 @@ Yellow doesn't come with a lot of stuff. [Download Yellow extensions](https://gi
 How do I get started?
 ---------------------
 You already have everything you need. Start by editing your website.  
-Yellow is made of files and folders. A flat-file CMS. [Learn more about it](https://github.com/markseu/yellowcms-extensions/blob/master/documentation/english/README.md). 
+Yellow is made of files and folders. A flat-file CMS. [Learn more about it](https://github.com/markseu/yellowcms/wiki). 
 
 How can I contribute?
 ---------------------
