@@ -4,4 +4,4 @@ Title: Home
 Your website works! 
 
 You can now [edit this page](@pageedit) or use your text editor.  
-For more information see [Yellow documentation](https://github.com/markseu/yellowcms-extensions/blob/master/documentation/english/README.md).
+For more information see [Yellow documentation](https://github.com/markseu/yellowcms/wiki).
