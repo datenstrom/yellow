@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.4.14";
+	const Version = "0.4.15";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -1121,7 +1121,13 @@ class YellowConfig
 	// Return configuration
 	function get($key)
 	{
-		return $this->isExisting($key) ? $this->config[$key] : $this->configDefaults[$key];
+		if(!is_null($this->config[$key]))
+		{
+			$value = $this->config[$key];
+		} else {
+			$value = !is_null($this->configDefaults[$key]) ? $this->configDefaults[$key] : "";
+		}
+		return $value;
 	}
 	
 	// Return configuration, HTML encoded

@@ -5,7 +5,7 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.4.5";
+	const Version = "0.4.6";
 	var $yellow;				//access to API
 	var $active;				//web interface is active? (boolean)
 	var $userLoginFailed;		//web interface login failed? (boolean)
@@ -216,8 +216,8 @@ class YellowWebinterface
 		$statusCode = 0;
 		if($this->userPermission && !empty($_POST["rawdataedit"]))
 		{
-			$this->rawDataSource = $this->rawDataEdit = stripcslashes($_POST["rawdatasource"]);
-			$page = $this->getPageNew($serverScheme, $serverName, $base, $location, $fileName, stripcslashes($_POST["rawdataedit"]));
+			$this->rawDataSource = $this->rawDataEdit = rawurldecode($_POST["rawdatasource"]);
+			$page = $this->getPageNew($serverScheme, $serverName, $base, $location, $fileName, rawurldecode($_POST["rawdataedit"]));
 			if(!$page->isError())
 			{
 				if($this->yellow->toolbox->createFile($page->fileName, $page->rawData))
@@ -245,8 +245,8 @@ class YellowWebinterface
 		$statusCode = 0;
 		if($this->userPermission && !empty($_POST["rawdataedit"]))
 		{
-			$this->rawDataSource = stripcslashes($_POST["rawdatasource"]);
-			$this->rawDataEdit = stripcslashes($_POST["rawdataedit"]);
+			$this->rawDataSource = rawurldecode($_POST["rawdatasource"]);
+			$this->rawDataEdit = rawurldecode($_POST["rawdataedit"]);
 			$page = $this->getPageUpdate($serverScheme, $serverName, $base, $location, $fileName,
 				$this->rawDataSource, $this->rawDataEdit, $this->yellow->toolbox->getFileData($fileName));
 			if(!$page->isError())
@@ -277,7 +277,7 @@ class YellowWebinterface
 		$statusCode = 0;
 		if($this->userPermission)
 		{
-			$this->rawDataSource = $this->rawDataEdit = stripcslashes($_POST["rawdatasource"]);
+			$this->rawDataSource = $this->rawDataEdit = rawurldecode($_POST["rawdatasource"]);
 			if(!is_file($fileName) || $this->yellow->toolbox->deleteFile($fileName))
 			{
 				$statusCode = 303;

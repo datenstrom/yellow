@@ -1,4 +1,4 @@
-Yellow 0.4.14
+Yellow 0.4.15
 =============
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/markseu/yellowcms) 
 
@@ -11,7 +11,7 @@ How do I install this?
 3. Open your website in a browser.
 
 Installation requirements are Apache, mod_rewrite, PHP 5.3+.  
-Yellow doesn't come with a lot of stuff. [Download Yellow extensions](https://github.com/markseu/yellowcms-extensions). 
+Yellow doesn't come with a lot of stuff. There are [Yellow extensions](https://github.com/markseu/yellowcms-extensions). 
 
 How do I get started?
 ---------------------
