@@ -5,7 +5,7 @@
 // Markdown extra plugin
 class YellowMarkdownExtra
 {
-	const Version = "0.4.1";
+	const Version = "0.4.2";
 	var $yellow;		//access to API
 	
 	// Handle plugin initialisation
@@ -1852,9 +1852,9 @@ class MarkdownExtraParser extends MarkdownParser {
 	### Extra Attribute Parser ###
 
 	# Expression to use to catch attributes (includes the braces)
-	protected $id_class_attr_catch_re = '\{((?:[ ]*[#.][-_:a-zA-Z0-9]+){1,})[ ]*\}';
+	protected $id_class_attr_catch_re = '\{((?:[ ]*[#.a-z][-_:a-zA-Z0-9=]+){1,})[ ]*\}';
 	# Expression to use when parsing in a context when no capture is desired
-	protected $id_class_attr_nocatch_re = '\{(?:[ ]*[#.][-_:a-zA-Z0-9]+){1,}[ ]*\}';
+	protected $id_class_attr_nocatch_re = '\{(?:[ ]*[#.a-z][-_:a-zA-Z0-9=]+){1,}[ ]*\}';
 
 	protected function doExtraAttributes($tag_name, $attr) {
 	#
@@ -1866,17 +1866,21 @@ class MarkdownExtraParser extends MarkdownParser {
 		if (empty($attr)) return "";
 		
 		# Split on components
-		preg_match_all('/[#.][-_:a-zA-Z0-9]+/', $attr, $matches);
+		preg_match_all('/[#.a-z][-_:a-zA-Z0-9=]+/', $attr, $matches);
 		$elements = $matches[0];
 
 		# handle classes and ids (only first id taken into account)
 		$classes = array();
+		$attributes = array();
 		$id = false;
 		foreach ($elements as $element) {
 			if ($element{0} == '.') {
 				$classes[] = substr($element, 1);
 			} else if ($element{0} == '#') {
 				if ($id === false) $id = substr($element, 1);
+			} else if (strpos($element, '=') > 0) {
+				$parts = explode('=', $element, 2);
+				$attributes[] = $parts[0] . '="' . $parts[1] . '"';
 			}
 		}
 
@@ -1887,6 +1891,9 @@ class MarkdownExtraParser extends MarkdownParser {
 		}
 		if (!empty($classes)) {
 			$attr_str .= ' class="'.implode(" ", $classes).'"';
+		}
+		if (!$this->no_markup && !empty($attributes)) {
+			$attr_str .= ' '.implode(" ", $attributes);
 		}
 		return $attr_str;
 	}
@@ -2856,9 +2863,6 @@ class MarkdownExtraParser extends MarkdownParser {
 	#
 	# Form HTML definition lists.
 	#
-		# Prevent unescaped text, security bugfix for https://github.com/michelf/php-markdown/issues/175
-		if ($this->no_markup) return $text;
-									  
 		$less_than_tab = $this->tab_width - 1;
 
 		# Re-usable pattern to match any entire dl list:
