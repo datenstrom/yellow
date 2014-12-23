@@ -16,12 +16,12 @@ Yellow doesn't come with a lot of stuff. There are [Yellow extensions](https://g
 How do I get started?
 ---------------------
 You already have everything you need. Start by editing your website.  
-Yellow is made of files and folders. A flat-file CMS. [Learn more about it](https://github.com/markseu/yellowcms/wiki). 
+Yellow is a flat-file CMS. For more information see [Yellow documentation](https://github.com/markseu/yellowcms/wiki). 
 
-How can I contribute?
----------------------
+How do I contribute?
+--------------------
 Everything is open source, made by the people who use Yellow. [Thank you](https://github.com/markseu/yellowcms/wiki/Yellow-contributors).  
-You can [report issues](https://github.com/markseu/yellowcms/issues) on Github and send [pull requests](https://help.github.com/articles/using-pull-requests/) for improvements.  
+You can [report issues](https://github.com/markseu/yellowcms/issues) on GitHub and send [pull requests](https://help.github.com/articles/using-pull-requests/) for improvements.  
 
 License
 -------
