@@ -127,7 +127,7 @@ yellow.webinterface =
 		} else if(paneId == "yellow-pane-user") {
 			elementDiv.innerHTML =
 				"<p>"+yellow.config.userEmail+"</p>"+
-				"<p><a href=\""+this.getText("UserHelpUrl")+"\">"+this.getText("UserHelp")+"</a></p>" +
+				"<p><a href=\""+this.getText("UserHelpUrl")+"\" target=\"_blank\">"+this.getText("UserHelp")+"</a></p>" +
 				"<p><a href=\"#\" onclick=\"yellow.action('logout'); return false;\">"+this.getText("UserLogout")+"</a></p>";
 		}
 		elementPane.appendChild(elementDiv);
