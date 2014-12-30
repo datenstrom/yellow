@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.4.15";
+	const Version = "0.4.17";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
