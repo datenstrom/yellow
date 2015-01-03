@@ -11,5 +11,3 @@ before_script:
 script: php yellow.php build test
 notifications:
   webhooks: https://webhooks.gitter.im/e/a0277bd15b6872e420d5
-  on_success: change
-  on_failure: always
