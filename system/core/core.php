@@ -10,8 +10,8 @@ class Yellow
 	var $pages;				//pages from file system
 	var $config;			//configuration
 	var $text;				//text strings
-	var $toolbox;			//toolbox with helpers
 	var $plugins;			//plugins
+	var $toolbox;			//toolbox with helpers
 
 	function __construct()
 	{
@@ -570,14 +570,14 @@ class YellowPage
 		return $this->yellow->pages->find($parentTopLocation);
 	}
 	
-	// Return pages on the same level as current page
+	// Return page collection with pages on the same level as current page
 	function getSiblings($showInvisible = false)
 	{
 		$parentLocation = $this->yellow->pages->getParentLocation($this->location);
 		return $this->yellow->pages->findChildren($parentLocation, $showInvisible);
 	}
 	
-	// Return child pages relative to current page
+	// Return page collection with child pages relative to current page
 	function getChildren($showInvisible = false)
 	{
 		return $this->yellow->pages->findChildren($this->location, $showInvisible);
@@ -771,6 +771,15 @@ class YellowPageCollection extends ArrayObject
 	function reverse()
 	{
 		$this->exchangeArray(array_reverse($this->getArrayCopy()));
+		return $this;
+	}
+	
+	// Randomize page collection
+	function shuffle()
+	{
+		$array = $this->getArrayCopy();
+		shuffle($array);
+		$this->exchangeArray($array);
 		return $this;
 	}
 
@@ -1287,6 +1296,56 @@ class YellowText
 	function isExisting($key)
 	{
 		return !is_null($this->text[$this->language]) && !is_null($this->text[$this->language][$key]);
+	}
+}
+	
+// Yellow plugins
+class YellowPlugins
+{
+	var $plugins;		//registered plugins
+
+	function __construct()
+	{
+		$this->plugins = array();
+	}
+	
+	// Load plugins
+	function load()
+	{
+		global $yellow;
+		$path = dirname(__FILE__);
+		foreach($yellow->toolbox->getDirectoryEntries($path, "/^core-.*\.php$/", true, false) as $entry) require_once($entry);
+		$path = $yellow->config->get("pluginDir");
+		foreach($yellow->toolbox->getDirectoryEntries($path, "/^.*\.php$/", true, false) as $entry) require_once($entry);
+		foreach($this->plugins as $key=>$value)
+		{
+			$this->plugins[$key]["obj"] = new $value["class"];
+			if(defined("DEBUG") && DEBUG>=3) echo "YellowPlugins::load class:$value[class] $value[version]<br/>\n";
+			if(method_exists($this->plugins[$key]["obj"], "onLoad")) $this->plugins[$key]["obj"]->onLoad($yellow);
+		}
+	}
+	
+	// Register plugin
+	function register($name, $class, $version)
+	{
+		if(!$this->isExisting($name))
+		{
+			$this->plugins[$name] = array();
+			$this->plugins[$name]["class"] = $class;
+			$this->plugins[$name]["version"] = $version;
+		}
+	}
+	
+	// Return plugin object
+	function get($name)
+	{
+		return $this->plugins[$name]["obj"];
+	}
+	
+	// Check if plugin exists
+	function isExisting($name)
+	{
+		return !is_null($this->plugins[$name]);
 	}
 }
 
@@ -2256,50 +2315,6 @@ class YellowToolbox
 	function timerStop(&$time)
 	{
 		$time = intval((microtime(true)-$time) * 1000);
-	}
-}
-
-// Yellow plugins
-class YellowPlugins
-{
-	var $plugins;		//registered plugins
-
-	function __construct()
-	{
-		$this->plugins = array();
-	}
-	
-	// Load plugins
-	function load()
-	{
-		global $yellow;
-		$path = dirname(__FILE__);
-		foreach($yellow->toolbox->getDirectoryEntries($path, "/^core-.*\.php$/", true, false) as $entry) require_once($entry);
-		$path = $yellow->config->get("pluginDir");
-		foreach($yellow->toolbox->getDirectoryEntries($path, "/^.*\.php$/", true, false) as $entry) require_once($entry);
-		foreach($this->plugins as $key=>$value)
-		{
-			$this->plugins[$key]["obj"] = new $value["class"];
-			if(defined("DEBUG") && DEBUG>=3) echo "YellowPlugins::load class:$value[class] $value[version]<br/>\n";
-			if(method_exists($this->plugins[$key]["obj"], "onLoad")) $this->plugins[$key]["obj"]->onLoad($yellow);
-		}
-	}
-	
-	// Register plugin
-	function register($name, $class, $version)
-	{
-		if(!$this->isExisting($name))
-		{
-			$this->plugins[$name] = array();
-			$this->plugins[$name]["class"] = $class;
-			$this->plugins[$name]["version"] = $version;
-		}
-	}
-	
-	// Check if plugin exists
-	function isExisting($name)
-	{
-		return !is_null($this->plugins[$name]);
 	}
 }
 
