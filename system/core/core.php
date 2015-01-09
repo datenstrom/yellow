@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.4.18";
+	const Version = "0.4.19";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -167,6 +167,10 @@ class Yellow
 		if(!is_file($fileNameTheme))
 		{
 			$this->page->error(500, "Theme '".$this->page->get("theme")."' does not exist!");
+		}
+		if(!$this->text->isLanguage($this->page->get("language")))
+		{
+			$this->page->error(500, "Language '".$this->page->get("language")."' does not exist!");
 		}
 		if(!is_object($this->page->parser))
 		{
@@ -1238,7 +1242,7 @@ class YellowText
 	// Return text string for specific language
 	function getText($key, $language)
 	{
-		return ($this->isText($key, $language)) ? $this->text[$language][$key] : "[$key]";
+		return $this->isExisting($key, $language) ? $this->text[$language][$key] : "[$key]";
 	}
 	
 	// Return text string for specific language, HTML encoded
@@ -1250,13 +1254,13 @@ class YellowText
 	// Return text string
 	function get($key)
 	{
-		return $this->isExisting($key) ? $this->text[$this->language][$key] : "[$key]";
+		return $this->getText($key, $this->language);
 	}
 	
 	// Return text string, HTML encoded
 	function getHtml($key)
 	{
-		return htmlspecialchars($this->get($key));
+		return htmlspecialchars($this->getText($key, $this->language));
 	}
 	
 	// Return text strings
@@ -1264,7 +1268,7 @@ class YellowText
 	{
 		$text = array();
 		if(empty($language)) $language = $this->language;
-		if(!is_null($this->text[$language]))
+		if($this->isLanguage($language))
 		{
 			if(empty($filterStart))
 			{
@@ -1285,17 +1289,18 @@ class YellowText
 	{
 		return $httpFormat ? $this->yellow->toolbox->getHttpTimeFormatted($this->modified) : $this->modified;
 	}
-	
-	// Check if text string for specific language exists
-	function isText($key, $language)
+
+	// Check if language exists
+	function isLanguage($language)
 	{
-		return !is_null($this->text[$language]) && !is_null($this->text[$language][$key]);
+		return !is_null($this->text[$language]);
 	}
 	
 	// Check if text string exists
-	function isExisting($key)
+	function isExisting($key, $language = "")
 	{
-		return !is_null($this->text[$this->language]) && !is_null($this->text[$this->language][$key]);
+		if(empty($language)) $language = $this->language;
+		return !is_null($this->text[$language]) && !is_null($this->text[$language][$key]);
 	}
 }
 	

@@ -1,4 +1,4 @@
-/* Yellow default theme 0.4.2 */
+/* Yellow default theme 0.4.3 */
 
 html, body, div, form, pre, span, tr, th, td { margin:0; padding:0; border:0; vertical-align:baseline; }
 body { 
@@ -28,6 +28,9 @@ a, img { border:none; text-decoration:none; }
 .content h1 a:hover { text-decoration:none; }
 .content img { max-width:100%; height:auto; }
 .content form { margin:1em 0; }
+.content table { border-spacing:0; border-collapse:collapse; }
+.content th { text-align:left; padding:0.3em; border-bottom: 1px solid #ddd;}
+.content td { text-align:left; padding:0.3em; border-top: 1px solid #ddd;}
 .content .flexible { position:relative; padding-bottom:56.25%; padding-top:30px; }
 .content .flexible iframe { position:absolute; top:0; left:0; width:100%; height:100%; }
 .footer { margin-top:2em; }

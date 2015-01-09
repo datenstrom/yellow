@@ -5,7 +5,7 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.4.6";
+	const Version = "0.4.7";
 	var $yellow;				//access to API
 	var $active;				//web interface is active? (boolean)
 	var $userLoginFailed;		//web interface login failed? (boolean)
@@ -111,6 +111,7 @@ class YellowWebinterface
 			}
 			$header .= "yellow.config = ".json_encode($this->getDataConfig()).";\n";
 			$language = $this->isUser() ? $this->users->getLanguage() : $page->get("language");
+			if(!$this->yellow->text->isLanguage($language)) $language = $this->yellow->config->get("language");
 			$header .= "yellow.text = ".json_encode($this->yellow->text->getData("webinterface", $language)).";\n";
 			if(defined("DEBUG")) $header .= "yellow.debug = ".json_encode(DEBUG).";\n";
 			$header .= "// ]]>\n";
