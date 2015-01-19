@@ -7,7 +7,7 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ yellow.php [L]
 DirectoryIndex index.html yellow.php
-RewriteRule ^(cache|content|system)/ error404.html [L]
+RewriteRule ^(cache|content|system)/ error [L]
 
 # Yellow static pages
 
