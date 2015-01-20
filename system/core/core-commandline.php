@@ -5,7 +5,7 @@
 // Command line core plugin
 class YellowCommandline
 {
-	const Version = "0.4.4";
+	const Version = "0.4.5";
 	var $yellow;				//access to API
 	var $content;				//number of content pages
 	var $media;					//number of media files
@@ -183,8 +183,8 @@ class YellowCommandline
 		$_SERVER["REQUEST_URI"] = $this->yellow->config->get("serverBase")."/";
 		$_SERVER["SCRIPT_NAME"] = $this->yellow->config->get("serverBase")."yellow.php";
 		$_REQUEST = array();
-		$statusCode = $this->yellow->request($statusCodeRequest);
 		$fileName = "$path/".$this->yellow->config->get("staticErrorFile");
+		$statusCode = $this->yellow->request($statusCodeRequest);
 		if($statusCode == $statusCodeRequest)
 		{
 			$statusCode = 200;
@@ -194,7 +194,8 @@ class YellowCommandline
 			   !$this->yellow->toolbox->modifyFile($fileName, $modified))
 			{
 				$statusCode = 500;
-				$this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
+				$this->yellow->page->statusCode = $statusCode;
+				$this->yellow->page->set("pageError", "Can't write file '$fileName'!");
 			}
 		}
 		ob_end_clean();
@@ -202,7 +203,7 @@ class YellowCommandline
 		if($statusCode >= 400)
 		{
 			++$this->error;
-			echo "ERROR building error file '$fileName', ".$this->yellow->page->getStatusCode(true)."\n";
+			echo "ERROR building error file, ".$this->yellow->page->getStatusCode(true)."\n";
 		}
 		if(defined("DEBUG") && DEBUG>=1) echo "YellowCommandline::buildStaticError status:$statusCode file:$fileName\n";
 		return $statusCode;
@@ -218,7 +219,8 @@ class YellowCommandline
 		{
 			++$this->error;
 			$fileType = $fileTypeMedia ? "media file" : "system file";
-			echo "ERROR building $fileType '$fileNameDest', ".$this->yellow->toolbox->getHttpStatusFormatted($statusCode)."\n";
+			$fileError = $this->yellow->toolbox->getHttpStatusFormatted($statusCode);
+			echo "ERROR building $fileType, $fileError: Can't write file '$fileNameDest'!\n";
 		}
 		if(defined("DEBUG") && DEBUG>=1) echo "YellowCommandline::buildStaticFile status:$statusCode file:$fileNameDest\n";
 		return $statusCode;
