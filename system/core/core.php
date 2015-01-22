@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.4.20";
+	const Version = "0.4.21";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -519,9 +519,10 @@ class YellowPage
 		
 		$shortHeader = $this->location == $this->yellow->pages->getHomeLocation($this->location);
 		$titleHeader = $shortHeader ? $this->get("sitename") : $this->get("title")." - ".$this->get("sitename");
+		if($this->get("titleContent") == "-") $this->set("titleContent", "");
+		if(!$this->isExisting("titleContent")) $this->set("titleContent", $this->get("title"));
 		if(!$this->isExisting("titleHeader")) $this->set("titleHeader", $titleHeader);
 		if(!$this->isExisting("titleNavigation")) $this->set("titleNavigation", $this->get("title"));
-		if(!$this->isExisting("titleContent")) $this->set("titleContent", $this->get("title"));
 		$this->set("pageRead", $this->yellow->toolbox->getUrl(
 			$this->yellow->config->get("serverScheme"), $this->yellow->config->get("serverName"),
 			$this->yellow->config->get("serverBase"), $this->location));
