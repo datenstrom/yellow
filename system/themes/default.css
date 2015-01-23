@@ -1,4 +1,4 @@
-/* Yellow default theme 0.4.3 */
+/* Yellow default theme 0.4.4 */
 
 html, body, div, form, pre, span, tr, th, td { margin:0; padding:0; border:0; vertical-align:baseline; }
 body { 
@@ -16,7 +16,7 @@ a { color:#07d; }
 a:hover { color:#07d; text-decoration:underline; }
 a, img { border:none; text-decoration:none; }
 .sitename h1 { margin-top:0.5em; margin-bottom:0em; font-size:2.2em; font-weight:500; }
-.sitename a { color:#111; text-decoration:none; }
+.sitename h1 a { color:#111; text-decoration:none; }
 .navigation { margin-top:-0.5em; margin-bottom:1em; line-height:2em; }
 .navigation a { color:#717171; padding:0 0.3em; display:inline-block; }
 .navigation a:hover { color:#07d; }
@@ -29,8 +29,8 @@ a, img { border:none; text-decoration:none; }
 .content img { max-width:100%; height:auto; }
 .content form { margin:1em 0; }
 .content table { border-spacing:0; border-collapse:collapse; }
-.content th { text-align:left; padding:0.3em; border-bottom: 1px solid #ddd;}
-.content td { text-align:left; padding:0.3em; border-top: 1px solid #ddd;}
+.content th { text-align:left; padding:0.3em; border-bottom:1px solid #ddd;}
+.content td { text-align:left; padding:0.3em; border-top:1px solid #ddd;}
 .content .flexible { position:relative; padding-bottom:56.25%; padding-top:30px; }
 .content .flexible iframe { position:absolute; top:0; left:0; width:100%; height:100%; }
 .footer { margin-top:2em; }
