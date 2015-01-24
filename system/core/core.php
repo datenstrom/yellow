@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.4.21";
+	const Version = "0.4.22";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -238,7 +238,7 @@ class Yellow
 	// Send file response
 	function sendFile($statusCode, $fileName, $cacheable)
 	{
-		$lastModified = $this->toolbox->getHttpTimeFormatted(filemtime($fileName));
+		$lastModified = $this->toolbox->getHttpDateFormatted(filemtime($fileName));
 		if($statusCode==200 && $cacheable && $this->toolbox->isFileNotModified($lastModified))
 		{
 			$statusCode = 304;
@@ -264,7 +264,7 @@ class Yellow
 			if(!empty($responseHeader))
 			{
 				$this->page->header($responseHeader);
-				$this->page->header("Last-Modified: ".$this->toolbox->getHttpTimeFormatted(time()));
+				$this->page->header("Last-Modified: ".$this->toolbox->getHttpDateFormatted(time()));
 				if($statusCode>=301 && $statusCode<=303) $this->sendStaticRedirect();
 			}
 		}
@@ -615,6 +615,13 @@ class YellowPage
 	{
 		return htmlspecialchars($this->get($key));
 	}
+	
+	// Return page meta data as human readable date, HTML encoded
+	function getFormatted($key, $dateFormat = "")
+	{
+		if(empty($dateFormat)) $dateFormat = $this->yellow->text->get("languageDateFormat");
+		return htmlspecialchars(date($dateFormat, strtotime($this->get($key))));
+	}
 
 	// Return page content, HTML encoded or raw format
 	function getContent($rawFormat = false)
@@ -684,14 +691,14 @@ class YellowPage
 		return $this->yellow->toolbox->getUrl($this->serverScheme, $this->serverName, $this->base, $this->location);
 	}
 	
-	// Return page modification time, Unix time
+	// Return page modification date, Unix time or HTTP format
 	function getModified($httpFormat = false)
 	{
 		$modified = strtotime($this->get("modified"));
-		return $httpFormat ? $this->yellow->toolbox->getHttpTimeFormatted($modified) : $modified;
+		return $httpFormat ? $this->yellow->toolbox->getHttpDateFormatted($modified) : $modified;
 	}
 	
-	// Return page status code
+	// Return page status code, number or HTTP format
 	function getStatusCode($httpFormat = false)
 	{
 		$statusCode = $this->statusCode;
@@ -935,12 +942,12 @@ class YellowPageCollection extends ArrayObject
 		return $this->filterValue;
 	}
 	
-	// Return last modification time for page collection, Unix time
+	// Return last modification date for page collection, Unix time or HTTP format
 	function getModified($httpFormat = false)
 	{
 		$modified = 0;
 		foreach($this->getIterator() as $page) $modified = max($modified, $page->getModified());
-		return $httpFormat ? $this->yellow->toolbox->getHttpTimeFormatted($modified) : $modified;
+		return $httpFormat ? $this->yellow->toolbox->getHttpDateFormatted($modified) : $modified;
 	}
 	
 	// Return first page in page collection
@@ -1173,7 +1180,7 @@ class YellowPages
 class YellowConfig
 {
 	var $yellow;			//access to API
-	var $modified;			//configuration modification time
+	var $modified;			//configuration modification date
 	var $config;			//configuration
 	var $configDefaults;	//configuration defaults
 	
@@ -1253,10 +1260,10 @@ class YellowConfig
 		return $config;
 	}
 	
-	// Return configuration modification time, Unix time
+	// Return configuration modification date, Unix time or HTTP format
 	function getModified($httpFormat = false)
 	{
-		return $httpFormat ? $this->yellow->toolbox->getHttpTimeFormatted($this->modified) : $this->modified;
+		return $httpFormat ? $this->yellow->toolbox->getHttpDateFormatted($this->modified) : $this->modified;
 	}
 	
 	// Check if configuration exists
@@ -1270,7 +1277,7 @@ class YellowConfig
 class YellowText
 {
 	var $yellow;		//access to API
-	var $modified;		//text modification time
+	var $modified;		//text modification date
 	var $text;			//text strings
 	var $language;		//current language
 	
@@ -1371,10 +1378,10 @@ class YellowText
 		return $text;
 	}
 	
-	// Return text modification time, Unix time
+	// Return text modification date, Unix time or HTTP format
 	function getModified($httpFormat = false)
 	{
-		return $httpFormat ? $this->yellow->toolbox->getHttpTimeFormatted($this->modified) : $this->modified;
+		return $httpFormat ? $this->yellow->toolbox->getHttpDateFormatted($this->modified) : $this->modified;
 	}
 
 	// Check if language exists
@@ -1954,12 +1961,12 @@ class YellowToolbox
 	{
 		if(!preg_match("/^\w+:/", trim(html_entity_decode($location, ENT_QUOTES, "UTF-8"))))
 		{
-			if(!preg_match("/^\//", $location))
+			if(preg_match("/^\#/", $location))
 			{
+				$location = $pageBase.$pageLocation.$location;
+			} else if(!preg_match("/^\//", $location)) {
 				$location = $this->getDirectoryLocation($pageBase.$pageLocation).$location;
-			}
-			else if(!preg_match("#^$pageBase#", $location))
-			{
+			} else if(!preg_match("#^$pageBase#", $location)) {
 				$location = $pageBase.$location;
 			}
 		} else {
@@ -2017,8 +2024,8 @@ class YellowToolbox
 		return $text;
 	}
 							  
-	// Return human readable HTTP time
-	function getHttpTimeFormatted($timestamp)
+	// Return human readable HTTP date
+	function getHttpDateFormatted($timestamp)
 	{
 		return gmdate("D, d M Y H:i:s", $timestamp)." GMT";
 	}
