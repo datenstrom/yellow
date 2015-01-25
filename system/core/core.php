@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.4.22";
+	const Version = "0.4.23";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -1957,17 +1957,20 @@ class YellowToolbox
 	}
 	
 	// Normalise location, make absolute location
-	function normaliseLocation($location, $pageBase, $pageLocation, $filterStrict = true)
+	function normaliseLocation($location, $pageBase, $pageLocation, $staticLocation = "", $filterStrict = true)
 	{
 		if(!preg_match("/^\w+:/", trim(html_entity_decode($location, ENT_QUOTES, "UTF-8"))))
 		{
-			if(preg_match("/^\#/", $location))
+			if(empty($staticLocation) || !preg_match("#^$staticLocation#", $location))
 			{
-				$location = $pageBase.$pageLocation.$location;
-			} else if(!preg_match("/^\//", $location)) {
-				$location = $this->getDirectoryLocation($pageBase.$pageLocation).$location;
-			} else if(!preg_match("#^$pageBase#", $location)) {
-				$location = $pageBase.$location;
+				if(preg_match("/^\#/", $location))
+				{
+					$location = $pageBase.$pageLocation.$location;
+				} else if(!preg_match("/^\//", $location)) {
+					$location = $this->getDirectoryLocation($pageBase.$pageLocation).$location;
+				} else if(!preg_match("#^$pageBase#", $location)) {
+					$location = $pageBase.$location;
+				}
 			}
 		} else {
 			if($filterStrict && !preg_match("/^(http|https|ftp|mailto):/", $location)) $location = "error-xss-filter";

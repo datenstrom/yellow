@@ -5,7 +5,7 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.4.8";
+	const Version = "0.4.9";
 	var $yellow;				//access to API
 	var $active;				//web interface is active? (boolean)
 	var $userLoginFailed;		//web interface login failed? (boolean)
@@ -69,24 +69,6 @@ class YellowWebinterface
 				}
 			}
 		}
-	}
-	
-	// Handle page content parsing
-	function onParseContent($page, $text)
-	{
-		$output = NULL;
-		if($this->isActive() && $this->isUser())
-		{
-			$serverBase = $this->yellow->config->get("serverBase");
-			$activePath = trim($this->yellow->config->get("webinterfaceLocation"), '/');
-			$callback = function($matches) use ($serverBase, $activePath)
-			{
-				$matches[2] = preg_replace("#^$serverBase/(?!$activePath)(.*)$#", "$serverBase/$activePath/$1", $matches[2]);
-				return "<a$matches[1]href=\"$matches[2]\"$matches[3]>";
-			};
-			$output = preg_replace_callback("/<a(.*?)href=\"([^\"]+)\"(.*?)>/i", $callback, $text);
-		}
-		return $output;
 	}
 	
 	// Handle page extra header

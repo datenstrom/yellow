@@ -5,7 +5,7 @@
 // Markdown extra plugin
 class YellowMarkdownExtra
 {
-	const Version = "0.4.2";
+	const Version = "0.4.3";
 	var $yellow;		//access to API
 	
 	// Handle plugin initialisation
@@ -39,6 +39,7 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser
 		$this->url_filter_func = function($url) use ($yellow, $page)
 		{
 			return $yellow->toolbox->normaliseLocation($url, $page->base, $page->location,
+				$yellow->config->get("serverBase").$yellow->config->get("imageLocation"),
 				$page->parserSafeMode && $page->statusCode==200);
 		};
 		parent::__construct();
