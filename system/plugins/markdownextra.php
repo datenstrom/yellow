@@ -1,11 +1,11 @@
 <?php
-// Copyright (c) 2013-2014 Datenstrom, http://datenstrom.se
+// Copyright (c) 2013-2015 Datenstrom, http://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 // Markdown extra plugin
 class YellowMarkdownExtra
 {
-	const Version = "0.4.3";
+	const Version = "0.4.4";
 	var $yellow;		//access to API
 	
 	// Handle plugin initialisation
@@ -117,7 +117,7 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser
 		$text = $matches[1];
 		$level = $matches[3]{0} == '=' ? 1 : 2;
 		$attr = $this->doExtraAttributes("h$level", $dummy =& $matches[2]);
-		if(empty($attr) && $level==2) $attr = $this->getIdAttribute($text);
+		if(empty($attr) && $level>=2 && $level<=3) $attr = $this->getIdAttribute($text);
 		$output = "<h$level$attr>".$this->runSpanGamut($text)."</h$level>";
 		return "\n".$this->hashBlock($output)."\n\n";
 	}
@@ -128,7 +128,7 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser
 		$text = $matches[2];
 		$level = strlen($matches[1]);
 		$attr = $this->doExtraAttributes("h$level", $dummy =& $matches[3]);
-		if(empty($attr) && $level==2) $attr = $this->getIdAttribute($text);
+		if(empty($attr) && $level>=2 && $level<=3) $attr = $this->getIdAttribute($text);
 		$output = "<h$level$attr>".$this->runSpanGamut($text)."</h$level>";
 		return "\n".$this->hashBlock($output)."\n\n";
 	}
