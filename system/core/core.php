@@ -1,11 +1,11 @@
 <?php
-// Copyright (c) 2013-2014 Datenstrom, http://datenstrom.se
+// Copyright (c) 2013-2015 Datenstrom, http://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 // Yellow main class
 class Yellow
 {
-	const Version = "0.4.23";
+	const Version = "0.4.24";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -169,9 +169,6 @@ class Yellow
 		$this->page = new YellowPage($this);
 		$this->page->setRequestInformation($serverScheme, $serverName, $base, $location, $fileName);
 		$this->page->parseData($this->toolbox->getFileData($fileName), $cacheable, $statusCode, $pageError);
-		$this->page->setHeader("Content-Type", "text/html; charset=UTF-8");
-		$this->page->setHeader("Last-Modified", $this->page->getModified(true));
-		if(!$this->page->isCacheable()) $this->page->setHeader("Cache-Control", "no-cache, must-revalidate");
 		$this->text->setLanguage($this->page->get("language"));
 		$this->page->parseContent();
 		return $fileName;
@@ -180,42 +177,21 @@ class Yellow
 	// Send page response
 	function sendPage()
 	{
-		$this->template($this->page->get("template"));
-		$fileNameTheme = $this->config->get("themeDir").$this->page->get("theme").".css";
-		if(!is_file($fileNameTheme))
-		{
-			$this->page->error(500, "Theme '".$this->page->get("theme")."' does not exist!");
-		}
-		if(!$this->text->isLanguage($this->page->get("language")))
-		{
-			$this->page->error(500, "Language '".$this->page->get("language")."' does not exist!");
-		}
-		if(!is_object($this->page->parser))
-		{
-			$this->page->error(500, "Parser '".$this->page->get("parser")."' does not exist!");
-		}
+		$this->page->parseResponse();
 		$statusCode = $this->page->statusCode;
+		$lastModifiedFormatted = $this->page->getHeader("Last-Modified");
+		if($statusCode==200 && $this->page->isCacheable() && $this->toolbox->isFileNotModified($lastModifiedFormatted))
+		{
+			$statusCode = 304;
+			$this->page->clean($statusCode);
+		}
 		if($statusCode==200 && $this->getRequestHandler()=="core" && $this->page->isExisting("redirect"))
 		{
 			$statusCode = 301;
 			$location = $this->toolbox->normaliseLocation($this->page->get("redirect"), $this->page->base, $this->page->location);
 			$locationHeader = $this->toolbox->getLocationHeader($this->page->serverScheme, $this->page->serverName, "", $location);
 			$this->page->clean($statusCode, $locationHeader);
-			$this->page->setHeader("Last-Modified", $this->page->getModified(true));
 			$this->page->setHeader("Cache-Control", "no-cache, must-revalidate");
-		}
-		if($statusCode==200 && $this->page->isCacheable() &&
-		   $this->toolbox->isFileNotModified($this->page->getHeader("Last-Modified")))
-		{
-			$statusCode = 304;
-			if($this->page->isHeader("Cache-Control")) $responseHeader = "Cache-Control: ".$this->page->getHeader("Cache-Control");
-			$this->page->clean($statusCode, $responseHeader);
-		}
-		list($contentType) = explode(';', $this->page->getHeader("Content-Type"));
-		if($statusCode==200 && !$this->toolbox->isValidContentType($contentType, $this->page->getLocation()))
-		{
-			$statusCode = 500;
-			$this->page->error($statusCode, "Type '$contentType' does not match file name!");
 		}
 		if($this->page->isExisting("pageClean")) ob_clean();
 		if(PHP_SAPI != "cli")
@@ -229,6 +205,7 @@ class Yellow
 		{
 			foreach($this->page->headerData as $key=>$value) echo "Yellow::sendPage $key: $value<br/>\n";
 			$fileNameTemplate = $this->config->get("templateDir").$this->page->get("template").".php";
+			$fileNameTheme = $this->config->get("themeDir").$this->page->get("theme").".css";
 			$parserName = $this->page->get("parser");
 			echo "Yellow::sendPage template:$fileNameTemplate theme:$fileNameTheme parser:$parserName<br/>\n";
 		}
@@ -238,17 +215,18 @@ class Yellow
 	// Send file response
 	function sendFile($statusCode, $fileName, $cacheable)
 	{
-		$lastModified = $this->toolbox->getHttpDateFormatted(filemtime($fileName));
-		if($statusCode==200 && $cacheable && $this->toolbox->isFileNotModified($lastModified))
+		$lastModifiedFormatted = $this->toolbox->getHttpDateFormatted(filemtime($fileName));
+		if($statusCode==200 && $cacheable && $this->toolbox->isFileNotModified($lastModifiedFormatted))
 		{
 			$statusCode = 304;
+			@header($this->toolbox->getHttpStatusFormatted($statusCode));
 		} else {
+			@header($this->toolbox->getHttpStatusFormatted($statusCode));
+			if(!$cacheable) @header("Cache-Control: no-cache, must-revalidate");
+			@header("Content-Type: ".$this->toolbox->getMimeContentType($fileName));
+			@header("Last-Modified: ".$lastModifiedFormatted);
 			echo $this->toolbox->getFileData($fileName);
 		}
-		@header($this->toolbox->getHttpStatusFormatted($statusCode));
-		@header("Content-Type: ".$this->toolbox->getMimeContentType($fileName));
-		@header("Last-Modified: ".$lastModified);
-		if(!$cacheable) @header("Cache-Control: no-cache, must-revalidate");
 		return $statusCode;
 	}
 
@@ -261,18 +239,16 @@ class Yellow
 			if(!$cacheable) @header("Cache-Control: no-cache, must-revalidate");
 			if(!empty($responseHeader)) @header($responseHeader);
 		} else {
-			if(!empty($responseHeader))
-			{
-				$this->page->header($responseHeader);
-				$this->page->header("Last-Modified: ".$this->toolbox->getHttpDateFormatted(time()));
-				if($statusCode>=301 && $statusCode<=303) $this->sendStaticRedirect();
-			}
+			if(!empty($responseHeader)) $this->page->header($responseHeader);
+			if($statusCode>=301 && $statusCode<=303) $this->sendStaticRedirect();
 		}
 	}
 
 	// Send static redirect response
 	function sendStaticRedirect()
 	{
+		$lastModifiedFormatted = $this->toolbox->getHttpDateFormatted(time());
+		if(!$this->page->isHeader("Last-Modified")) $this->page->setHeader("Last-Modified", $lastModifiedFormatted);
 		echo "<!DOCTYPE html><html>\n<head>\n";
 		echo "<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" />\n";
 		echo "<meta http-equiv=\"refresh\" content=\"0;url=".htmlspecialchars($this->page->getHeader("Location"))."\" />\n";
@@ -389,6 +365,7 @@ class Yellow
 		$fileNameTemplate = $this->config->get("templateDir")."$name.php";
 		if(is_file($fileNameTemplate))
 		{
+			$this->page->setLastModified(filemtime($fileNameTemplate));
 			global $yellow;
 			require($fileNameTemplate);
 		} else {
@@ -399,10 +376,11 @@ class Yellow
 	// Execute snippet
 	function snippet($name, $args = NULL)
 	{
-		$this->pages->snippetArgs = func_get_args();
 		$fileNameSnippet = $this->config->get("snippetDir")."$name.php";
 		if(is_file($fileNameSnippet))
 		{
+			$this->page->setLastModified(filemtime($fileNameSnippet));
+			$this->pages->snippetArgs = func_get_args();
 			global $yellow;
 			require($fileNameSnippet);
 		} else {
@@ -426,6 +404,7 @@ class YellowPage
 	var $base;					//base location
 	var $location;				//page location
 	var $fileName;				//content file name
+	var $lastModified;			//last modification date
 	var $rawData;				//raw data of page
 	var $metaDataOffsetBytes;	//meta data offset
 	var $metaData;				//meta data
@@ -458,6 +437,7 @@ class YellowPage
 	// Parse page data
 	function parseData($rawData, $cacheable, $statusCode = 0, $pageError = "")
 	{
+		$this->lastModified = 0;
 		$this->rawData = $rawData;
 		$this->parserData = "";
 		$this->parser = NULL;
@@ -517,8 +497,8 @@ class YellowPage
 			$this->set("title", $parsed[2]);
 		}
 		
-		$shortHeader = $this->location == $this->yellow->pages->getHomeLocation($this->location);
-		$titleHeader = $shortHeader ? $this->get("sitename") : $this->get("title")." - ".$this->get("sitename");
+		$titleHeader = ($this->location == $this->yellow->pages->getHomeLocation($this->location)) ?
+			$this->get("sitename") : $this->get("title")." - ".$this->get("sitename");
 		if($this->get("titleContent") == "-") $this->set("titleContent", "");
 		if(!$this->isExisting("titleContent")) $this->set("titleContent", $this->get("title"));
 		if(!$this->isExisting("titleHeader")) $this->set("titleHeader", $titleHeader);
@@ -584,6 +564,32 @@ class YellowPage
 		}
 		if(defined("DEBUG") && DEBUG>=3 && !empty($name)) echo "YellowPage::parseType name:$name shortcut:$typeShortcut<br/>\n";
 		return $output;
+	}
+	
+	// Parse page response
+	function parseResponse()
+	{
+		$this->yellow->template($this->get("template"));
+		if(!$this->isCacheable()) $this->setHeader("Cache-Control", "no-cache, must-revalidate");
+		if(!$this->isHeader("Content-Type")) $this->setHeader("Content-Type", "text/html; charset=utf-8");
+		if(!$this->isHeader("Content-Modified")) $this->setHeader("Content-Modified", $this->getModified(true));
+		if(!$this->isHeader("Last-Modified")) $this->setHeader("Last-Modified", $this->getLastModified(true));
+		if(!is_file($this->yellow->config->get("themeDir").$this->get("theme").".css"))
+		{
+			$this->error(500, "Theme '".$this->get("theme")."' does not exist!");
+		}
+		if(!$this->yellow->text->isLanguage($this->get("language")))
+		{
+			$this->error(500, "Language '".$this->get("language")."' does not exist!");
+		}
+		if(!is_object($this->parser))
+		{
+			$this->error(500, "Parser '".$this->get("parser")."' does not exist!");
+		}
+		if(!$this->yellow->toolbox->isValidContentType($this->getHeader("Content-Type"), $this->getLocation()))
+		{
+			$this->error(500, "Type '".$this->getHeader("Content-Type")."' does not match file name!");
+		}
 	}
 	
 	// Set page response header
@@ -691,10 +697,24 @@ class YellowPage
 		return $this->yellow->toolbox->getUrl($this->serverScheme, $this->serverName, $this->base, $this->location);
 	}
 	
-	// Return page modification date, Unix time or HTTP format
+	// Return page content modification date, Unix time or HTTP format
 	function getModified($httpFormat = false)
 	{
 		$modified = strtotime($this->get("modified"));
+		return $httpFormat ? $this->yellow->toolbox->getHttpDateFormatted($modified) : $modified;
+	}
+	
+	// Set last modification date, Unix time
+	function setLastModified($modified)
+	{
+		$this->lastModified = max($this->lastModified, $modified);
+	}
+	
+	// Return last modification date, Unix time or HTTP format
+	function getLastModified($httpFormat = false)
+	{
+		$modified = max($this->lastModified, $this->getModified(), $this->yellow->config->getModified(),
+			$this->yellow->text->getModified(), $this->yellow->plugins->getModified());
 		return $httpFormat ? $this->yellow->toolbox->getHttpDateFormatted($modified) : $modified;
 	}
 	
@@ -726,6 +746,7 @@ class YellowPage
 		if(!$this->isExisting("pageClean") && $statusCode>0)
 		{
 			$this->statusCode = $statusCode;
+			$this->lastModified = 0;
 			$this->headerData = array();
 			if(!empty($responseHeader)) $this->header($responseHeader);
 			$this->set("pageClean", (string)$statusCode);
@@ -942,7 +963,7 @@ class YellowPageCollection extends ArrayObject
 		return $this->filterValue;
 	}
 	
-	// Return last modification date for page collection, Unix time or HTTP format
+	// Return page collection modification date, Unix time or HTTP format
 	function getModified($httpFormat = false)
 	{
 		$modified = 0;
@@ -1402,10 +1423,12 @@ class YellowText
 class YellowPlugins
 {
 	var $plugins;		//registered plugins
+	var $modified;		//plugin modification date
 
 	function __construct()
 	{
 		$this->plugins = array();
+		$this->modified = 0;
 	}
 	
 	// Load plugins
@@ -1415,7 +1438,11 @@ class YellowPlugins
 		$path = $yellow->config->get("coreDir");
 		foreach($yellow->toolbox->getDirectoryEntries($path, "/^core-.*\.php$/", true, false) as $entry) require_once($entry);
 		$path = $yellow->config->get("pluginDir");
-		foreach($yellow->toolbox->getDirectoryEntries($path, "/^.*\.php$/", true, false) as $entry) require_once($entry);
+		foreach($yellow->toolbox->getDirectoryEntries($path, "/^.*\.php$/", true, false) as $entry)
+		{
+			$this->modified = max($this->modified, filemtime($entry));
+			require_once($entry);
+		}
 		foreach($this->plugins as $key=>$value)
 		{
 			$this->plugins[$key]["obj"] = new $value["class"];
@@ -1439,6 +1466,12 @@ class YellowPlugins
 	function get($name)
 	{
 		return $this->plugins[$name]["obj"];
+	}
+	
+	// Return plugins modification date, Unix time or HTTP format
+	function getModified($httpFormat = false)
+	{
+		return $httpFormat ? $this->yellow->toolbox->getHttpDateFormatted($this->modified) : $this->modified;
 	}
 	
 	// Check if plugin exists
@@ -1613,9 +1646,9 @@ class YellowToolbox
 	}
 	
 	// Check if file is unmodified since last HTTP request
-	function isFileNotModified($lastModified)
+	function isFileNotModified($lastModifiedFormatted)
 	{
-		return isset($_SERVER["HTTP_IF_MODIFIED_SINCE"]) && $_SERVER["HTTP_IF_MODIFIED_SINCE"]==$lastModified;
+		return isset($_SERVER["HTTP_IF_MODIFIED_SINCE"]) && $_SERVER["HTTP_IF_MODIFIED_SINCE"]==$lastModifiedFormatted;
 	}
 	
 	// Check if clean URL is requested
@@ -1629,7 +1662,8 @@ class YellowToolbox
 	{
 		$ok = false;
 		$extension = ($pos = strrposu($location, '.')) ? substru($location, $pos) : "";
-		if($contentType == "text/html")
+		$tokens = explode(';', $contentType);
+		if($tokens[0] == "text/html")
 		{
 			if($this->isFileLocation($location))
 			{
@@ -1640,7 +1674,7 @@ class YellowToolbox
 		} else {
 			if($this->isFileLocation($location))
 			{
-				if(!empty($extension) && preg_match("/^.*$extension$/", $contentType)) $ok = true;
+				if(!empty($extension) && preg_match("/^.*$extension$/", $tokens[0])) $ok = true;
 			}
 		}
 		return $ok;
@@ -2043,7 +2077,7 @@ class YellowToolbox
 			"png" => "image/png",
 			"txt" => "text/plain",
 			"woff" => "application/font-woff");
-		$contentType = "text/html; charset=UTF-8";
+		$contentType = "text/html; charset=utf-8";
 		$extension = ($pos = strrposu($fileName, '.')) ? substru($fileName, $pos+1) : "";
 		if(array_key_exists(strtoloweru($extension), $mimeTypes)) $contentType = $mimeTypes[$extension];
 		return $contentType;
@@ -2177,7 +2211,7 @@ class YellowToolbox
 		return @rename($fileNameSource, $fileNameDest);
 	}
 	
-	// Set file modification time, Unix time
+	// Set file modification date, Unix time
 	function modifyFile($fileName, $modified)
 	{
 		return @touch($fileName, $modified);
