@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.4.24";
+	const Version = "0.4.25";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -184,14 +184,6 @@ class Yellow
 		{
 			$statusCode = 304;
 			$this->page->clean($statusCode);
-		}
-		if($statusCode==200 && $this->getRequestHandler()=="core" && $this->page->isExisting("redirect"))
-		{
-			$statusCode = 301;
-			$location = $this->toolbox->normaliseLocation($this->page->get("redirect"), $this->page->base, $this->page->location);
-			$locationHeader = $this->toolbox->getLocationHeader($this->page->serverScheme, $this->page->serverName, "", $location);
-			$this->page->clean($statusCode, $locationHeader);
-			$this->page->setHeader("Cache-Control", "no-cache, must-revalidate");
 		}
 		if($this->page->isExisting("pageClean")) ob_clean();
 		if(PHP_SAPI != "cli")
@@ -586,9 +578,17 @@ class YellowPage
 		{
 			$this->error(500, "Parser '".$this->get("parser")."' does not exist!");
 		}
-		if(!$this->yellow->toolbox->isValidContentType($this->getHeader("Content-Type"), $this->getLocation()))
+		if($this->statusCode==200 && $this->yellow->getRequestHandler()=="core" &&
+		   !$this->yellow->toolbox->isValidContentType($this->getHeader("Content-Type"), $this->getLocation()))
 		{
 			$this->error(500, "Type '".$this->getHeader("Content-Type")."' does not match file name!");
+		}
+		if($this->statusCode==200 && $this->yellow->getRequestHandler()=="core" && $this->isExisting("redirect"))
+		{
+			$location = $this->yellow->toolbox->normaliseLocation($this->get("redirect"), $this->base, $this->location);
+			$locationHeader = $this->yellow->toolbox->getLocationHeader($this->serverScheme, $this->serverName, "", $location);
+			$this->clean(301, $locationHeader);
+			$this->setHeader("Cache-Control", "no-cache, must-revalidate");
 		}
 	}
 	
