@@ -578,7 +578,7 @@ class YellowPage
 		{
 			$this->error(500, "Parser '".$this->get("parser")."' does not exist!");
 		}
-		if($this->statusCode==200 && $this->yellow->getRequestHandler()=="core" &&
+		if($this->statusCode==200 &&
 		   !$this->yellow->toolbox->isValidContentType($this->getHeader("Content-Type"), $this->getLocation()))
 		{
 			$this->error(500, "Type '".$this->getHeader("Content-Type")."' does not match file name!");
