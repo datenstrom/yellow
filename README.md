@@ -1,4 +1,4 @@
-Yellow 0.4.25
+Yellow 0.4.26
 =============
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/markseu/yellowcms) 
 

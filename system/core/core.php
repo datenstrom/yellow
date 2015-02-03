@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.4.25";
+	const Version = "0.4.26";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -463,7 +463,6 @@ class YellowPage
 	function parseMeta($pageError = "")
 	{
 		$this->metaData = array();
-		$this->set("modified", date("c", is_readable($this->fileName) ? filemtime($this->fileName) : 0));
 		$this->set("title", $this->yellow->toolbox->createTextTitle($this->location));
 		$this->set("sitename", $this->yellow->config->get("sitename"));
 		$this->set("author", $this->yellow->config->get("author"));
@@ -474,6 +473,7 @@ class YellowPage
 		$this->set("language", $this->yellow->toolbox->findLanguageFromFile($this->fileName,
 			$this->yellow->config->get("contentDir"), $this->yellow->config->get("contentRootDir"),
 			$this->yellow->config->get("language")));
+		$this->set("modified", date("c", $this->yellow->toolbox->findModifiedFromFile($this->fileName)));
 		$this->set("parser", $this->yellow->config->get("parser"));
 		
 		if(preg_match("/^(\xEF\xBB\xBF)?\-\-\-[\r\n]+(.+?)[\r\n]+\-\-\-[\r\n]+/s", $this->rawData, $parsed))
@@ -623,10 +623,10 @@ class YellowPage
 	}
 	
 	// Return page meta data as human readable date, HTML encoded
-	function getFormatted($key, $dateFormat = "")
+	function getFormatted($key)
 	{
-		if(empty($dateFormat)) $dateFormat = $this->yellow->text->get("languageDateFormat");
-		return htmlspecialchars(date($dateFormat, strtotime($this->get($key))));
+		$dateFormat = $this->yellow->text->get("languageDateFormat");
+		return $this->yellow->text->getDateFormatted($dateFormat, strtotime($this->get($key)));
 	}
 
 	// Return page content, HTML encoded or raw format
@@ -1378,6 +1378,20 @@ class YellowText
 		return htmlspecialchars($this->getText($key, $this->language));
 	}
 	
+	// Return human readable date, HTML encoded
+	function getDateFormatted($dateFormat, $timestamp)
+	{
+		$dateMonths = preg_split("/,\s*/", $this->get("dateMonths"));
+		$dateWeekdays = preg_split("/,\s*/", $this->get("dateWeekdays"));
+		$month = $dateMonths[date('n', $timestamp) - 1];
+		$weekday = $dateWeekdays[date('N', $timestamp) - 1];
+		$dateFormat = preg_replace("/(?<!\\\)F/", addcslashes($month, 'A..Za..z'), $dateFormat);
+		$dateFormat = preg_replace("/(?<!\\\)M/", addcslashes(substru($month, 0, 3), 'A..Za..z'), $dateFormat);
+		$dateFormat = preg_replace("/(?<!\\\)D/", addcslashes(substru($weekday, 0, 3), 'A..Za..z'), $dateFormat);
+		$dateFormat = preg_replace("/(?<!\\\)l/", addcslashes($weekday, 'A..Za..z'), $dateFormat);
+		return htmlspecialchars(date($dateFormat, $timestamp));
+	}
+	
 	// Return text strings
 	function getData($filterStart = "", $language = "")
 	{
@@ -1941,6 +1955,18 @@ class YellowToolbox
 			}
 		}
 		return $fileNames;
+	}
+
+	// Return modification date from file path, Unix time
+	function findModifiedFromFile($fileName)
+	{
+		$modified = is_readable($fileName) ? filemtime($fileName) : 0;
+		if($modified == 0)
+		{
+			$path = dirname($fileName);
+			$modified = is_readable($path) ? filemtime($path) : 0;
+		}
+		return $modified;
 	}
 	
 	// Return theme/template name from file path
