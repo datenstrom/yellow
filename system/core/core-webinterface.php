@@ -1,11 +1,11 @@
 <?php
-// Copyright (c) 2013-2014 Datenstrom, http://datenstrom.se
+// Copyright (c) 2013-2015 Datenstrom, http://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.4.9";
+	const Version = "0.4.10";
 	var $yellow;				//access to API
 	var $active;				//web interface is active? (boolean)
 	var $userLoginFailed;		//web interface login failed? (boolean)
@@ -465,6 +465,7 @@ class YellowWebinterface
 			$this->yellow->config->get("configDir"), $this->yellow->config->get("newPageFile"),
 			$this->yellow->config->get("contentDefaultFile"));
 		$fileData = $this->yellow->toolbox->getFileData($fileName);
+		$fileData = preg_replace("/@datetime/i", date("Y-m-d H:i:s"), $fileData);
 		$fileData = preg_replace("/@date/i", date("Y-m-d"), $fileData);
 		$fileData = preg_replace("/@username/i", $this->users->getName(), $fileData);
 		$fileData = preg_replace("/@userlanguage/i", $this->users->getLanguage(), $fileData);

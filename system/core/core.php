@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.4.26";
+	const Version = "0.4.27";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -29,6 +29,7 @@ class Yellow
 		$this->config->setDefault("serverScheme", $this->toolbox->getServerScheme());
 		$this->config->setDefault("serverName", $this->toolbox->getServerName());
 		$this->config->setDefault("serverBase", $this->toolbox->getServerBase());
+		$this->config->setDefault("timeZone", $this->toolbox->getTimeZone());
 		$this->config->setDefault("imageLocation", "/media/images/");
 		$this->config->setDefault("pluginLocation", "/media/plugins/");
 		$this->config->setDefault("themeLocation", "/media/themes/");
@@ -329,6 +330,7 @@ class Yellow
 	// Update configuration
 	function updateConfig()
 	{
+		date_default_timezone_set($this->config->get("timeZone"));
 		list($pathRoot, $pathHome) = $this->toolbox->findRootConfig($this->config->get("contentDir"),
 			$this->config->get("contentRootDir"), $this->config->get("contentHomeDir"),
 			$this->config->get("multiLanguageMode"));
@@ -473,7 +475,7 @@ class YellowPage
 		$this->set("language", $this->yellow->toolbox->findLanguageFromFile($this->fileName,
 			$this->yellow->config->get("contentDir"), $this->yellow->config->get("contentRootDir"),
 			$this->yellow->config->get("language")));
-		$this->set("modified", date("c", $this->yellow->toolbox->findModifiedFromFile($this->fileName)));
+		$this->set("modified", date("Y-m-d H:i:s", $this->yellow->toolbox->findModifiedFromFile($this->fileName)));
 		$this->set("parser", $this->yellow->config->get("parser"));
 		
 		if(preg_match("/^(\xEF\xBB\xBF)?\-\-\-[\r\n]+(.+?)[\r\n]+\-\-\-[\r\n]+/s", $this->rawData, $parsed))
@@ -622,13 +624,18 @@ class YellowPage
 		return htmlspecialchars($this->get($key));
 	}
 	
-	// Return page meta data as human readable date, HTML encoded
-	function getFormatted($key)
+	// Return page meta data as human readable date
+	function getDate($key, $dateFormat = "")
 	{
-		$dateFormat = $this->yellow->text->get("languageDateFormat");
-		return $this->yellow->text->getDateFormatted($dateFormat, strtotime($this->get($key)));
+		if($this->yellow->text->isExisting($dateFormat))
+		{
+			$format = $this->yellow->text->get($dateFormat);
+		} else {
+			$format = $this->yellow->text->get("dateFormatMedium");
+		}
+		return $this->yellow->text->getDateFormatted(strtotime($this->get($key)), $format);
 	}
-
+	
 	// Return page content, HTML encoded or raw format
 	function getContent($rawFormat = false)
 	{
@@ -1378,20 +1385,6 @@ class YellowText
 		return htmlspecialchars($this->getText($key, $this->language));
 	}
 	
-	// Return human readable date, HTML encoded
-	function getDateFormatted($dateFormat, $timestamp)
-	{
-		$dateMonths = preg_split("/,\s*/", $this->get("dateMonths"));
-		$dateWeekdays = preg_split("/,\s*/", $this->get("dateWeekdays"));
-		$month = $dateMonths[date('n', $timestamp) - 1];
-		$weekday = $dateWeekdays[date('N', $timestamp) - 1];
-		$dateFormat = preg_replace("/(?<!\\\)F/", addcslashes($month, 'A..Za..z'), $dateFormat);
-		$dateFormat = preg_replace("/(?<!\\\)M/", addcslashes(substru($month, 0, 3), 'A..Za..z'), $dateFormat);
-		$dateFormat = preg_replace("/(?<!\\\)D/", addcslashes(substru($weekday, 0, 3), 'A..Za..z'), $dateFormat);
-		$dateFormat = preg_replace("/(?<!\\\)l/", addcslashes($weekday, 'A..Za..z'), $dateFormat);
-		return htmlspecialchars(date($dateFormat, $timestamp));
-	}
-	
 	// Return text strings
 	function getData($filterStart = "", $language = "")
 	{
@@ -1413,12 +1406,42 @@ class YellowText
 		return $text;
 	}
 	
+	// Return text string with human readable date, custom date format
+	function getDateFormatted($timestamp, $format)
+	{
+		$dateMonths = preg_split("/,\s*/", $this->get("dateMonths"));
+		$dateWeekdays = preg_split("/,\s*/", $this->get("dateWeekdays"));
+		$month = $dateMonths[date('n', $timestamp) - 1];
+		$weekday = $dateWeekdays[date('N', $timestamp) - 1];
+		$format = preg_replace("/(?<!\\\)F/", addcslashes($month, 'A..Za..z'), $format);
+		$format = preg_replace("/(?<!\\\)M/", addcslashes(substru($month, 0, 3), 'A..Za..z'), $format);
+		$format = preg_replace("/(?<!\\\)D/", addcslashes(substru($weekday, 0, 3), 'A..Za..z'), $format);
+		$format = preg_replace("/(?<!\\\)l/", addcslashes($weekday, 'A..Za..z'), $format);
+		return date($format, $timestamp);
+	}
+	
 	// Return text modification date, Unix time or HTTP format
 	function getModified($httpFormat = false)
 	{
 		return $httpFormat ? $this->yellow->toolbox->getHttpDateFormatted($this->modified) : $this->modified;
 	}
 
+	// Normalise date into known format
+	function normaliseDate($text)
+	{
+		if(preg_match("/^\d+\-\d+$/", $text))
+		{
+			$output = $this->getDateFormatted(strtotime($text), $this->get("dateFormatShort"));
+		} else if(preg_match("/^\d+\-\d+\-\d+$/", $text)) {
+			$output = $this->getDateFormatted(strtotime($text), $this->get("dateFormatMedium"));
+		} else if(preg_match("/^\d+\-\d+\-\d+ \d+\:\d+$/", $text)) {
+			$output = $this->getDateFormatted(strtotime($text), $this->get("dateFormatLong"));
+		} else {
+			$output = $text;
+		}
+		return $output;
+	}
+	
 	// Check if language exists
 	function isLanguage($language)
 	{
@@ -2066,6 +2089,17 @@ class YellowToolbox
 		return $text;
 	}
 	
+	// Return time zone
+	function getTimeZone()
+	{
+		$timeZone = @date_default_timezone_get();
+		if(PHP_OS=="Darwin" && $timeZone=="UTC")
+		{
+			if(preg_match("#zoneinfo/(.*)#", @readlink("/etc/localtime"), $matches)) $timeZone = $matches[1];
+		}
+		return $timeZone;
+	}
+	
 	// Return human readable HTTP server status
 	function getHttpStatusFormatted($statusCode)
 	{
@@ -2512,9 +2546,6 @@ function strrposb() { return call_user_func_array("strrpos", func_get_args()); }
 function substru() { return call_user_func_array("mb_substr", func_get_args()); }
 function substrb() { return call_user_func_array("substr", func_get_args()); }
 
-// Default timezone for PHP
-date_default_timezone_set(@date_default_timezone_get());
-	
 // Error reporting for PHP
 error_reporting(E_ALL ^ E_NOTICE);
 ?>
