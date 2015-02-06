@@ -1,10 +1,10 @@
-// Copyright (c) 2013-2014 Datenstrom, http://datenstrom.se
+// Copyright (c) 2013-2015 Datenstrom, http://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 // Yellow main API
 var yellow =
 {
-	version: "0.4.5",
+	version: "0.4.6",
 	action: function(text) { yellow.webinterface.action(text); },
 	onClick: function(e) { yellow.webinterface.hidePanesOnClick(yellow.toolbox.getEventElement(e)); },
 	onKeydown: function(e) { yellow.webinterface.hidePanesOnKeydown(yellow.toolbox.getEventKeycode(e)); },
@@ -63,6 +63,7 @@ yellow.webinterface =
 			case "new":		this.togglePane("yellow-pane-edit", "new"); break;
 			case "user":	this.togglePane("yellow-pane-user"); break;
 			case "send":	this.sendPane(this.paneId, this.paneType); break;
+			case "cancel":	this.hidePane(this.paneId); break;
 			case "logout":	yellow.toolbox.submitForm({"action":"logout"}); break;
 		}
 	},
@@ -122,6 +123,7 @@ yellow.webinterface =
 				"<textarea id=\"yellow-pane-edit-page\" name=\"rawdataedit\"></textarea>"+
 				"<div id=\"yellow-pane-edit-buttons\">"+
 				"<input id=\"yellow-pane-edit-send\" class=\"yellow-btn\" type=\"button\" onclick=\"yellow.action('send'); return false;\" value=\""+this.getText("EditButton")+"\" />"+
+				"<input id=\"yellow-pane-edit-cancel\" class=\"yellow-btn\" type=\"button\" onclick=\"yellow.action('cancel'); return false;\" value=\""+this.getText("CancelButton")+"\" />"+
 				"</div>"+
 				"</form>";
 		} else if(paneId == "yellow-pane-user") {
@@ -145,16 +147,21 @@ yellow.webinterface =
 				var string = paneType=="new" ? yellow.page.rawDataNew : yellow.page.rawDataEdit;
 				document.getElementById("yellow-pane-edit-page").value = string;
 			}
-			var key, className;
-			switch(this.getPaneAction(paneId, paneType))
+			var action = this.getPaneAction(paneId, paneType)
+			if(action)
 			{
-				case "create":	key = "CreateButton"; className = "yellow-btn yellow-btn-green"; break;
-				case "edit":	key = "EditButton"; className = "yellow-btn yellow-btn-yellow"; break;
-				case "delete":	key = "DeleteButton"; className = "yellow-btn yellow-btn-red"; break;
-				default:		key = "CancelButton"; className = "yellow-btn";
+				var key, className;
+				switch(action)
+				{
+					case "create":	key = "CreateButton"; className = "yellow-btn yellow-btn-green"; break;
+					case "edit":	key = "EditButton"; className = "yellow-btn yellow-btn-yellow"; break;
+					case "delete":	key = "DeleteButton"; className = "yellow-btn yellow-btn-red"; break;
+				}
+				document.getElementById("yellow-pane-edit-send").value = this.getText(key);
+				document.getElementById("yellow-pane-edit-send").className = className;
+			} else {
+				document.getElementById("yellow-pane-edit-send").style.display = "none";
 			}
-			document.getElementById("yellow-pane-edit-send").value = this.getText(key);
-			document.getElementById("yellow-pane-edit-send").className = className;
 		}
 	},
 	
