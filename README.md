@@ -2,6 +2,8 @@ Yellow 0.4.28
 =============
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/markseu/yellowcms) 
 
+![Yellow](https://raw.githubusercontent.com/wiki/markseu/yellowcms/images/yellowcms.jpg)
+
 Yellow is for people who make websites. [Visit the Yellow website](http://datenstrom.se/yellow).
 
 How do I install this?
@@ -12,9 +14,9 @@ How do I install this?
 
 How do I get started?
 ---------------------
-You already have everything you need. Start by editing your website.  
-Yellow is a flat-file CMS. For more information see [Yellow documentation](https://github.com/markseu/yellowcms/wiki).   
-There's not much to learn. For more features download [Yellow extensions](https://github.com/markseu/yellowcms-extensions). 
+Start by editing your website. Just give it a try.  
+There's not much to learn. For more information see [Yellow documentation](https://github.com/markseu/yellowcms/wiki).   
+Create the website you want. For more features download [Yellow extensions](https://github.com/markseu/yellowcms-extensions). 
 
 License
 -------
