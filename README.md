@@ -2,7 +2,7 @@ Yellow 0.4.28
 =============
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/markseu/yellowcms) 
 
-![Yellow](https://raw.githubusercontent.com/wiki/markseu/yellowcms/images/yellowcms.jpg)
+[![Yellow](https://raw.githubusercontent.com/wiki/markseu/yellowcms/images/yellowcms.jpg)](http://datenstrom.se/yellow)
 
 Yellow is for people who make websites. [Visit the Yellow website](http://datenstrom.se/yellow).
 
