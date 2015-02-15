@@ -15,11 +15,9 @@ How do I install this?
 How do I get started?
 ---------------------
 You already have everything you need. Start by editing your website.  
-There's not much to learn. For more information see [Yellow documentation](https://github.com/markseu/yellowcms/wiki).   
-Create the website you want. For more features download [Yellow extensions](https://github.com/markseu/yellowcms-extensions). 
+For more information see [Yellow documentation](https://github.com/markseu/yellowcms/wiki) and [Yellow extensions](https://github.com/markseu/yellowcms-extensions). 
 
 License
 -------
 Yellow is free and open source, made by the people who use Yellow. [Thank you](https://github.com/markseu/yellowcms/wiki/Yellow-contributors).  
-Yellow core by Mark Seuffert and David Fehrmann is licensed under [GPLv2](http://opensource.org/licenses/GPL-2.0).  
-Yellow extensions are licensed under [GPLv2](http://opensource.org/licenses/GPL-2.0) unless stated otherwise.
+Yellow core and extensions are licensed under [GPLv2](http://opensource.org/licenses/GPL-2.0) unless stated otherwise.
