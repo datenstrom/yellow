@@ -698,7 +698,7 @@ class YellowPage
 		return $this->base.$this->location;
 	}
 	
-	// Return page URL, with server scheme and server name
+	// Return page URL with server scheme and server name
 	function getUrl()
 	{
 		return $this->yellow->toolbox->getUrl($this->serverScheme, $this->serverName, $this->base, $this->location);

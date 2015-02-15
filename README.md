@@ -14,7 +14,7 @@ How do I install this?
 
 How do I get started?
 ---------------------
-Start by editing your website. Just give it a try.  
+You already have everything you need. Start by editing your website.  
 There's not much to learn. For more information see [Yellow documentation](https://github.com/markseu/yellowcms/wiki).   
 Create the website you want. For more features download [Yellow extensions](https://github.com/markseu/yellowcms-extensions). 
 
