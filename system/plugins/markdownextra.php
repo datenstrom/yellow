@@ -5,8 +5,8 @@
 // Markdown extra plugin
 class YellowMarkdownExtra
 {
-	const Version = "0.4.4";
-	var $yellow;		//access to API
+	const Version = "0.1.6";
+	var $yellow;			//access to API
 	
 	// Handle plugin initialisation
 	function onLoad($yellow)
@@ -25,9 +25,9 @@ class YellowMarkdownExtra
 // Markdown extra parser
 class YellowMarkdownExtraParser extends MarkdownExtraParser
 {
-	var $yellow;		//access to API
-	var $page;			//access to page
-	var $idAttributes;	//id attributes
+	var $yellow;			//access to API
+	var $page;				//access to page
+	var $idAttributes;		//id attributes
 
 	function __construct($yellow, $page)
 	{

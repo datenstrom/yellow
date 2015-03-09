@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.4.28";
+	const Version = "0.5.1";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -26,10 +26,10 @@ class Yellow
 		$this->config->setDefault("theme", "default");
 		$this->config->setDefault("template", "default");
 		$this->config->setDefault("language", "en");
+		$this->config->setDefault("timeZone", $this->toolbox->getTimeZone());
 		$this->config->setDefault("serverScheme", $this->toolbox->getServerScheme());
 		$this->config->setDefault("serverName", $this->toolbox->getServerName());
 		$this->config->setDefault("serverBase", $this->toolbox->getServerBase());
-		$this->config->setDefault("timeZone", $this->toolbox->getTimeZone());
 		$this->config->setDefault("imageLocation", "/media/images/");
 		$this->config->setDefault("pluginLocation", "/media/plugins/");
 		$this->config->setDefault("themeLocation", "/media/themes/");

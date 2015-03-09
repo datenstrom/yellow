@@ -4,7 +4,7 @@
 // Yellow main API
 var yellow =
 {
-	version: "0.4.10",
+	version: "0.5.1",
 	action: function(text) { yellow.webinterface.action(text); },
 	onClick: function(e) { yellow.webinterface.hidePanesOnClick(yellow.toolbox.getEventElement(e)); },
 	onKeydown: function(e) { yellow.webinterface.hidePanesOnKeydown(yellow.toolbox.getEventKeycode(e)); },
@@ -311,7 +311,7 @@ yellow.webinterface =
 				var string = document.getElementById("yellow-pane-edit-page").value;
 				if(yellow.page.statusCode==424 || paneType=="new")
 				{
-					action = string ? "create" : "";
+					action = "create";
 				} else {
 					action = string ? "edit" : "delete";
 				}

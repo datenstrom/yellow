@@ -1,4 +1,4 @@
-/* Yellow web interface 0.4.10 */
+/* Yellow web interface 0.5.1 */
 
 .yellow-bar { position:relative; overflow:hidden; line-height:2em; margin-bottom:10px; }
 .yellow-bar-left { display:block; float:left; }
@@ -44,9 +44,9 @@
 	margin:0; padding:4px 22px; min-width:7em;
 	display:inline-block;
 	background-color:#eaeaea; color:#333333;
-	background-image:linear-gradient(to bottom, #ffffff, #e1e1e1); 
+	background-image:linear-gradient(to bottom, #f8f8f8, #e1e1e1);
 	border:1px solid #bbb;
-	border-color:#d1d1d1 #d1d1d1 #aaaaaa; 
+	border-color:#c1c1c1 #c1c1c1 #aaaaaa;
 	border-radius:4px; 
 	outline-offset:-2px; 
 	font-size:0.9em; font-family:inherit; font-weight:normal; line-height:1;

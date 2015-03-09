@@ -5,7 +5,7 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.4.10";
+	const Version = "0.5.1";
 	var $yellow;				//access to API
 	var $active;				//web interface is active? (boolean)
 	var $userLoginFailed;		//web interface login failed? (boolean)
