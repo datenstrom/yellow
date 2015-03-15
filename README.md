@@ -10,14 +10,14 @@ How do I install this?
 ----------------------
 1. [Download Yellow](https://github.com/markseu/yellowcms/archive/master.zip) and unzip it.  
 2. Copy all files to your web hosting.  
-3. Open your website in a browser. That's it. 
+3. Open your website in a browser.
 
 How do I get started?
 ---------------------
-You already have everything you need. Start by editing your website.  
-For more information see [Yellow documentation](https://github.com/markseu/yellowcms/wiki) and [Yellow extensions](https://github.com/markseu/yellowcms-extensions). 
+Start by editing your website. Just give it a try.  
+For more information see [Yellow documentation](https://github.com/markseu/yellowcms/wiki).
 
 License
 -------
-Yellow is free and open source, made by the people who use Yellow. [Thank you](https://github.com/markseu/yellowcms/wiki/Yellow-contributors).  
-Yellow core and extensions are licensed under [GPLv2](http://opensource.org/licenses/GPL-2.0) unless stated otherwise.
+Yellow is free and open source, made by the people who use Yellow.  
+[Thank you](https://github.com/markseu/yellowcms/wiki/Yellow-contributors). Yellow is licensed under [GPLv2](http://opensource.org/licenses/GPL-2.0) unless stated otherwise.
