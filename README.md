@@ -20,4 +20,5 @@ For more information see [Yellow documentation](https://github.com/markseu/yello
 License
 -------
 Yellow is free and open source, made by the people who use Yellow.  
-[Thank you](https://github.com/markseu/yellowcms/wiki/Yellow-contributors). Yellow is licensed under [GPLv2](http://opensource.org/licenses/GPL-2.0) unless stated otherwise.
+All the code is licensed under [GPLv2](http://opensource.org/licenses/GPL-2.0) unless stated otherwise.
+[Thank you](https://github.com/markseu/yellowcms/wiki/Yellow-contributors).
