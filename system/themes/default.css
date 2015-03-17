@@ -1,4 +1,4 @@
-/* Default theme 0.4.6 */
+/* Default theme 0.5.2 */
 /* Designer: Datenstrom Sweden */
 
 html, body, div, form, pre, span, tr, th, td { margin:0; padding:0; border:0; vertical-align:baseline; }
@@ -12,6 +12,7 @@ body {
 }
 h1, h2, h3, h4, h5, h6 { color:#07d; font-weight:normal; }
 hr { height:1px; background:#ddd; border:0; }
+strong { font-weight:bold; }
 code { font-size:1.1em; }
 a { color:#07d; }
 a:hover { color:#07d; text-decoration:underline; }
@@ -23,7 +24,6 @@ a, img { border:none; text-decoration:none; }
 .navigation a:hover { color:#07d; }
 .navigation ul { margin:0 -0.3em; padding:0; list-style:none; }
 .navigation li { display:inline; }
-.pagination { margin:1em 0; }
 .content h1 a:hover { text-decoration:none; }
 .content img { max-width:100%; height:auto; }
 .content form { margin:1em 0; }
@@ -33,6 +33,7 @@ a, img { border:none; text-decoration:none; }
 .content .flexible { position:relative; padding-bottom:56.25%; padding-top:30px; }
 .content .flexible iframe { position:absolute; top:0; left:0; width:100%; height:100%; }
 .content .toc { margin:0; padding:0; list-style:none; }
+.pagination { margin:1em 0; }
 .footer { margin-top:1em; }
 .footer a { color:#717171; }
 .footer a:hover { color:#07d; text-decoration:underline; }
@@ -55,5 +56,4 @@ a, img { border:none; text-decoration:none; }
 @media print {
 	body, h1, h2, h3, h4, h5, h6 { background-color:white; color:black; }
 	.page { border:none !important; }
-	.navigation, .navigationsub, .navigationtree, .footer { display:none !important; }
 }

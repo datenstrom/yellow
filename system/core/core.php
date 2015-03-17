@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.5.1";
+	const Version = "0.5.2";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $config;			//configuration
@@ -23,9 +23,9 @@ class Yellow
 		$this->plugins = new YellowPlugins();
 		$this->config->setDefault("sitename", "Yellow");
 		$this->config->setDefault("author", "Yellow");
+		$this->config->setDefault("language", "en");
 		$this->config->setDefault("theme", "default");
 		$this->config->setDefault("template", "default");
-		$this->config->setDefault("language", "en");
 		$this->config->setDefault("timeZone", $this->toolbox->getTimeZone());
 		$this->config->setDefault("serverScheme", $this->toolbox->getServerScheme());
 		$this->config->setDefault("serverName", $this->toolbox->getServerName());
@@ -468,13 +468,13 @@ class YellowPage
 		$this->set("title", $this->yellow->toolbox->createTextTitle($this->location));
 		$this->set("sitename", $this->yellow->config->get("sitename"));
 		$this->set("author", $this->yellow->config->get("author"));
+		$this->set("language", $this->yellow->toolbox->findLanguageFromFile($this->fileName,
+			$this->yellow->config->get("contentDir"), $this->yellow->config->get("contentRootDir"),
+			$this->yellow->config->get("language")));
 		$this->set("theme", $this->yellow->toolbox->findNameFromFile($this->fileName,
 			$this->yellow->config->get("themeDir"), $this->yellow->config->get("theme"), ".css"));
 		$this->set("template", $this->yellow->toolbox->findNameFromFile($this->fileName,
 			$this->yellow->config->get("templateDir"), $this->yellow->config->get("template"), ".php"));
-		$this->set("language", $this->yellow->toolbox->findLanguageFromFile($this->fileName,
-			$this->yellow->config->get("contentDir"), $this->yellow->config->get("contentRootDir"),
-			$this->yellow->config->get("language")));
 		$this->set("modified", date("Y-m-d H:i:s", $this->yellow->toolbox->findModifiedFromFile($this->fileName)));
 		$this->set("parser", $this->yellow->config->get("parser"));
 		
@@ -568,13 +568,13 @@ class YellowPage
 		if(!$this->isHeader("Content-Type")) $this->setHeader("Content-Type", "text/html; charset=utf-8");
 		if(!$this->isHeader("Content-Modified")) $this->setHeader("Content-Modified", $this->getModified(true));
 		if(!$this->isHeader("Last-Modified")) $this->setHeader("Last-Modified", $this->getLastModified(true));
-		if(!is_file($this->yellow->config->get("themeDir").$this->get("theme").".css"))
-		{
-			$this->error(500, "Theme '".$this->get("theme")."' does not exist!");
-		}
 		if(!$this->yellow->text->isLanguage($this->get("language")))
 		{
 			$this->error(500, "Language '".$this->get("language")."' does not exist!");
+		}
+		if(!is_file($this->yellow->config->get("themeDir").$this->get("theme").".css"))
+		{
+			$this->error(500, "Theme '".$this->get("theme")."' does not exist!");
 		}
 		if(!is_object($this->parser))
 		{

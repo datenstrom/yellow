@@ -1,4 +1,4 @@
-Yellow 0.5.1
+Yellow 0.5.2
 ============
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/markseu/yellowcms) 
 
@@ -10,7 +10,7 @@ How do I install this?
 ----------------------
 1. [Download Yellow](https://github.com/markseu/yellowcms/archive/master.zip) and unzip it.  
 2. Copy all files to your web hosting.  
-3. Open your website in a browser.
+3. Open your website, that's it.
 
 How do I get started?
 ---------------------
