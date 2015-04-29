@@ -1,4 +1,4 @@
-Yellow 0.5.2
+Yellow 0.5.3
 ============
 [![Yellow](https://raw.githubusercontent.com/wiki/datenstrom/yellow/images/yellow.jpg)](http://datenstrom.se/yellow)
 
@@ -10,10 +10,7 @@ How do I install this?
 2. Copy all files to your web hosting.  
 3. Open your website in a web browser.
 
-How do I get started?
----------------------
-Start by editing your website. Just give it a try.  
-For more information see [Yellow documentation](https://github.com/datenstrom/yellow/wiki).
+Installing is unzipping one file and you are ready to go. [Learn more](https://github.com/datenstrom/yellow/wiki).
 
 License
 -------

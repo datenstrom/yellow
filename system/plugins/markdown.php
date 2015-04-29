@@ -2,28 +2,28 @@
 // Copyright (c) 2013-2015 Datenstrom, http://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
-// Markdown extra plugin
-class YellowMarkdownExtra
+// Markdown plugin
+class YellowMarkdown
 {
-	const Version = "0.1.6";
+	const Version = "0.5.1";
 	var $yellow;			//access to API
 	
-	// Handle plugin initialisation
+	// Handle initialisation
 	function onLoad($yellow)
 	{
 		$this->yellow = $yellow;
 	}
 	
 	// Handle page content parsing of raw format
-	function onParseContentText($page, $text)
+	function onParseContentRaw($page, $text)
 	{
-		$markdown = new YellowMarkdownExtraParser($this->yellow, $page);
+		$markdown = new YellowMarkdownParser($this->yellow, $page);
 		return $markdown->transform($text);
 	}
 }
 
-// Markdown extra parser
-class YellowMarkdownExtraParser extends MarkdownExtraParser
+// Markdown parser
+class YellowMarkdownParser extends MarkdownExtraParser
 {
 	var $yellow;			//access to API
 	var $page;				//access to page
@@ -38,7 +38,7 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser
 		$this->no_entities = $page->parserSafeMode;
 		$this->url_filter_func = function($url) use ($yellow, $page)
 		{
-			return $yellow->toolbox->normaliseLocation($url, $page->base, $page->location,
+			return $yellow->lookup->normaliseLocation($url, $page->base, $page->location,
 				$yellow->config->get("serverBase").$yellow->config->get("imageLocation"),
 				$page->parserSafeMode && $page->statusCode==200);
 		};
@@ -57,7 +57,7 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser
 	// Return unique id attribute
 	function getIdAttribute($text)
 	{
-		$text = $this->yellow->toolbox->normaliseName($text, true, false, true);
+		$text = $this->yellow->lookup->normaliseName($text, true, false, true);
 		$text = trim(preg_replace("/-+/", "-", $text), "-");
 		if(is_null($this->idAttributes[$text]))
 		{
@@ -83,9 +83,9 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser
 	function _doAutoLinks_shortcut_callback($matches)
 	{
 		$text = preg_replace("/\s+/s", " ", $matches[2]);
-		$output = $this->page->parseType($matches[1], $text, true);
+		$output = $this->page->parseContentBlock($matches[1], $text, true);
 		if(is_null($output)) $output = htmlspecialchars($matches[0], ENT_NOQUOTES);
-		return $this->hashBlock($output);
+		return substr($output, 0, 4)=="<div" ? $this->hashBlock($output) : $this->hashPart($output);
 	}
 
 	// Handle comments
@@ -101,7 +101,7 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser
 	function _doFencedCodeBlocks_callback($matches)
 	{
 		$text = $matches[4];
-		$output = $this->page->parseType($matches[2], $text, false);
+		$output = $this->page->parseContentBlock($matches[2], $text, false);
 		if(is_null($output))
 		{
 			$attr = $this->doExtraAttributes("pre", $dummy =& $matches[3]);
@@ -3325,5 +3325,5 @@ class MarkdownExtraParser extends MarkdownParser {
 
 }
 
-$yellow->plugins->register("markdownextra", "YellowMarkdownExtra", YellowMarkdownExtra::Version);
+$yellow->plugins->register("markdown", "YellowMarkdown", YellowMarkdown::Version);
 ?>

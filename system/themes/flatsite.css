@@ -1,0 +1,101 @@
+/* Flatsite theme 0.1.7 */
+/* Designer: Mark Mayberg */
+
+@import url(https://fonts.googleapis.com/css?family=Open+Sans:300,400,700);
+html, body, div, form, pre, span, tr, th, td { margin:0; padding:0; border:0; vertical-align:baseline; }
+body {
+	margin:1em;
+	background-color:#fff; color:#717171;
+	font-family:'Open Sans',sans-serif;
+	font-size:1.0em;
+	font-weight:300;
+	line-height:1.5;
+}
+h1, h2, h3, h4, h5, h6 { color:#07d; font-weight:normal; }
+h1 { font-size:2.0em; }
+hr { height:1px; background:#ddd; border:0; }
+strong { font-weight:bold; }
+code { font-size:1.1em; }
+a { color:#07d; }
+a:hover { color:#07d; text-decoration:underline; }
+a, img { border:none; text-decoration:none; }
+.sitename { display:block; float:left; }
+.sitename h1 { margin:0; }
+.sitename h1 a { color:#111; text-decoration:none; }
+.navigation { display:block; float:right; }
+.navigation { margin-top:0.9em; margin-bottom:0.9em; line-height:2em; }
+.navigation a { padding:0 0.3em; display:inline-block; }
+.navigation ul { margin:0 -0.3em; padding:0; list-style:none; }
+.navigation li { display:inline; }
+.content { clear:both; }
+.content h1 a:hover { text-decoration:none; }
+.content img { max-width:100%; height:auto; }
+.content form { margin:1em 0; }
+.content table { border-spacing:0; border-collapse:collapse; }
+.content th { text-align:left; padding:0.3em; border-bottom:1px solid #ddd;}
+.content td { text-align:left; padding:0.3em; border-top:1px solid #ddd;}
+.content .flexible { position:relative; padding-bottom:56.25%; padding-top:30px; }
+.content .flexible iframe { position:absolute; top:0; left:0; width:100%; height:100%; }
+.content .toc { margin:0; padding:0; list-style:none; }
+.content code { border:1px solid #ddd; border-radius:3px; padding:0 0.5em; }
+.content pre>code { border:none; padding:0; }
+.content pre { border:1px solid #ddd; border-radius:3px; padding:1em; overflow:hidden; }
+.content .imagelist { margin:0; padding:0; list-style:none; }
+.content .themes { margin:0; padding:0; list-style:none; width:100%; }
+.content .themes li { padding-bottom:1em; text-align:center; white-space:nowrap; display:inline-block; width:24%; }
+.pagination { margin:1em 0; }
+.footer { margin-top:2em; }
+.footer a { color:#07d; }
+.footer a:hover { color:#07d; text-decoration:underline; }
+.left { float:left; margin:0 1em 0 0; }
+.center { display:block; margin:0 auto; }
+.right { float:right; margin:0 0 0 1em; }
+
+/* Forms and buttons */
+
+.form-control {
+	margin:0; padding:2px 4px;
+	display:inline-block;
+	background-color:#fff; color:#555;
+	background-image:linear-gradient(to bottom, #fff, #fff);
+	border:1px solid #bbb;
+	border-radius:4px;
+	font-size:0.9em; font-family:inherit; font-weight:normal; line-height:1;
+}
+.btn {
+	margin:0; padding:4px 22px;
+	display:inline-block; min-width:8em;
+	background-color:#eaeaea; color:#333333;
+	background-image:linear-gradient(to bottom, #f8f8f8, #e1e1e1);
+	border:1px solid #bbb;
+	border-color:#c1c1c1 #c1c1c1 #aaaaaa;
+	border-radius:4px;
+	outline-offset:-2px;
+	font-size:0.9em; font-family:inherit; font-weight:normal; line-height:1; 
+	text-align:center; text-decoration:none;
+}
+.btn:hover, .btn:focus, .btn:active {
+	color:#333333;
+	background-image:none; 
+	text-decoration:none;
+}
+.btn:active { box-shadow:inset 0 2px 4px rgba(0, 0, 0, 0.1); }
+
+/* Responsive and print */
+
+.page { margin:0 auto; max-width:1000px; }
+
+@media screen and (min-width:62em) { 
+	body { width:60em; margin:1em auto; }
+	.page{ margin:0; max-width:none; }
+}
+@media screen and (max-width:30em) { 
+	body { margin:0.5em; font-size:0.9em; }
+	.sitename h1, h1, h2 { font-size:1.2em; }
+	.sitename h1, .header, .navigation, .footer, .page { margin:0; padding:0; }
+	.sitename, .navigation { float:none; }
+}
+@media print {
+	body, h1, h2, h3, h4, h5, h6 { background-color:white; color:black; }
+	.page { border:none !important; }
+}

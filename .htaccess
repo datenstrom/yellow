@@ -13,5 +13,5 @@ RewriteRule ^(cache|content|system)/ error [L]
 
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^[^\.]+$ - [T=text/html,L]
-ErrorDocument 404 /error404.html
+ErrorDocument 404 /error.html
 </IfModule>

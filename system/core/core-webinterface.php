@@ -5,7 +5,7 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.5.1";
+	const Version = "0.5.3";
 	var $yellow;				//access to API
 	var $active;				//web interface is active? (boolean)
 	var $userLoginFailed;		//web interface login failed? (boolean)
@@ -15,7 +15,7 @@ class YellowWebinterface
 	var $rawDataSource;			//raw data of page for comparison
 	var $rawDataEdit;			//raw data of page for editing
 
-	// Handle plugin initialisation
+	// Handle initialisation
 	function onLoad($yellow)
 	{
 		$this->yellow = $yellow;
@@ -27,7 +27,8 @@ class YellowWebinterface
 		$this->yellow->config->setDefault("webinterfaceUserHashAlgorithm", "bcrypt");
 		$this->yellow->config->setDefault("webinterfaceUserHashCost", "10");
 		$this->yellow->config->setDefault("webinterfaceUserFile", "user.ini");
-		$this->yellow->config->setDefault("webinterfaceFilePrefix", "published");
+		$this->yellow->config->setDefault("webinterfaceNewFile", "page-new-(.*).txt");
+		$this->yellow->config->setDefault("webinterfaceMetaFilePrefix", "published");
 		$this->users->load($this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile"));
 	}
 
@@ -44,17 +45,17 @@ class YellowWebinterface
 			if(rtrim($location, '/') == rtrim($activeLocation, '/'))
 			{
 				$statusCode = 301;
-				$locationHeader = $this->yellow->toolbox->getLocationHeader(
+				$location = $this->yellow->lookup->normaliseUrl(
 					$this->yellow->config->get("webinterfaceServerScheme"),
 					$this->yellow->config->get("webinterfaceServerName"), $base, $activeLocation);
-				$this->yellow->sendStatus($statusCode, $locationHeader, false);
+				$this->yellow->sendStatus($statusCode, $location);
 			}
 		}
 		return $statusCode;
 	}
 	
 	// Handle page meta data parsing
-	function onParseMeta($page, $text)
+	function onParseMeta($page)
 	{
 		if($this->isActive() && $this->isUser())
 		{
@@ -71,41 +72,35 @@ class YellowWebinterface
 		}
 	}
 	
-	// Handle page extra header
-	function onHeaderExtra($page)
+	// Handle page extra HTML data
+	function onExtra()
 	{
-		$header = "";
+		$output = "";
 		if($this->isActive())
 		{
 			$location = $this->yellow->config->getHtml("serverBase").$this->yellow->config->getHtml("pluginLocation");
-			$header .= "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"{$location}core-webinterface.css\" />\n";
-			$header .= "<script type=\"text/javascript\" src=\"{$location}core-webinterface.js\"></script>\n";
-			$header .= "<script type=\"text/javascript\">\n";
-			$header .= "// <![CDATA[\n";
+			$output .= "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"{$location}core-webinterface.css\" />\n";
+			$output .= "<script type=\"text/javascript\" src=\"{$location}core-webinterface.js\"></script>\n";
+			$output .= "<script type=\"text/javascript\">\n";
+			$output .= "// <![CDATA[\n";
 			if($this->isUser())
 			{
-				$header .= "yellow.page.userPermission = ".json_encode($this->userPermission).";\n";
-				$header .= "yellow.page.rawDataSource = ".json_encode($this->rawDataSource).";\n";
-				$header .= "yellow.page.rawDataEdit = ".json_encode($this->rawDataEdit).";\n";
-				$header .= "yellow.page.rawDataNew = ".json_encode($this->getDataNew()).";\n";
-				$header .= "yellow.page.parserSafeMode = ".json_encode($page->parserSafeMode).";\n";
-				$header .= "yellow.page.statusCode = ".json_encode($page->statusCode).";\n";
+				$output .= "yellow.page.userPermission = ".json_encode($this->userPermission).";\n";
+				$output .= "yellow.page.rawDataSource = ".json_encode($this->rawDataSource).";\n";
+				$output .= "yellow.page.rawDataEdit = ".json_encode($this->rawDataEdit).";\n";
+				$output .= "yellow.page.rawDataNew = ".json_encode($this->getDataNew()).";\n";
+				$output .= "yellow.page.parserSafeMode = ".json_encode($this->yellow->page->parserSafeMode).";\n";
+				$output .= "yellow.page.statusCode = ".json_encode($this->yellow->page->statusCode).";\n";
 			}
-			$header .= "yellow.config = ".json_encode($this->getDataConfig()).";\n";
-			$language = $this->isUser() ? $this->users->getLanguage() : $page->get("language");
+			$output .= "yellow.config = ".json_encode($this->getDataConfig()).";\n";
+			$language = $this->isUser() ? $this->users->getLanguage() : $this->yellow->page->get("language");
 			if(!$this->yellow->text->isLanguage($language)) $language = $this->yellow->config->get("language");
-			$header .= "yellow.text = ".json_encode($this->yellow->text->getData("webinterface", $language)).";\n";
-			if(defined("DEBUG")) $header .= "yellow.debug = ".json_encode(DEBUG).";\n";
-			$header .= "// ]]>\n";
-			$header .= "</script>\n";
+			$output .= "yellow.text = ".json_encode($this->yellow->text->getData("webinterface", $language)).";\n";
+			if(defined("DEBUG")) $output .= "yellow.debug = ".json_encode(DEBUG).";\n";
+			$output .= "// ]]>\n";
+			$output .= "</script>\n";
 		}
-		return $header;
-	}
-	
-	// Handle command help
-	function onCommandHelp()
-	{
-		return "user EMAIL PASSWORD [NAME LANGUAGE HOME]\n";
+		return $output;
 	}
 	
 	// Handle command
@@ -118,6 +113,12 @@ class YellowWebinterface
 			default:		$statusCode = 0;
 		}
 		return $statusCode;
+	}
+	
+	// Handle command help
+	function onCommandHelp()
+	{
+		return "user EMAIL PASSWORD [NAME LANGUAGE HOME]\n";
 	}
 	
 	// Create or update user account
@@ -180,11 +181,12 @@ class YellowWebinterface
 		{
 			$statusCode = $this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
 		} else {
-			if($this->yellow->toolbox->isFileLocation($location) && $this->yellow->isContentDirectory("$location/"))
+			if($this->yellow->isRequestContentDirectory($location))
 			{
 				$statusCode = 301;
-				$locationHeader = $this->yellow->toolbox->getLocationHeader($serverScheme, $serverName, $base, "$location/");
-				$this->yellow->sendStatus($statusCode, $locationHeader, false);
+				$location = $this->yellow->lookup->isFileLocation($location) ? "$location/" : "/".$this->yellow->getRequestLanguage()."/";
+				$location = $this->yellow->lookup->normaliseUrl($serverScheme, $serverName, $base, $location);
+				$this->yellow->sendStatus($statusCode, $location);
 			} else {
 				$statusCode = $this->userPermission ? 424 : 404;
 				$this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
@@ -207,8 +209,8 @@ class YellowWebinterface
 				if($this->yellow->toolbox->createFile($page->fileName, $page->rawData))
 				{
 					$statusCode = 303;
-					$locationHeader = $this->yellow->toolbox->getLocationHeader($serverScheme, $serverName, $base, $page->location);
-					$this->yellow->sendStatus($statusCode, $locationHeader, false);
+					$location = $this->yellow->lookup->normaliseUrl($serverScheme, $serverName, $base, $page->location);
+					$this->yellow->sendStatus($statusCode, $location);
 				} else {
 					$statusCode = 500;
 					$this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
@@ -239,8 +241,8 @@ class YellowWebinterface
 				   $this->yellow->toolbox->createFile($page->fileName, $page->rawData))
 				{
 					$statusCode = 303;
-					$locationHeader = $this->yellow->toolbox->getLocationHeader($serverScheme, $serverName, $base, $page->location);
-					$this->yellow->sendStatus($statusCode, $locationHeader, false);
+					$location = $this->yellow->lookup->normaliseUrl($serverScheme, $serverName, $base, $page->location);
+					$this->yellow->sendStatus($statusCode, $location);
 				} else {
 					$statusCode = 500;
 					$this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
@@ -265,8 +267,8 @@ class YellowWebinterface
 			if(!is_file($fileName) || $this->yellow->toolbox->deleteFile($fileName))
 			{
 				$statusCode = 303;
-				$locationHeader = $this->yellow->toolbox->getLocationHeader($serverScheme, $serverName, $base, $location);
-				$this->yellow->sendStatus($statusCode, $locationHeader, false);
+				$location = $this->yellow->lookup->normaliseUrl($serverScheme, $serverName, $base, $location);
+				$this->yellow->sendStatus($statusCode, $location);
 			} else {
 				$statusCode = 500;
 				$this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
@@ -284,12 +286,12 @@ class YellowWebinterface
 		if(substru($location, 0, strlenu($home)) == $home)
 		{
 			$statusCode = 303;
-			$locationHeader = $this->yellow->toolbox->getLocationHeader($serverScheme, $serverName, $base, $location);
-			$this->yellow->sendStatus($statusCode, $locationHeader, false);
+			$location = $this->yellow->lookup->normaliseUrl($serverScheme, $serverName, $base, $location);
+			$this->yellow->sendStatus($statusCode, $location);
 		} else {
 			$statusCode = 302;
-			$locationHeader = $this->yellow->toolbox->getLocationHeader($serverScheme, $serverName, $base, $home);
-			$this->yellow->sendStatus($statusCode, $locationHeader, false);
+			$location = $this->yellow->lookup->normaliseUrl($serverScheme, $serverName, $base, $home);
+			$this->yellow->sendStatus($statusCode, $location);
 		}
 		return $statusCode;
 	}
@@ -300,11 +302,11 @@ class YellowWebinterface
 		$statusCode = 302;
 		$this->users->destroyCookie("login");
 		$this->users->email = "";
-		$locationHeader = $this->yellow->toolbox->getLocationHeader(
+		$location = $this->yellow->lookup->normaliseUrl(
 			$this->yellow->config->get("serverScheme"),
 			$this->yellow->config->get("serverName"),
 			$this->yellow->config->get("serverBase"), $location);
-		$this->yellow->sendStatus($statusCode, $locationHeader, false);
+		$this->yellow->sendStatus($statusCode, $location);
 		return $statusCode;
 	}
 
@@ -390,14 +392,11 @@ class YellowWebinterface
 	{
 		$page = new YellowPage($this->yellow);
 		$page->setRequestInformation($serverScheme, $serverName, $base, $location, $fileName);
-		$page->parseData($rawData, false);
-		$page->fileName = $this->yellow->toolbox->findFileFromTitle(
-			$page->get($this->yellow->config->get("webinterfaceFilePrefix")), $page->get("title"), $fileName,
+		$page->parseData($rawData, false, 0);
+		$page->fileName = $this->yellow->lookup->findFileFromTitle(
+			$page->get($this->yellow->config->get("webinterfaceMetaFilePrefix")), $page->get("title"), $fileName,
 			$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
-		$page->location = $this->yellow->toolbox->findLocationFromFile(
-			$page->fileName, $this->yellow->config->get("contentDir"),
-			$this->yellow->config->get("contentRootDir"), $this->yellow->config->get("contentHomeDir"),
-			$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
+		$page->location = $this->yellow->lookup->findLocationFromFile($page->fileName);
 		if($this->yellow->pages->find($page->location))
 		{
 			preg_match("/^(.*?)(\d*)$/", $page->get("title"), $matches);
@@ -407,13 +406,10 @@ class YellowWebinterface
 			for(; $titleNumber<=999; ++$titleNumber)
 			{
 				$page->rawData = $this->updateDataTitle($rawData, $titleText.$titleNumber);
-				$page->fileName = $this->yellow->toolbox->findFileFromTitle(
-					$page->get($this->yellow->config->get("webinterfaceFilePrefix")), $titleText.$titleNumber, $fileName,
+				$page->fileName = $this->yellow->lookup->findFileFromTitle(
+					$page->get($this->yellow->config->get("webinterfaceMetaFilePrefix")), $titleText.$titleNumber, $fileName,
 					$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
-				$page->location = $this->yellow->toolbox->findLocationFromFile(
-					$page->fileName, $this->yellow->config->get("contentDir"),
-					$this->yellow->config->get("contentRootDir"), $this->yellow->config->get("contentHomeDir"),
-					$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
+				$page->location = $this->yellow->lookup->findLocationFromFile($page->fileName);
 				if(!$this->yellow->pages->find($page->location)) { $ok = true; break; }
 			}
 			if(!$ok) $page->error(500, "Page '".$page->get("title")."' can not be created!");
@@ -427,23 +423,20 @@ class YellowWebinterface
 	{
 		$page = new YellowPage($this->yellow);
 		$page->setRequestInformation($serverScheme, $serverName, $base, $location, $fileName);
-		$page->parseData($this->merge->merge($rawDataSource, $rawDataEdit, $rawDataFile), false);
+		$page->parseData($this->merge->merge($rawDataSource, $rawDataEdit, $rawDataFile), false, 0);
 		if(empty($page->rawData)) $page->error(500, "Page has been modified by someone else!");
-		if($this->yellow->toolbox->isFileLocation($location) && !$page->isError())
+		if($this->yellow->lookup->isFileLocation($location) && !$page->isError())
 		{
 			$pageSource = new YellowPage($this->yellow);
 			$pageSource->setRequestInformation($serverScheme, $serverName, $base, $location, $fileName);
-			$pageSource->parseData($rawDataSource, false);
-			$prefix = $this->yellow->config->get("webinterfaceFilePrefix");
+			$pageSource->parseData($rawDataSource, false, 0);
+			$prefix = $this->yellow->config->get("webinterfaceMetaFilePrefix");
 			if($pageSource->get($prefix)!=$page->get($prefix) || $pageSource->get("title")!=$page->get("title"))
 			{
-				$page->fileName = $this->yellow->toolbox->findFileFromTitle(
+				$page->fileName = $this->yellow->lookup->findFileFromTitle(
 					$page->get($prefix), $page->get("title"), $fileName,
 					$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
-				$page->location = $this->yellow->toolbox->findLocationFromFile(
-					$page->fileName, $this->yellow->config->get("contentDir"),
-					$this->yellow->config->get("contentRootDir"), $this->yellow->config->get("contentHomeDir"),
-					$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
+				$page->location = $this->yellow->lookup->findLocationFromFile($page->fileName);
 				if($pageSource->location!=$page->location && $this->yellow->pages->find($page->location))
 				{
 					$page->error(500, "Page '".$page->get("title")."' already exists!");
@@ -457,12 +450,9 @@ class YellowWebinterface
 	// Return content data for new page
 	function getDataNew($title = "")
 	{
-		$fileName = $this->yellow->toolbox->findFileFromLocation(
-			$this->yellow->page->location, $this->yellow->config->get("contentDir"),
-			$this->yellow->config->get("contentRootDir"), $this->yellow->config->get("contentHomeDir"),
-			$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
-		$fileName = $this->yellow->toolbox->findFileNew($fileName,
-			$this->yellow->config->get("configDir"), $this->yellow->config->get("newPageFile"),
+		$fileName = $this->yellow->lookup->findFileFromLocation($this->yellow->page->location);
+		$fileName = $this->yellow->lookup->findFileNew($fileName,
+			$this->yellow->config->get("configDir"), $this->yellow->config->get("webinterfaceNewFile"),
 			$this->yellow->config->get("contentDefaultFile"));
 		$fileData = $this->yellow->toolbox->getFileData($fileName);
 		$fileData = preg_replace("/@datetime/i", date("Y-m-d H:i:s"), $fileData);
