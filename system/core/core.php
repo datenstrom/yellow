@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.5.3";
+	const Version = "0.5.4";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $files;				//files from file system
@@ -1928,13 +1928,13 @@ class YellowLookup
 	}
 	
 	// Return file path for new page
-	function findFileNew($fileName, $pathBase, $fileNew, $fileDefault)
+	function findFileNew($fileName, $fileNew, $pathBase, $nameDefault)
 	{
 		if(preg_match("/^.*\/(.+?)$/", dirname($fileName), $matches)) $name = $this->normaliseName($matches[1]);
 		$fileName = strreplaceu("(.*)", $name, $pathBase.$fileNew);
 		if(!is_file($fileName))
 		{
-			$name = $this->normaliseName($fileDefault, true, true);
+			$name = $this->normaliseName($nameDefault);
 			$fileName = strreplaceu("(.*)", $name, $pathBase.$fileNew);
 		}
 		return $fileName;

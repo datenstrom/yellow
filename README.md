@@ -1,4 +1,4 @@
-Yellow 0.5.3
+Yellow 0.5.4
 ============
 [![Yellow](https://raw.githubusercontent.com/wiki/datenstrom/yellow/images/yellow.jpg)](http://datenstrom.se/yellow)
 

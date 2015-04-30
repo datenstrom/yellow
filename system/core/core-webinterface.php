@@ -5,7 +5,7 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.5.3";
+	const Version = "0.5.4";
 	var $yellow;				//access to API
 	var $active;				//web interface is active? (boolean)
 	var $userLoginFailed;		//web interface login failed? (boolean)
@@ -452,8 +452,8 @@ class YellowWebinterface
 	{
 		$fileName = $this->yellow->lookup->findFileFromLocation($this->yellow->page->location);
 		$fileName = $this->yellow->lookup->findFileNew($fileName,
-			$this->yellow->config->get("configDir"), $this->yellow->config->get("webinterfaceNewFile"),
-			$this->yellow->config->get("contentDefaultFile"));
+			$this->yellow->config->get("webinterfaceNewFile"), $this->yellow->config->get("configDir"),
+			$this->yellow->config->get("template"));
 		$fileData = $this->yellow->toolbox->getFileData($fileName);
 		$fileData = preg_replace("/@datetime/i", date("Y-m-d H:i:s"), $fileData);
 		$fileData = preg_replace("/@date/i", date("Y-m-d"), $fileData);
