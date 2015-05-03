@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.5.4";
+	const Version = "0.5.5";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $files;				//files from file system
@@ -2170,7 +2170,6 @@ class YellowToolbox
 				}
 			}
 		}
-		if(!preg_match("/^HTTP\//", $_SERVER["SERVER_PROTOCOL"])) $_SERVER["SERVER_PROTOCOL"] = "HTTP/1.1";
 		return $location;
 	}
 	
@@ -2285,20 +2284,22 @@ class YellowToolbox
 	// Return human readable HTTP server status
 	function getHttpStatusFormatted($statusCode)
 	{
+		$serverProtocol = $_SERVER["SERVER_PROTOCOL"];
+		if(!preg_match("/^HTTP\//", $serverProtocol)) $serverProtocol = "HTTP/1.1";
 		switch($statusCode)
 		{
-			case 0:		$text = "$_SERVER[SERVER_PROTOCOL] $statusCode No data"; break;
-			case 200:	$text = "$_SERVER[SERVER_PROTOCOL] $statusCode OK"; break;
-			case 301:	$text = "$_SERVER[SERVER_PROTOCOL] $statusCode Moved permanently"; break;
-			case 302:	$text = "$_SERVER[SERVER_PROTOCOL] $statusCode Moved temporarily"; break;
-			case 303:	$text = "$_SERVER[SERVER_PROTOCOL] $statusCode Reload please"; break;
-			case 304:	$text = "$_SERVER[SERVER_PROTOCOL] $statusCode Not modified"; break;
-			case 400:	$text = "$_SERVER[SERVER_PROTOCOL] $statusCode Bad request"; break;
-			case 401:	$text = "$_SERVER[SERVER_PROTOCOL] $statusCode Unauthorised"; break;
-			case 404:	$text = "$_SERVER[SERVER_PROTOCOL] $statusCode Not found"; break;
-			case 424:	$text = "$_SERVER[SERVER_PROTOCOL] $statusCode Not existing"; break;
-			case 500:	$text = "$_SERVER[SERVER_PROTOCOL] $statusCode Server error"; break;
-			default:	$text = "$_SERVER[SERVER_PROTOCOL] $statusCode Unknown status";
+			case 0:		$text = "$serverProtocol $statusCode No data"; break;
+			case 200:	$text = "$serverProtocol $statusCode OK"; break;
+			case 301:	$text = "$serverProtocol $statusCode Moved permanently"; break;
+			case 302:	$text = "$serverProtocol $statusCode Moved temporarily"; break;
+			case 303:	$text = "$serverProtocol $statusCode Reload please"; break;
+			case 304:	$text = "$serverProtocol $statusCode Not modified"; break;
+			case 400:	$text = "$serverProtocol $statusCode Bad request"; break;
+			case 401:	$text = "$serverProtocol $statusCode Unauthorised"; break;
+			case 404:	$text = "$serverProtocol $statusCode Not found"; break;
+			case 424:	$text = "$serverProtocol $statusCode Not existing"; break;
+			case 500:	$text = "$serverProtocol $statusCode Server error"; break;
+			default:	$text = "$serverProtocol $statusCode Unknown status";
 		}
 		return $text;
 	}
