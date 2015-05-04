@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.5.5";
+	const Version = "0.5.6";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $files;				//files from file system
@@ -712,12 +712,13 @@ class YellowPage
 	}
 	
 	// Return page extra HTML data
-	function getExtra()
+	function getExtra($name = "")
 	{
 		$output = "";
+		if(empty($name)) list($name) = $this->yellow->getSnippetArgs();
 		foreach($this->yellow->plugins->plugins as $key=>$value)
 		{
-			if(method_exists($value["obj"], "onExtra")) $output .= $value["obj"]->onExtra();
+			if(method_exists($value["obj"], "onExtra")) $output .= $value["obj"]->onExtra($name);
 		}
 		return $output;
 	}

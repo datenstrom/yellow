@@ -11,7 +11,7 @@
 <title><?php echo $yellow->page->getHtml("titleHeader") ?></title>
 <link rel="shortcut icon" href="<?php echo $yellow->config->get("serverBase").$yellow->config->get("imageLocation")."icon.png" ?>" />
 <link rel="stylesheet" type="text/css" media="all" href="<?php echo $yellow->config->get("serverBase").$yellow->config->get("themeLocation").$yellow->page->get("theme").".css" ?>" />
-<?php echo $yellow->page->getExtra() ?>
+<?php echo $yellow->page->getExtra("header") ?>
 </head>
 <body>
 <div class="page">

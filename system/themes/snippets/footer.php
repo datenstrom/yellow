@@ -3,5 +3,6 @@
 <a href="http://datenstrom.se/yellow">Made with Yellow</a>.
 </div>
 </div>
+<?php echo $yellow->page->getExtra("footer") ?>
 </body>
 </html>
