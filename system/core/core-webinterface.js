@@ -4,7 +4,7 @@
 // Yellow main API
 var yellow =
 {
-	version: "0.5.3",
+	version: "0.5.7",
 	action: function(text) { yellow.webinterface.action(text); },
 	onClick: function(e) { yellow.webinterface.hidePanesOnClick(yellow.toolbox.getEventElement(e)); },
 	onKeydown: function(e) { yellow.webinterface.hidePanesOnKeydown(yellow.toolbox.getEventKeycode(e)); },
@@ -48,7 +48,7 @@ yellow.webinterface =
 			} else {
 				this.createBar("yellow-bar", false, body.firstChild);
 				this.createPane("yellow-pane-login", false, body.firstChild);
-				this.showPane("yellow-pane-login");
+				if(yellow.config.login) this.showPane("yellow-pane-login");
 			}
 			clearInterval(this.intervalId);
 		}
@@ -64,6 +64,7 @@ yellow.webinterface =
 			case "user":	this.togglePane("yellow-pane-user"); break;
 			case "send":	this.sendPane(this.paneId, this.paneType); break;
 			case "cancel":	this.hidePane(this.paneId); break;
+			case "login":	this.togglePane("yellow-pane-login"); break;
 			case "logout":	yellow.toolbox.submitForm({"action":"logout"}); break;
 		}
 	},

@@ -5,7 +5,7 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.5.6";
+	const Version = "0.5.7";
 	var $yellow;				//access to API
 	var $active;				//web interface is active? (boolean)
 	var $userLoginFailed;		//web interface login failed? (boolean)
@@ -168,7 +168,16 @@ class YellowWebinterface
 		if($statusCode == 0)
 		{
 			$statusCode = $this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
-			if($this->userLoginFailed) $this->yellow->page->error(401);
+			if($this->userLoginFailed)
+			{
+				if(!$this->users->getNumber())
+				{
+					$url = $this->yellow->text->get("webinterfaceUserAccountUrl");
+					$this->yellow->page->error(500, "You are not authorised on this server, [please add a user account]($url)!");
+				} else {
+					$this->yellow->page->error(401);
+				}
+			}
 		}
 		return $statusCode;
 	}
@@ -477,6 +486,7 @@ class YellowWebinterface
 			$data["serverName"] = $this->yellow->config->get("serverName");
 			$data["serverBase"] = $this->yellow->config->get("serverBase");
 		} else {
+			$data["login"] = $this->yellow->page->statusCode==200;
 			$data["loginEmail"] = $this->yellow->config->get("loginEmail");
 			$data["loginPassword"] = $this->yellow->config->get("loginPassword");
 		}
@@ -636,6 +646,12 @@ class YellowWebinterfaceUsers
 	{
 		if(empty($email)) $email = $this->email;
 		return $this->isExisting($email) ? $this->users[$email]["home"] : "";
+	}
+	
+	// Return number of users
+	function getNumber()
+	{
+		return count($this->users);
 	}
 	
 	// Check if user exists

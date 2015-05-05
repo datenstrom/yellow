@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.5.6";
+	const Version = "0.5.7";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $files;				//files from file system
@@ -421,7 +421,7 @@ class YellowPage
 		$this->rawData = $rawData;
 		$this->parser = NULL;
 		$this->parserData = "";
-		$this->parserSafeMode = $this->yellow->config->get("parserSafeMode");
+		$this->parserSafeMode = intval($this->yellow->config->get("parserSafeMode"));
 		$this->available = true;
 		$this->visible = $this->yellow->lookup->isVisibleLocation($this->location, $this->fileName);
 		$this->active = $this->yellow->lookup->isActiveLocation($this->location, $this->yellow->page->location);
