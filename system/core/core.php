@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.5.7";
+	const Version = "0.5.8";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $files;				//files from file system
@@ -1113,9 +1113,9 @@ class YellowPages
 	}
 	
 	// Return page collection with all pages
-	function index($showInvisible = false, $showMultiLanguage = false, $levelMax = 0)
+	function index($showInvisible = false, $multiLanguage = false, $levelMax = 0)
 	{
-		$rootLocation = $showMultiLanguage ? "" : $this->getRootLocation($this->yellow->page->location);
+		$rootLocation = $multiLanguage ? "" : $this->getRootLocation($this->yellow->page->location);
 		return $this->getChildrenRecursive($rootLocation, $showInvisible, $levelMax);
 	}
 	
@@ -1316,7 +1316,7 @@ class YellowFiles
 	}
 	
 	// Return page collection with all media files
-	function index($showInvisible = false, $showMultiPass = false, $levelMax = 0)
+	function index($showInvisible = false, $multiPass = false, $levelMax = 0)
 	{
 		return $this->getChildrenRecursive("", $showInvisible, $levelMax);
 	}
