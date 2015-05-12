@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.5.8";
+	const Version = "0.5.9";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $files;				//files from file system
@@ -479,10 +479,10 @@ class YellowPage
 			
 			$titleHeader = ($this->location == $this->yellow->pages->getHomeLocation($this->location)) ?
 				$this->get("sitename") : $this->get("title")." - ".$this->get("sitename");
-			if($this->get("titleContent") == "-") $this->set("titleContent", "");
 			if(!$this->isExisting("titleContent")) $this->set("titleContent", $this->get("title"));
 			if(!$this->isExisting("titleHeader")) $this->set("titleHeader", $titleHeader);
 			if(!$this->isExisting("titleNavigation")) $this->set("titleNavigation", $this->get("title"));
+			if($this->get("titleContent") == "-") $this->set("titleContent", "");
 			$this->set("pageRead", $this->yellow->lookup->normaliseUrl(
 				$this->yellow->config->get("serverScheme"),
 				$this->yellow->config->get("serverName"),

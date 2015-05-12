@@ -7,3 +7,4 @@
 <?php endforeach ?>
 </ul>
 </div>
+<div class="navigation-banner"></div>

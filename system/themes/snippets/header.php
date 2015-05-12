@@ -14,4 +14,12 @@
 <?php echo $yellow->page->getExtra("header") ?>
 </head>
 <body>
-<div class="page">
+<?php $yellow->page->set("pageClass", "page") ?>
+<?php $yellow->page->set("pageClass", $yellow->page->get("pageClass")." ".$yellow->page->get("template")) ?>
+<?php if($yellow->page->isExisting("sidebar")) $yellow->page->set("pageClass", $yellow->page->get("pageClass")." with-sidebar") ?>
+<div class="<?php echo $yellow->page->getHtml("pageClass") ?>">
+<div class="header">
+<div class="sitename"><h1><a href="<?php echo $yellow->page->base."/" ?>"><i class="sitename-logo"></i><?php echo $yellow->page->getHtml("sitename") ?></a></h1></div>
+<div class="sitename-banner"></div>
+<?php $yellow->snippet("navigation") ?>
+</div>

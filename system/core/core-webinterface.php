@@ -5,7 +5,7 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.5.8";
+	const Version = "0.5.9";
 	var $yellow;				//access to API
 	var $active;				//web interface is active? (boolean)
 	var $userLoginFailed;		//web interface login failed? (boolean)
@@ -622,6 +622,21 @@ class YellowWebinterfaceUsers
 	function checkCookie($email, $session)
 	{
 		return $this->isExisting($email) && $this->yellow->toolbox->verifyHash($this->users[$email]["hash"], "sha256", $session);
+	}
+	
+	// Retun user login information
+	function getUserInfo($email, $password, $name, $language, $home)
+	{
+		$algorithm = $this->yellow->config->get("webinterfaceUserHashAlgorithm");
+		$cost = $this->yellow->config->get("webinterfaceUserHashCost");
+		$hash = $this->yellow->toolbox->createHash($password, $algorithm, $cost);
+		$email = strreplaceu(',', '-', $email);
+		$hash = strreplaceu(',', '-', $hash);
+		$name = strreplaceu(',', '-', empty($name) ? $this->yellow->config->get("sitename") : $name);
+		$language = strreplaceu(',', '-', empty($language) ? $this->yellow->config->get("language") : $language);
+		$home = strreplaceu(',', '-', empty($home) ? "/" : $home);
+		$user = "$email,$hash,$name,$language,$home\n";
+		return $user;
 	}
 	
 	// Return user name

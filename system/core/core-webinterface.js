@@ -4,7 +4,7 @@
 // Yellow main API
 var yellow =
 {
-	version: "0.5.8",
+	version: "0.5.9",
 	action: function(text) { yellow.webinterface.action(text); },
 	onClick: function(e) { yellow.webinterface.hidePanesOnClick(yellow.toolbox.getEventElement(e)); },
 	onKeydown: function(e) { yellow.webinterface.hidePanesOnKeydown(yellow.toolbox.getEventKeycode(e)); },
@@ -74,7 +74,7 @@ yellow.webinterface =
 	{
 		if(yellow.debug) console.log("yellow.webinterface.createBar id:"+id);
 		var elementBar = document.createElement("div");
-		elementBar.className = "yellow-bar yellow";
+		elementBar.className = "yellow-bar";
 		elementBar.setAttribute("id", id);
 		if(normal)
 		{
@@ -85,7 +85,7 @@ yellow.webinterface =
 				"</div>"+
 				"<div class=\"yellow-bar-right\">"+
 				"<a href=\"#\" onclick=\"yellow.action('new'); return false;\" id=\"yellow-pane-new-link\">"+this.getText("New")+"</a>"+
-				"<a href=\"#\" onclick=\"yellow.action('user'); return false;\" id=\"yellow-pane-user-link\">"+yellow.config.userName+" &#9662;</a>"+
+				"<a href=\"#\" onclick=\"yellow.action('user'); return false;\" id=\"yellow-pane-user-link\">"+yellow.config.userName+"</a>"+
 				"</div>";
 		}
 		yellow.toolbox.insertBefore(elementBar, elementReference);

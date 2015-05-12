@@ -1,4 +1,4 @@
-/* Flatsite theme 0.1.7 */
+/* Flatsite theme 0.2.1 */
 /* Designer: Mark Mayberg */
 
 @import url(https://fonts.googleapis.com/css?family=Open+Sans:300,400,700);
@@ -22,12 +22,10 @@ a, img { border:none; text-decoration:none; }
 .sitename { display:block; float:left; }
 .sitename h1 { margin:0; }
 .sitename h1 a { color:#111; text-decoration:none; }
-.navigation { display:block; float:right; }
-.navigation { margin-top:0.9em; margin-bottom:0.9em; line-height:2em; }
-.navigation a { padding:0 0.3em; display:inline-block; }
-.navigation ul { margin:0 -0.3em; padding:0; list-style:none; }
-.navigation li { display:inline; }
-.content { clear:both; }
+.with-sidebar .main { margin-right:13em; }
+.with-sidebar .sidebar { float:right; width:12em; margin-top:4.3em; overflow:hidden; }
+.with-sidebar .sidebar .navigationside ul { margin:0; padding:0; list-style:none; }
+.content h1:first-child, .content>*:first-child { margin-top:0; }
 .content h1 a:hover { text-decoration:none; }
 .content img { max-width:100%; height:auto; }
 .content form { margin:1em 0; }
@@ -43,13 +41,22 @@ a, img { border:none; text-decoration:none; }
 .content .imagelist { margin:0; padding:0; list-style:none; }
 .content .themes { margin:0; padding:0; list-style:none; width:100%; }
 .content .themes li { padding-bottom:1em; text-align:center; white-space:nowrap; display:inline-block; width:24%; }
-.pagination { margin:1em 0; }
-.footer { margin-top:2em; }
+.content .pagination { margin:1em 0; }
+.footer { margin-top:2em; clear:both; }
 .footer a { color:#07d; }
 .footer a:hover { color:#07d; text-decoration:underline; }
 .left { float:left; margin:0 1em 0 0; }
 .center { display:block; margin:0 auto; }
 .right { float:right; margin:0 0 0 1em; }
+
+/* Navigation */
+
+.navigation { display:block; float:right; }
+.navigation { margin-top:0.9em; margin-bottom:0.9em; line-height:2em; }
+.navigation a { padding:0 0.3em; display:inline-block; }
+.navigation ul { margin:0 -0.3em; padding:0; list-style:none; }
+.navigation li { display:inline; }
+.navigation-banner { clear:both; }
 
 /* Forms and buttons */
 
@@ -94,6 +101,8 @@ a, img { border:none; text-decoration:none; }
 	.sitename h1, h1, h2 { font-size:1.2em; }
 	.sitename h1, .header, .navigation, .footer, .page { margin:0; padding:0; }
 	.sitename, .navigation { float:none; }
+	.with-sidebar .main { margin-right:0em; }
+	.with-sidebar .sidebar { display:none; }
 }
 @media print {
 	body, h1, h2, h3, h4, h5, h6 { background-color:white; color:black; }
