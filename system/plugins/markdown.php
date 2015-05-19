@@ -5,7 +5,7 @@
 // Markdown plugin
 class YellowMarkdown
 {
-	const Version = "0.5.1";
+	const Version = "0.5.2";
 	var $yellow;			//access to API
 	
 	// Handle initialisation
@@ -82,8 +82,7 @@ class YellowMarkdownParser extends MarkdownExtraParser
 	// Handle shortcuts
 	function _doAutoLinks_shortcut_callback($matches)
 	{
-		$text = preg_replace("/\s+/s", " ", $matches[2]);
-		$output = $this->page->parseContentBlock($matches[1], $text, true);
+		$output = $this->page->parseContentBlock($matches[1], $matches[2], true);
 		if(is_null($output)) $output = htmlspecialchars($matches[0], ENT_NOQUOTES);
 		return substr($output, 0, 4)=="<div" ? $this->hashBlock($output) : $this->hashPart($output);
 	}

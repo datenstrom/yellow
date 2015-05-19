@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.5.10";
+	const Version = "0.5.11";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $files;				//files from file system
@@ -268,6 +268,12 @@ class Yellow
 		return $this->pages->requestHandler;
 	}
 	
+	// Return snippet arguments
+	function getSnippetArgs()
+	{
+		return $this->pages->snippetArgs;
+	}
+	
 	// Return static file from cache if available
 	function getStaticFileFromCache($location, $fileName, $cacheable, $statusCode)
 	{
@@ -333,41 +339,10 @@ class Yellow
 		return $statusCode;
 	}
 	
-	// Execute template
-	function template($name)
-	{
-		$fileNameTemplate = $this->config->get("templateDir")."$name.html";
-		if(is_file($fileNameTemplate))
-		{
-			$this->page->setLastModified(filemtime($fileNameTemplate));
-			global $yellow;
-			require($fileNameTemplate);
-		} else {
-			$this->page->error(500, "Template '$name' does not exist!");
-			echo "Template error<br/>\n";
-		}
-	}
-	
 	// Execute snippet
 	function snippet($name, $args = NULL)
 	{
-		$fileNameSnippet = $this->config->get("snippetDir")."$name.php";
-		if(is_file($fileNameSnippet))
-		{
-			$this->page->setLastModified(filemtime($fileNameSnippet));
-			$this->pages->snippetArgs = func_get_args();
-			global $yellow;
-			require($fileNameSnippet);
-		} else {
-			$this->page->error(500, "Snippet '$name' does not exist!");
-			echo "Snippet error<br/>\n";
-		}
-	}
-	
-	// Return snippet arguments
-	function getSnippetArgs()
-	{
-		return $this->pages->snippetArgs;
+		$this->page->parseSnippet(func_get_args());
 	}
 }
 	
@@ -555,6 +530,13 @@ class YellowPage
 				if(!is_null($output)) break;
 			}
 		}
+		if(is_null($output) && $name=="snippet" && $typeShortcut && !$this->parserSafeMode)
+		{
+			ob_start();
+			$this->parseSnippet($this->yellow->toolbox->getTextArgs($text));
+			$output = ob_get_contents();
+			ob_end_clean();
+		}
 		if(defined("DEBUG") && DEBUG>=3 && !empty($name)) echo "YellowPage::parseContentBlock name:$name shortcut:$typeShortcut<br/>\n";
 		return $output;
 	}
@@ -573,7 +555,7 @@ class YellowPage
 		if(is_null($this->outputData))
 		{
 			ob_start();
-			$this->yellow->template($this->get("template"));
+			$this->parseTemplate($this->get("template"));
 			$this->outputData = ob_get_contents();
 			ob_end_clean();
 		}
@@ -604,6 +586,37 @@ class YellowPage
 			$this->error(404);
 		}
 		if($this->isExisting("pageClean")) $this->page->outputData = NULL;
+	}
+	
+	// Parse template
+	function parseTemplate($name)
+	{
+		$fileNameTemplate = $this->yellow->config->get("templateDir")."$name.html";
+		if(is_file($fileNameTemplate))
+		{
+			$this->setLastModified(filemtime($fileNameTemplate));
+			global $yellow;
+			require($fileNameTemplate);
+		} else {
+			$this->error(500, "Template '$name' does not exist!");
+			echo "Template error<br/>\n";
+		}
+	}
+	
+	// Parse snippet
+	function parseSnippet($args)
+	{
+		list($name) = $this->yellow->pages->snippetArgs = $args;
+		$fileNameSnippet = $this->yellow->config->get("snippetDir")."$name.php";
+		if(is_file($fileNameSnippet))
+		{
+			$this->setLastModified(filemtime($fileNameSnippet));
+			global $yellow;
+			require($fileNameSnippet);
+		} else {
+			$this->error(500, "Snippet '$name' does not exist!");
+			echo "Snippet error<br/>\n";
+		}
 	}
 	
 	// Set page meta data
@@ -648,6 +661,18 @@ class YellowPage
 			$text = $this->parserData;
 		}
 		return $text;
+	}
+	
+	// Return page custom block, HTML encoded
+	function getContentBlock($text)
+	{
+		$output = NULL;
+		if(preg_match("/\[(\w+)\s+(.*?)\]/", $text, $matches))
+		{
+			$output = $this->parseContentBlock($matches[1], $matches[2], true);
+		}
+		if(is_null($output)) $output = htmlspecialchars($text, ENT_NOQUOTES);
+		return $output;
 	}
 	
 	// Return parent page relative to current page, NULL if none
@@ -712,10 +737,9 @@ class YellowPage
 	}
 	
 	// Return page extra HTML data
-	function getExtra($name = "")
+	function getExtra($name)
 	{
 		$output = "";
-		if(empty($name)) list($name) = $this->yellow->getSnippetArgs();
 		foreach($this->yellow->plugins->plugins as $key=>$value)
 		{
 			if(method_exists($value["obj"], "onExtra")) $output .= $value["obj"]->onExtra($name);
@@ -886,6 +910,18 @@ class YellowPageCollection extends ArrayObject
 		return $this;
 	}
 	
+	// Filter page collection by file name
+	function match($regex = "/.*/")
+	{
+		$array = array();
+		foreach($this->getArrayCopy() as $page)
+		{
+			if(preg_match($regex, basename($page->fileName))) array_push($array, $page);
+		}
+		$this->exchangeArray($array);
+		return $this;
+	}
+	
 	// Sort page collection by meta data
 	function sort($key, $ascendingOrder = true)
 	{
@@ -901,18 +937,6 @@ class YellowPageCollection extends ArrayObject
 		return $this;
 	}
 
-	// Filter page collection by file
-	function match($regex = "/.*/")
-	{
-		$array = array();
-		foreach($this->getArrayCopy() as $page)
-		{
-			if(preg_match($regex, basename($page->fileName))) array_push($array, $page);
-		}
-		$this->exchangeArray($array);
-		return $this;
-	}
-	
 	// Merge page collection
 	function merge($input)
 	{
@@ -2481,7 +2505,8 @@ class YellowToolbox
 	// Return arguments from text string
 	function getTextArgs($text, $optional = "-")
 	{
-		$tokens = str_getcsv(trim($text), ' ', '"');
+		$text = preg_replace("/\s+/s", " ", trim($text));
+		$tokens = str_getcsv($text, ' ', '"');
 		foreach($tokens as $key=>$value) if($value == $optional) $tokens[$key] = "";
 		return $tokens;
 	}
