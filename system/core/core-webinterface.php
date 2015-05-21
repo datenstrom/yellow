@@ -5,7 +5,7 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.5.10";
+	const Version = "0.5.11";
 	var $yellow;				//access to API
 	var $active;				//web interface is active? (boolean)
 	var $userLoginFailed;		//web interface login failed? (boolean)
@@ -75,11 +75,11 @@ class YellowWebinterface
 	// Handle page extra HTML data
 	function onExtra($name)
 	{
-		$output = "";
+		$output = NULL;
 		if($this->isActive() && $name=="header")
 		{
 			$location = $this->yellow->config->getHtml("serverBase").$this->yellow->config->getHtml("pluginLocation");
-			$output .= "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"{$location}core-webinterface.css\" />\n";
+			$output = "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"{$location}core-webinterface.css\" />\n";
 			$output .= "<script type=\"text/javascript\" src=\"{$location}core-webinterface.js\"></script>\n";
 			$output .= "<script type=\"text/javascript\">\n";
 			$output .= "// <![CDATA[\n";

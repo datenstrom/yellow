@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.5.11";
+	const Version = "0.5.12";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $files;				//files from file system
@@ -498,7 +498,7 @@ class YellowPage
 						if(method_exists($value["obj"], "onParseContentText"))
 						{
 							$output = $value["obj"]->onParseContentText($this, $this->parserData);
-							if(!is_null($output)) { $this->parserData = $output; }
+							if(!is_null($output)) $this->parserData = $output;
 						}
 					}
 				}
@@ -663,18 +663,6 @@ class YellowPage
 		return $text;
 	}
 	
-	// Return page custom block, HTML encoded
-	function getContentBlock($text)
-	{
-		$output = NULL;
-		if(preg_match("/\[(\w+)\s+(.*?)\]/", $text, $matches))
-		{
-			$output = $this->parseContentBlock($matches[1], $matches[2], true);
-		}
-		if(is_null($output)) $output = htmlspecialchars($text, ENT_NOQUOTES);
-		return $output;
-	}
-	
 	// Return parent page relative to current page, NULL if none
 	function getParent()
 	{
@@ -742,7 +730,11 @@ class YellowPage
 		$output = "";
 		foreach($this->yellow->plugins->plugins as $key=>$value)
 		{
-			if(method_exists($value["obj"], "onExtra")) $output .= $value["obj"]->onExtra($name);
+			if(method_exists($value["obj"], "onExtra"))
+			{
+				$outputPlugin = $value["obj"]->onExtra($name);
+				if(!is_null($outputPlugin)) $output .= $outputPlugin;
+			}
 		}
 		return $output;
 	}

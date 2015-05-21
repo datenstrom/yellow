@@ -5,7 +5,7 @@
 // Markdown plugin
 class YellowMarkdown
 {
-	const Version = "0.5.2";
+	const Version = "0.5.3";
 	var $yellow;			//access to API
 	
 	// Handle initialisation
@@ -84,7 +84,7 @@ class YellowMarkdownParser extends MarkdownExtraParser
 	{
 		$output = $this->page->parseContentBlock($matches[1], $matches[2], true);
 		if(is_null($output)) $output = htmlspecialchars($matches[0], ENT_NOQUOTES);
-		return substr($output, 0, 4)=="<div" ? $this->hashBlock($output) : $this->hashPart($output);
+		return substr($output, 0, 4)=="<div" ? $this->hashBlock(trim($output)) : $this->hashPart(trim($output));
 	}
 
 	// Handle comments
@@ -169,9 +169,9 @@ class YellowMarkdownParser extends MarkdownExtraParser
 	}
 }
 
-// PHP Markdown Lib
-// Copyright (c) 2004-2013 Michel Fortin
-// <http://michelf.com/projects/php-markdown/>
+// PHP Markdown
+// Copyright (c) 2004-2015 Michel Fortin
+// <https://michelf.ca/projects/php-markdown/>
 //
 // Original Markdown
 // Copyright (c) 2004-2006 John Gruber
@@ -208,7 +208,7 @@ class MarkdownParser {
 
 	### Version ###
 
-	const  MARKDOWNLIB_VERSION  =  "1.4.1";
+	const  MARKDOWNLIB_VERSION  =  "1.5.0";
 
 	### Simple Function Interface ###
 
@@ -249,6 +249,21 @@ class MarkdownParser {
 	# Optional filter function for URLs
 	public $url_filter_func = null;
 
+	# Optional header id="" generation callback function.
+	public $header_id_func = null;
+
+	# Class attribute to toggle "enhanced ordered list" behaviour
+	# setting this to true will allow ordered lists to start from the index
+	# number that is defined first.  For example:
+	# 2. List item two
+	# 3. List item three
+	# 
+	# becomes
+	# <ol start="2">
+	# <li>List item two</li>
+	# <li>List item three</li>
+	# </ol>
+	public $enhanced_ordered_list = false;
 
 	### Parser Implementation ###
 
@@ -960,21 +975,46 @@ class MarkdownParser {
 
 		return $text;
 	}
+
 	protected function _doHeaders_callback_setext($matches) {
 		# Terrible hack to check we haven't found an empty list item.
 		if ($matches[2] == '-' && preg_match('{^-(?: |$)}', $matches[1]))
 			return $matches[0];
 		
 		$level = $matches[2]{0} == '=' ? 1 : 2;
-		$block = "<h$level>".$this->runSpanGamut($matches[1])."</h$level>";
+
+		# id attribute generation
+		$idAtt = $this->_generateIdFromHeaderValue($matches[1]);
+
+		$block = "<h$level$idAtt>".$this->runSpanGamut($matches[1])."</h$level>";
 		return "\n" . $this->hashBlock($block) . "\n\n";
 	}
 	protected function _doHeaders_callback_atx($matches) {
+
+		# id attribute generation
+		$idAtt = $this->_generateIdFromHeaderValue($matches[2]);
+
 		$level = strlen($matches[1]);
-		$block = "<h$level>".$this->runSpanGamut($matches[2])."</h$level>";
+		$block = "<h$level$idAtt>".$this->runSpanGamut($matches[2])."</h$level>";
 		return "\n" . $this->hashBlock($block) . "\n\n";
 	}
 
+	protected function _generateIdFromHeaderValue($headerValue) {
+
+		# if a header_id_func property is set, we can use it to automatically
+		# generate an id attribute.
+		#
+		# This method returns a string in the form id="foo", or an empty string
+		# otherwise.
+		if (!is_callable($this->header_id_func)) {
+			return "";
+		}
+		$idValue = call_user_func($this->header_id_func, $headerValue);
+		if (!$idValue) return "";
+
+		return ' id="' . $this->encodeAttribute($idValue) . '"';
+
+	}
 
 	protected function doLists($text) {
 	#
@@ -1046,16 +1086,33 @@ class MarkdownParser {
 		$marker_ul_re  = '[*+-]';
 		$marker_ol_re  = '\d+[\.]';
 		$marker_any_re = "(?:$marker_ul_re|$marker_ol_re)";
-		
+		$marker_ol_start_re = '[0-9]+';
+
 		$list = $matches[1];
 		$list_type = preg_match("/$marker_ul_re/", $matches[4]) ? "ul" : "ol";
-		
+
 		$marker_any_re = ( $list_type == "ul" ? $marker_ul_re : $marker_ol_re );
-		
+
 		$list .= "\n";
 		$result = $this->processListItems($list, $marker_any_re);
-		
-		$result = $this->hashBlock("<$list_type>\n" . $result . "</$list_type>");
+
+		$ol_start = 1;
+		if ($this->enhanced_ordered_list) {
+			# Get the start number for ordered list.
+			if ($list_type == 'ol') {
+				$ol_start_array = array();
+				$ol_start_check = preg_match("/$marker_ol_start_re/", $matches[4], $ol_start_array);
+				if ($ol_start_check){
+					$ol_start = $ol_start_array[0];
+				}
+			}
+		}
+
+		if ($ol_start > 1 && $list_type == 'ol'){
+			$result = $this->hashBlock("<$list_type start=\"$ol_start\">\n" . $result . "</$list_type>");
+		} else {
+			$result = $this->hashBlock("<$list_type>\n" . $result . "</$list_type>");
+		}
 		return "\n". $result ."\n\n";
 	}
 
@@ -1767,7 +1824,6 @@ class MarkdownExtraParser extends MarkdownParser {
 	# Predefined abbreviations.
 	public $predef_abbr = array();
 
-
 	### Parser Implementation ###
 
 	public function __construct() {
@@ -1796,6 +1852,7 @@ class MarkdownExtraParser extends MarkdownParser {
 			"doAbbreviations"    => 70,
 			);
 		
+		$this->enhanced_ordered_list = true;
 		parent::__construct();
 	}
 	
@@ -1856,14 +1913,17 @@ class MarkdownExtraParser extends MarkdownParser {
 	# Expression to use when parsing in a context when no capture is desired
 	protected $id_class_attr_nocatch_re = '\{(?:[ ]*[#.a-z][-_:a-zA-Z0-9=]+){1,}[ ]*\}';
 
-	protected function doExtraAttributes($tag_name, $attr) {
+	protected function doExtraAttributes($tag_name, $attr, $defaultIdValue = null) {
 	#
 	# Parse attributes caught by the $this->id_class_attr_catch_re expression
 	# and return the HTML-formatted list of attributes.
 	#
 	# Currently supported attributes are .class and #id.
 	#
-		if (empty($attr)) return "";
+	# In addition, this method also supports supplying a default Id value,
+	# which will be used to populate the id attribute in case it was not
+	# overridden.
+		if (empty($attr) && !$defaultIdValue) return "";
 		
 		# Split on components
 		preg_match_all('/[#.a-z][-_:a-zA-Z0-9=]+/', $attr, $matches);
@@ -1884,13 +1944,15 @@ class MarkdownExtraParser extends MarkdownParser {
 			}
 		}
 
+		if (!$id) $id = $defaultIdValue;
+
 		# compose attributes as string
 		$attr_str = "";
 		if (!empty($id)) {
-			$attr_str .= ' id="'.$id.'"';
+			$attr_str .= ' id="'.$this->encodeAttribute($id) .'"';
 		}
 		if (!empty($classes)) {
-			$attr_str .= ' class="'.implode(" ", $classes).'"';
+			$attr_str .= ' class="'. implode(" ", $classes) . '"';
 		}
 		if (!$this->no_markup && !empty($attributes)) {
 			$attr_str .= ' '.implode(" ", $attributes);
@@ -2703,14 +2765,20 @@ class MarkdownExtraParser extends MarkdownParser {
 	protected function _doHeaders_callback_setext($matches) {
 		if ($matches[3] == '-' && preg_match('{^- }', $matches[1]))
 			return $matches[0];
+
 		$level = $matches[3]{0} == '=' ? 1 : 2;
-		$attr  = $this->doExtraAttributes("h$level", $dummy =& $matches[2]);
+
+		$defaultId = is_callable($this->header_id_func) ? call_user_func($this->header_id_func, $matches[1]) : null;
+
+		$attr  = $this->doExtraAttributes("h$level", $dummy =& $matches[2], $defaultId);
 		$block = "<h$level$attr>".$this->runSpanGamut($matches[1])."</h$level>";
 		return "\n" . $this->hashBlock($block) . "\n\n";
 	}
 	protected function _doHeaders_callback_atx($matches) {
 		$level = strlen($matches[1]);
-		$attr  = $this->doExtraAttributes("h$level", $dummy =& $matches[3]);
+
+		$defaultId = is_callable($this->header_id_func) ? call_user_func($this->header_id_func, $matches[2]) : null;
+		$attr  = $this->doExtraAttributes("h$level", $dummy =& $matches[3], $defaultId);
 		$block = "<h$level$attr>".$this->runSpanGamut($matches[2])."</h$level>";
 		return "\n" . $this->hashBlock($block) . "\n\n";
 	}
@@ -3321,7 +3389,6 @@ class MarkdownExtraParser extends MarkdownParser {
 			return $matches[0];
 		}
 	}
-
 }
 
 $yellow->plugins->register("markdown", "YellowMarkdown", YellowMarkdown::Version);
