@@ -2,7 +2,7 @@
 <?php if(!$pages) $pages = $yellow->pages->top() ?>
 <?php $yellow->page->setLastModified($pages->getModified()) ?>
 <?php if(!$level): ?>
-<div class="navigationtree">
+<div class="navigation-tree">
 <?php endif ?>
 <ul>
 <?php foreach($pages as $page): ?>

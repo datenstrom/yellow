@@ -21,5 +21,5 @@
 <div class="header">
 <div class="sitename"><h1><a href="<?php echo $yellow->page->base."/" ?>"><i class="sitename-logo"></i><?php echo $yellow->page->getHtml("sitename") ?></a></h1></div>
 <div class="sitename-banner"></div>
-<?php $yellow->snippet($yellow->page->isExisting("navigation") ? $yellow->page->get("navigation") : "navigation") ?>
+<?php $yellow->snippet($yellow->page->get("navigation")) ?>
 </div>

@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.5.13";
+	const Version = "0.5.14";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $files;				//files from file system
@@ -60,6 +60,7 @@ class Yellow
 		$this->config->setDefault("errorFile", "page-error-(.*).txt");
 		$this->config->setDefault("robotsTextFile", "robots.txt");
 		$this->config->setDefault("template", "default");
+		$this->config->setDefault("navigation", "navigation");
 		$this->config->setDefault("parser", "markdown");
 		$this->config->setDefault("parserSafeMode", "0");
 		$this->config->setDefault("multiLanguageMode", "0");
@@ -437,6 +438,7 @@ class YellowPage
 			$this->set("template", $this->yellow->lookup->findNameFromFile($this->fileName,
 				$this->yellow->config->get("templateDir"), $this->yellow->config->get("template"), ".html"));
 			$this->set("modified", date("Y-m-d H:i:s", $this->yellow->toolbox->getFileModified($this->fileName)));
+			$this->set("navigation", $this->yellow->config->get("navigation"));
 			$this->set("parser", $this->yellow->config->get("parser"));
 			
 			if(preg_match("/^(\xEF\xBB\xBF)?\-\-\-[\r\n]+(.+?)[\r\n]+\-\-\-[\r\n]+/s", $this->rawData, $parts))
