@@ -1,4 +1,4 @@
-/* Flatsite theme 0.2.2 */
+/* Flatsite theme 0.5.3 */
 /* Designer: Mark Mayberg */
 
 @import url(https://fonts.googleapis.com/css?family=Open+Sans:300,400,700);
@@ -49,12 +49,24 @@ a, img { border:none; text-decoration:none; }
 
 /* Navigation */
 
+.navigation-banner { clear:both; }
 .navigation { display:block; float:right; }
 .navigation { margin-top:0.9em; margin-bottom:0.9em; line-height:2em; }
 .navigation a { padding:0 0.3em; display:inline-block; }
 .navigation ul { margin:0 -0.3em; padding:0; list-style:none; }
 .navigation li { display:inline; }
-.navigation-banner { clear:both; }
+
+.navigationtree { display:block; float:right; }
+.navigationtree { margin-top:0.9em; margin-bottom:0.9em; line-height:2em; }
+.navigationtree a { padding:0 0.3em; display:inline-block; }
+.navigationtree ul { margin:0 -0.3em; padding:0; list-style:none; }
+.navigationtree li { display:inline; }
+.navigationtree ul li { display:inline-block; position:relative; cursor:pointer; margin:0; }
+.navigationtree ul li:hover {}
+.navigationtree ul li ul { padding:0.3em; position:absolute; width:13em; background:#fff; z-index:100; display:none; }
+.navigationtree ul li ul { border:1px solid #bbb; border-radius:4px; box-shadow:2px 4px 10px rgba(0, 0, 0, 0.2); }
+.navigationtree ul li ul li { display:block; }
+.navigationtree ul li:hover ul { display:block; }
 
 /* Forms and buttons */
 
