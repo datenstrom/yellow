@@ -5,11 +5,11 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.5.12";
+	const Version = "0.5.15";
 	var $yellow;				//access to API
 	var $active;				//web interface is active? (boolean)
 	var $userLoginFailed;		//web interface login failed? (boolean)
-	var $userPermission;		//web interface can modify page? (boolean)
+	var $userPermission;		//web interface can change page? (boolean)
 	var $users;					//web interface users
 	var $merge;					//web interface merge
 	var $rawDataSource;			//raw data of page for comparison
@@ -356,19 +356,17 @@ class YellowWebinterface
 		return $this->isUser();
 	}
 
-	// Return permission to modify page
+	// Return permission to change page
 	function getUserPermission($location, $fileName)
 	{
-		$userPermission = true;
+		$userPermission = is_dir(dirname($fileName)) && strlenu(basename($fileName))<128;
 		foreach($this->yellow->plugins->plugins as $key=>$value)
 		{
 			if(method_exists($value["obj"], "onUserPermission"))
 			{
-				$userPermission = $value["obj"]->onUserPermission($location, $fileName, $this->users);
-				if(!$userPermission) break;
+				$userPermission &= $value["obj"]->onUserPermission($location, $fileName, $this->users);
 			}
 		}
-		$userPermission &= is_dir(dirname($fileName)) && strlenu(basename($fileName))<128;
 		return $userPermission;
 	}
 	

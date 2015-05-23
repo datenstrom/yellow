@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.5.14";
+	const Version = "0.5.15";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $files;				//files from file system
@@ -593,7 +593,7 @@ class YellowPage
 	// Parse template
 	function parseTemplate($name)
 	{
-		$fileNameTemplate = $this->yellow->config->get("templateDir")."$name.html";
+		$fileNameTemplate = $this->yellow->config->get("templateDir").$this->yellow->lookup->normaliseName($name).".html";
 		if(is_file($fileNameTemplate))
 		{
 			$this->setLastModified(filemtime($fileNameTemplate));
@@ -609,7 +609,7 @@ class YellowPage
 	function parseSnippet($args)
 	{
 		list($name) = $this->yellow->pages->snippetArgs = $args;
-		$fileNameSnippet = $this->yellow->config->get("snippetDir")."$name.php";
+		$fileNameSnippet = $this->yellow->config->get("snippetDir").$this->yellow->lookup->normaliseName($name).".php";
 		if(is_file($fileNameSnippet))
 		{
 			$this->setLastModified(filemtime($fileNameSnippet));

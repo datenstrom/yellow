@@ -4,7 +4,7 @@
 // Yellow main API
 var yellow =
 {
-	version: "0.5.12",
+	version: "0.5.15",
 	action: function(text) { yellow.webinterface.action(text); },
 	onClick: function(e) { yellow.webinterface.hidePanesOnClick(yellow.toolbox.getEventElement(e)); },
 	onKeydown: function(e) { yellow.webinterface.hidePanesOnKeydown(yellow.toolbox.getEventKeycode(e)); },
@@ -59,8 +59,9 @@ yellow.webinterface =
 	{
 		switch(text)
 		{
+			case "create":	this.togglePane("yellow-pane-edit", "create"); break;
 			case "edit":	this.togglePane("yellow-pane-edit", "edit"); break;
-			case "new":		this.togglePane("yellow-pane-edit", "new"); break;
+			case "delete":	this.togglePane("yellow-pane-edit", "delete"); break;
 			case "user":	this.togglePane("yellow-pane-user"); break;
 			case "send":	this.sendPane(this.paneId, this.paneType); break;
 			case "cancel":	this.hidePane(this.paneId); break;
@@ -84,7 +85,8 @@ yellow.webinterface =
 				"<a href=\"#\" onclick=\"yellow.action('edit'); return false;\" id=\"yellow-pane-edit-link\">"+this.getText("Edit")+"</a>"+
 				"</div>"+
 				"<div class=\"yellow-bar-right\">"+
-				"<a href=\"#\" onclick=\"yellow.action('new'); return false;\" id=\"yellow-pane-new-link\">"+this.getText("New")+"</a>"+
+				"<a href=\"#\" onclick=\"yellow.action('create'); return false;\" id=\"yellow-pane-create-link\">"+this.getText("Create")+"</a>"+
+				"<a href=\"#\" onclick=\"yellow.action('delete'); return false;\" id=\"yellow-pane-delete-link\">"+this.getText("Delete")+"</a>"+
 				"<a href=\"#\" onclick=\"yellow.action('user'); return false;\" id=\"yellow-pane-user-link\">"+yellow.config.userName+"</a>"+
 				"</div>";
 		}
@@ -145,7 +147,7 @@ yellow.webinterface =
 		{
 			if(init)
 			{
-				var string = paneType=="new" ? yellow.page.rawDataNew : yellow.page.rawDataEdit;
+				var string = paneType=="create" ? yellow.page.rawDataNew : yellow.page.rawDataEdit;
 				document.getElementById("yellow-pane-edit-page").value = string;
 			}
 			var action = this.getPaneAction(paneId, paneType)
@@ -282,7 +284,7 @@ yellow.webinterface =
 				var height2 = yellow.toolbox.getOuterHeight(document.getElementById("yellow-pane-edit-content"));
 				var height3 = yellow.toolbox.getOuterHeight(document.getElementById("yellow-pane-edit-page"));
 				yellow.toolbox.setOuterHeight(document.getElementById("yellow-pane-edit-page"), height1 - height2 + height3);
-				var elementLink = document.getElementById(this.paneType=="new" ? "yellow-pane-new-link" : "yellow-pane-edit-link");
+				var elementLink = document.getElementById("yellow-pane-"+this.paneType+"-link");
 				var position = yellow.toolbox.getOuterLeft(elementLink) + yellow.toolbox.getOuterWidth(elementLink)/2;
 				position -= yellow.toolbox.getOuterLeft(document.getElementById("yellow-pane-edit"));
 				yellow.toolbox.setOuterLeft(document.getElementById("yellow-pane-edit-arrow"), position);
@@ -310,12 +312,13 @@ yellow.webinterface =
 			if(yellow.page.userPermission)
 			{
 				var string = document.getElementById("yellow-pane-edit-page").value;
-				if(yellow.page.statusCode==424 || paneType=="new")
+				switch(paneType)
 				{
-					action = "create";
-				} else {
-					action = string ? "edit" : "delete";
+					case "create":	action = "create"; break;
+					case "edit":	action = string ? "edit" : "delete"; break;
+					case "delete":	action = "delete"; break;
 				}
+				if(yellow.page.statusCode==424 && paneType!="delete") action = "create";
 			}
 		}
 		return action;
