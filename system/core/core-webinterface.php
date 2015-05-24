@@ -5,7 +5,7 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.5.15";
+	const Version = "0.5.16";
 	var $yellow;				//access to API
 	var $active;				//web interface is active? (boolean)
 	var $userLoginFailed;		//web interface login failed? (boolean)
@@ -85,10 +85,11 @@ class YellowWebinterface
 			$output .= "// <![CDATA[\n";
 			if($this->isUser())
 			{
-				$output .= "yellow.page.userPermission = ".json_encode($this->userPermission).";\n";
+				$output .= "yellow.page.title = ".json_encode($this->getDataTitle($this->rawDataEdit)).";\n";
 				$output .= "yellow.page.rawDataSource = ".json_encode($this->rawDataSource).";\n";
 				$output .= "yellow.page.rawDataEdit = ".json_encode($this->rawDataEdit).";\n";
 				$output .= "yellow.page.rawDataNew = ".json_encode($this->getDataNew()).";\n";
+				$output .= "yellow.page.userPermission = ".json_encode($this->userPermission).";\n";
 				$output .= "yellow.page.parserSafeMode = ".json_encode($this->yellow->page->parserSafeMode).";\n";
 				$output .= "yellow.page.statusCode = ".json_encode($this->yellow->page->statusCode).";\n";
 			}
@@ -389,6 +390,20 @@ class YellowWebinterface
 			$rawDataNew .= $line;
 		}
 		return $rawDataNew;
+	}
+	
+	// Return page data title
+	function getDataTitle($rawData)
+	{
+		$title = $this->yellow->page->get("title");
+		if(preg_match("/^(\xEF\xBB\xBF)?\-\-\-[\r\n]+(.+?)[\r\n]+\-\-\-[\r\n]+/s", $rawData))
+		{
+			foreach($this->yellow->toolbox->getTextLines($rawData) as $line)
+			{
+				if(preg_match("/^(\s*Title\s*:\s*)(.*?)(\s*)$/i", $line, $matches)) { $title = $matches[2]; break; }
+			}
+		}
+		return $title;
 	}
 	
 	// Return new page

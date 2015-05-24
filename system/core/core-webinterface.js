@@ -4,7 +4,7 @@
 // Yellow main API
 var yellow =
 {
-	version: "0.5.15",
+	version: "0.5.16",
 	action: function(text) { yellow.webinterface.action(text); },
 	onClick: function(e) { yellow.webinterface.hidePanesOnClick(yellow.toolbox.getEventElement(e)); },
 	onKeydown: function(e) { yellow.webinterface.hidePanesOnKeydown(yellow.toolbox.getEventKeycode(e)); },
@@ -123,6 +123,7 @@ yellow.webinterface =
 		} else if(paneId == "yellow-pane-edit") {
 			elementDiv.innerHTML =
 				"<form method=\"post\">"+
+				"<h1 id=\"yellow-pane-edit-title\">"+this.getText("Edit")+"</h1>"+
 				"<textarea id=\"yellow-pane-edit-page\" name=\"rawdataedit\"></textarea>"+
 				"<div id=\"yellow-pane-edit-buttons\">"+
 				"<input id=\"yellow-pane-edit-send\" class=\"yellow-btn\" type=\"button\" onclick=\"yellow.action('send'); return false;\" value=\""+this.getText("EditButton")+"\" />"+
@@ -147,7 +148,14 @@ yellow.webinterface =
 		{
 			if(init)
 			{
-				var string = paneType=="create" ? yellow.page.rawDataNew : yellow.page.rawDataEdit;
+				var title = yellow.page.title;
+				var string = yellow.page.rawDataEdit;
+				switch(paneType)
+				{
+					case "create":	title = this.getText("CreateTitle"); string = yellow.page.rawDataNew; break;
+					case "delete":	title = this.getText("DeleteTitle"); break;
+				}
+				document.getElementById("yellow-pane-edit-title").innerHTML = yellow.toolbox.encodeHtml(title);
 				document.getElementById("yellow-pane-edit-page").value = string;
 			}
 			var action = this.getPaneAction(paneId, paneType)
@@ -530,6 +538,16 @@ yellow.toolbox =
 			.replace(/[%]/g, "%25")
 			.replace(/[\r]/g, "%0d")
 			.replace(/[\n]/g, "%0a");
+	},
+
+	// Encode HTML special characters
+	encodeHtml: function(string)
+	{
+		return string
+			.replace(/&/g, "&amp;")
+			.replace(/</g, "&lt;")
+			.replace(/>/g, "&gt;")
+			.replace(/"/g, "&quot;");
 	},
 	
 	// Submit form with post method

@@ -1,9 +1,9 @@
-/* Yellow web interface 0.5.15 */
+/* Yellow web interface 0.5.16 */
 
 .yellow-bar { position:relative; overflow:hidden; line-height:2em; margin-bottom:10px; }
 .yellow-bar-left { display:block; float:left; }
 .yellow-bar-right { display:block; float:right; }
-.yellow-bar-right a { padding-left:0.5em; }
+.yellow-bar-right a { margin-left:1em; }
 .yellow-bar-right #yellow-pane-create-link { padding:0 0.5em; }
 .yellow-bar-right #yellow-pane-delete-link { padding:0 0.5em; }
 .yellow-body-modal-open { overflow:hidden; }
@@ -80,8 +80,9 @@
 #yellow-pane-login h1 { margin:0.5em 0.5em; }
 #yellow-pane-login p { margin:0.5em; text-align:right; }
 #yellow-pane-edit { }
+#yellow-pane-edit h1 { margin:4px 0; color:#000; font-size:1.3em; text-align:center; }
 #yellow-pane-edit-page { margin:0; padding:5px; border:1px solid #bbb; outline:none; resize:none; font-size:0.9em; }
-#yellow-pane-edit-buttons { margin:8px 0; }
+#yellow-pane-edit-buttons { margin:4px 0; }
 #yellow-pane-edit-buttons input { margin-right:5px; }
 #yellow-pane-user { cursor:pointer; }
 #yellow-pane-user a { text-decoration:none; }
