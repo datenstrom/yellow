@@ -1,16 +1,16 @@
-/* Yellow web interface 0.5.16 */
+/* Yellow web interface 0.5.17 */
 
-.yellow-bar { position:relative; overflow:hidden; line-height:2em; margin-bottom:10px; }
+.yellow-bar { position:relative; overflow:hidden; height:2em; margin-bottom:10px; }
 .yellow-bar-left { display:block; float:left; }
 .yellow-bar-right { display:block; float:right; }
 .yellow-bar-right a { margin-left:1em; }
 .yellow-bar-right #yellow-pane-create-link { padding:0 0.5em; }
 .yellow-bar-right #yellow-pane-delete-link { padding:0 0.5em; }
-.yellow-body-modal-open { overflow:hidden; }
+.yellow-body-modal-open { overflow:hidden; background-color:rgba(128, 128, 128, 0.1); transition:background-color 100ms; }
 
 .yellow-pane {
 	position:absolute; display:none; z-index:100;
-	margin:10px 0px; padding:5px;
+	margin:10px 0px; padding:10px;
 	background-color:#fff; color:#000; 
 	border:1px solid #bbb; 
 	border-radius:4px; box-shadow:2px 4px 10px rgba(0, 0, 0, 0.2);
@@ -18,6 +18,8 @@
 .yellow-pane p { margin:0.5em; }
 .yellow-pane ul { list-style:none; margin:0 0.5em; padding:0; }
 .yellow-pane div { overflow:hidden; }
+.yellow-cancel { display:block; float:right; padding:0 0.5em; color:#bbb; }
+.yellow-cancel:hover { text-decoration:none; color:#000; }
 .yellow-arrow { position:absolute; top:0; left:0; }
 .yellow-arrow:after, .yellow-arrow:before {
 	position:absolute;
@@ -39,51 +41,62 @@
 	margin-left:-11px;
 }
 
-.yellow-btn {
-	margin:0; padding:4px 22px; min-width:7em;
+.yellow-form-control {
+	margin:0; padding:2px 4px;
 	display:inline-block;
+	background-color:#fff; color:#000;
+	background-image:linear-gradient(to bottom, #fff, #fff);
+	border:1px solid #bbb;
+	border-radius:4px;
+	font-size:0.9em; font-family:inherit; font-weight:normal; line-height:normal;
+}
+.yellow-btn {
+	margin:0; padding:4px 22px;
+	display:inline-block; min-width:7em;
 	background-color:#eaeaea; color:#333333;
 	background-image:linear-gradient(to bottom, #f8f8f8, #e1e1e1);
 	border:1px solid #bbb;
 	border-color:#c1c1c1 #c1c1c1 #aaaaaa;
-	border-radius:4px; 
-	outline-offset:-2px; 
+	border-radius:4px;
+	outline-offset:-2px;
 	font-size:0.9em; font-family:inherit; font-weight:normal; line-height:1;
 	text-align:center; text-decoration:none;
 }
-.yellow-btn:hover, .yellow-btn:focus, .yellow-btn:active { 
+.yellow-btn:hover, .yellow-btn:focus, .yellow-btn:active {
 	color:#333333;
-	background-image:none; 
+	background-image:none;
 	text-decoration:none;
 }
 .yellow-btn:active { box-shadow:inset 0 2px 4px rgba(0, 0, 0, 0.1); }
-.yellow-btn-red {
-	background-color:#c33c35; color:#ffffff; 
-	background-image:linear-gradient(to bottom, #ee5f5b, #bd362f); 
-	border-color:#b13121 #b13121 #802020; 
-}
-.yellow-btn-red:hover, .yellow-btn-red:focus, .yellow-btn-red:active { color:#ffffff; }
-.yellow-btn-green {
+.yellow-btn-create {
 	background-color:#3cc335; color:#ffffff;
 	background-image:linear-gradient(to bottom, #5fee5b, #36bd2f); 
 	border-color:#31b121 #31b121 #20b020; 
 }
-.yellow-btn-green:hover, .yellow-btn-green:focus, .yellow-btn-green:active { color:#ffffff; }
-.yellow-btn-yellow {
-	background-color:#f0d000; color:#333333;
-	background-image:linear-gradient(to bottom, #ffe100, #efc100);
-	border-color:#d1c121 #d1c121 #ccaa00;
+.yellow-btn-create:hover, .yellow-btn-create:focus, .yellow-btn-create:active { color:#ffffff; }
+.yellow-btn-edit {
+	background-color:#3cc335; color:#ffffff;
+	background-image:linear-gradient(to bottom, #5fee5b, #36bd2f);
+	border-color:#31b121 #31b121 #20b020;
 }
-.yellow-btn-yellow:hover, .yellow-btn-yellow:focus, .yellow-btn-yellow:active { color:#333333; }
+.yellow-btn-edit:hover, .yellow-btn-edit:focus, .yellow-btn-edit:active { color:#ffffff; }
+.yellow-btn-delete {
+	background-color:#c33c35; color:#ffffff;
+	background-image:linear-gradient(to bottom, #ee5f5b, #bd362f);
+	border-color:#b13121 #b13121 #802020;
+}
+.yellow-btn-delete:hover, .yellow-btn-delete:focus, .yellow-btn-delete:active { color:#ffffff; }
 
-#yellow-pane-login { }
-#yellow-pane-login h1 { margin:0.5em 0.5em; }
-#yellow-pane-login p { margin:0.5em; text-align:right; }
+#yellow-pane-login { text-align:center; }
+#yellow-pane-login h1 { margin:0 0.5em; color:#000; font-size:2em; }
+#yellow-pane-login p { margin:1em 0.5em; }
+#yellow-pane-login-fields { width:12em; text-align:left; margin:0 auto; }
+#yellow-pane-login input { width:12em; box-sizing:border-box; }
 #yellow-pane-edit { }
-#yellow-pane-edit h1 { margin:4px 0; color:#000; font-size:1.3em; text-align:center; }
-#yellow-pane-edit-page { margin:0; padding:5px; border:1px solid #bbb; outline:none; resize:none; font-size:0.9em; }
-#yellow-pane-edit-buttons { margin:4px 0; }
-#yellow-pane-edit-buttons input { margin-right:5px; }
+#yellow-pane-edit h1 { margin:0 0 10px 0; color:#000; font-size:1.5em; }
+#yellow-pane-edit-page { padding:5px; outline:none; resize:none; }
+#yellow-pane-edit-buttons { margin-top:5px; }
+#yellow-pane-edit-buttons input { margin-right:10px; }
 #yellow-pane-user { cursor:pointer; }
 #yellow-pane-user a { text-decoration:none; }
 #yellow-pane-user a:hover { text-decoration:underline; }

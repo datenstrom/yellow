@@ -5,7 +5,7 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.5.16";
+	const Version = "0.5.17";
 	var $yellow;				//access to API
 	var $active;				//web interface is active? (boolean)
 	var $userLoginFailed;		//web interface login failed? (boolean)
@@ -72,6 +72,19 @@ class YellowWebinterface
 		}
 	}
 	
+	// Handle page content parsing of custom block
+	function onParseContentBlock($page, $name, $text, $typeShortcut)
+	{
+		$output = NULL;
+		if($name=="edit" && $typeShortcut)
+		{
+			$editText = "$name $text";
+			if(substru($text, 0, 2)=="- ") $editText = trim(substru($text, 2));
+			$output = "<a href=\"".$page->get("pageEdit")."\">".htmlspecialchars($editText)."</a>";
+		}
+		return $output;
+	}
+	
 	// Handle page extra HTML data
 	function onExtra($name)
 	{
@@ -89,6 +102,7 @@ class YellowWebinterface
 				$output .= "yellow.page.rawDataSource = ".json_encode($this->rawDataSource).";\n";
 				$output .= "yellow.page.rawDataEdit = ".json_encode($this->rawDataEdit).";\n";
 				$output .= "yellow.page.rawDataNew = ".json_encode($this->getDataNew()).";\n";
+				$output .= "yellow.page.pageFile = ".json_encode($this->yellow->page->get("pageFile")).";\n";
 				$output .= "yellow.page.userPermission = ".json_encode($this->userPermission).";\n";
 				$output .= "yellow.page.parserSafeMode = ".json_encode($this->yellow->page->parserSafeMode).";\n";
 				$output .= "yellow.page.statusCode = ".json_encode($this->yellow->page->statusCode).";\n";

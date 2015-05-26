@@ -1,4 +1,4 @@
-/* Flatsite theme 0.5.4 */
+/* Flatsite theme 0.5.5 */
 /* Designer: Mark Mayberg */
 
 @import url(https://fonts.googleapis.com/css?family=Open+Sans:300,400,700);
@@ -87,18 +87,18 @@ a, img { border:none; text-decoration:none; }
 	background-image:linear-gradient(to bottom, #fff, #fff);
 	border:1px solid #bbb;
 	border-radius:4px;
-	font-size:0.9em; font-family:inherit; font-weight:normal; line-height:1;
+	font-size:0.9em; font-family:inherit; font-weight:normal; line-height:normal;
 }
 .btn {
 	margin:0; padding:4px 22px;
-	display:inline-block; min-width:8em;
+	display:inline-block; min-width:7em;
 	background-color:#eaeaea; color:#333333;
 	background-image:linear-gradient(to bottom, #f8f8f8, #e1e1e1);
 	border:1px solid #bbb;
 	border-color:#c1c1c1 #c1c1c1 #aaaaaa;
 	border-radius:4px;
 	outline-offset:-2px;
-	font-size:0.9em; font-family:inherit; font-weight:normal; line-height:1; 
+	font-size:0.9em; font-family:inherit; font-weight:normal; line-height:1;
 	text-align:center; text-decoration:none;
 }
 .btn:hover, .btn:focus, .btn:active {

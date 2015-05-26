@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.5.16";
+	const Version = "0.5.17";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $files;				//files from file system
@@ -531,13 +531,6 @@ class YellowPage
 				$output = $value["obj"]->onParseContentBlock($this, $name, $text, $typeShortcut);
 				if(!is_null($output)) break;
 			}
-		}
-		if(is_null($output) && $name=="snippet" && $typeShortcut && !$this->parserSafeMode)
-		{
-			ob_start();
-			$this->parseSnippet($this->yellow->toolbox->getTextArgs($text));
-			$output = ob_get_contents();
-			ob_end_clean();
 		}
 		if(defined("DEBUG") && DEBUG>=3 && !empty($name)) echo "YellowPage::parseContentBlock name:$name shortcut:$typeShortcut<br/>\n";
 		return $output;

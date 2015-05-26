@@ -4,7 +4,7 @@
 // Yellow main API
 var yellow =
 {
-	version: "0.5.16",
+	version: "0.5.17",
 	action: function(text) { yellow.webinterface.action(text); },
 	onClick: function(e) { yellow.webinterface.hidePanesOnClick(yellow.toolbox.getEventElement(e)); },
 	onKeydown: function(e) { yellow.webinterface.hidePanesOnKeydown(yellow.toolbox.getEventKeycode(e)); },
@@ -59,9 +59,9 @@ yellow.webinterface =
 	{
 		switch(text)
 		{
-			case "create":	this.togglePane("yellow-pane-edit", "create"); break;
-			case "edit":	this.togglePane("yellow-pane-edit", "edit"); break;
-			case "delete":	this.togglePane("yellow-pane-edit", "delete"); break;
+			case "create":	this.togglePane("yellow-pane-edit", "create", true); break;
+			case "edit":	this.togglePane("yellow-pane-edit", "edit", true); break;
+			case "delete":	this.togglePane("yellow-pane-edit", "delete", true); break;
 			case "user":	this.togglePane("yellow-pane-user"); break;
 			case "send":	this.sendPane(this.paneId, this.paneType); break;
 			case "cancel":	this.hidePane(this.paneId); break;
@@ -113,18 +113,21 @@ yellow.webinterface =
 		if(paneId == "yellow-pane-login")
 		{
 			elementDiv.innerHTML =
-				"<h1>"+this.getText("LoginText")+"</h1>"+
 				"<form method=\"post\">"+
+				"<a href=\"#\" onclick=\"yellow.action('cancel'); return false;\" class=\"yellow-cancel\">x</a>"+
+				"<h1>"+this.getText("LoginText")+"</h1>"+
+				"<div id=\"yellow-pane-login-fields\">"+
 				"<input type=\"hidden\" name=\"action\" value=\"login\" />"+
-				"<p><label for=\"email\">"+this.getText("LoginEmail")+"</label> <input name=\"email\" id=\"email\" maxlength=\"64\" value=\""+yellow.config.loginEmail+"\" /></p>"+
-				"<p><label for=\"password\">"+this.getText("LoginPassword")+"</label> <input type=\"password\" name=\"password\" id=\"password\" maxlength=\"64\" value=\""+yellow.config.loginPassword+"\" /></p>"+
+				"<p><label for=\"email\">"+this.getText("LoginEmail")+"</label><br /><input class=\"yellow-form-control\" name=\"email\" id=\"email\" maxlength=\"64\" value=\""+yellow.config.loginEmail+"\" /></p>"+
+				"<p><label for=\"password\">"+this.getText("LoginPassword")+"</label><br /><input class=\"yellow-form-control\" type=\"password\" name=\"password\" id=\"password\" maxlength=\"64\" value=\""+yellow.config.loginPassword+"\" /></p>"+
 				"<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("LoginButton")+"\" /></p>"+
+				"</div>"+
 				"</form>";
 		} else if(paneId == "yellow-pane-edit") {
 			elementDiv.innerHTML =
 				"<form method=\"post\">"+
 				"<h1 id=\"yellow-pane-edit-title\">"+this.getText("Edit")+"</h1>"+
-				"<textarea id=\"yellow-pane-edit-page\" name=\"rawdataedit\"></textarea>"+
+				"<textarea id=\"yellow-pane-edit-page\" class=\"yellow-form-control\" name=\"rawdataedit\"></textarea>"+
 				"<div id=\"yellow-pane-edit-buttons\">"+
 				"<input id=\"yellow-pane-edit-send\" class=\"yellow-btn\" type=\"button\" onclick=\"yellow.action('send'); return false;\" value=\""+this.getText("EditButton")+"\" />"+
 				"<input id=\"yellow-pane-edit-cancel\" class=\"yellow-btn\" type=\"button\" onclick=\"yellow.action('cancel'); return false;\" value=\""+this.getText("CancelButton")+"\" />"+
@@ -164,9 +167,9 @@ yellow.webinterface =
 				var key, className;
 				switch(action)
 				{
-					case "create":	key = "CreateButton"; className = "yellow-btn yellow-btn-green"; break;
-					case "edit":	key = "EditButton"; className = "yellow-btn yellow-btn-yellow"; break;
-					case "delete":	key = "DeleteButton"; className = "yellow-btn yellow-btn-red"; break;
+					case "create":	key = "CreateButton"; className = "yellow-btn yellow-btn-create"; break;
+					case "edit":	key = "EditButton"; className = "yellow-btn yellow-btn-edit"; break;
+					case "delete":	key = "DeleteButton"; className = "yellow-btn yellow-btn-delete"; break;
 				}
 				document.getElementById("yellow-pane-edit-send").value = this.getText(key);
 				document.getElementById("yellow-pane-edit-send").className = className;
@@ -197,26 +200,26 @@ yellow.webinterface =
 	},
 	
 	// Show or hide pane
-	togglePane: function(paneId, paneType)
+	togglePane: function(paneId, paneType, modal)
 	{
 		if(this.paneId!=paneId || this.paneType!=paneType)
 		{
 			this.hidePane(this.paneId);
-			this.showPane(paneId, paneType);
+			this.showPane(paneId, paneType, modal);
 		} else {
 			this.hidePane(paneId);
 		}
 	},
 	
 	// Show pane
-	showPane: function(paneId, paneType)
+	showPane: function(paneId, paneType, modal)
 	{
 		var element = document.getElementById(paneId);
 		if(!yellow.toolbox.isVisible(element))
 		{
 			if(yellow.debug) console.log("yellow.webinterface.showPane id:"+paneId);
 			element.style.display = "block";
-			yellow.toolbox.addClass(document.body, "yellow-body-modal-open");
+			if(modal) yellow.toolbox.addClass(document.body, "yellow-body-modal-open");
 			this.paneId = paneId;
 			this.paneType = paneType;
 			this.resizePanes();
@@ -280,6 +283,7 @@ yellow.webinterface =
 			var paneHeight = yellow.toolbox.getWindowHeight() - paneTop - yellow.toolbox.getOuterHeight(elementBar);
 			if(yellow.toolbox.isVisible(document.getElementById("yellow-pane-login")))
 			{
+				yellow.toolbox.setOuterTop(document.getElementById("yellow-pane-login"), paneTop);
 				yellow.toolbox.setOuterWidth(document.getElementById("yellow-pane-login"), paneWidth);
 			}
 			if(yellow.toolbox.isVisible(document.getElementById("yellow-pane-edit")))
