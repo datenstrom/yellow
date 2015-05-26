@@ -6,15 +6,17 @@
 .yellow-bar-right a { margin-left:1em; }
 .yellow-bar-right #yellow-pane-create-link { padding:0 0.5em; }
 .yellow-bar-right #yellow-pane-delete-link { padding:0 0.5em; }
-.yellow-body-modal-open { overflow:hidden; background-color:rgba(128, 128, 128, 0.1); transition:background-color 100ms; }
+.yellow-body-modal-open { overflow:hidden; }
+.yellow-body-modal-open .page { display:none; }
 
 .yellow-pane {
 	position:absolute; display:none; z-index:100;
 	margin:10px 0px; padding:10px;
-	background-color:#fff; color:#000; 
+	background-color:#fff; color:#000;
 	border:1px solid #bbb; 
 	border-radius:4px; box-shadow:2px 4px 10px rgba(0, 0, 0, 0.2);
 }
+.yellow-pane h1 { color:#000; }
 .yellow-pane p { margin:0.5em; }
 .yellow-pane ul { list-style:none; margin:0 0.5em; padding:0; }
 .yellow-pane div { overflow:hidden; }
@@ -88,12 +90,12 @@
 .yellow-btn-delete:hover, .yellow-btn-delete:focus, .yellow-btn-delete:active { color:#ffffff; }
 
 #yellow-pane-login { text-align:center; }
-#yellow-pane-login h1 { margin:0 0.5em; color:#000; font-size:2em; }
-#yellow-pane-login p { margin:1em 0.5em; }
+#yellow-pane-login h1 { margin:0 1em; font-size:2em; }
 #yellow-pane-login-fields { width:12em; text-align:left; margin:0 auto; }
 #yellow-pane-login input { width:12em; box-sizing:border-box; }
+#yellow-pane-login .yellow-btn { margin:0.5em 0; }
 #yellow-pane-edit { }
-#yellow-pane-edit h1 { margin:0 0 10px 0; color:#000; font-size:1.5em; }
+#yellow-pane-edit h1 { margin:0 0 10px 0; font-size:1.5em; }
 #yellow-pane-edit-page { padding:5px; outline:none; resize:none; }
 #yellow-pane-edit-buttons { margin-top:5px; }
 #yellow-pane-edit-buttons input { margin-right:10px; }

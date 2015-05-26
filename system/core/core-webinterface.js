@@ -82,7 +82,6 @@ yellow.webinterface =
 		elementBar.setAttribute("id", id);
 		if(normal)
 		{
-			var location = yellow.config.serverBase+yellow.config.pluginLocation;			
 			elementBar.innerHTML =
 				"<div class=\"yellow-bar-left\">"+
 				"<a href=\"#\" onclick=\"yellow.action('edit'); return false;\" id=\"yellow-pane-edit-link\">"+this.getText("Edit")+"</a>"+
@@ -301,7 +300,7 @@ yellow.webinterface =
 				yellow.toolbox.setOuterHeight(document.getElementById("yellow-pane-edit-page"), height1 - height2 + height3);
 				var elementLink = document.getElementById("yellow-pane-"+this.paneType+"-link");
 				var position = yellow.toolbox.getOuterLeft(elementLink) + yellow.toolbox.getOuterWidth(elementLink)/2;
-				position -= yellow.toolbox.getOuterLeft(document.getElementById("yellow-pane-edit"));
+				position -= yellow.toolbox.getOuterLeft(document.getElementById("yellow-pane-edit")) + 1;
 				yellow.toolbox.setOuterLeft(document.getElementById("yellow-pane-edit-arrow"), position);
 			}
 			if(yellow.toolbox.isVisible(document.getElementById("yellow-pane-user")))
