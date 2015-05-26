@@ -37,18 +37,21 @@ yellow.webinterface =
 		if(body && body.firstChild && !this.loaded)
 		{
 			this.loaded = true;
-			if(yellow.debug) console.log("yellow.webinterface.load email:"+yellow.config.userEmail+" "+yellow.config.userName);
-			if(yellow.config.userEmail)
+			if(yellow.config.webinterfaceLocation)
 			{
-				this.createBar("yellow-bar", true, body.firstChild);
-				this.createPane("yellow-pane-edit", true, body.firstChild);
-				this.createPane("yellow-pane-user", true, body.firstChild);
-				yellow.toolbox.addEvent(document.getElementById("yellow-pane-edit-page"), "keyup", yellow.onUpdate);
-				yellow.toolbox.addEvent(document.getElementById("yellow-pane-edit-page"), "change", yellow.onUpdate);
-			} else {
-				this.createBar("yellow-bar", false, body.firstChild);
-				this.createPane("yellow-pane-login", false, body.firstChild);
-				if(yellow.config.login) this.showPane("yellow-pane-login");
+				if(yellow.debug) console.log("yellow.webinterface.load email:"+yellow.config.userEmail+" "+yellow.config.userName);
+				if(yellow.config.userEmail)
+				{
+					this.createBar("yellow-bar", true, body.firstChild);
+					this.createPane("yellow-pane-edit", true, body.firstChild);
+					this.createPane("yellow-pane-user", true, body.firstChild);
+					yellow.toolbox.addEvent(document.getElementById("yellow-pane-edit-page"), "keyup", yellow.onUpdate);
+					yellow.toolbox.addEvent(document.getElementById("yellow-pane-edit-page"), "change", yellow.onUpdate);
+				} else {
+					this.createBar("yellow-bar", false, body.firstChild);
+					this.createPane("yellow-pane-login", false, body.firstChild);
+					if(yellow.config.login) this.showPane("yellow-pane-login");
+				}
 			}
 			clearInterval(this.intervalId);
 		}

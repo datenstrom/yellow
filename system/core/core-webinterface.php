@@ -93,27 +93,30 @@ class YellowWebinterface
 		{
 			$location = $this->yellow->config->getHtml("serverBase").$this->yellow->config->getHtml("pluginLocation");
 			$output = "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"{$location}core-webinterface.css\" />\n";
-			$output .= "<script type=\"text/javascript\" src=\"{$location}core-webinterface.js\"></script>\n";
-			$output .= "<script type=\"text/javascript\">\n";
-			$output .= "// <![CDATA[\n";
-			if($this->isUser())
+			if($this->users->getNumber())
 			{
-				$output .= "yellow.page.title = ".json_encode($this->getDataTitle($this->rawDataEdit)).";\n";
-				$output .= "yellow.page.rawDataSource = ".json_encode($this->rawDataSource).";\n";
-				$output .= "yellow.page.rawDataEdit = ".json_encode($this->rawDataEdit).";\n";
-				$output .= "yellow.page.rawDataNew = ".json_encode($this->getDataNew()).";\n";
-				$output .= "yellow.page.pageFile = ".json_encode($this->yellow->page->get("pageFile")).";\n";
-				$output .= "yellow.page.userPermission = ".json_encode($this->userPermission).";\n";
-				$output .= "yellow.page.parserSafeMode = ".json_encode($this->yellow->page->parserSafeMode).";\n";
-				$output .= "yellow.page.statusCode = ".json_encode($this->yellow->page->statusCode).";\n";
+				$output .= "<script type=\"text/javascript\" src=\"{$location}core-webinterface.js\"></script>\n";
+				$output .= "<script type=\"text/javascript\">\n";
+				$output .= "// <![CDATA[\n";
+				if($this->isUser())
+				{
+					$output .= "yellow.page.title = ".json_encode($this->getDataTitle($this->rawDataEdit)).";\n";
+					$output .= "yellow.page.rawDataSource = ".json_encode($this->rawDataSource).";\n";
+					$output .= "yellow.page.rawDataEdit = ".json_encode($this->rawDataEdit).";\n";
+					$output .= "yellow.page.rawDataNew = ".json_encode($this->getDataNew()).";\n";
+					$output .= "yellow.page.pageFile = ".json_encode($this->yellow->page->get("pageFile")).";\n";
+					$output .= "yellow.page.userPermission = ".json_encode($this->userPermission).";\n";
+					$output .= "yellow.page.parserSafeMode = ".json_encode($this->yellow->page->parserSafeMode).";\n";
+					$output .= "yellow.page.statusCode = ".json_encode($this->yellow->page->statusCode).";\n";
+				}
+				$output .= "yellow.config = ".json_encode($this->getDataConfig()).";\n";
+				$language = $this->isUser() ? $this->users->getLanguage() : $this->yellow->page->get("language");
+				if(!$this->yellow->text->isLanguage($language)) $language = $this->yellow->config->get("language");
+				$output .= "yellow.text = ".json_encode($this->yellow->text->getData("webinterface", $language)).";\n";
+				if(defined("DEBUG")) $output .= "yellow.debug = ".json_encode(DEBUG).";\n";
+				$output .= "// ]]>\n";
+				$output .= "</script>\n";
 			}
-			$output .= "yellow.config = ".json_encode($this->getDataConfig()).";\n";
-			$language = $this->isUser() ? $this->users->getLanguage() : $this->yellow->page->get("language");
-			if(!$this->yellow->text->isLanguage($language)) $language = $this->yellow->config->get("language");
-			$output .= "yellow.text = ".json_encode($this->yellow->text->getData("webinterface", $language)).";\n";
-			if(defined("DEBUG")) $output .= "yellow.debug = ".json_encode(DEBUG).";\n";
-			$output .= "// ]]>\n";
-			$output .= "</script>\n";
 		}
 		return $output;
 	}
