@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.5.17";
+	const Version = "0.5.18";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $files;				//files from file system
@@ -363,6 +363,7 @@ class YellowPage
 	var $headerData;			//response header
 	var $outputData;			//response output
 	var $pages;					//page collection
+	var $relations;				//page relations
 	var $parser;				//content parser
 	var $parserData;			//content data of page
 	var $parserSafeMode;		//page is parsed in safe mode? (boolean)
@@ -378,6 +379,7 @@ class YellowPage
 		$this->metaData = array();
 		$this->headerData = array();
 		$this->pages = new YellowPageCollection($yellow);
+		$this->relations = array();
 	}
 
 	// Set request information
@@ -707,6 +709,18 @@ class YellowPage
 		return $this->pages;
 	}
 	
+	// Set page relation
+	function setPage($type, $page)
+	{
+		$page->relations[$type] = $this;
+	}
+	
+	// Return related page
+	function getPage($type)
+	{
+		return !is_null($this->relations[$type]) ? $this->relations[$type] : $this;
+	}
+	
 	// Return absolute page location
 	function getLocation()
 	{
@@ -921,6 +935,36 @@ class YellowPageCollection extends ArrayObject
 		$array = $this->getArrayCopy();
 		usort($array, $callback);
 		$this->exchangeArray($array);
+		return $this;
+	}
+	
+	// Sort page collection by meta data similarity
+	function similar($page, $ascendingOrder = false)
+	{
+		$location = $page->location;
+		$keywords = $page->get("keywords").",".$page->get("tag").",".$page->get("author");
+		$tokens = array_unique(array_filter(explode(',', $keywords), "strlen"));
+		if(!empty($tokens))
+		{
+			$array = array();
+			foreach($this->getArrayCopy() as $page)
+			{
+				$searchScore = 0;
+				foreach($tokens as $token)
+				{
+					if(stristr($page->get("title"), $token)) $searchScore += 10;
+					if(stristr($page->get("tag"), $token)) $searchScore += 5;
+					if(stristr($page->get("author"), $token)) $searchScore += 2;
+				}
+				if($page->location != $location)
+				{
+					$page->set("searchscore", $searchScore);
+					array_push($array, $page);
+				}
+			}
+			$this->exchangeArray($array);
+			$this->sort("searchscore", $ascendingOrder);
+		}
 		return $this;
 	}
 
