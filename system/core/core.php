@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.5.18";
+	const Version = "0.5.19";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $files;				//files from file system
@@ -710,15 +710,15 @@ class YellowPage
 	}
 	
 	// Set page relation
-	function setPage($type, $page)
+	function setPage($key, $page)
 	{
-		$page->relations[$type] = $this;
+		$page->relations[$key] = $this;
 	}
 	
 	// Return related page
-	function getPage($type)
+	function getPage($key)
 	{
-		return !is_null($this->relations[$type]) ? $this->relations[$type] : $this;
+		return !is_null($this->relations[$key]) ? $this->relations[$key] : $this;
 	}
 	
 	// Return absolute page location
@@ -942,8 +942,9 @@ class YellowPageCollection extends ArrayObject
 	function similar($page, $ascendingOrder = false)
 	{
 		$location = $page->location;
-		$keywords = $page->get("keywords").",".$page->get("tag").",".$page->get("author");
-		$tokens = array_unique(array_filter(explode(',', $keywords), "strlen"));
+		$keywords = $this->yellow->toolbox->createTextKeywords($page->get("title"));
+		$keywords .= ",".$page->get("tag").",".$page->get("author");
+		$tokens = array_unique(array_filter(preg_split("/,\s*/", $keywords), "strlen"));
 		if(!empty($tokens))
 		{
 			$array = array();
@@ -2134,11 +2135,16 @@ class YellowLookup
 	// Check if location is within current request
 	function isActiveLocation($location, $currentLocation)
 	{
-		if($location != $this->yellow->pages->getHomeLocation($currentLocation))
+		if($this->isFileLocation($location))
 		{
-			$active = substru($currentLocation, 0, strlenu($location))==$location;
+			$active = $currentLocation==$location;
 		} else {
-			$active = $this->getDirectoryLocation($currentLocation)==$location;
+			if($location == $this->yellow->pages->getHomeLocation($location))
+			{
+				$active = $this->getDirectoryLocation($currentLocation)==$location;
+			} else {
+				$active = substru($currentLocation, 0, strlenu($location))==$location;
+			}
 		}
 		return $active;
 	}
@@ -2610,11 +2616,12 @@ class YellowToolbox
 	}
 	
 	// Create keywords from text string
-	function createTextKeywords($text, $keywordsMax)
+	function createTextKeywords($text, $keywordsMax = 0)
 	{
-		$tokens = preg_split("/[,\s\(\)]/", strtoloweru($text));
+		$tokens = array_unique(preg_split("/[,\s\(\)]/", strtoloweru($text)));
 		foreach($tokens as $key=>$value) if(strlenu($value) < 3) unset($tokens[$key]);
-		return implode(", ", array_slice(array_unique($tokens), 0, $keywordsMax));
+		if($keywordsMax) $tokens = array_slice($tokens, 0, $keywordsMax);
+		return implode(", ", $tokens);
 	}
 	
 	// Create title from text string
