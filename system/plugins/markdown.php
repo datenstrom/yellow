@@ -5,7 +5,7 @@
 // Markdown plugin
 class YellowMarkdown
 {
-	const Version = "0.5.4";
+	const Version = "0.5.5";
 	var $yellow;			//access to API
 	
 	// Handle initialisation
@@ -100,8 +100,9 @@ class YellowMarkdownParser extends MarkdownExtraParser
 	// Handle fenced code blocks
 	function _doFencedCodeBlocks_callback($matches)
 	{
+		$name = trim($matches[2]." ".$matches[3]);
 		$text = $matches[4];
-		$output = $this->page->parseContentBlock($matches[2], $text, false);
+		$output = $this->page->parseContentBlock($name, $text, false);
 		if(is_null($output))
 		{
 			$attr = $this->doExtraAttributes("pre", $dummy =& $matches[3]);
@@ -113,7 +114,7 @@ class YellowMarkdownParser extends MarkdownExtraParser
 	// Handle headers, text style
 	function _doHeaders_callback_setext($matches)
 	{
-		if ($matches[3] == '-' && preg_match('{^- }', $matches[1])) return $matches[0];
+		if($matches[3] == '-' && preg_match('{^- }', $matches[1])) return $matches[0];
 		$text = $matches[1];
 		$level = $matches[3]{0} == '=' ? 1 : 2;
 		$attr = $this->doExtraAttributes("h$level", $dummy =& $matches[2]);
