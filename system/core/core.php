@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.5.19";
+	const Version = "0.5.20";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $files;				//files from file system
@@ -582,7 +582,7 @@ class YellowPage
 		{
 			$this->error(404);
 		}
-		if($this->isExisting("pageClean")) $this->page->outputData = NULL;
+		if($this->isExisting("pageClean")) $this->outputData = NULL;
 	}
 	
 	// Parse template
