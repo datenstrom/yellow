@@ -2040,8 +2040,6 @@ class YellowLookup
 				if(preg_match("/^\#/", $location))
 				{
 					$location = $pageBase.$pageLocation.$location;
-				} else if( preg_match( "/^\!/", $location )) {
-					$location = substr( $location, 1 );
 				} else if(!preg_match("/^\//", $location)) {
 					$location = $this->getDirectoryLocation($pageBase.$pageLocation).$location;
 				} else if(!preg_match("#^$pageBase#", $location)) {
