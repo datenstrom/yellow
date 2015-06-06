@@ -1,5 +1,5 @@
 <?php $page = $yellow->page->getParentTop(false) ?>
-<?php $pages = $page ? $page->getChildren(): $yellow->pages->clean() ?>
+<?php $pages = $page ? $page->getChildren(!$page->isVisible()): $yellow->pages->clean() ?>
 <?php $yellow->page->setLastModified($pages->getModified()) ?>
 <div class="navigation-sidebar">
 <ul>

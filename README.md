@@ -16,4 +16,4 @@ License
 -------
 Yellow is free and open source, made by the people who use Yellow.  
 All files are licensed under [GPLv2](http://opensource.org/licenses/GPL-2.0) unless stated otherwise.
-[Thank you](https://github.com/datenstrom/yellow/wiki/Yellow-contributors).
+[Thank you](https://github.com/datenstrom/yellow/wiki/Yellow-community).
