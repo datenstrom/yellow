@@ -5,7 +5,7 @@
 // Markdown plugin
 class YellowMarkdown
 {
-	const Version = "0.5.5";
+	const Version = "0.5.6";
 	var $yellow;			//access to API
 	
 	// Handle initialisation
@@ -48,11 +48,10 @@ class YellowMarkdownParser extends MarkdownExtraParser
 	// Transform text
 	function transform($text)
 	{
-		$text = preg_replace("/@domain/i", $this->page->serverScheme . "://" . $this->page->serverName, $text);
+		$text = preg_replace("/@domain/i", $this->page->serverScheme."://".$this->page->serverName, $text);
 		$text = preg_replace("/@pageRead/i", $this->page->get("pageRead"), $text);
 		$text = preg_replace("/@pageEdit/i", $this->page->get("pageEdit"), $text);
 		$text = preg_replace("/@pageError/i", $this->page->get("pageError"), $text);
-		$text = preg_replace("/@pageFile/i", $this->page->get("pageFile"), $text);
 		return parent::transform($text);
 	}
 
