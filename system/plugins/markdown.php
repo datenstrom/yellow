@@ -52,7 +52,7 @@ class YellowMarkdownParser extends MarkdownExtraParser
 		$text = preg_replace("/@pageEdit/i", $this->page->get("pageEdit"), $text);
 		$text = preg_replace("/@pageError/i", $this->page->get("pageError"), $text);
 		$text = parent::transform($text);
-		$text = preg_replace("/".$this->page->base.$this->page->location."@domain/i", "", $text);
+		$text = preg_replace("/".preg_quote( $this->page->base.$this->page->location, "/" )."@domain/i", "", $text);
 		return $text;
 	}
 
