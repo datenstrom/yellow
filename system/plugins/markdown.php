@@ -48,11 +48,12 @@ class YellowMarkdownParser extends MarkdownExtraParser
 	// Transform text
 	function transform($text)
 	{
-		$text = preg_replace("/@domain/i", $this->page->serverScheme."://".$this->page->serverName, $text);
 		$text = preg_replace("/@pageRead/i", $this->page->get("pageRead"), $text);
 		$text = preg_replace("/@pageEdit/i", $this->page->get("pageEdit"), $text);
 		$text = preg_replace("/@pageError/i", $this->page->get("pageError"), $text);
-		return parent::transform($text);
+		$text = parent::transform( $text );
+		$text = preg_replace( "/".$this->page->base.$this->page->location."@domain/i", "", $text );
+		return $text;
 	}
 
 	// Return unique id attribute
