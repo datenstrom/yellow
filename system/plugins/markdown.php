@@ -5,7 +5,7 @@
 // Markdown plugin
 class YellowMarkdown
 {
-	const Version = "0.5.6";
+	const Version = "0.5.7";
 	var $yellow;			//access to API
 	
 	// Handle initialisation
@@ -48,10 +48,10 @@ class YellowMarkdownParser extends MarkdownExtraParser
 	// Transform text
 	function transform($text)
 	{
-		$text = preg_replace("/@domain/i", $this->page->serverScheme."://".$this->page->serverName, $text);
 		$text = preg_replace("/@pageRead/i", $this->page->get("pageRead"), $text);
 		$text = preg_replace("/@pageEdit/i", $this->page->get("pageEdit"), $text);
 		$text = preg_replace("/@pageError/i", $this->page->get("pageError"), $text);
+		$text = preg_replace("/@pageFile/i", $this->page->get("pageFile"), $text);
 		return parent::transform($text);
 	}
 
@@ -73,7 +73,7 @@ class YellowMarkdownParser extends MarkdownExtraParser
 	{
 		$text = preg_replace_callback("/<(\w+:[^\'\">\s]+)>/", array(&$this, "_doAutoLinks_url_callback"), $text);
 		$text = preg_replace_callback("/<([\w\-\.]+@[\w\-\.]+)>/", array(&$this, "_doAutoLinks_email_callback"), $text);
-		$text = preg_replace_callback("/\[(\w+)\s+(.*?)\]/", array(&$this, "_doAutoLinks_shortcut_callback"), $text);
+		$text = preg_replace_callback("/\[(\w+)(.*?)\]/", array(&$this, "_doAutoLinks_shortcut_callback"), $text);
 		$text = preg_replace_callback("/\[\-\-(.*?)\-\-\]/", array(&$this, "_doAutoLinks_comment_callback"), $text);
 		$text = preg_replace_callback("/((http|https|ftp):\/\/\S+[^\'\"\,\.\;\:\s]+)/", array(&$this, "_doAutoLinks_url_callback"), $text);
 		$text = preg_replace_callback("/([\w\-\.]+@[\w\-\.]+\.[\w]{2,4})/", array(&$this, "_doAutoLinks_email_callback"), $text);
@@ -83,7 +83,7 @@ class YellowMarkdownParser extends MarkdownExtraParser
 	// Handle shortcuts
 	function _doAutoLinks_shortcut_callback($matches)
 	{
-		$output = $this->page->parseContentBlock($matches[1], $matches[2], true);
+		$output = $this->page->parseContentBlock($matches[1], trim($matches[2]), true);
 		if(is_null($output)) $output = htmlspecialchars($matches[0], ENT_NOQUOTES);
 		return substr($output, 0, 4)=="<div" ? $this->hashBlock(trim($output)) : $this->hashPart(trim($output));
 	}
