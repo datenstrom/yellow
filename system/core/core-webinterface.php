@@ -73,10 +73,10 @@ class YellowWebinterface
 	}
 	
 	// Handle page content parsing of custom block
-	function onParseContentBlock($page, $name, $text, $typeShortcut)
+	function onParseContentBlock($page, $name, $text, $shortcut)
 	{
 		$output = NULL;
-		if($name=="edit" && $typeShortcut)
+		if($name=="edit" && $shortcut)
 		{
 			$editText = "$name $text";
 			if(substru($text, 0, 2)=="- ") $editText = trim(substru($text, 2));

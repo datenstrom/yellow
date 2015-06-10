@@ -523,18 +523,18 @@ class YellowPage
 	}
 	
 	// Parse page content block
-	function parseContentBlock($name, $text, $typeShortcut)
+	function parseContentBlock($name, $text, $shortcut)
 	{
 		$output = NULL;
 		foreach($this->yellow->plugins->plugins as $key=>$value)
 		{
 			if(method_exists($value["obj"], "onParseContentBlock"))
 			{
-				$output = $value["obj"]->onParseContentBlock($this, $name, $text, $typeShortcut);
+				$output = $value["obj"]->onParseContentBlock($this, $name, $text, $shortcut);
 				if(!is_null($output)) break;
 			}
 		}
-		if(defined("DEBUG") && DEBUG>=3 && !empty($name)) echo "YellowPage::parseContentBlock name:$name shortcut:$typeShortcut<br/>\n";
+		if(defined("DEBUG") && DEBUG>=3 && !empty($name)) echo "YellowPage::parseContentBlock name:$name shortcut:$shortcut<br/>\n";
 		return $output;
 	}
 	
