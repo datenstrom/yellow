@@ -5,7 +5,7 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.5.17";
+	const Version = "0.5.18";
 	var $yellow;				//access to API
 	var $active;				//web interface is active? (boolean)
 	var $userLoginFailed;		//web interface login failed? (boolean)
@@ -625,10 +625,12 @@ class YellowWebinterfaceUsers
 		if($this->isExisting($email))
 		{
 			$location = $this->yellow->config->get("serverBase").$this->yellow->config->get("webinterfaceLocation");
+			$domain = $this->yellow->config->get("webinterfaceServerName");
+			$expire = time()+60*60*24*30*365;
 			$session = $this->yellow->toolbox->createHash($this->users[$email]["hash"], "sha256");
 			if(empty($session)) $session = "error-hash-algorithm-sha256";
-			setcookie($cookieName, "$email,$session", time()+60*60*24*30*365, $location,
-				$this->yellow->config->get("webinterfaceServerName"),
+			if($domain == "localhost") $domain = $expire = false;
+			setcookie($cookieName, "$email,$session", $expire, $location, $domain,
 				$this->yellow->config->get("webinterfaceServerScheme")=="https");
 		}
 	}
@@ -637,8 +639,10 @@ class YellowWebinterfaceUsers
 	function destroyCookie($cookieName)
 	{
 		$location = $this->yellow->config->get("serverBase").$this->yellow->config->get("webinterfaceLocation");
-		setcookie($cookieName, "", time()-3600,
-			$location, $this->yellow->config->get("webinterfaceServerName"),
+		$domain = $this->yellow->config->get("webinterfaceServerName");
+		$expire = time()-3600;
+		if($domain == "localhost") $domain = $expire = false;
+		setcookie($cookieName, "", $expire, $location, $domain,
 			$this->yellow->config->get("webinterfaceServerScheme")=="https");
 	}
 	
