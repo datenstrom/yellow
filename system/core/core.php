@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.5.24";
+	const Version = "0.5.25";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $files;				//files from file system
@@ -1839,7 +1839,7 @@ class YellowLookup
 	// Return file path from location
 	function findFileFromLocation($location, $directory = false)
 	{
-		$path = $pathBase = $this->yellow->config->get("contentDir");
+		$path = $this->yellow->config->get("contentDir");
 		$pathRoot = $this->yellow->config->get("contentRootDir");
 		$pathHome = $this->yellow->config->get("contentHomeDir");
 		$fileDefault = $this->yellow->config->get("contentDefaultFile");
@@ -2067,7 +2067,7 @@ class YellowLookup
 	// Return content information
 	function getContentInformation()
 	{
-		$path = $pathBase = $this->yellow->config->get("contentDir");
+		$path = $this->yellow->config->get("contentDir");
 		$pathRoot = $this->yellow->config->get("contentRootDir");
 		$pathHome = $this->yellow->config->get("contentHomeDir");
 		if(!$this->yellow->config->get("multiLanguageMode")) $pathRoot = "";
