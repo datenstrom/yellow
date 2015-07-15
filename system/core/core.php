@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.5.25";
+	const Version = "0.5.26";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $files;				//files from file system
@@ -343,7 +343,8 @@ class Yellow
 	// Execute snippet
 	function snippet($name, $args = NULL)
 	{
-		$this->page->parseSnippet(func_get_args());
+		$this->pages->snippetArgs = func_get_args();
+		$this->page->parseSnippet($name);
 	}
 }
 	
@@ -601,9 +602,8 @@ class YellowPage
 	}
 	
 	// Parse snippet
-	function parseSnippet($args)
+	function parseSnippet($name)
 	{
-		list($name) = $this->yellow->pages->snippetArgs = $args;
 		$fileNameSnippet = $this->yellow->config->get("snippetDir").$this->yellow->lookup->normaliseName($name).".php";
 		if(is_file($fileNameSnippet))
 		{
