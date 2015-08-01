@@ -5,7 +5,7 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.5.19";
+	const Version = "0.5.20";
 	var $yellow;				//access to API
 	var $active;				//web interface is active? (boolean)
 	var $userLoginFailed;		//web interface login failed? (boolean)
@@ -82,6 +82,18 @@ class YellowWebinterface
 			if(substru($text, 0, 2)=="- ") $editText = trim(substru($text, 2));
 			$output = "<a href=\"".$page->get("pageEdit")."\">".htmlspecialchars($editText)."</a>";
 		}
+		if($name=="debug" && $shortcut)
+		{
+			$output = "<div class=\"".htmlspecialchars($name)."\">\n";
+			if(empty($text))
+			{
+				$output .= "Yellow ".Yellow::Version.", PHP ".PHP_VERSION.", ".$this->yellow->toolbox->getServerSoftware().", ".PHP_OS."\n";
+			} else {
+				foreach($this->yellow->config->getData($text) as $key=>$value) $output .= htmlspecialchars("$key = $value")."<br />\n";
+				if($page->parserSafeMode) $page->error(500, "Debug '$text' is not allowed!");
+			}
+			$output .= "</div>\n";
+		}
 		return $output;
 	}
 	
@@ -91,11 +103,11 @@ class YellowWebinterface
 		$output = NULL;
 		if($this->isActive() && $name=="header")
 		{
-			$location = $this->yellow->config->getHtml("serverBase").$this->yellow->config->getHtml("pluginLocation");
-			$output = "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"{$location}core-webinterface.css\" />\n";
 			if($this->users->getNumber())
 			{
-				$output .= "<script type=\"text/javascript\" src=\"{$location}core-webinterface.js\"></script>\n";
+				$location = $this->yellow->config->get("serverBase").$this->yellow->config->get("pluginLocation")."core-webinterface";
+				$output = "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"".htmlspecialchars($location).".css\" />\n";
+				$output .= "<script type=\"text/javascript\" src=\"".htmlspecialchars($location).".js\"></script>\n";
 				$output .= "<script type=\"text/javascript\">\n";
 				$output .= "// <![CDATA[\n";
 				if($this->isUser())

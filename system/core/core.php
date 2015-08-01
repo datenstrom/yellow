@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.5.26";
+	const Version = "0.5.27";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $files;				//files from file system
@@ -58,7 +58,8 @@ class Yellow
 		$this->config->setDefault("configFile", "config.ini");
 		$this->config->setDefault("textFile", "language-(.*).ini");
 		$this->config->setDefault("errorFile", "page-error-(.*).txt");
-		$this->config->setDefault("robotsTextFile", "robots.txt");
+		$this->config->setDefault("robotsFile", "robots.txt");
+		$this->config->setDefault("iconFile", "icon.png");
 		$this->config->setDefault("template", "default");
 		$this->config->setDefault("navigation", "navigation");
 		$this->config->setDefault("parser", "markdown");
@@ -249,8 +250,8 @@ class Yellow
 				$fileName = $this->config->get("pluginDir").substru($location, $pluginLocationLength);
 			} else if(substru($location, 0, $themeLocationLength) == $this->config->get("themeLocation")) {
 				$fileName = $this->config->get("themeDir").substru($location, $themeLocationLength);
-			} else if($location == "/".$this->config->get("robotsTextFile")) {
-				$fileName = $this->config->get("configDir").$this->config->get("robotsTextFile");
+			} else if($location == "/".$this->config->get("robotsFile")) {
+				$fileName = $this->config->get("configDir").$this->config->get("robotsFile");
 			}
 		}
 		if(empty($fileName)) $fileName = $this->lookup->findFileFromLocation($location);
@@ -737,6 +738,22 @@ class YellowPage
 	function getExtra($name)
 	{
 		$output = "";
+		if($name == "header")
+		{
+			if(is_file($this->yellow->config->get("themeDir").$this->get("theme").".css"))
+			{
+				$location = $this->yellow->config->get("serverBase").
+					$this->yellow->config->get("themeLocation").$this->get("theme").".css";
+				$output .= "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"".htmlspecialchars($location)."\" />\n";
+			}
+			if(is_file($this->yellow->config->get("imageDir").$this->yellow->config->get("iconFile")))
+			{
+				$location = $this->yellow->config->get("serverBase").
+					$this->yellow->config->get("imageLocation").$this->yellow->config->get("iconFile");
+				$contentType = $this->yellow->toolbox->getMimeContentType($this->yellow->config->get("iconFile"));
+				$output .= "<link rel=\"shortcut icon\" type=\"$contentType\" href=\"".htmlspecialchars($location)."\" />\n";
+			}
+		}
 		foreach($this->yellow->plugins->plugins as $key=>$value)
 		{
 			if(method_exists($value["obj"], "onExtra"))
@@ -745,7 +762,33 @@ class YellowPage
 				if(!is_null($outputPlugin)) $output .= $outputPlugin;
 			}
 		}
-		return $output;
+		return $this->normaliseExtra($output);
+	}
+	
+	// Normalise page extra HTML data
+	function normaliseExtra($text)
+	{
+		$outputScript = $outputStylesheet = $outputOther = $locations = array();
+		foreach($this->yellow->toolbox->getTextLines($text) as $line)
+		{
+			if(preg_match("/^<script (.*?)src=\"([^\"]+)\"(.*?)><\/script>$/i", $line, $matches))
+			{
+				if(is_null($locations[$matches[2]]))
+				{
+					$locations[$matches[2]] = $matches[2];
+					array_push($outputScript, $line);
+				}
+			} else if(preg_match("/^<link rel=\"stylesheet\"(.*?)href=\"([^\"]+)\"(.*?)>$/i", $line, $matches)) {
+				if(is_null($locations[$matches[2]]))
+				{
+					$locations[$matches[2]] = $matches[2];
+					array_push($outputStylesheet, $line);
+				}
+			} else {
+				array_push($outputOther, $line);
+			}
+		}
+		return implode($outputScript).implode($outputStylesheet).implode($outputOther);
 	}
 	
 	// Set page response output
@@ -1333,7 +1376,7 @@ class YellowFiles
 			$this->files[$location] = array();
 			$serverScheme = $this->yellow->page->serverScheme;
 			$serverName = $this->yellow->page->serverName;
-			$base = $this->yellow->page->base;
+			$base = $this->yellow->config->get("serverBase");
 			if(empty($location))
 			{
 				$fileNames = array($this->yellow->config->get("mediaDir"));
@@ -1586,9 +1629,9 @@ class YellowConfig
 		$config = array();
 		if(empty($filterStart) && empty($filterEnd))
 		{
-			$config = $this->config;
+			$config = array_merge($this->configDefaults, $this->config);
 		} else {
-			foreach($this->config as $key=>$value)
+			foreach(array_merge($this->configDefaults, $this->config) as $key=>$value)
 			{
 				if(!empty($filterStart) && substru($key, 0, strlenu($filterStart))==$filterStart) $config[$key] = $value;
 				if(!empty($filterEnd) && substru($key, -strlenu($filterEnd))==$filterEnd) $config[$key] = $value;
@@ -2162,6 +2205,14 @@ class YellowLookup
 // Yellow toolbox with helpers
 class YellowToolbox
 {
+	// Return server software from current HTTP request
+	function getServerSoftware()
+	{
+		$serverSoftware = PHP_SAPI;
+		if(preg_match("/^(\S+)/", $_SERVER["SERVER_SOFTWARE"], $matches)) $serverSoftware = $matches[1];
+		return $serverSoftware;
+	}
+	
 	// Return server scheme from current HTTP request
 	function getServerScheme()
 	{
@@ -2377,6 +2428,7 @@ class YellowToolbox
 	{
 		$mimeTypes = array(
 			"css" => "text/css",
+			"ico" => "image/x-icon",
 			"js" => "application/javascript",
 			"jpg" => "image/jpeg",
 			"png" => "image/png",
@@ -2551,7 +2603,7 @@ class YellowToolbox
 	// Create description from text string
 	function createTextDescription($text, $lengthMax, $removeHtml = true, $endMarker = "", $endMarkerText = "")
 	{
-		if(preg_match("/<h1>.*<\/h1>(.*)/si", $text, $matches)) $text = $matches[1];
+		if(preg_match("/^<h1>.*?<\/h1>(.*)$/si", $text, $matches)) $text = $matches[1];
 		if($removeHtml)
 		{
 			while(true)
@@ -2618,7 +2670,7 @@ class YellowToolbox
 	// Create keywords from text string
 	function createTextKeywords($text, $keywordsMax = 0)
 	{
-		$tokens = array_unique(preg_split("/[,\s\(\)]/", strtoloweru($text)));
+		$tokens = array_unique(preg_split("/[,\s\(\)\+\-]/", strtoloweru($text)));
 		foreach($tokens as $key=>$value) if(strlenu($value) < 3) unset($tokens[$key]);
 		if($keywordsMax) $tokens = array_slice($tokens, 0, $keywordsMax);
 		return implode(", ", $tokens);

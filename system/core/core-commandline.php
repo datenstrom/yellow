@@ -5,7 +5,7 @@
 // Command line core plugin
 class YellowCommandline
 {
-	const Version = "0.5.3";
+	const Version = "0.5.4";
 	var $yellow;					//access to API
 	var $content;					//number of content pages
 	var $media;						//number of media files
@@ -387,7 +387,7 @@ class YellowCommandline
 		}
 		$fileNames = array();
 		array_push($fileNames, $this->yellow->config->get("commandlineSystemFile"));
-		array_push($fileNames, $this->yellow->config->get("configDir").$this->yellow->config->get("robotsTextFile"));
+		array_push($fileNames, $this->yellow->config->get("configDir").$this->yellow->config->get("robotsFile"));
 		foreach($fileNames as $fileName) $files[$fileName] = "$path/".basename($fileName);
 		return $files;
 	}
