@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.5.27";
+	const Version = "0.5.28";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $files;				//files from file system
@@ -65,9 +65,7 @@ class Yellow
 		$this->config->setDefault("parser", "markdown");
 		$this->config->setDefault("parserSafeMode", "0");
 		$this->config->setDefault("multiLanguageMode", "0");
-		$this->config->load($this->config->get("configDir").$this->config->get("configFile"));
-		$this->text->load($this->config->get("configDir").$this->config->get("textFile"));
-		$this->updateConfig();
+		$this->load();
 	}
 	
 	// Handle request
@@ -317,13 +315,20 @@ class Yellow
 		return $ok;
 	}
 	
-	// Update configuration
-	function updateConfig()
+	// Load configuration and text strings
+	function load()
 	{
+		if(defined("DEBUG") && DEBUG>=3)
+		{
+			$serverSoftware = $this->toolbox->getServerSoftware();
+			echo "Yellow ".Yellow::Version.", PHP ".PHP_VERSION.", $serverSoftware<br>\n";
+		}
+		date_default_timezone_set($this->config->get("timeZone"));
+		$this->config->load($this->config->get("configDir").$this->config->get("configFile"));
+		$this->text->load($this->config->get("configDir").$this->config->get("textFile"));
 		list($pathRoot, $pathHome) = $this->lookup->getContentInformation();
 		$this->config->set("contentRootDir", $pathRoot);
 		$this->config->set("contentHomeDir", $pathHome);
-		date_default_timezone_set($this->config->get("timeZone"));
 	}
 	
 	// Execute command
@@ -2210,7 +2215,7 @@ class YellowToolbox
 	{
 		$serverSoftware = PHP_SAPI;
 		if(preg_match("/^(\S+)/", $_SERVER["SERVER_SOFTWARE"], $matches)) $serverSoftware = $matches[1];
-		return $serverSoftware;
+		return $serverSoftware." ".PHP_OS;
 	}
 	
 	// Return server scheme from current HTTP request

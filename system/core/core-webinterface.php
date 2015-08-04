@@ -5,7 +5,7 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.5.20";
+	const Version = "0.5.21";
 	var $yellow;				//access to API
 	var $active;				//web interface is active? (boolean)
 	var $userLoginFailed;		//web interface login failed? (boolean)
@@ -87,7 +87,8 @@ class YellowWebinterface
 			$output = "<div class=\"".htmlspecialchars($name)."\">\n";
 			if(empty($text))
 			{
-				$output .= "Yellow ".Yellow::Version.", PHP ".PHP_VERSION.", ".$this->yellow->toolbox->getServerSoftware().", ".PHP_OS."\n";
+				$serverSoftware = $this->yellow->toolbox->getServerSoftware();
+				$output .= "Yellow ".Yellow::Version.", PHP ".PHP_VERSION.", $serverSoftware\n";
 			} else {
 				foreach($this->yellow->config->getData($text) as $key=>$value) $output .= htmlspecialchars("$key = $value")."<br />\n";
 				if($page->parserSafeMode) $page->error(500, "Debug '$text' is not allowed!");
