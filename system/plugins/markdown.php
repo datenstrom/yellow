@@ -101,10 +101,11 @@ class YellowMarkdownParser extends MarkdownExtraParser
 	function _doFencedCodeBlocks_callback($matches)
 	{
 		$text = $matches[4];
-		if(!empty($matches[2])) $output = $this->page->parseContentBlock($matches[2]." ".$matches[3], $text, false);
+		$name = empty($matches[2]) ? "" : "$matches[2] $matches[3]";
+		$output = $this->page->parseContentBlock($name, $text, false);
 		if(is_null($output))
 		{
-			$attr = $this->doExtraAttributes("pre", $dummy =& $matches[3]);
+			$attr = $this->doExtraAttributes("pre", ".$matches[2] $matches[3]");
 			$output = "<pre$attr><code>".htmlspecialchars($text, ENT_NOQUOTES)."</code></pre>";
 		}
 		return "\n\n".$this->hashBlock($output)."\n\n";
