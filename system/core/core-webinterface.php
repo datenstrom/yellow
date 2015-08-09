@@ -5,7 +5,7 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.5.21";
+	const Version = "0.5.22";
 	var $yellow;				//access to API
 	var $active;				//web interface is active? (boolean)
 	var $userLoginFailed;		//web interface login failed? (boolean)
@@ -149,30 +149,37 @@ class YellowWebinterface
 	// Handle command help
 	function onCommandHelp()
 	{
-		return "user EMAIL PASSWORD [NAME LANGUAGE HOME]\n";
+		return "user [EMAIL PASSWORD NAME LANGUAGE HOME]\n";
 	}
 	
-	// Create or update user account
+	// Update user account
 	function userCommand($args)
 	{
 		$statusCode = 0;
 		list($dummy, $command, $email, $password, $name, $language, $home) = $args;
-		if(!empty($email) && !empty($password) && (empty($home) || $home[0]=='/'))
+		if(empty($home) || $home[0]=='/')
 		{
-			$fileName = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
-			$algorithm = $this->yellow->config->get("webinterfaceUserHashAlgorithm");
-			$cost = $this->yellow->config->get("webinterfaceUserHashCost");
-			$hash = $this->yellow->toolbox->createHash($password, $algorithm, $cost);
-			if(empty($hash))
+			if(!empty($email) && !empty($password))
 			{
-				$statusCode = 500;
-				echo "ERROR creating hash: Algorithm '$algorithm' not supported!\n";
+				$fileName = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
+				$algorithm = $this->yellow->config->get("webinterfaceUserHashAlgorithm");
+				$cost = $this->yellow->config->get("webinterfaceUserHashCost");
+				$hash = $this->yellow->toolbox->createHash($password, $algorithm, $cost);
+				if(empty($hash))
+				{
+					$statusCode = 500;
+					echo "ERROR creating hash: Algorithm '$algorithm' not supported!\n";
+				} else {
+					$statusCode = $this->users->createUser($fileName, $email, $hash, $name, $language, $home) ? 200 : 500;
+					if($statusCode != 200) echo "ERROR updating configuration: Can't write file '$fileName'!\n";
+				}
+				echo "Yellow $command: User account ".($statusCode!=200 ? "not " : "");
+				echo ($this->users->isExisting($email) ? "updated" : "created")."\n";
 			} else {
-				$statusCode = $this->users->createUser($fileName, $email, $hash, $name, $language, $home) ? 200 : 500;
-				if($statusCode != 200) echo "ERROR updating configuration: Can't write file '$fileName'!\n";
+				$statusCode = 200;
+				foreach($this->getUserData() as $line) echo "$line\n";
+				if(!$this->users->getNumber()) echo "Yellow $command: No user accounts\n";
 			}
-			echo "Yellow $command: User account ".($statusCode!=200 ? "not " : "");
-			echo ($this->users->isExisting($email) ? "updated" : "created")."\n";
 		} else {
 			echo "Yellow $command: Invalid arguments\n";
 			$statusCode = 400;
@@ -399,6 +406,15 @@ class YellowWebinterface
 			}
 		}
 		return $userPermission;
+	}
+	
+	// Return user data
+	function getUserData()
+	{
+		$data = array();
+		foreach($this->users->users as $key=>$value) $data[$key] = "$value[email] - $value[name] $value[language] $value[home]";
+		usort($data, strnatcasecmp);
+		return $data;
 	}
 	
 	// Update request information

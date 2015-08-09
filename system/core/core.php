@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.5.29";
+	const Version = "0.5.30";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $files;				//files from file system
@@ -66,6 +66,22 @@ class Yellow
 		$this->config->setDefault("parserSafeMode", "0");
 		$this->config->setDefault("multiLanguageMode", "0");
 		$this->load();
+	}
+	
+	// Initialise configuration
+	function load()
+	{
+		if(defined("DEBUG") && DEBUG>=3)
+		{
+			$serverSoftware = $this->toolbox->getServerSoftware();
+			echo "Yellow ".Yellow::Version.", PHP ".PHP_VERSION.", $serverSoftware<br>\n";
+		}
+		$this->config->load($this->config->get("configDir").$this->config->get("configFile"));
+		$this->text->load($this->config->get("configDir").$this->config->get("textFile"));
+		date_default_timezone_set($this->config->get("timeZone"));
+		list($pathRoot, $pathHome) = $this->lookup->getContentInformation();
+		$this->config->set("contentRootDir", $pathRoot);
+		$this->config->set("contentHomeDir", $pathHome);
 	}
 	
 	// Handle request
@@ -313,22 +329,6 @@ class Yellow
 			$ok = $this->config->get("multiLanguageMode");
 		}
 		return $ok;
-	}
-	
-	// Load configuration and text strings
-	function load()
-	{
-		if(defined("DEBUG") && DEBUG>=3)
-		{
-			$serverSoftware = $this->toolbox->getServerSoftware();
-			echo "Yellow ".Yellow::Version.", PHP ".PHP_VERSION.", $serverSoftware<br>\n";
-		}
-		date_default_timezone_set($this->config->get("timeZone"));
-		$this->config->load($this->config->get("configDir").$this->config->get("configFile"));
-		$this->text->load($this->config->get("configDir").$this->config->get("textFile"));
-		list($pathRoot, $pathHome) = $this->lookup->getContentInformation();
-		$this->config->set("contentRootDir", $pathRoot);
-		$this->config->set("contentHomeDir", $pathHome);
 	}
 	
 	// Execute command
