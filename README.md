@@ -4,8 +4,6 @@ Yellow 0.5.30
 
 Yellow is for people who make websites. [Visit the Yellow website](http://datenstrom.se/yellow).
 
-How do I install this?
-----------------------
 1. [Download Yellow and unzip it](https://github.com/datenstrom/yellow/archive/master.zip).  
 2. Copy all files to your web hosting.  
 3. Open your website in a web browser. [Learn more](https://github.com/datenstrom/yellow/wiki).
