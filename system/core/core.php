@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.5.30";
+	const Version = "0.5.31";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $files;				//files from file system
@@ -965,7 +965,7 @@ class YellowPageCollection extends ArrayObject
 		$array = array();
 		foreach($this->getArrayCopy() as $page)
 		{
-			if(preg_match($regex, basename($page->fileName))) array_push($array, $page);
+			if(preg_match($regex, $page->fileName)) array_push($array, $page);
 		}
 		$this->exchangeArray($array);
 		return $this;
