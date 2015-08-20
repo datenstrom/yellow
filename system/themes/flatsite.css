@@ -1,4 +1,4 @@
-/* Flatsite theme 0.5.5 */
+/* Flatsite theme 0.5.6 */
 /* Designer: Mark Mayberg */
 
 @import url(https://fonts.googleapis.com/css?family=Open+Sans:300,400,700);
@@ -37,7 +37,7 @@ a, img { border:none; text-decoration:none; }
 .content code { border:1px solid #ddd; border-radius:3px; padding:0 0.5em; }
 .content pre>code { border:none; padding:0; }
 .content .fourpages { margin:0; padding:0; list-style:none; width:100%; }
-.content .fourpages li { padding-bottom:1em; text-align:center; white-space:nowrap; display:inline-block; width:24%; }
+.content .fourpages li { padding-bottom:1em; text-align:center; display:inline-block; width:24%; }
 .content .pagination { margin:1em 0; }
 .footer { margin-top:2em; clear:both; }
 .footer a { color:#07d; }
@@ -51,7 +51,7 @@ a, img { border:none; text-decoration:none; }
 .navigation-banner { clear:both; }
 .navigation { display:block; float:right; }
 .navigation { margin-top:0.9em; margin-bottom:0.9em; line-height:2em; }
-.navigation a { padding:0 0.3em; display:inline-block; }
+.navigation a { padding:0 0.3em; }
 .navigation ul { margin:0 -0.3em; padding:0; list-style:none; }
 .navigation li { display:inline; }
 
@@ -68,7 +68,7 @@ a, img { border:none; text-decoration:none; }
 
 .navigation-tree { display:block; float:right; }
 .navigation-tree { margin-top:0.9em; margin-bottom:0.9em; line-height:2em; }
-.navigation-tree a { padding:0 0.3em; display:inline-block; }
+.navigation-tree a { padding:0 0.3em; }
 .navigation-tree ul { margin:0 -0.3em; padding:0; list-style:none; }
 .navigation-tree li { display:inline; }
 .navigation-tree ul li { display:inline-block; position:relative; cursor:pointer; margin:0; }
@@ -120,7 +120,7 @@ a, img { border:none; text-decoration:none; }
 	body { margin:0.5em; font-size:0.9em; }
 	.sitename h1, h1, h2 { font-size:1.2em; }
 	.sitename h1, .header, .navigation, .footer, .page { margin:0; padding:0; }
-	.sitename, .navigation { float:none; }
+	.sitename, .navigation, .navigation-tree { float:none; }
 	.navigation-search { padding-top: 0.5em; }
 	.with-sidebar .main { margin-right:0em; }
 	.with-sidebar .sidebar { display:none; }
