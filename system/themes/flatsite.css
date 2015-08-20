@@ -37,7 +37,7 @@ a, img { border:none; text-decoration:none; }
 .content code { border:1px solid #ddd; border-radius:3px; padding:0 0.5em; }
 .content pre>code { border:none; padding:0; }
 .content .fourpages { margin:0; padding:0; list-style:none; width:100%; }
-.content .fourpages li { padding-bottom:1em; text-align:center; display:inline-block; width:24%; }
+.content .fourpages li { padding-bottom:1em; text-align:center; vertical-align:top; display:inline-block; width:24%; }
 .content .pagination { margin:1em 0; }
 .footer { margin-top:2em; clear:both; }
 .footer a { color:#07d; }
