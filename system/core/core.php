@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.5.31";
+	const Version = "0.5.32";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $files;				//files from file system
@@ -62,6 +62,7 @@ class Yellow
 		$this->config->setDefault("iconFile", "icon.png");
 		$this->config->setDefault("template", "default");
 		$this->config->setDefault("navigation", "navigation");
+		$this->config->setDefault("sidebar", "sidebar");
 		$this->config->setDefault("parser", "markdown");
 		$this->config->setDefault("parserSafeMode", "0");
 		$this->config->setDefault("multiLanguageMode", "0");
@@ -370,7 +371,7 @@ class YellowPage
 	var $headerData;			//response header
 	var $outputData;			//response output
 	var $pages;					//page collection
-	var $relations;				//page relations
+	var $pageRelations;			//page relations
 	var $parser;				//content parser
 	var $parserData;			//content data of page
 	var $parserSafeMode;		//page is parsed in safe mode? (boolean)
@@ -386,7 +387,7 @@ class YellowPage
 		$this->metaData = array();
 		$this->headerData = array();
 		$this->pages = new YellowPageCollection($yellow);
-		$this->relations = array();
+		$this->pageRelations = array();
 	}
 
 	// Set request information
@@ -448,6 +449,7 @@ class YellowPage
 				$this->yellow->config->get("templateDir"), $this->yellow->config->get("template"), ".html"));
 			$this->set("modified", date("Y-m-d H:i:s", $this->yellow->toolbox->getFileModified($this->fileName)));
 			$this->set("navigation", $this->yellow->config->get("navigation"));
+			$this->set("sidebar", $this->yellow->config->get("sidebar"));
 			$this->set("parser", $this->yellow->config->get("parser"));
 			
 			if(preg_match("/^(\xEF\xBB\xBF)?\-\-\-[\r\n]+(.+?)[\r\n]+\-\-\-[\r\n]+/s", $this->rawData, $parts))
@@ -715,16 +717,16 @@ class YellowPage
 		return $this->pages;
 	}
 	
-	// Set page relation
+	// Set related page
 	function setPage($key, $page)
 	{
-		$page->relations[$key] = $this;
+		$this->pageRelations[$key] = $page;
 	}
 	
 	// Return related page
 	function getPage($key)
 	{
-		return !is_null($this->relations[$key]) ? $this->relations[$key] : $this;
+		return !is_null($this->pageRelations[$key]) ? $this->pageRelations[$key] : $this;
 	}
 	
 	// Return absolute page location
@@ -914,6 +916,12 @@ class YellowPage
 	function isExisting($key)
 	{
 		return !is_null($this->metaData[$key]);
+	}
+	
+	// Check if related page exists
+	function isPage($key)
+	{
+		return !is_null($this->pageRelations[$key]);
 	}
 }
 

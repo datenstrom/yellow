@@ -14,8 +14,9 @@
 <body>
 <?php $yellow->page->set("pageClass", "page") ?>
 <?php $yellow->page->set("pageClass", $yellow->page->get("pageClass")." ".$yellow->page->get("template")) ?>
-<?php if($yellow->page->get("navigation") == "navigation-sidebar") { $yellow->page->set("navigation", "navigation"); $yellow->page->set("sidebar", "navigation-sidebar"); } ?>
-<?php if($yellow->page->isExisting("sidebar")) $yellow->page->set("pageClass", $yellow->page->get("pageClass")." with-sidebar") ?>
+<?php if($yellow->page->get("navigation") == "navigation-sidebar") $yellow->page->setPage("sidebar", $yellow->page); ?>
+<?php if($page = $yellow->pages->find($yellow->lookup->getDirectoryLocation($yellow->page->location).$yellow->page->get("sidebar"))) $yellow->page->setPage("sidebar", $page) ?>
+<?php if($yellow->page->isPage("sidebar")) $yellow->page->set("pageClass", $yellow->page->get("pageClass")." with-sidebar") ?>
 <div class="<?php echo $yellow->page->getHtml("pageClass") ?>">
 <div class="header">
 <div class="sitename"><h1><a href="<?php echo $yellow->page->base."/" ?>"><i class="sitename-logo"></i><?php echo $yellow->page->getHtml("sitename") ?></a></h1></div>
