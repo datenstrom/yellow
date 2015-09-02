@@ -1,4 +1,4 @@
-/* Flatsite theme 0.5.6 */
+/* Flatsite theme 0.5.7 */
 /* Designer: Mark Mayberg */
 
 @import url(https://fonts.googleapis.com/css?family=Open+Sans:300,400,700);
@@ -34,11 +34,12 @@ a, img { border:none; text-decoration:none; }
 .content .flexible { position:relative; padding-bottom:56.25%; padding-top:30px; }
 .content .flexible iframe { position:absolute; top:0; left:0; width:100%; height:100%; }
 .content .toc { margin:0; padding:0; list-style:none; }
+.content .pagination { margin:1em 0; }
 .content code { border:1px solid #ddd; border-radius:3px; padding:0 0.5em; }
 .content pre>code { border:none; padding:0; }
+.content pre { overflow:auto; }
 .content .fourpages { margin:0; padding:0; list-style:none; width:100%; }
 .content .fourpages li { padding-bottom:1em; text-align:center; vertical-align:top; display:inline-block; width:24%; }
-.content .pagination { margin:1em 0; }
 .footer { margin-top:2em; clear:both; }
 .footer a { color:#07d; }
 .footer a:hover { color:#07d; text-decoration:underline; }
