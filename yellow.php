@@ -12,6 +12,6 @@ if(PHP_SAPI != "cli")
 	$yellow = new Yellow();
 	$yellow->plugins->load();
 	$statusCode = $yellow->command("commandline", $argv[1], $argv[2], $argv[3], $argv[4], $argv[5], $argv[6]);
-	exit($statusCode<=200 ? 0 : 1);
+	exit($statusCode<400 ? 0 : 1);
 }
 ?>
