@@ -5,7 +5,7 @@
 // Web interface core plugin
 class YellowWebinterface
 {
-	const Version = "0.5.22";
+	const Version = "0.5.23";
 	var $yellow;				//access to API
 	var $active;				//web interface is active? (boolean)
 	var $userLoginFailed;		//web interface login failed? (boolean)
@@ -26,6 +26,7 @@ class YellowWebinterface
 		$this->yellow->config->setDefault("webinterfaceServerName", $this->yellow->config->get("serverName"));
 		$this->yellow->config->setDefault("webinterfaceUserHashAlgorithm", "bcrypt");
 		$this->yellow->config->setDefault("webinterfaceUserHashCost", "10");
+		$this->yellow->config->setDefault("webinterfaceUserHome", "/");
 		$this->yellow->config->setDefault("webinterfaceUserFile", "user.ini");
 		$this->yellow->config->setDefault("webinterfaceNewFile", "page-new-(.*).txt");
 		$this->yellow->config->setDefault("webinterfaceMetaFilePrefix", "published");
@@ -397,13 +398,19 @@ class YellowWebinterface
 	// Return permission to change page
 	function getUserPermission($location, $fileName)
 	{
-		$userPermission = is_dir(dirname($fileName)) && strlenu(basename($fileName))<128;
+		$userPermission = NULL;
 		foreach($this->yellow->plugins->plugins as $key=>$value)
 		{
 			if(method_exists($value["obj"], "onUserPermission"))
 			{
-				$userPermission &= $value["obj"]->onUserPermission($location, $fileName, $this->users);
+				$userPermission = $value["obj"]->onUserPermission($location, $fileName, $this->users);
+				if(!is_null($userPermission)) break;
 			}
+		}
+		if(is_null($userPermission))
+		{
+			$userPermission = is_dir(dirname($fileName)) && strlenu(basename($fileName))<128;
+			$userPermission &= substru($location, 0, strlenu($this->users->getHome())) == $this->users->getHome();
 		}
 		return $userPermission;
 	}
@@ -635,7 +642,7 @@ class YellowWebinterfaceUsers
 		{
 			$name = strreplaceu(',', '-', empty($name) ? $this->yellow->config->get("sitename") : $name);
 			$language = strreplaceu(',', '-', empty($language) ? $this->yellow->config->get("language") : $language);
-			$home = strreplaceu(',', '-', empty($home) ? "/" : $home);
+			$home = strreplaceu(',', '-', empty($home) ? $this->yellow->config->get("webinterfaceUserHome") : $home);
 			$fileDataNew .= "$email,$hash,$name,$language,$home\n";
 		}
 		return $this->yellow->toolbox->createFile($fileName, $fileDataNew);

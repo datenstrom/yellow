@@ -5,7 +5,7 @@
 // Yellow main class
 class Yellow
 {
-	const Version = "0.5.32";
+	const Version = "0.5.33";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $files;				//files from file system
@@ -46,6 +46,7 @@ class Yellow
 		$this->config->setDefault("mediaDir", "media/");
 		$this->config->setDefault("imageDir", "media/images/");
 		$this->config->setDefault("staticDir", "cache/");
+		$this->config->setDefault("staticAccessFile", ".htaccess");		
 		$this->config->setDefault("staticDefaultFile", "index.html");
 		$this->config->setDefault("staticErrorFile", "error.html");
 		$this->config->setDefault("contentDir", "content/");

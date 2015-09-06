@@ -5,7 +5,7 @@
 // Command line core plugin
 class YellowCommandline
 {
-	const Version = "0.5.4";
+	const Version = "0.5.5";
 	var $yellow;					//access to API
 	var $content;					//number of content pages
 	var $media;						//number of media files
@@ -18,8 +18,6 @@ class YellowCommandline
 	function onLoad($yellow)
 	{
 		$this->yellow = $yellow;
-		$this->yellow->config->setDefault("commandlineIgnoreLocation", "");
-		$this->yellow->config->setDefault("commandlineSystemFile", ".htaccess");
 	}
 	
 	// Handle command
@@ -332,7 +330,7 @@ class YellowCommandline
 		if(!empty($path))
 		{
 			if($path == rtrim($this->yellow->config->get("staticDir"), '/')) $ok = true;
-			if(is_file("$path/".$this->yellow->config->get("commandlineSystemFile"))) $ok = true;
+			if(is_file("$path/".$this->yellow->config->get("staticAccessFile"))) $ok = true;
 			if(is_file("$path/yellow.php")) $ok = false;
 		}
 		return $ok;
@@ -346,14 +344,12 @@ class YellowCommandline
 		$serverName = $this->yellow->config->get("serverName");
 		$serverBase = $this->yellow->config->get("serverBase");
 		$this->yellow->page->setRequestInformation($serverScheme, $serverName, $serverBase, "", "");
-		if($this->yellow->config->isExisting("commandlineIgnoreLocation"))
-		{
-			$regex = "#^".$this->yellow->config->get("commandlineIgnoreLocation")."#";
-		}
 		foreach($this->yellow->pages->index(true, true) as $page)
 		{
-			if(!empty($regex) && preg_match($regex, $page->location)) continue;
-			array_push($locations, $page->location);
+			if($page->get("status")!="ignore" && $page->get("status")!="draft")
+			{
+				array_push($locations, $page->location);
+			}
 		}
 		if(!$this->yellow->pages->find("/") && $this->yellow->config->get("multiLanguageMode")) array_unshift($locations, "/");
 		return $locations;
@@ -386,7 +382,7 @@ class YellowCommandline
 			$files[$fileName] = $path.$this->yellow->config->get("themeLocation").basename($fileName);
 		}
 		$fileNames = array();
-		array_push($fileNames, $this->yellow->config->get("commandlineSystemFile"));
+		array_push($fileNames, $this->yellow->config->get("staticAccessFile"));
 		array_push($fileNames, $this->yellow->config->get("configDir").$this->yellow->config->get("robotsFile"));
 		foreach($fileNames as $fileName) $files[$fileName] = "$path/".basename($fileName);
 		return $files;
