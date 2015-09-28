@@ -2,6 +2,7 @@
     "name": "datenstrom/yellow",
     "description": "Yellow is for people who make websites. A flat-file CMS.",
     "keywords": ["yellow", "flat-file", "cms"],
+    "license": "GPL-2.0",
     "require": {
         "php": ">=5.3.0"
     }
