@@ -3,6 +3,6 @@
     "description": "Yellow is for people who make websites. A flat-file CMS.",
     "keywords": ["yellow", "flat-file", "cms"],
     "require": {
-        "php": ">=5.3.0",
+        "php": ">=5.3.0"
     }
 }
