@@ -1,10 +1,10 @@
 // Copyright (c) 2013-2015 Datenstrom, http://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
-// Yellow main API
+// Yellow API
 var yellow =
 {
-	version: "0.5.20",
+	version: "0.6.1",
 	action: function(text) { yellow.webinterface.action(text); },
 	onClick: function(e) { yellow.webinterface.hidePanesOnClick(yellow.toolbox.getEventElement(e)); },
 	onKeydown: function(e) { yellow.webinterface.hidePanesOnKeydown(yellow.toolbox.getEventKeycode(e)); },
@@ -138,7 +138,7 @@ yellow.webinterface =
 		} else if(paneId == "yellow-pane-user") {
 			elementDiv.innerHTML =
 				"<p>"+yellow.config.userEmail+"</p>"+
-				"<p><a href=\""+this.getText("UserHelpUrl")+"\" target=\"_blank\" onclick=\"yellow.action('user'); return true;\">"+this.getText("UserHelp")+"</a></p>" +
+				"<p><a href=\""+this.getText("UserHelpUrl")+"\" onclick=\"yellow.action('user'); return true;\">"+this.getText("UserHelp")+"</a></p>" +
 				"<p><a href=\"#\" onclick=\"yellow.action('logout'); return false;\">"+this.getText("UserLogout")+"</a></p>";
 		}
 		elementPane.appendChild(elementDiv);
@@ -162,6 +162,7 @@ yellow.webinterface =
 				}
 				document.getElementById("yellow-pane-edit-title").innerHTML = yellow.toolbox.encodeHtml(title);
 				document.getElementById("yellow-pane-edit-page").value = string;
+				yellow.toolbox.setCursorPosition(document.getElementById("yellow-pane-edit-page"), 0);
 			}
 			var action = this.getPaneAction(paneId, paneType)
 			if(action)
@@ -258,11 +259,11 @@ yellow.webinterface =
 	// Hide all panes on mouse click outside
 	hidePanesOnClick: function(element)
 	{
-		while(element = element.parentNode)
+		for(;element; element=element.parentNode)
 		{
 			if(element.className)
 			{
-				if(element.className.indexOf("yellow-pane")>=0 || element.className.indexOf("yellow-bar")>=0) return;
+				if(element.className.indexOf("yellow-pane")>=0 || element.className.indexOf("yellow-bar-")>=0) return;
 			}
 		}
 		this.hidePanes();
@@ -379,6 +380,13 @@ yellow.toolbox =
 	{
 		if(element.addEventListener) element.addEventListener(type, handler, false);
 		else element.attachEvent('on'+type, handler);
+	},
+	
+	// Remove event handler
+	removeEvent: function(element, type, handler)
+	{
+		if(element.removeEventListener) element.removeEventListener(type, handler, false);
+		else element.detachEvent('on'+type, handler);
 	},
 	
 	// Return element of event
@@ -529,6 +537,37 @@ yellow.toolbox =
 		var marginBottom = parseFloat(this.getStyle(element, "margin-bottom")) || 0;
 		var height = marginTop + marginBottom;
 		return { "width":width, "height":height };
+	},
+	
+	// Set input cursor position
+	setCursorPosition: function(element, pos)
+	{
+		if(element.setSelectionRange)
+		{
+			element.focus();
+			element.setSelectionRange(pos, pos);
+		} else if(element.createTextRange) {
+			var range = element.createTextRange();
+			range.move('character', pos);
+			range.select();
+		}
+	},
+
+	// Get input cursor position
+	getCursorPosition: function(element)
+	{
+		var pos = 0;
+		if(element.setSelectionRange)
+		{
+			pos = element.selectionStart;
+		} else if(document.selection) {
+			var range = document.selection.createRange();
+			var rangeDuplicate = range.duplicate();
+			rangeDuplicate.moveToElementText(element);
+			rangeDuplicate.setEndPoint('EndToEnd', range);
+			pos = rangeDuplicate.text.length - range.text.length;
+		}
+		return pos;
 	},
 	
 	// Check if element exists and is visible

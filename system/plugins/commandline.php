@@ -2,10 +2,10 @@
 // Copyright (c) 2013-2015 Datenstrom, http://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
-// Command line core plugin
+// Command line plugin
 class YellowCommandline
 {
-	const Version = "0.5.5";
+	const Version = "0.6.1";
 	var $yellow;					//access to API
 	var $content;					//number of content pages
 	var $media;						//number of media files
@@ -18,6 +18,7 @@ class YellowCommandline
 	function onLoad($yellow)
 	{
 		$this->yellow = $yellow;
+		$this->yellow->config->setDefault("commandlineVersionUrl", "https://github.com/datenstrom/yellow-extensions");
 	}
 	
 	// Handle command
@@ -27,7 +28,7 @@ class YellowCommandline
 		switch($command)
 		{
 			case "":		$statusCode = $this->helpCommand(); break;
-			case "version":	$statusCode = $this->versionCommand(); break;
+			case "version":	$statusCode = $this->versionCommand($args); break;
 			case "build":	$statusCode = $this->buildCommand($args); break;
 			case "clean":	$statusCode = $this->cleanCommand($args); break;
 			default:		$statusCode = $this->pluginCommand($args);
@@ -52,19 +53,41 @@ class YellowCommandline
 	// Show available commands
 	function helpCommand()
 	{
-		echo "Yellow ".Yellow::Version."\n";
+		echo "Yellow ".YellowCore::Version."\n";
 		foreach($this->getCommandHelp() as $line) echo (++$lineCounter>1 ? "        " : "Syntax: ")."yellow.php $line\n";
 		return 200;
 	}
 	
 	// Show software version
-	function versionCommand()
+	function versionCommand($args)
 	{
-		echo "Yellow ".Yellow::Version."\n";
-		foreach($this->getPluginVersion() as $line) echo "$line\n";
-		return 200;
+		$statusCode = 0;
+		echo "Yellow ".YellowCore::Version."\n";
+		$url = $this->yellow->config->get("commandlineVersionUrl");
+		list($dummy, $command) = $args;
+		list($statusCode, $versionCurrent) = $this->getPluginVersion();
+		list($statusCode, $versionLatest) = $this->getPluginVersion($url);
+		foreach($versionCurrent as $key=>$value)
+		{
+			if($versionCurrent[$key] >= $versionLatest[$key])
+			{
+				echo "$key $value\n";
+			} else {
+				echo "$key $value - Update available\n";
+				++$updates;
+			}
+		}
+		if($statusCode != 200) echo "ERROR checking updates at $url, $versionLatest[error]\n";
+		if(!$this->yellow->config->isExisting("sitename"))
+		{
+			$fileNames = $this->yellow->toolbox->getDirectoryEntries(
+				$this->yellow->config->get("configDir"), "/^.*\.ini$/", true, false);
+			foreach($fileNames as $fileName) $statusCode = max($statusCode, $this->updateConfigFile($fileName));
+		}
+		if($updates) echo "Yellow $command: $updates update".($updates==1 ? "":"s")." available at $url\n";
+		return $statusCode;
 	}
-	
+		
 	// Build static pages
 	function buildCommand($args)
 	{
@@ -79,7 +102,7 @@ class YellowCommandline
 				$statusCode = 500;
 				list($this->content, $this->media, $this->system, $this->error) = array(0, 0, 0, 1);
 				$fileName = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
-				echo "ERROR bulding pages: Please configure serverScheme, serverName and serverBase in file '$fileName'!\n";
+				echo "ERROR bulding pages: Please configure ServerScheme, ServerName, ServerBase, ServerTime in file '$fileName'!\n";
 			}
 			echo "Yellow $command: $this->content content, $this->media media, $this->system system";
 			echo ", $this->error error".($this->error!=1 ? 's' : '');
@@ -297,6 +320,43 @@ class YellowCommandline
 		return $statusCode;
 	}
 	
+	// Update configuration file if necessary
+	function updateConfigFile($fileName)
+	{
+		$statusCode = 200;
+		$fileData = @file($fileName);
+		if($fileData)
+		{
+			foreach($fileData as $line)
+			{
+				if(preg_match("/^\/\/(.*)$/", $line, $matches))
+				{
+					if(!$found) $matches[1] .= " (updated)";
+					$line = "#$matches[1]\n";
+					$found = true;
+				}
+				if(preg_match("/^\s*(.*?)\s*=\s*(.*?)\s*$/", $line, $matches))
+				{
+					$line = ucfirst($matches[1]).": $matches[2]\n";
+				}
+				if(preg_match("/^([^,:]+),([^,]+),([^,]+),([^,]+),([^,\n]+)$/", $line, $matches))
+				{
+					$line = "$matches[1]: $matches[2],$matches[3],$matches[4],active,$matches[5]\n";
+				}
+				$fileDataNew .= $line;
+			}
+		}
+		if($found)
+		{
+			if(!$this->yellow->toolbox->createFile($fileName, $fileDataNew))
+			{
+				$statusCode = 500;
+				echo "ERROR updating configuration: Can't write file '$fileName'!\n";
+			}
+		}
+		return $statusCode;
+	}
+	
 	// Forward plugin command
 	function pluginCommand($args)
 	{
@@ -411,6 +471,63 @@ class YellowCommandline
 		return $output;
 	}
 	
+	// Return plugin version
+	function getPluginVersion($url = "")
+	{
+		$version = array();
+		if(empty($url))
+		{
+			$statusCode = 200;
+			$version["YellowCore"] = YellowCore::Version;
+			foreach($this->yellow->plugins->plugins as $key=>$value) $version[$value["class"]] = $value[version];
+		} else {
+			if(extension_loaded("curl"))
+			{
+				$pluginVersionUrl = $this->getPluginVersionUrl($url);
+				$curlHandle = curl_init();
+				curl_setopt($curlHandle, CURLOPT_URL, $pluginVersionUrl);
+				curl_setopt($curlHandle, CURLOPT_USERAGENT, "Mozilla/5.0 (compatible; YellowCore/".YellowCore::Version).")";
+				curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, 1);
+				curl_setopt($curlHandle, CURLOPT_CONNECTTIMEOUT, 30);
+				$rawData = curl_exec($curlHandle);
+				$statusCode = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);
+				curl_close($curlHandle);
+				if($statusCode == 200)
+				{
+					if(defined("DEBUG") && DEBUG>=2) echo "YellowCommandline::getPluginVersion file:$pluginVersionUrl\n";
+					foreach($this->yellow->toolbox->getTextLines($rawData) as $line)
+					{
+						if(preg_match("/^(\w+)\s*:\s*([0-9\.]+)/", $line, $matches))
+						{
+							$version[$matches[1]] = $matches[2];
+							if(defined("DEBUG") && DEBUG>=3) echo "YellowCommandline::getPluginVersion $matches[1]:$matches[2]\n";
+						}
+					}
+				}
+				if($statusCode == 0) $statusCode = 444;
+				$version["error"] = $this->yellow->toolbox->getHttpStatusFormatted($statusCode);
+			} else {
+				$statusCode = 500;
+				$version["error"] = "Plugin 'commandline' requires cURL library!";
+			}
+		}
+		uksort($version, strnatcasecmp);
+		return array($statusCode, $version);
+	}
+	
+	// Return plugin version URL from repository
+	function getPluginVersionUrl($url)
+	{
+		if(!$this->yellow->lookup->isFileLocation($url))
+		{
+			if(preg_match("#^https://github.com/(.+)$#", $url, $matches))
+			{
+				$url = "https://raw.githubusercontent.com/".$matches[1]."/master/version.ini";
+			}
+		}
+		return $url;
+	}
+	
 	// Return command help
 	function getCommandHelp()
 	{
@@ -427,15 +544,6 @@ class YellowCommandline
 			}
 		}
 		uksort($data, strnatcasecmp);
-		return $data;
-	}
-	
-	// Return plugin version
-	function getPluginVersion()
-	{
-		$data = array();
-		foreach($this->yellow->plugins->plugins as $key=>$value) $data[$key] = "$value[class] $value[version]";
-		usort($data, strnatcasecmp);
 		return $data;
 	}
 }

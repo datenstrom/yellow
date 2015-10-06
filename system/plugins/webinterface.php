@@ -2,10 +2,10 @@
 // Copyright (c) 2013-2015 Datenstrom, http://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
-// Web interface core plugin
+// Web interface plugin
 class YellowWebinterface
 {
-	const Version = "0.5.23";
+	const Version = "0.6.1";
 	var $yellow;				//access to API
 	var $active;				//web interface is active? (boolean)
 	var $userLoginFailed;		//web interface login failed? (boolean)
@@ -19,8 +19,8 @@ class YellowWebinterface
 	function onLoad($yellow)
 	{
 		$this->yellow = $yellow;
-		$this->users = new YellowWebinterfaceUsers($yellow);
-		$this->merge = new YellowWebinterfaceMerge($yellow);
+		$this->users = new YellowUsers($yellow);
+		$this->merge = new YellowMerge($yellow);
 		$this->yellow->config->setDefault("webinterfaceLocation", "/edit/");
 		$this->yellow->config->setDefault("webinterfaceServerScheme", "http");
 		$this->yellow->config->setDefault("webinterfaceServerName", $this->yellow->config->get("serverName"));
@@ -89,9 +89,12 @@ class YellowWebinterface
 			if(empty($text))
 			{
 				$serverSoftware = $this->yellow->toolbox->getServerSoftware();
-				$output .= "Yellow ".Yellow::Version.", PHP ".PHP_VERSION.", $serverSoftware\n";
+				$output .= "Yellow ".YellowCore::Version.", PHP ".PHP_VERSION.", $serverSoftware\n";
 			} else {
-				foreach($this->yellow->config->getData($text) as $key=>$value) $output .= htmlspecialchars("$key = $value")."<br />\n";
+				foreach($this->yellow->config->getData($text) as $key=>$value)
+				{
+					$output .= htmlspecialchars(ucfirst($key).": ".$value)."<br />\n";
+				}
 				if($page->parserSafeMode) $page->error(500, "Debug '$text' is not allowed!");
 			}
 			$output .= "</div>\n";
@@ -107,7 +110,7 @@ class YellowWebinterface
 		{
 			if($this->users->getNumber())
 			{
-				$location = $this->yellow->config->get("serverBase").$this->yellow->config->get("pluginLocation")."core-webinterface";
+				$location = $this->yellow->config->get("serverBase").$this->yellow->config->get("pluginLocation")."webinterface";
 				$output = "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"".htmlspecialchars($location).".css\" />\n";
 				$output .= "<script type=\"text/javascript\" src=\"".htmlspecialchars($location).".js\"></script>\n";
 				$output .= "<script type=\"text/javascript\">\n";
@@ -127,7 +130,7 @@ class YellowWebinterface
 				$language = $this->isUser() ? $this->users->getLanguage() : $this->yellow->page->get("language");
 				if(!$this->yellow->text->isLanguage($language)) $language = $this->yellow->config->get("language");
 				$output .= "yellow.text = ".json_encode($this->yellow->text->getData("webinterface", $language)).";\n";
-				if(defined("DEBUG")) $output .= "yellow.debug = ".json_encode(DEBUG).";\n";
+				if(defined("DEBUG") && DEBUG>=1) $output .= "yellow.debug = ".json_encode(DEBUG).";\n";
 				$output .= "// ]]>\n";
 				$output .= "</script>\n";
 			}
@@ -150,40 +153,34 @@ class YellowWebinterface
 	// Handle command help
 	function onCommandHelp()
 	{
-		return "user [EMAIL PASSWORD NAME LANGUAGE HOME]\n";
+		return "user [EMAIL PASSWORD NAME LANGUAGE STATUS HOME]\n";
 	}
 	
 	// Update user account
 	function userCommand($args)
 	{
 		$statusCode = 0;
-		list($dummy, $command, $email, $password, $name, $language, $home) = $args;
-		if(empty($home) || $home[0]=='/')
+		list($dummy, $command, $email, $password, $name, $language, $status, $home) = $args;
+		if(!empty($email) && !empty($password))
 		{
-			if(!empty($email) && !empty($password))
+			$fileName = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
+			$algorithm = $this->yellow->config->get("webinterfaceUserHashAlgorithm");
+			$cost = $this->yellow->config->get("webinterfaceUserHashCost");
+			$hash = $this->yellow->toolbox->createHash($password, $algorithm, $cost);
+			if(empty($hash))
 			{
-				$fileName = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
-				$algorithm = $this->yellow->config->get("webinterfaceUserHashAlgorithm");
-				$cost = $this->yellow->config->get("webinterfaceUserHashCost");
-				$hash = $this->yellow->toolbox->createHash($password, $algorithm, $cost);
-				if(empty($hash))
-				{
-					$statusCode = 500;
-					echo "ERROR creating hash: Algorithm '$algorithm' not supported!\n";
-				} else {
-					$statusCode = $this->users->createUser($fileName, $email, $hash, $name, $language, $home) ? 200 : 500;
-					if($statusCode != 200) echo "ERROR updating configuration: Can't write file '$fileName'!\n";
-				}
-				echo "Yellow $command: User account ".($statusCode!=200 ? "not " : "");
-				echo ($this->users->isExisting($email) ? "updated" : "created")."\n";
+				$statusCode = 500;
+				echo "ERROR creating hash: Algorithm '$algorithm' not supported!\n";
 			} else {
-				$statusCode = 200;
-				foreach($this->getUserData() as $line) echo "$line\n";
-				if(!$this->users->getNumber()) echo "Yellow $command: No user accounts\n";
+				$statusCode = $this->users->createUser($fileName, $email, $hash, $name, $language, $status, $home) ? 200 : 500;
+				if($statusCode != 200) echo "ERROR updating configuration: Can't write file '$fileName'!\n";
 			}
+			echo "Yellow $command: User account ".($statusCode!=200 ? "not " : "");
+			echo ($this->users->isExisting($email) ? "updated" : "created")."\n";
 		} else {
-			echo "Yellow $command: Invalid arguments\n";
-			$statusCode = 400;
+			$statusCode = 200;
+			foreach($this->getUserData() as $line) echo "$line\n";
+			if(!$this->users->getNumber()) echo "Yellow $command: No user accounts\n";
 		}
 		return $statusCode;
 	}
@@ -209,7 +206,7 @@ class YellowWebinterface
 			$statusCode = $this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
 			if($this->users->getNumber())
 			{
-				if($this->userLoginFailed) $this->yellow->page->error(401);
+				if($this->userLoginFailed) $this->yellow->page->error(500, "Login failed, [please log in](javascript:yellow.action('login');)!");
 			} else {
 				$url = $this->yellow->text->get("webinterfaceUserAccountUrl");
 				$this->yellow->page->error(500, "You are not authorised on this server, [please add a user account]($url)!");
@@ -419,7 +416,10 @@ class YellowWebinterface
 	function getUserData()
 	{
 		$data = array();
-		foreach($this->users->users as $key=>$value) $data[$key] = "$value[email] - $value[name] $value[language] $value[home]";
+		foreach($this->users->users as $key=>$value)
+		{
+			$data[$key] = "$value[email] - $value[name] $value[language] $value[status] $value[home]";
+		}
 		usort($data, strnatcasecmp);
 		return $data;
 	}
@@ -544,6 +544,7 @@ class YellowWebinterface
 			$data["userEmail"] = $this->users->email;
 			$data["userName"] = $this->users->getName();
 			$data["userLanguage"] = $this->users->getLanguage();
+			$data["userStatus"] = $this->users->getStatus();
 			$data["userHome"] = $this->users->getHome();
 			$data["serverScheme"] = $this->yellow->config->get("serverScheme");
 			$data["serverName"] = $this->yellow->config->get("serverName");
@@ -569,8 +570,8 @@ class YellowWebinterface
 	}
 }
 
-// Yellow web interface users
-class YellowWebinterfaceUsers
+// Yellow users
+class YellowUsers
 {
 	var $yellow;	//access to API
 	var $users;		//registered users
@@ -588,32 +589,35 @@ class YellowWebinterfaceUsers
 		$fileData = @file($fileName);
 		if($fileData)
 		{
+			if(defined("DEBUG") && DEBUG>=2) echo "YellowUsers::load file:$fileName<br/>\n";
 			foreach($fileData as $line)
 			{
-				if(preg_match("/^\//", $line)) continue;
-				preg_match("/^(.*?),\s*(.*?),\s*(.*?),\s*(.*?),\s*(.*?)\s*$/", $line, $matches);
-				if(!empty($matches[1]) && !empty($matches[2]) && !empty($matches[3]) && !empty($matches[4]))
+				if(preg_match("/^\#/", $line)) continue;
+				preg_match("/^(.*?)\s*:\s*(.*?),\s*(.*?),\s*(.*?),\s*(.*?),\s*(.*?)\s*$/", $line, $matches);
+				if(!empty($matches[1]) && !empty($matches[2]) && !empty($matches[3]) && !empty($matches[4]) &&
+				   !empty($matches[5]) && !empty($matches[6]))
 				{
-					$this->set($matches[1], $matches[2], $matches[3], $matches[4], $matches[5]);
-					if(defined("DEBUG") && DEBUG>=3) echo "YellowWebinterfaceUsers::load email:$matches[1] $matches[3]<br/>\n";
+					$this->set($matches[1], $matches[2], $matches[3], $matches[4], $matches[5], $matches[6]);
+					if(defined("DEBUG") && DEBUG>=3) echo "YellowUsers::load email:$matches[1] $matches[5]<br/>\n";
 				}
 			}
 		}
 	}
 	
 	// Set user data
-	function set($email, $hash, $name, $language, $home)
+	function set($email, $hash, $name, $language, $status, $home)
 	{
 		$this->users[$email] = array();
 		$this->users[$email]["email"] = $email;
 		$this->users[$email]["hash"] = $hash;
 		$this->users[$email]["name"] = $name;
 		$this->users[$email]["language"] = $language;
+		$this->users[$email]["status"] = $status;
 		$this->users[$email]["home"] = $home;
 	}
 	
 	// Create or update user in file
-	function createUser($fileName, $email, $hash, $name, $language, $home)
+	function createUser($fileName, $email, $hash, $name, $language, $status, $home)
 	{
 		$email = strreplaceu(',', '-', $email);
 		$hash = strreplaceu(',', '-', $hash);
@@ -622,15 +626,16 @@ class YellowWebinterfaceUsers
 		{
 			foreach($fileData as $line)
 			{
-				preg_match("/^(.*?),\s*(.*?),\s*(.*?),\s*(.*?),\s*(.*?)\s*$/", $line, $matches);
+				preg_match("/^(.*?)\s*:\s*(.*?),\s*(.*?),\s*(.*?),\s*(.*?)\s*$/", $line, $matches);
 				if(!empty($matches[1]) && !empty($matches[2]) && !empty($matches[3]) && !empty($matches[4]))
 				{
 					if($matches[1] == $email)
 					{
 						$name = strreplaceu(',', '-', empty($name) ? $matches[3] : $name);
 						$language = strreplaceu(',', '-', empty($language) ? $matches[4] : $language);
-						$home = strreplaceu(',', '-', empty($home) ? $matches[5] : $home);
-						$fileDataNew .= "$email,$hash,$name,$language,$home\n";
+						$status = strreplaceu(',', '-', empty($status) ? $matches[5] : $status);
+						$home = strreplaceu(',', '-', empty($home) ? $matches[6] : $home);
+						$fileDataNew .= "$email: $hash,$name,$language,$status,$home\n";
 						$found = true;
 						continue;
 					}
@@ -642,8 +647,9 @@ class YellowWebinterfaceUsers
 		{
 			$name = strreplaceu(',', '-', empty($name) ? $this->yellow->config->get("sitename") : $name);
 			$language = strreplaceu(',', '-', empty($language) ? $this->yellow->config->get("language") : $language);
+			$status = strreplaceu(',', '-', empty($status) ? "active" : $status);
 			$home = strreplaceu(',', '-', empty($home) ? $this->yellow->config->get("webinterfaceUserHome") : $home);
-			$fileDataNew .= "$email,$hash,$name,$language,$home\n";
+			$fileDataNew .= "$email: $hash,$name,$language,$status,$home\n";
 		}
 		return $this->yellow->toolbox->createFile($fileName, $fileDataNew);
 	}
@@ -652,7 +658,8 @@ class YellowWebinterfaceUsers
 	function checkUser($email, $password)
 	{
 		$algorithm = $this->yellow->config->get("webinterfaceUserHashAlgorithm");
-		return $this->isExisting($email) && $this->yellow->toolbox->verifyHash($password, $algorithm, $this->users[$email]["hash"]);
+		return $this->isExisting($email) && $this->users[$email]["status"]=="active" &&
+			$this->yellow->toolbox->verifyHash($password, $algorithm, $this->users[$email]["hash"]);
 	}
 
 	// Create browser cookie
@@ -690,7 +697,8 @@ class YellowWebinterfaceUsers
 	// Check user login from browser cookie
 	function checkCookie($email, $session)
 	{
-		return $this->isExisting($email) && $this->yellow->toolbox->verifyHash($this->users[$email]["hash"], "sha256", $session);
+		return $this->isExisting($email) && $this->users[$email]["status"]=="active" &&
+			$this->yellow->toolbox->verifyHash($this->users[$email]["hash"], "sha256", $session);
 	}
 	
 	// Retun user login information
@@ -705,8 +713,9 @@ class YellowWebinterfaceUsers
 			$hash = strreplaceu(',', '-', $hash);
 			$name = strreplaceu(',', '-', empty($name) ? $this->yellow->config->get("sitename") : $name);
 			$language = strreplaceu(',', '-', empty($language) ? $this->yellow->config->get("language") : $language);
-			$home = strreplaceu(',', '-', empty($home) ? "/" : $home);
-			$user = "$email,$hash,$name,$language,$home\n";
+			$status = strreplaceu(',', '-', empty($status) ? "active" : $status);
+			$home = strreplaceu(',', '-', empty($home) ? $this->yellow->config->get("webinterfaceUserHome") : $home);
+			$user = "$email: $hash,$name,$language,$status,$home\n";
 		}
 		return $user;
 	}
@@ -724,7 +733,14 @@ class YellowWebinterfaceUsers
 		if(empty($email)) $email = $this->email;
 		return $this->isExisting($email) ? $this->users[$email]["language"] : "";
 	}	
-
+	
+	// Return user status
+	function getStatus($email = "")
+	{
+		if(empty($email)) $email = $this->email;
+		return $this->isExisting($email) ? $this->users[$email]["status"] : "";
+	}
+	
 	// Return user home
 	function getHome($email = "")
 	{
@@ -745,8 +761,8 @@ class YellowWebinterfaceUsers
 	}
 }
 	
-// Yellow web interface merge
-class YellowWebinterfaceMerge
+// Yellow merge
+class YellowMerge
 {
 	var $yellow;		//access to API
 	const Add = '+';	//merge types
@@ -789,37 +805,37 @@ class YellowWebinterfaceMerge
 		{
 			--$sourceEnd; --$otherEnd;
 		}
-		for($pos=0; $pos<$textStart; ++$pos) array_push($diff, array(YellowWebinterfaceMerge::Same, $textSource[$pos], false));
+		for($pos=0; $pos<$textStart; ++$pos) array_push($diff, array(YellowMerge::Same, $textSource[$pos], false));
 		$lcs = $this->buildDiffLCS($textSource, $textOther, $textStart, $sourceEnd-$textStart, $otherEnd-$textStart);
 		for($x=0,$y=0,$xEnd=$otherEnd-$textStart,$yEnd=$sourceEnd-$textStart; $x<$xEnd || $y<$yEnd;)
 		{
 			$max = $lcs[$y][$x];
 			if($y<$yEnd && $lcs[$y+1][$x]==$max)
 			{
-				array_push($diff, array(YellowWebinterfaceMerge::Remove, $textSource[$textStart+$y], false));
+				array_push($diff, array(YellowMerge::Remove, $textSource[$textStart+$y], false));
 				if($lastRemove == -1) $lastRemove = count($diff)-1;
 				++$y;
 				continue;
 			}
 			if($x<$xEnd && $lcs[$y][$x+1]==$max)
 			{
-				if($lastRemove==-1 || $diff[$lastRemove][0]!=YellowWebinterfaceMerge::Remove)
+				if($lastRemove==-1 || $diff[$lastRemove][0]!=YellowMerge::Remove)
 				{
-					array_push($diff, array(YellowWebinterfaceMerge::Add, $textOther[$textStart+$x], false));
+					array_push($diff, array(YellowMerge::Add, $textOther[$textStart+$x], false));
 					$lastRemove = -1;
 				} else {
-					$diff[$lastRemove] = array(YellowWebinterfaceMerge::Modify, $textOther[$textStart+$x], false);
+					$diff[$lastRemove] = array(YellowMerge::Modify, $textOther[$textStart+$x], false);
 					++$lastRemove; if(count($diff)==$lastRemove) $lastRemove = -1;
 				}
 				++$x;
 				continue;
 			}
-			array_push($diff, array(YellowWebinterfaceMerge::Same, $textSource[$textStart+$y], false));
+			array_push($diff, array(YellowMerge::Same, $textSource[$textStart+$y], false));
 			$lastRemove = -1;
 			++$x;
 			++$y;
 		}
-		for($pos=$sourceEnd;$pos<$sourceSize; ++$pos) array_push($diff, array(YellowWebinterfaceMerge::Same, $textSource[$pos], false));
+		for($pos=$sourceEnd;$pos<$sourceSize; ++$pos) array_push($diff, array(YellowMerge::Same, $textSource[$pos], false));
 		return $diff;
 	}
 	
@@ -851,29 +867,29 @@ class YellowWebinterfaceMerge
 		{
 			$typeMine = $diffMine[$posMine][0];
 			$typeYours = $diffYours[$posYours][0];
-			if($typeMine==YellowWebinterfaceMerge::Same)
+			if($typeMine==YellowMerge::Same)
 			{
 				array_push($diff, $diffYours[$posYours]);
-			} else if($typeYours==YellowWebinterfaceMerge::Same) {
+			} else if($typeYours==YellowMerge::Same) {
 				array_push($diff, $diffMine[$posMine]);
-			} else if($typeMine==YellowWebinterfaceMerge::Add && $typeYours==YellowWebinterfaceMerge::Add) {
+			} else if($typeMine==YellowMerge::Add && $typeYours==YellowMerge::Add) {
 				$this->mergeConflict($diff, $diffMine[$posMine], $diffYours[$posYours], false);
-			} else if($typeMine==YellowWebinterfaceMerge::Modify && $typeYours==YellowWebinterfaceMerge::Modify) {
+			} else if($typeMine==YellowMerge::Modify && $typeYours==YellowMerge::Modify) {
 				$this->mergeConflict($diff, $diffMine[$posMine], $diffYours[$posYours], false);
-			} else if($typeMine==YellowWebinterfaceMerge::Remove && $typeYours==YellowWebinterfaceMerge::Remove) {
+			} else if($typeMine==YellowMerge::Remove && $typeYours==YellowMerge::Remove) {
 				array_push($diff, $diffMine[$posMine]);
-			} else if($typeMine==YellowWebinterfaceMerge::Add) {
+			} else if($typeMine==YellowMerge::Add) {
 				array_push($diff, $diffMine[$posMine]);
-			} else if($typeYours==YellowWebinterfaceMerge::Add) {
+			} else if($typeYours==YellowMerge::Add) {
 				array_push($diff, $diffYours[$posYours]);
 			} else {
 				$this->mergeConflict($diff, $diffMine[$posMine], $diffYours[$posYours], true);
 			}
-			if(defined("DEBUG") && DEBUG>=2) echo "YellowWebinterfaceMerge::mergeDiff $typeMine $typeYours pos:$posMine\t$posYours<br/>\n";
-			if($typeMine==YellowWebinterfaceMerge::Add || $typeYours==YellowWebinterfaceMerge::Add)
+			if(defined("DEBUG") && DEBUG>=2) echo "YellowMerge::mergeDiff $typeMine $typeYours pos:$posMine\t$posYours<br/>\n";
+			if($typeMine==YellowMerge::Add || $typeYours==YellowMerge::Add)
 			{
-				if($typeMine==YellowWebinterfaceMerge::Add) ++$posMine;
-				if($typeYours==YellowWebinterfaceMerge::Add) ++$posYours;
+				if($typeMine==YellowMerge::Add) ++$posMine;
+				if($typeYours==YellowMerge::Add) ++$posYours;
 			} else {
 				++$posMine;
 				++$posYours;
@@ -883,13 +899,13 @@ class YellowWebinterfaceMerge
 		{
 			array_push($diff, $diffMine[$posMine]);
 			$typeMine = $diffMine[$posMine][0]; $typeYours = ' ';
-			if(defined("DEBUG") && DEBUG>=2) echo "YellowWebinterfaceMerge::mergeDiff $typeMine $typeYours pos:$posMine\t$posYours<br/>\n";
+			if(defined("DEBUG") && DEBUG>=2) echo "YellowMerge::mergeDiff $typeMine $typeYours pos:$posMine\t$posYours<br/>\n";
 		}
 		for(;$posYours<count($diffYours); ++$posYours)
 		{
 			array_push($diff, $diffYours[$posYours]);
 			$typeYours = $diffYours[$posYours][0]; $typeMine = ' ';
-			if(defined("DEBUG") && DEBUG>=2) echo "YellowWebinterfaceMerge::mergeDiff $typeMine $typeYours pos:$posMine\t$posYours<br/>\n";
+			if(defined("DEBUG") && DEBUG>=2) echo "YellowMerge::mergeDiff $typeMine $typeYours pos:$posMine\t$posYours<br/>\n";
 		}
 		return $diff;
 	}
@@ -914,7 +930,7 @@ class YellowWebinterfaceMerge
 		{
 			for($i=0; $i<count($diff); ++$i)
 			{
-				if($diff[$i][0] != YellowWebinterfaceMerge::Remove) $output .= $diff[$i][1];
+				if($diff[$i][0] != YellowMerge::Remove) $output .= $diff[$i][1];
 				$conflict |= $diff[$i][2];
 			}
 		} else {

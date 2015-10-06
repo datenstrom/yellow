@@ -2,10 +2,10 @@
 // Copyright (c) 2013-2015 Datenstrom, http://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
-// Yellow main class
-class Yellow
+// Yellow core
+class YellowCore
 {
-	const Version = "0.5.33";
+	const Version = "0.6.1";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $files;				//files from file system
@@ -29,16 +29,15 @@ class Yellow
 		$this->config->setDefault("author", "Yellow");
 		$this->config->setDefault("language", "en");
 		$this->config->setDefault("theme", "default");
-		$this->config->setDefault("timeZone", $this->toolbox->getTimeZone());
 		$this->config->setDefault("serverScheme", $this->toolbox->getServerScheme());
 		$this->config->setDefault("serverName", $this->toolbox->getServerName());
 		$this->config->setDefault("serverBase", $this->toolbox->getServerBase());
+		$this->config->setDefault("serverTime", $this->toolbox->getServerTime());
 		$this->config->setDefault("imageLocation", "/media/images/");
 		$this->config->setDefault("pluginLocation", "/media/plugins/");
 		$this->config->setDefault("themeLocation", "/media/themes/");
 		$this->config->setDefault("systemDir", "system/");
 		$this->config->setDefault("configDir", "system/config/");
-		$this->config->setDefault("coreDir", "system/core/");
 		$this->config->setDefault("pluginDir", "system/plugins/");
 		$this->config->setDefault("themeDir", "system/themes/");
 		$this->config->setDefault("snippetDir", "system/themes/snippets/");
@@ -46,7 +45,7 @@ class Yellow
 		$this->config->setDefault("mediaDir", "media/");
 		$this->config->setDefault("imageDir", "media/images/");
 		$this->config->setDefault("staticDir", "cache/");
-		$this->config->setDefault("staticAccessFile", ".htaccess");		
+		$this->config->setDefault("staticAccessFile", ".htaccess");
 		$this->config->setDefault("staticDefaultFile", "index.html");
 		$this->config->setDefault("staticErrorFile", "error.html");
 		$this->config->setDefault("contentDir", "content/");
@@ -76,11 +75,11 @@ class Yellow
 		if(defined("DEBUG") && DEBUG>=3)
 		{
 			$serverSoftware = $this->toolbox->getServerSoftware();
-			echo "Yellow ".Yellow::Version.", PHP ".PHP_VERSION.", $serverSoftware<br>\n";
+			echo "Yellow ".YellowCore::Version.", PHP ".PHP_VERSION.", $serverSoftware<br>\n";
 		}
 		$this->config->load($this->config->get("configDir").$this->config->get("configFile"));
 		$this->text->load($this->config->get("configDir").$this->config->get("textFile"));
-		date_default_timezone_set($this->config->get("timeZone"));
+		date_default_timezone_set($this->config->get("serverTime"));
 		list($pathRoot, $pathHome) = $this->lookup->getContentInformation();
 		$this->config->set("contentRootDir", $pathRoot);
 		$this->config->set("contentHomeDir", $pathHome);
@@ -111,8 +110,8 @@ class Yellow
 		if($this->page->isError()) $statusCode = $this->processRequestError();
 		$this->toolbox->timerStop($time);
 		ob_end_flush();
-		if(defined("DEBUG") && DEBUG>=1) echo "Yellow::request status:$statusCode location:$location<br/>\n";
-		if(defined("DEBUG") && DEBUG>=1) echo "Yellow::request time:$time ms<br/>\n";
+		if(defined("DEBUG") && DEBUG>=1) echo "YellowCore::request status:$statusCode location:$location<br/>\n";
+		if(defined("DEBUG") && DEBUG>=1) echo "YellowCore::request time:$time ms<br/>\n";
 		return $statusCode;
 	}
 	
@@ -153,7 +152,7 @@ class Yellow
 		if(defined("DEBUG") && DEBUG>=1)
 		{
 			$handler = $this->getRequestHandler();
-			echo "Yellow::processRequest file:$fileName handler:$handler<br/>\n";
+			echo "YellowCore::processRequest file:$fileName handler:$handler<br/>\n";
 		}
 		return $statusCode;
 	}
@@ -169,7 +168,7 @@ class Yellow
 		if(defined("DEBUG") && DEBUG>=1)
 		{
 			$handler = $this->getRequestHandler();
-			echo "Yellow::processRequestError file:$fileName handler:$handler<br/>\n";
+			echo "YellowCore::processRequestError file:$fileName handler:$handler<br/>\n";
 		}
 		return $statusCode;
 	}
@@ -208,11 +207,11 @@ class Yellow
 		}
 		if(defined("DEBUG") && DEBUG>=1)
 		{
-			foreach($this->page->headerData as $key=>$value) echo "Yellow::sendPage $key: $value<br/>\n";
+			foreach($this->page->headerData as $key=>$value) echo "YellowCore::sendPage $key: $value<br/>\n";
 			$fileNameTheme = $this->config->get("themeDir").$this->page->get("theme").".css";
 			$templateName = $this->page->get("template");
 			$parserName = $this->page->get("parser");
-			echo "Yellow::sendPage theme:$fileNameTheme template:$templateName parser:$parserName<br/>\n";
+			echo "YellowCore::sendPage theme:$fileNameTheme template:$templateName parser:$parserName<br/>\n";
 		}
 		return $statusCode;
 	}
@@ -243,7 +242,7 @@ class Yellow
 		foreach($this->page->headerData as $key=>$value) @header("$key: $value");
 		if(defined("DEBUG") && DEBUG>=1)
 		{
-			foreach($this->page->headerData as $key=>$value) echo "Yellow::sendStatus $key: $value<br/>\n";
+			foreach($this->page->headerData as $key=>$value) echo "YellowCore::sendStatus $key: $value<br/>\n";
 		}
 	}
 	
@@ -259,10 +258,7 @@ class Yellow
 		{
 			$pluginLocationLength = strlenu($this->config->get("pluginLocation"));
 			$themeLocationLength = strlenu($this->config->get("themeLocation"));
-			if(substru($location, 0, $pluginLocationLength+5) == $this->config->get("pluginLocation")."core-")
-			{
-				$fileName = $this->config->get("coreDir").substru($location, $pluginLocationLength);
-			} else if(substru($location, 0, $pluginLocationLength) == $this->config->get("pluginLocation")) {
+			if(substru($location, 0, $pluginLocationLength) == $this->config->get("pluginLocation")) {
 				$fileName = $this->config->get("pluginDir").substru($location, $pluginLocationLength);
 			} else if(substru($location, 0, $themeLocationLength) == $this->config->get("themeLocation")) {
 				$fileName = $this->config->get("themeDir").substru($location, $themeLocationLength);
@@ -1518,13 +1514,6 @@ class YellowPlugins
 	// Load plugins
 	function load()
 	{
-		$path = $this->yellow->config->get("coreDir");
-		foreach($this->yellow->toolbox->getDirectoryEntries($path, "/^core-.*\.php$/", true, false) as $entry)
-		{
-			$this->modified = max($this->modified, filemtime($entry));
-			global $yellow;
-			require_once($entry);
-		}
 		$path = $this->yellow->config->get("pluginDir");
 		foreach($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.php$/", true, false) as $entry)
 		{
@@ -1596,12 +1585,12 @@ class YellowConfig
 			$this->modified = filemtime($fileName);
 			foreach($fileData as $line)
 			{
-				if(preg_match("/^\//", $line)) continue;
-				preg_match("/^\s*(.*?)\s*=\s*(.*?)\s*$/", $line, $matches);
+				if(preg_match("/^\#/", $line)) continue;
+				preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
 				if(!empty($matches[1]) && !strempty($matches[2]))
 				{
-					$this->set($matches[1], $matches[2]);
-					if(defined("DEBUG") && DEBUG>=3) echo "YellowConfig::load key:$matches[1] $matches[2]<br/>\n";
+					$this->set(lcfirst($matches[1]), $matches[2]);
+					if(defined("DEBUG") && DEBUG>=3) echo "YellowConfig::load ".lcfirst($matches[1]).":$matches[2]<br/>\n";
 				}
 			}
 		}
@@ -1697,17 +1686,17 @@ class YellowText
 				$language = "";
 				foreach($fileData as $line)
 				{
-					preg_match("/^\s*(.*?)\s*=\s*(.*?)\s*$/", $line, $matches);
-					if($matches[1]=="language" && !strempty($matches[2])) { $language = $matches[2]; break; }
+					preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
+					if(lcfirst($matches[1])=="language" && !strempty($matches[2])) { $language = $matches[2]; break; }
 				}
 				foreach($fileData as $line)
 				{
-					if(preg_match("/^\//", $line)) continue;
-					preg_match("/^\s*(.*?)\s*=\s*(.*?)\s*$/", $line, $matches);
+					if(preg_match("/^\#/", $line)) continue;
+					preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
 					if(!empty($language) && !empty($matches[1]) && !strempty($matches[2]))
 					{
-						$this->setText($matches[1], $matches[2], $language);
-						if(defined("DEBUG") && DEBUG>=3) echo "YellowText::load key:$matches[1] $matches[2]<br/>\n";
+						$this->setText(lcfirst($matches[1]), $matches[2], $language);
+						if(defined("DEBUG") && DEBUG>=3) echo "YellowText::load ".lcfirst($matches[1]).":$matches[2]<br/>\n";
 					}
 				}
 			}
@@ -2397,15 +2386,15 @@ class YellowToolbox
 		return $text;
 	}
 	
-	// Return time zone
-	function getTimeZone()
+	// Return server time zone
+	function getServerTime()
 	{
-		$timeZone = @date_default_timezone_get();
-		if(PHP_OS=="Darwin" && $timeZone=="UTC")
+		$serverTime = @date_default_timezone_get();
+		if(PHP_OS=="Darwin" && $serverTime=="UTC")
 		{
-			if(preg_match("#zoneinfo/(.*)#", @readlink("/etc/localtime"), $matches)) $timeZone = $matches[1];
+			if(preg_match("#zoneinfo/(.*)#", @readlink("/etc/localtime"), $matches)) $serverTime = $matches[1];
 		}
-		return $timeZone;
+		return $serverTime;
 	}
 	
 	// Return human readable HTTP server status
@@ -2422,9 +2411,9 @@ class YellowToolbox
 			case 303:	$text = "$serverProtocol $statusCode Reload please"; break;
 			case 304:	$text = "$serverProtocol $statusCode Not modified"; break;
 			case 400:	$text = "$serverProtocol $statusCode Bad request"; break;
-			case 401:	$text = "$serverProtocol $statusCode Unauthorised"; break;
 			case 404:	$text = "$serverProtocol $statusCode Not found"; break;
 			case 424:	$text = "$serverProtocol $statusCode Not existing"; break;
+			case 444:	$text = "$serverProtocol $statusCode No response"; break;
 			case 500:	$text = "$serverProtocol $statusCode Server error"; break;
 			default:	$text = "$serverProtocol $statusCode Unknown status";
 		}
