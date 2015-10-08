@@ -1524,7 +1524,7 @@ class YellowPlugins
 		foreach($this->plugins as $key=>$value)
 		{
 			$this->plugins[$key]["obj"] = new $value["class"];
-			if(defined("DEBUG") && DEBUG>=3) echo "YellowPlugins::load class:$value[class] $value[version]<br/>\n";
+			if(defined("DEBUG") && DEBUG>=3) echo "YellowPlugins::load $value[class]:$value[version]<br/>\n";
 			if(method_exists($this->plugins[$key]["obj"], "onLoad")) $this->plugins[$key]["obj"]->onLoad($yellow);
 		}
 	}
@@ -1546,7 +1546,17 @@ class YellowPlugins
 		return $this->plugins[$name]["obj"];
 	}
 	
-	// Return plugins modification date, Unix time or HTTP format
+	// Return plugin version
+	function getData()
+	{
+		$version = array();
+		$version["YellowCore"] = YellowCore::Version;
+		foreach($this->plugins as $key=>$value) $version[$value["class"]] = $value[version];
+		uksort($version, strnatcasecmp);
+		return $version;
+	}
+	
+	// Return plugin modification date, Unix time or HTTP format
 	function getModified($httpFormat = false)
 	{
 		return $httpFormat ? $this->yellow->toolbox->getHttpDateFormatted($this->modified) : $this->modified;

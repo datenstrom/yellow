@@ -90,13 +90,18 @@ class YellowWebinterface
 			{
 				$serverSoftware = $this->yellow->toolbox->getServerSoftware();
 				$output .= "Yellow ".YellowCore::Version.", PHP ".PHP_VERSION.", $serverSoftware\n";
+			} else if($text == "version") {
+				foreach($this->yellow->plugins->getData() as $key=>$value)
+				{
+					$output .= htmlspecialchars("$key: $value")."<br />\n";
+				}
 			} else {
 				foreach($this->yellow->config->getData($text) as $key=>$value)
 				{
 					$output .= htmlspecialchars(ucfirst($key).": ".$value)."<br />\n";
 				}
-				if($page->parserSafeMode) $page->error(500, "Debug '$text' is not allowed!");
 			}
+			if(!empty($text) && $page->parserSafeMode) $page->error(500, "Debug '$text' is not allowed in safe mode!");
 			$output .= "</div>\n";
 		}
 		return $output;
@@ -598,7 +603,7 @@ class YellowUsers
 				   !empty($matches[5]) && !empty($matches[6]))
 				{
 					$this->set($matches[1], $matches[2], $matches[3], $matches[4], $matches[5], $matches[6]);
-					if(defined("DEBUG") && DEBUG>=3) echo "YellowUsers::load email:$matches[1] $matches[5]<br/>\n";
+					if(defined("DEBUG") && DEBUG>=3) echo "YellowUsers::load email:$matches[1]<br/>\n";
 				}
 			}
 		}

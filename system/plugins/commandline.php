@@ -77,7 +77,7 @@ class YellowCommandline
 				++$updates;
 			}
 		}
-		if($statusCode != 200) echo "ERROR checking updates at $url, $versionLatest[error]\n";
+		if($statusCode != 200) echo "ERROR checking updates at $url: $versionLatest[error]\n";
 		if(!$this->yellow->config->isExisting("sitename"))
 		{
 			$fileNames = $this->yellow->toolbox->getDirectoryEntries(
