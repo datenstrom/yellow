@@ -58,7 +58,7 @@ class YellowCommandline
 		return 200;
 	}
 	
-	// Show software version
+	// Show software version and updates
 	function versionCommand($args)
 	{
 		$statusCode = 0;
