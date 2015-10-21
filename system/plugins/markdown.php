@@ -35,7 +35,6 @@ class YellowMarkdownParser extends MarkdownExtraParser
 		$this->page = $page;
 		$this->idAttributes = array();
 		$this->no_markup = $page->parserSafeMode;
-		$this->no_entities = $page->parserSafeMode;
 		$this->url_filter_func = function($url) use ($yellow, $page)
 		{
 			return $yellow->lookup->normaliseLocation($url, $page->base, $page->location,

@@ -540,6 +540,30 @@ class YellowPage
 				if(!is_null($output)) break;
 			}
 		}
+		if(is_null($output))
+		{
+			if($name=="debug" && $shortcut)
+			{
+				$output = "<span class=\"".htmlspecialchars($name)."\">\n";
+				if(empty($text))
+				{
+					$serverSoftware = $this->yellow->toolbox->getServerSoftware();
+					$output .= "Yellow ".YellowCore::Version.", PHP ".PHP_VERSION.", $serverSoftware\n";
+				} else if($text == "version") {
+					foreach($this->yellow->plugins->getData() as $key=>$value)
+					{
+						$output .= htmlspecialchars("$key: $value")."<br />\n";
+					}
+				} else {
+					foreach($this->yellow->config->getData($text) as $key=>$value)
+					{
+						$output .= htmlspecialchars(ucfirst($key).": ".$value)."<br />\n";
+					}
+				}
+				if(!empty($text) && $this->parserSafeMode) $this->error(500, "Debug '$text' is not allowed in safe mode!");
+				$output .= "</span>\n";
+			}
+		}
 		if(defined("DEBUG") && DEBUG>=3 && !empty($name)) echo "YellowPage::parseContentBlock name:$name shortcut:$shortcut<br/>\n";
 		return $output;
 	}
@@ -1934,14 +1958,14 @@ class YellowLookup
 			}
 			if(!$directory)
 			{
-				$fileFolder = $tokens[$i-1].$fileExtension;
 				if(!empty($tokens[$i]))
 				{
 					$token = $tokens[$i].$fileExtension;
+					$fileFolder = $tokens[$i-1].$fileExtension;
 					if($token==$fileDefault || $token==$fileFolder) $invalid = true;
 					$path .= $this->findFileDirectory($path, $token, true, false, $found, $invalid);
 				} else {
-					$path .= $this->findFileDefault($path, $fileDefault, $fileFolder);
+					$path .= $this->findFileDefault($path, $fileDefault, $fileExtension, false);
 				}
 				if(defined("DEBUG") && DEBUG>=2)
 				{
@@ -1970,11 +1994,12 @@ class YellowLookup
 	}
 	
 	// Return default file in directory
-	function findFileDefault($path, $fileDefault, $fileFolder)
+	function findFileDefault($path, $fileDefault, $fileExtension, $includePath = true)
 	{
 		$token = $fileDefault;
 		if(!is_file($path."/".$fileDefault))
 		{
+			$fileFolder = $this->normaliseName(basename($path)).$fileExtension;
 			$regex = "/^[\d\-\_\.]*($fileDefault|$fileFolder)$/";
 			foreach($this->yellow->toolbox->getDirectoryEntries($path, $regex, true, false, false) as $entry)
 			{
@@ -1982,7 +2007,7 @@ class YellowLookup
 				if($this->normaliseName($entry) == $fileFolder) { $token = $entry; break; }
 			}
 		}
-		return $token;
+		return $includePath ? "$path/$token" : $token;
 	}
 	
 	// Return children from location
@@ -1996,8 +2021,7 @@ class YellowLookup
 			$path = $this->findFileFromLocation($location, true);
 			foreach($this->yellow->toolbox->getDirectoryEntries($path, "/.*/", true, true, false) as $entry)
 			{
-				$fileFolder = $this->normaliseName($entry).$fileExtension;
-				$token = $this->findFileDefault($path.$entry, $fileDefault, $fileFolder);
+				$token = $this->findFileDefault($path.$entry, $fileDefault, $fileExtension, false);
 				array_push($fileNames, $path.$entry."/".$token);
 			}
 			if(!$this->isRootLocation($location))

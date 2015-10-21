@@ -96,7 +96,7 @@
 #yellow-pane-login input { width:15em; box-sizing:border-box; }
 #yellow-pane-login .yellow-btn { width:15em; margin:1em 1em 0.5em 0; }
 #yellow-pane-edit { }
-#yellow-pane-edit h1 { margin:0 0 10px 0; font-size:1.5em; }
+#yellow-pane-edit h1 { margin:0 0 10px 0; font-size:1.5em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 #yellow-pane-edit-page { padding:5px; outline:none; resize:none; }
 #yellow-pane-edit-buttons { margin-top:5px; }
 #yellow-pane-edit-buttons input { margin-right:10px; }

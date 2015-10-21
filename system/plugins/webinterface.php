@@ -83,27 +83,6 @@ class YellowWebinterface
 			if(substru($text, 0, 2)=="- ") $editText = trim(substru($text, 2));
 			$output = "<a href=\"".$page->get("pageEdit")."\">".htmlspecialchars($editText)."</a>";
 		}
-		if($name=="debug" && $shortcut)
-		{
-			$output = "<div class=\"".htmlspecialchars($name)."\">\n";
-			if(empty($text))
-			{
-				$serverSoftware = $this->yellow->toolbox->getServerSoftware();
-				$output .= "Yellow ".YellowCore::Version.", PHP ".PHP_VERSION.", $serverSoftware\n";
-			} else if($text == "version") {
-				foreach($this->yellow->plugins->getData() as $key=>$value)
-				{
-					$output .= htmlspecialchars("$key: $value")."<br />\n";
-				}
-			} else {
-				foreach($this->yellow->config->getData($text) as $key=>$value)
-				{
-					$output .= htmlspecialchars(ucfirst($key).": ".$value)."<br />\n";
-				}
-			}
-			if(!empty($text) && $page->parserSafeMode) $page->error(500, "Debug '$text' is not allowed in safe mode!");
-			$output .= "</div>\n";
-		}
 		return $output;
 	}
 	
@@ -470,26 +449,29 @@ class YellowWebinterface
 		$page = new YellowPage($this->yellow);
 		$page->setRequestInformation($serverScheme, $serverName, $base, $location, $fileName);
 		$page->parseData($rawData, false, 0);
-		$page->fileName = $this->yellow->lookup->findFileFromTitle(
-			$page->get($this->yellow->config->get("webinterfaceMetaFilePrefix")), $page->get("title"), $fileName,
-			$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
-		$page->location = $this->yellow->lookup->findLocationFromFile($page->fileName);
-		if($this->yellow->pages->find($page->location))
+		if($this->yellow->lookup->isFileLocation($location) || is_file($fileName))
 		{
-			preg_match("/^(.*?)(\d*)$/", $page->get("title"), $matches);
-			$titleText = $matches[1];
-			$titleNumber = $matches[2];
-			if(strempty($titleNumber)) { $titleNumber = 2; $titleText = $titleText.' '; }
-			for(; $titleNumber<=999; ++$titleNumber)
+			$page->fileName = $this->yellow->lookup->findFileFromTitle(
+				$page->get($this->yellow->config->get("webinterfaceMetaFilePrefix")), $page->get("title"), $fileName,
+				$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
+			$page->location = $this->yellow->lookup->findLocationFromFile($page->fileName);
+			if($this->yellow->pages->find($page->location))
 			{
-				$page->rawData = $this->updateDataTitle($rawData, $titleText.$titleNumber);
-				$page->fileName = $this->yellow->lookup->findFileFromTitle(
-					$page->get($this->yellow->config->get("webinterfaceMetaFilePrefix")), $titleText.$titleNumber, $fileName,
-					$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
-				$page->location = $this->yellow->lookup->findLocationFromFile($page->fileName);
-				if(!$this->yellow->pages->find($page->location)) { $ok = true; break; }
+				preg_match("/^(.*?)(\d*)$/", $page->get("title"), $matches);
+				$titleText = $matches[1];
+				$titleNumber = $matches[2];
+				if(strempty($titleNumber)) { $titleNumber = 2; $titleText = $titleText.' '; }
+				for(; $titleNumber<=999; ++$titleNumber)
+				{
+					$page->rawData = $this->updateDataTitle($rawData, $titleText.$titleNumber);
+					$page->fileName = $this->yellow->lookup->findFileFromTitle(
+						$page->get($this->yellow->config->get("webinterfaceMetaFilePrefix")), $titleText.$titleNumber, $fileName,
+						$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
+					$page->location = $this->yellow->lookup->findLocationFromFile($page->fileName);
+					if(!$this->yellow->pages->find($page->location)) { $ok = true; break; }
+				}
+				if(!$ok) $page->error(500, "Page '".$page->get("title")."' can not be created!");
 			}
-			if(!$ok) $page->error(500, "Page '".$page->get("title")."' can not be created!");
 		}
 		if(!$this->getUserPermission($page->location, $page->fileName)) $page->error(500, "Page '".$page->get("title")."' is not allowed!");
 		return $page;
@@ -514,9 +496,14 @@ class YellowWebinterface
 					$page->get($prefix), $page->get("title"), $fileName,
 					$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
 				$page->location = $this->yellow->lookup->findLocationFromFile($page->fileName);
-				if($pageSource->location!=$page->location && $this->yellow->pages->find($page->location))
+				if($pageSource->location != $page->location)
 				{
-					$page->error(500, "Page '".$page->get("title")."' already exists!");
+					if(!$this->yellow->lookup->isFileLocation($page->location))
+					{
+						$page->error(500, "Page '".$page->get("title")."' is not allowed!");
+					} else if($this->yellow->pages->find($page->location)) {
+						$page->error(500, "Page '".$page->get("title")."' already exists!");
+					}
 				}
 			}
 		}
