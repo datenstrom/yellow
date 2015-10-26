@@ -222,7 +222,11 @@ yellow.webinterface =
 		{
 			if(yellow.debug) console.log("yellow.webinterface.showPane id:"+paneId);
 			element.style.display = "block";
-			if(modal) yellow.toolbox.addClass(document.body, "yellow-body-modal-open");
+			if(modal)
+			{
+				yellow.toolbox.addClass(document.body, "yellow-body-modal-open");
+				yellow.toolbox.addValue("meta[name=viewport]", "content", ", maximum-scale=1, user-scalable=0");
+			}
 			this.paneId = paneId;
 			this.paneType = paneType;
 			this.resizePanes();
@@ -237,8 +241,9 @@ yellow.webinterface =
 		if(yellow.toolbox.isVisible(element))
 		{
 			if(yellow.debug) console.log("yellow.webinterface.hidePane id:"+paneId);
-			element.style.display = "none";
 			yellow.toolbox.removeClass(document.body, "yellow-body-modal-open");
+			yellow.toolbox.removeValue("meta[name=viewport]", "content", ", maximum-scale=1, user-scalable=0");
+			element.style.display = "none";
 			this.paneId = 0;
 			this.paneType = 0;
 		}
@@ -374,7 +379,21 @@ yellow.toolbox =
 		var string = (" " + element.className + " ").replace(" " + name + " ", " ");
 		element.className = string.replace(/^\s+|\s+$/, "");
 	},
+	
+	// Add attribute information
+	addValue: function(selector, name, value)
+	{
+		var element = document.querySelector(selector);
+		element.setAttribute(name, element.getAttribute(name) + value);
+	},
 
+	// Remove attribute information
+	removeValue: function(selector, name, value)
+	{
+		var element = document.querySelector(selector);
+		element.setAttribute(name, element.getAttribute(name).replace(value, ""));
+	},
+	
 	// Add event handler
 	addEvent: function(element, type, handler)
 	{
