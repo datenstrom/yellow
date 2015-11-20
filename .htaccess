@@ -1,17 +1,9 @@
 <IfModule mod_rewrite.c>
 RewriteEngine on
 
-# Yellow dynamic pages
-
+DirectoryIndex index.html yellow.php
+RewriteRule ^(cache|content|system)/ error [L]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ yellow.php [L]
-DirectoryIndex index.html yellow.php
-RewriteRule ^(cache|content|system)/ error [L]
-
-# Yellow static pages
-
-RewriteCond %{REQUEST_FILENAME} -f
-RewriteRule ^[^\.]+$ - [T=text/html,L]
-ErrorDocument 404 /error.html
 </IfModule>
