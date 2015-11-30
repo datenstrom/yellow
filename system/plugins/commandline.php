@@ -5,7 +5,7 @@
 // Command line plugin
 class YellowCommandline
 {
-	const Version = "0.6.1";
+	const Version = "0.6.2";
 	var $yellow;					//access to API
 	var $content;					//number of content pages
 	var $media;						//number of media files
@@ -88,21 +88,26 @@ class YellowCommandline
 		return $statusCode;
 	}
 		
-	// Build static pages
+	// Build static files
 	function buildCommand($args)
 	{
 		$statusCode = 0;
 		list($dummy, $command, $path, $location) = $args;
 		if(empty($location) || $location[0]=='/')
 		{
-			if($this->checkStaticConfig())
+			if($this->checkStaticConfig() && $this->checkStaticFilesystem())
 			{
 				$statusCode = $this->buildStatic($path, $location);
 			} else {
 				$statusCode = 500;
 				list($this->content, $this->media, $this->system, $this->error) = array(0, 0, 0, 1);
-				$fileName = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
-				echo "ERROR bulding pages: Please configure ServerScheme, ServerName, ServerBase, ServerTime in file '$fileName'!\n";
+				if(!$this->checkStaticFilesystem())
+				{
+					echo "ERROR building files: Static website not supported on Windows file system!\n";
+				} else {
+					$fileName = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
+					echo "ERROR building files: Please configure ServerScheme, ServerName, ServerBase, ServerTime in file '$fileName'!\n";
+				}
 			}
 			echo "Yellow $command: $this->content content, $this->media media, $this->system system";
 			echo ", $this->error error".($this->error!=1 ? 's' : '');
@@ -114,7 +119,7 @@ class YellowCommandline
 		return $statusCode;
 	}
 	
-	// Build static pages and files
+	// Build static directories and files
 	function buildStatic($path, $location)
 	{
 		$this->yellow->toolbox->timerStart($time);
@@ -231,6 +236,7 @@ class YellowCommandline
 		preg_match_all("/<a(.*?)href=\"([^\"]+)\"(.*?)>/i", $text, $matches);
 		foreach($matches[2] as $match)
 		{
+			if(preg_match("/^(.*?)#(.*)$/", $match, $tokens)) $match = $tokens[1];
 			if(preg_match("/^\w+:\/+(.*?)(\/.*)$/", $match, $tokens))
 			{
 				if($tokens[1] != $serverName) continue;
@@ -258,7 +264,7 @@ class YellowCommandline
 		}
 	}
 	
-	// Clean static pages
+	// Clean static files
 	function cleanCommand($args)
 	{
 		$statusCode = 0;
@@ -266,7 +272,7 @@ class YellowCommandline
 		if(empty($location) || $location[0]=='/')
 		{
 			$statusCode = $this->cleanStatic($path, $location);
-			echo "Yellow $command: Static page".(empty($location) ? "s" : "")." ".($statusCode!=200 ? "not " : "")."cleaned\n";
+			echo "Yellow $command: Static file".(empty($location) ? "s" : "")." ".($statusCode!=200 ? "not " : "")."cleaned\n";
 		} else {
 			$statusCode = 400;
 			echo "Yellow $command: Invalid arguments\n";
@@ -293,12 +299,12 @@ class YellowCommandline
 	function cleanStaticDirectory($path)
 	{
 		$statusCode = 200;
-		if(is_dir($path))
+		if(is_dir($path) && $this->checkStaticDirectory($path))
 		{
-			if(!$this->checkStaticDirectory($path) || !$this->yellow->toolbox->deleteDirectory($path, true))
+			if(!$this->yellow->toolbox->deleteDirectory($path, true))
 			{
 				$statusCode = 500;
-				echo "ERROR cleaning pages: Can't delete directory '$path'!\n";
+				echo "ERROR cleaning files: Can't delete directory '$path'!\n";
 			}
 		}
 		return $statusCode;
@@ -311,10 +317,10 @@ class YellowCommandline
 		$fileName = $this->getStaticFile($path, $location, $statusCode);
 		if(is_file($fileName))
 		{
-			if(!$this->checkStaticDirectory($path) || !$this->yellow->toolbox->deleteFile($fileName))
+			if(!$this->yellow->toolbox->deleteFile($fileName))
 			{
 				$statusCode = 500;
-				echo "ERROR cleaning pages: Can't delete file '$fileName'!\n";
+				echo "ERROR cleaning files: Can't delete file '$fileName'!\n";
 			}
 		}
 		return $statusCode;
@@ -383,6 +389,12 @@ class YellowCommandline
 			$this->yellow->lookup->isValidLocation($serverBase) && $serverBase!="/";
 	}
 	
+	// Check static filesystem
+	function checkStaticFilesystem()
+	{
+		return strtoupperu(substru(PHP_OS, 0, 3)) != "WIN";
+	}
+	
 	// Check static directory
 	function checkStaticDirectory($path)
 	{
@@ -390,7 +402,7 @@ class YellowCommandline
 		if(!empty($path))
 		{
 			if($path == rtrim($this->yellow->config->get("staticDir"), '/')) $ok = true;
-			if(is_file("$path/".$this->yellow->config->get("staticAccessFile"))) $ok = true;
+			if(is_file("$path/".$this->yellow->config->get("staticDefaultFile"))) $ok = true;
 			if(is_file("$path/yellow.php")) $ok = false;
 		}
 		return $ok;
@@ -442,7 +454,6 @@ class YellowCommandline
 			$files[$fileName] = $path.$this->yellow->config->get("themeLocation").basename($fileName);
 		}
 		$fileNames = array();
-		array_push($fileNames, $this->yellow->config->get("staticAccessFile"));
 		array_push($fileNames, $this->yellow->config->get("configDir").$this->yellow->config->get("robotsFile"));
 		foreach($fileNames as $fileName) $files[$fileName] = "$path/".basename($fileName);
 		return $files;

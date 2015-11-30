@@ -45,9 +45,8 @@ class YellowCore
 		$this->config->setDefault("mediaDir", "media/");
 		$this->config->setDefault("imageDir", "media/images/");
 		$this->config->setDefault("staticDir", "cache/");
-		$this->config->setDefault("staticAccessFile", ".htaccess");
 		$this->config->setDefault("staticDefaultFile", "index.html");
-		$this->config->setDefault("staticErrorFile", "error.html");
+		$this->config->setDefault("staticErrorFile", "404.html");
 		$this->config->setDefault("contentDir", "content/");
 		$this->config->setDefault("contentRootDir", "default/");
 		$this->config->setDefault("contentHomeDir", "home/");
@@ -548,7 +547,7 @@ class YellowPage
 				if(empty($text))
 				{
 					$serverSoftware = $this->yellow->toolbox->getServerSoftware();
-					$output .= "Yellow ".YellowCore::Version.", PHP ".PHP_VERSION.", $serverSoftware\n";
+					$output .= "Yellow ".YellowCore::Version.", PHP ".PHP_VERSION.", $serverSoftware<br />\n";
 				} else if($text == "version") {
 					foreach($this->yellow->plugins->getData() as $key=>$value)
 					{
@@ -2265,7 +2264,10 @@ class YellowToolbox
 	// Return server name from current HTTP request
 	function getServerName()
 	{
-		return $_SERVER["SERVER_NAME"];
+		$serverName = $_SERVER["SERVER_NAME"];
+		$serverPort = $_SERVER["SERVER_PORT"];
+		if($serverPort!=80 && $serverPort!=443) $serverName .= ":$serverPort";
+		return $serverName;
 	}
 	
 	// Return server base from current HTTP request
