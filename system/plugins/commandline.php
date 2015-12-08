@@ -62,7 +62,8 @@ class YellowCommandline
 	function versionCommand($args)
 	{
 		$statusCode = 0;
-		echo "Yellow ".YellowCore::Version."\n";
+		$serverSoftware = $this->yellow->toolbox->getServerSoftware();
+		echo "Yellow ".YellowCore::Version.", PHP ".PHP_VERSION.", $serverSoftware\n";
 		$url = $this->yellow->config->get("commandlineVersionUrl");
 		list($dummy, $command) = $args;
 		list($statusCode, $versionCurrent) = $this->getPluginVersion();

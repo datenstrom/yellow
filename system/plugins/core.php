@@ -90,6 +90,7 @@ class YellowCore
 		ob_start();
 		$statusCode = 0;
 		$this->toolbox->timerStart($time);
+		$this->toolbox->normaliseRequest();
 		list($serverScheme, $serverName, $base, $location, $fileName) = $this->getRequestInformation();
 		$this->page->setRequestInformation($serverScheme, $serverName, $base, $location, $fileName);
 		foreach($this->plugins->plugins as $key=>$value)
@@ -541,14 +542,13 @@ class YellowPage
 		}
 		if(is_null($output))
 		{
-			if($name=="debug" && $shortcut)
+			if($name=="yellow" && $shortcut)
 			{
 				$output = "<span class=\"".htmlspecialchars($name)."\">\n";
 				if(empty($text))
 				{
 					$serverSoftware = $this->yellow->toolbox->getServerSoftware();
 					$output .= "Yellow ".YellowCore::Version.", PHP ".PHP_VERSION.", $serverSoftware<br />\n";
-				} else if($text == "version") {
 					foreach($this->yellow->plugins->getData() as $key=>$value)
 					{
 						$output .= htmlspecialchars("$key: $value")."<br />\n";
@@ -559,7 +559,7 @@ class YellowPage
 						$output .= htmlspecialchars(ucfirst($key).": ".$value)."<br />\n";
 					}
 				}
-				if(!empty($text) && $this->parserSafeMode) $this->error(500, "Debug '$text' is not allowed in safe mode!");
+				if($this->parserSafeMode) $this->error(500, "Yellow information are not available in safe mode!");
 				$output .= "</span>\n";
 			}
 		}
@@ -2244,7 +2244,7 @@ class YellowToolbox
 	// Return server software from current HTTP request
 	function getServerSoftware()
 	{
-		$serverSoftware = PHP_SAPI;
+		$serverSoftware = strtoupperu(PHP_SAPI);
 		if(preg_match("/^(\S+)/", $_SERVER["SERVER_SOFTWARE"], $matches)) $serverSoftware = $matches[1];
 		return $serverSoftware." ".PHP_OS;
 	}
@@ -2401,6 +2401,17 @@ class YellowToolbox
 	function isRequestNotModified($lastModifiedFormatted)
 	{
 		return isset($_SERVER["HTTP_IF_MODIFIED_SINCE"]) && $_SERVER["HTTP_IF_MODIFIED_SINCE"]==$lastModifiedFormatted;
+	}
+	
+	// Normalise request data, take care of magic quotes
+	function normaliseRequest()
+	{
+		if(get_magic_quotes_gpc())
+		{
+			function stripArray($data) { return is_array($data) ? array_map("stripArray", $data) : stripslashes($data); }
+			$requestData = array(&$_GET, &$_POST, &$_COOKIE, &$_REQUEST);
+			foreach($requestData as &$data) $data = stripArray($data);
+		}
 	}
 	
 	// Normalise location arguments
