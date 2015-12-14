@@ -601,6 +601,7 @@ class YellowPage
 		{
 			$this->error(500, "Parser '".$this->get("parser")."' does not exist!");
 		}
+		if($this->yellow->toolbox->isRequestSelf()) $this->error(500, "Rewrite module not enabled on this server!");
 		if($this->yellow->getRequestHandler()=="core" && $this->isExisting("redirect") && $this->statusCode==200)
 		{
 			$location = $this->yellow->lookup->normaliseLocation($this->get("redirect"), $this->base, $this->location);
@@ -2389,6 +2390,12 @@ class YellowToolbox
 	function isLocationArgsPagination($location, $pagination)
 	{
 		return preg_match("/^(.*\/)?$pagination:.*$/", $location);
+	}
+
+	// Check if script location is requested
+	function isRequestSelf()
+	{
+		return $_SERVER["REQUEST_URI"] == $_SERVER["SCRIPT_NAME"];
 	}
 
 	// Check if clean URL is requested
