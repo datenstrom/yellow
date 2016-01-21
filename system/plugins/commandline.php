@@ -1,13 +1,13 @@
 <?php
-// Copyright (c) 2013-2015 Datenstrom, http://datenstrom.se
+// Copyright (c) 2013-2016 Datenstrom, http://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 // Command line plugin
 class YellowCommandline
 {
-	const Version = "0.6.2";
+	const Version = "0.6.3";
 	var $yellow;					//access to API
-	var $content;					//number of content pages
+	var $content;					//number of content files
 	var $media;						//number of media files
 	var $system;					//number of system files
 	var $error;						//number of build errors
@@ -79,12 +79,6 @@ class YellowCommandline
 			}
 		}
 		if($statusCode != 200) echo "ERROR checking updates at $url: $versionLatest[error]\n";
-		if(!$this->yellow->config->isExisting("sitename"))
-		{
-			$fileNames = $this->yellow->toolbox->getDirectoryEntries(
-				$this->yellow->config->get("configDir"), "/^.*\.ini$/", true, false);
-			foreach($fileNames as $fileName) $statusCode = max($statusCode, $this->updateConfigFile($fileName));
-		}
 		if($updates) echo "Yellow $command: $updates update".($updates==1 ? "":"s")." available at $url\n";
 		return $statusCode;
 	}
@@ -120,7 +114,7 @@ class YellowCommandline
 		return $statusCode;
 	}
 	
-	// Build static directories and files
+	// Build static files and directories
 	function buildStatic($path, $location)
 	{
 		$this->yellow->toolbox->timerStart($time);
@@ -130,106 +124,112 @@ class YellowCommandline
 		if(empty($location))
 		{
 			$statusCode = $this->cleanStatic($path, $location);
-			foreach($this->getStaticLocations() as $location)
+			foreach($this->getContentLocations() as $location)
 			{
-				$statusCode = max($statusCode, $this->buildStaticPage($path, $location, true));
+				$statusCode = max($statusCode, $this->buildStaticRequest($path, $location, "content", true));
 			}
 			foreach($this->locationsArgs as $location)
 			{
-				$statusCode = max($statusCode, $this->buildStaticPage($path, $location, true));
+				$statusCode = max($statusCode, $this->buildStaticRequest($path, $location, "content", true));
 			}
 			foreach($this->locationsArgsPagination as $location)
 			{
 				if(substru($location, -1) != ':')
 				{
-					$statusCode = max($statusCode, $this->buildStaticPage($path, $location, false, true));
+					$statusCode = max($statusCode, $this->buildStaticRequest($path, $location, "content", false, true));
 				}
 				for($pageNumber=2; $pageNumber<=999; ++$pageNumber)
 				{
-					$statusCodeLocation = $this->buildStaticPage($path, $location.$pageNumber, false, true);
+					$statusCodeLocation = $this->buildStaticRequest($path, $location.$pageNumber, "content", false, true);
 					$statusCode = max($statusCode, $statusCodeLocation);
-					if($statusCodeLocation == 0) break;
+					if($statusCodeLocation == 100) break;
 				}
 			}
-			$statusCode = max($statusCode, $this->buildStaticPage($path, "/error", false, false, true));
-			foreach($this->getStaticFilesMedia($path) as $fileNameSource=>$fileNameDest)
+			foreach($this->getMediaLocations() as $location)
 			{
-				$statusCode = max($statusCode, $this->buildStaticFile($fileNameSource, $fileNameDest, true));
+				$statusCode = max($statusCode, $this->buildStaticRequest($path, $location, "media"));
 			}
-			foreach($this->getStaticFilesSystem($path) as $fileNameSource=>$fileNameDest)
+			foreach($this->getSystemLocations() as $location)
 			{
-				$statusCode = max($statusCode, $this->buildStaticFile($fileNameSource, $fileNameDest, false));
+				$statusCode = max($statusCode, $this->buildStaticRequest($path, $location, "system"));
 			}
+			$statusCode = max($statusCode, $this->buildStaticRequest($path, "/error", "system", false, false, true));
 		} else {
-			$statusCode = $this->buildStaticPage($path, $location);
+			$statusCode = $this->buildStaticRequest($path, $location, "content");
 		}
 		$this->yellow->toolbox->timerStop($time);
 		if(defined("DEBUG") && DEBUG>=1) echo "YellowCommandline::buildStatic time:$time ms\n";
 		return $statusCode;
 	}
 	
-	// Build static page
-	function buildStaticPage($path, $location, $analyse = false, $probe = false, $error = false)
-	{		
-		ob_start();
-		$_SERVER["SERVER_PROTOCOL"] = "HTTP/1.1";
-		$_SERVER["SERVER_NAME"] = $this->yellow->config->get("serverName");
-		$_SERVER["REQUEST_URI"] = $this->yellow->config->get("serverBase").$location;
-		$_SERVER["SCRIPT_NAME"] = $this->yellow->config->get("serverBase")."/yellow.php";
-		$_REQUEST = array();
-		$statusCode = $this->yellow->request();
-		if($statusCode<400 || $error)
+	// Build static request
+	function buildStaticRequest($path, $location, $type, $analyse = false, $probe = false, $error = false)
+	{
+		$this->yellow->page = new YellowPage($this->yellow);
+		if($type=="content" || $type=="system")
 		{
-			$fileData = ob_get_contents();
-			$modified = strtotime($this->yellow->page->getHeader("Last-Modified"));
-			if($statusCode>=301 && $statusCode<=303)
+			ob_start();
+			$_SERVER["SERVER_PROTOCOL"] = "HTTP/1.1";
+			$_SERVER["SERVER_NAME"] = $this->yellow->config->get("serverName");
+			$_SERVER["REQUEST_URI"] = $this->yellow->config->get("serverBase").$location;
+			$_SERVER["SCRIPT_NAME"] = $this->yellow->config->get("serverBase")."/yellow.php";
+			$_REQUEST = array();
+			$statusCode = $this->yellow->request();
+			if($statusCode<400 || $error)
 			{
-				$fileData = $this->getStaticRedirect($this->yellow->page->getHeader("Location"));
-				$modified = time();
+				$fileData = ob_get_contents();
+				$modified = strtotime($this->yellow->page->getHeader("Last-Modified"));
+				if($modified == 0) $modified = filemtime($this->yellow->page->fileName);
+				if($statusCode>=301 && $statusCode<=303)
+				{
+					$fileData = $this->getStaticRedirect($this->yellow->page->getHeader("Location"));
+					$modified = time();
+				}
+				$fileName = $this->getStaticFile($path, $location, $statusCode);
+				if(!$this->yellow->toolbox->createFile($fileName, $fileData, true) ||
+				   !$this->yellow->toolbox->modifyFile($fileName, $modified))
+				{
+					$statusCode = 500;
+					$this->yellow->page->statusCode = $statusCode;
+					$this->yellow->page->set("pageError", "Can't write file '$fileName'!");
+				}
 			}
+			ob_end_clean();
+		} else {
+			$statusCode = 200;
+			$fileNameSource = substru($location, 1);
 			$fileName = $this->getStaticFile($path, $location, $statusCode);
-			if(!$this->yellow->toolbox->createFile($fileName, $fileData, true) ||
-			   !$this->yellow->toolbox->modifyFile($fileName, $modified))
+			if(!$this->yellow->toolbox->copyFile($fileNameSource, $fileName, true) ||
+			   !$this->yellow->toolbox->modifyFile($fileName, filemtime($fileNameSource)))
 			{
 				$statusCode = 500;
 				$this->yellow->page->statusCode = $statusCode;
 				$this->yellow->page->set("pageError", "Can't write file '$fileName'!");
 			}
 		}
-		ob_end_clean();
-		if($statusCode==200 && $analyse) $this->analyseStaticPage($fileData);
+		if($statusCode==200 && $analyse) $this->analyseStaticRequest($fileData);
 		if($statusCode==404 && $error) $statusCode = 200;
-		if($statusCode==404 && $probe) $statusCode = 0;
-		if($statusCode != 0) ++$this->content;
+		if($statusCode==404 && $probe) $statusCode = 100;
+		if($statusCode >= 200)
+		{
+			switch($type)
+			{
+				case "content":	++$this->content; break;
+				case "media":	++$this->media; break;
+				case "system":	++$this->system; break;
+			}
+		}
 		if($statusCode >= 400)
 		{
 			++$this->error;
-			echo "ERROR building content location '$location', ".$this->yellow->page->getStatusCode(true)."\n";
+			echo "ERROR building location '$location', ".$this->yellow->page->getStatusCode(true)."\n";
 		}
-		if(defined("DEBUG") && DEBUG>=3) echo $fileData;
-		if(defined("DEBUG") && DEBUG>=1) echo "YellowCommandline::buildStaticPage status:$statusCode location:$location\n";
+		if(defined("DEBUG") && DEBUG>=1) echo "YellowCommandline::buildStaticRequest status:$statusCode location:$location\n";
 		return $statusCode;
 	}
 	
-	// Build static file
-	function buildStaticFile($fileNameSource, $fileNameDest, $fileTypeMedia)
-	{
-		$statusCode = $this->yellow->toolbox->copyFile($fileNameSource, $fileNameDest, true) &&
-			$this->yellow->toolbox->modifyFile($fileNameDest, filemtime($fileNameSource)) ? 200 : 500;
-		if($fileTypeMedia) { ++$this->media; } else { ++$this->system; }
-		if($statusCode >= 400)
-		{
-			++$this->error;
-			$fileType = $fileTypeMedia ? "media file" : "system file";
-			$fileError = $this->yellow->toolbox->getHttpStatusFormatted($statusCode);
-			echo "ERROR building $fileType, $fileError: Can't write file '$fileNameDest'!\n";
-		}
-		if(defined("DEBUG") && DEBUG>=1) echo "YellowCommandline::buildStaticFile status:$statusCode file:$fileNameDest\n";
-		return $statusCode;
-	}
-	
-	// Analyse static page, detect locations with arguments
-	function analyseStaticPage($text)
+	// Analyse static request, detect locations with arguments
+	function analyseStaticRequest($text)
 	{
 		$serverName = $this->yellow->config->get("serverName");
 		$serverBase = $this->yellow->config->get("serverBase");
@@ -252,14 +252,14 @@ class YellowCommandline
 				if(is_null($this->locationsArgs[$location]))
 				{
 					$this->locationsArgs[$location] = $location;
-					if(defined("DEBUG") && DEBUG>=2) echo "YellowCommandline::analyseStaticPage detected location:$location\n";
+					if(defined("DEBUG") && DEBUG>=2) echo "YellowCommandline::analyseStaticRequest detected location:$location\n";
 				}
 			} else {
 				$location = rtrim($location, "0..9");
 				if(is_null($this->locationsArgsPagination[$location]))
 				{
 					$this->locationsArgsPagination[$location] = $location;
-					if(defined("DEBUG") && DEBUG>=2) echo "YellowCommandline::analyseStaticPage detected location:$location\n";
+					if(defined("DEBUG") && DEBUG>=2) echo "YellowCommandline::analyseStaticRequest detected location:$location\n";
 				}
 			}
 		}
@@ -281,7 +281,7 @@ class YellowCommandline
 		return $statusCode;
 	}
 	
-	// Clean static directories and files
+	// Clean static files and directories
 	function cleanStatic($path, $location)
 	{
 		$statusCode = 200;
@@ -322,43 +322,6 @@ class YellowCommandline
 			{
 				$statusCode = 500;
 				echo "ERROR cleaning files: Can't delete file '$fileName'!\n";
-			}
-		}
-		return $statusCode;
-	}
-	
-	// Update configuration file if necessary
-	function updateConfigFile($fileName)
-	{
-		$statusCode = 200;
-		$fileData = @file($fileName);
-		if($fileData)
-		{
-			foreach($fileData as $line)
-			{
-				if(preg_match("/^\/\/(.*)$/", $line, $matches))
-				{
-					if(!$found) $matches[1] .= " (updated)";
-					$line = "#$matches[1]\n";
-					$found = true;
-				}
-				if(preg_match("/^\s*(.*?)\s*=\s*(.*?)\s*$/", $line, $matches))
-				{
-					$line = ucfirst($matches[1]).": $matches[2]\n";
-				}
-				if(preg_match("/^([^,:]+),([^,]+),([^,]+),([^,]+),([^,\n]+)$/", $line, $matches))
-				{
-					$line = "$matches[1]: $matches[2],$matches[3],$matches[4],active,$matches[5]\n";
-				}
-				$fileDataNew .= $line;
-			}
-		}
-		if($found)
-		{
-			if(!$this->yellow->toolbox->createFile($fileName, $fileDataNew))
-			{
-				$statusCode = 500;
-				echo "ERROR updating configuration: Can't write file '$fileName'!\n";
 			}
 		}
 		return $statusCode;
@@ -409,57 +372,6 @@ class YellowCommandline
 		return $ok;
 	}
 	
-	// Return static locations from file system
-	function getStaticLocations()
-	{
-		$locations = array();
-		$serverScheme = $this->yellow->config->get("serverScheme");
-		$serverName = $this->yellow->config->get("serverName");
-		$serverBase = $this->yellow->config->get("serverBase");
-		$this->yellow->page->setRequestInformation($serverScheme, $serverName, $serverBase, "", "");
-		foreach($this->yellow->pages->index(true, true) as $page)
-		{
-			if($page->get("status")!="ignore" && $page->get("status")!="draft")
-			{
-				array_push($locations, $page->location);
-			}
-		}
-		if(!$this->yellow->pages->find("/") && $this->yellow->config->get("multiLanguageMode")) array_unshift($locations, "/");
-		return $locations;
-	}
-	
-	// Return static media files
-	function getStaticFilesMedia($path)
-	{
-		$files = array();
-		$fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive(
-			$this->yellow->config->get("mediaDir"), "/.*/", false, false);
-		foreach($fileNames as $fileName) $files[$fileName] = "$path/$fileName";
-		return $files;
-	}
-	
-	// Return static system files
-	function getStaticFilesSystem($path)
-	{
-		$files = array();
-		$fileNames = $this->yellow->toolbox->getDirectoryEntries(
-			$this->yellow->config->get("pluginDir"), "/\.(css|js|jpg|png|txt|woff)/", false, false);
-		foreach($fileNames as $fileName)
-		{
-			$files[$fileName] = $path.$this->yellow->config->get("pluginLocation").basename($fileName);
-		}
-		$fileNames = $this->yellow->toolbox->getDirectoryEntries(
-			$this->yellow->config->get("themeDir"), "/\.(css|js|jpg|png|txt|woff)/", false, false);
-		foreach($fileNames as $fileName)
-		{
-			$files[$fileName] = $path.$this->yellow->config->get("themeLocation").basename($fileName);
-		}
-		$fileNames = array();
-		array_push($fileNames, $this->yellow->config->get("configDir").$this->yellow->config->get("robotsFile"));
-		foreach($fileNames as $fileName) $files[$fileName] = "$path/".basename($fileName);
-		return $files;
-	}
-	
 	// Return static file
 	function getStaticFile($path, $location, $statusCode)
 	{
@@ -481,6 +393,58 @@ class YellowCommandline
 		$output .= "<meta http-equiv=\"refresh\" content=\"0;url=".htmlspecialchars($location)."\" />\n";
 		$output .= "</head>\n</html>";
 		return $output;
+	}
+	
+	// Return content locations
+	function getContentLocations()
+	{
+		$locations = array();
+		$serverScheme = $this->yellow->config->get("serverScheme");
+		$serverName = $this->yellow->config->get("serverName");
+		$serverBase = $this->yellow->config->get("serverBase");
+		$this->yellow->page->setRequestInformation($serverScheme, $serverName, $serverBase, "", "");
+		foreach($this->yellow->pages->index(true, true) as $page)
+		{
+			if($page->get("status")!="ignore" && $page->get("status")!="draft")
+			{
+				array_push($locations, $page->location);
+			}
+		}
+		if(!$this->yellow->pages->find("/") && $this->yellow->config->get("multiLanguageMode")) array_unshift($locations, "/");
+		return $locations;
+	}
+	
+	// Return media locations
+	function getMediaLocations()
+	{
+		$locations = array();
+		$fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive(
+			$this->yellow->config->get("mediaDir"), "/.*/", false, false);
+		foreach($fileNames as $fileName)
+		{
+			array_push($locations, "/".$fileName);
+		}
+		return $locations;
+	}
+
+	// Return system locations
+	function getSystemLocations()
+	{
+		$locations = array();
+		$fileNames = $this->yellow->toolbox->getDirectoryEntries(
+			$this->yellow->config->get("pluginDir"), "/\.(css|js|jpg|png|txt|woff)/", false, false);
+		foreach($fileNames as $fileName)
+		{
+			array_push($locations, $this->yellow->config->get("pluginLocation").basename($fileName));
+		}
+		$fileNames = $this->yellow->toolbox->getDirectoryEntries(
+			$this->yellow->config->get("themeDir"), "/\.(css|js|jpg|png|txt|woff)/", false, false);
+		foreach($fileNames as $fileName)
+		{
+			array_push($locations, $this->yellow->config->get("themeLocation").basename($fileName));
+		}
+		array_push($locations, "/".$this->yellow->config->get("robotsFile"));
+		return $locations;
 	}
 	
 	// Return plugin version
