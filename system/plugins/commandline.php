@@ -5,7 +5,7 @@
 // Command line plugin
 class YellowCommandline
 {
-	const Version = "0.6.4";
+	const Version = "0.6.5";
 	var $yellow;					//access to API
 	var $files;						//number of files
 	var $errors;					//number of errors
@@ -151,7 +151,7 @@ class YellowCommandline
 			{
 				$statusCode = max($statusCode, $this->buildStaticFile($path, $location));
 			}
-			$statusCode = max($statusCode, $this->buildStaticFile($path, "/error", false, false, true));
+			$statusCode = max($statusCode, $this->buildStaticFile($path, "/error/", false, false, true));
 		} else {
 			$statusCode = $this->buildStaticFile($path, $location);
 		}
@@ -163,6 +163,7 @@ class YellowCommandline
 	// Build static file
 	function buildStaticFile($path, $location, $analyse = false, $probe = false, $error = false)
 	{
+		$this->yellow->pages = new YellowPages($this->yellow);
 		$this->yellow->page = new YellowPage($this->yellow);
 		$this->yellow->page->fileName = substru($location, 1);
 		if(!is_readable($this->yellow->page->fileName))
