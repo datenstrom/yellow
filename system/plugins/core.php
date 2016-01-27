@@ -2322,7 +2322,10 @@ class YellowToolbox
 					$_REQUEST[$matches[1]] = $matches[2];
 				}
 			}
-		}
+		} else {
+			$_SERVER["LOCATION"] = $location;
+			$_SERVER["LOCATION_ARGS"] = "";
+		}		
 		return $location;
 	}
 	
