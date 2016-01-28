@@ -1,5 +1,5 @@
 <?php $pages = $yellow->pages->top() ?>
-<?php $pagesMultiLanguage = $yellow->pages->multi($yellow->page->location) ?>
+<?php $pagesMultiLanguage = $yellow->pages->multi($yellow->page->location, false, true) ?>
 <?php $yellow->page->setLastModified($pages->getModified()) ?>
 <?php $yellow->page->setLastModified($pagesMultiLanguage->getModified()) ?>
 <div class="navigation">
