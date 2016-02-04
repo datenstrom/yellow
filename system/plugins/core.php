@@ -1,11 +1,11 @@
 <?php
-// Copyright (c) 2013-2015 Datenstrom, http://datenstrom.se
+// Copyright (c) 2013-2016 Datenstrom, http://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 // Yellow core
 class YellowCore
 {
-	const Version = "0.6.1";
+	const Version = "0.6.2";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $files;				//files from file system
@@ -2588,6 +2588,19 @@ class YellowToolbox
 		return $modified;
 	}
 	
+	// Read file, empty string if not found
+	function readFile($fileName, $sizeMax = 0)
+	{
+		$fileData = "";
+		$fileHandle = @fopen($fileName, "rb");
+		if($fileHandle)
+		{
+			$fileData = fread($fileHandle, $sizeMax ? $sizeMax : filesize($fileName));
+			fclose($fileHandle);
+		}
+		return $fileData;
+	}
+	
 	// Create file
 	function createFile($fileName, $fileData, $mkdir = false)
 	{
@@ -2898,6 +2911,7 @@ class YellowToolbox
 // Unicode support for PHP
 mb_internal_encoding("UTF-8");
 function strempty($string) { return is_null($string) || $string===""; }
+function strencode($string) { return addcslashes($string, "\'\"\\\/"); }
 function strreplaceu() { return call_user_func_array("str_replace", func_get_args()); }
 function strtoloweru() { return call_user_func_array("mb_strtolower", func_get_args()); }
 function strtoupperu() { return call_user_func_array("mb_strtoupper", func_get_args()); }
