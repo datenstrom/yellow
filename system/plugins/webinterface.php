@@ -666,7 +666,7 @@ class YellowUsers
 			$expire = time()+60*60*24*30*365;
 			$session = $this->yellow->toolbox->createHash($this->users[$email]["hash"], "sha256");
 			if(empty($session)) $session = "error-hash-algorithm-sha256";
-			if($serverName == "localhost") $serverName = false;
+			if(preg_match("/^localhost(:\d+)?$/", $serverName)) $serverName = false;
 			setcookie($cookieName, "$email,$session", $expire, $location, $serverName, $serverScheme=="https");
 		}
 	}
@@ -677,7 +677,7 @@ class YellowUsers
 		$serverScheme = $this->yellow->config->get("webinterfaceServerScheme");
 		$serverName = $this->yellow->config->get("webinterfaceServerName");
 		$location = $this->yellow->config->get("serverBase").$this->yellow->config->get("webinterfaceLocation");
-		if($serverName == "localhost") $serverName = false;
+		if(preg_match("/^localhost(:\d+)?$/", $serverName)) $serverName = false;
 		setcookie($cookieName, "", time()-3600, $location, $serverName, $serverScheme=="https");
 	}
 	
