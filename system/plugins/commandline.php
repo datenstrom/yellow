@@ -5,7 +5,7 @@
 // Command line plugin
 class YellowCommandline
 {
-	const Version = "0.6.5";
+	const Version = "0.6.6";
 	var $yellow;					//access to API
 	var $files;						//number of files
 	var $errors;					//number of errors
@@ -88,19 +88,14 @@ class YellowCommandline
 		list($dummy, $command, $path, $location) = $args;
 		if(empty($location) || $location[0]=='/')
 		{
-			if($this->checkStaticConfig() && $this->checkStaticFilesystem())
+			if($this->checkStaticConfig())
 			{
 				$statusCode = $this->buildStatic($path, $location);
 			} else {
 				$statusCode = 500;
 				$this->files = 0; $this->errors = 1;
-				if(!$this->checkStaticFilesystem())
-				{
-					echo "ERROR building files: Static website not supported on Windows file system!\n";
-				} else {
-					$fileName = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
-					echo "ERROR building files: Please configure ServerScheme, ServerName, ServerBase, ServerTime in file '$fileName'!\n";
-				}
+				$fileName = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
+				echo "ERROR building files: Please configure ServerScheme, ServerName, ServerBase, ServerTime in file '$fileName'!\n";
 			}
 			echo "Yellow $command: $this->files file".($this->files!=1 ? 's' : '');
 			echo ", $this->errors error".($this->errors!=1 ? 's' : '');
@@ -132,7 +127,7 @@ class YellowCommandline
 			}
 			foreach($this->locationsArgsPagination as $location)
 			{
-				if(substru($location, -1) != ':')
+				if(substru($location, -1) != $this->yellow->toolbox->getLocationArgsSeparator())
 				{
 					$statusCode = max($statusCode, $this->buildStaticFile($path, $location, false, true));
 				}
@@ -225,7 +220,7 @@ class YellowCommandline
 		$serverName = $this->yellow->config->get("serverName");
 		$serverBase = $this->yellow->config->get("serverBase");
 		$pagination = $this->yellow->config->get("contentPagination");
-		preg_match_all("/<a(.*?)href=\"([^\"]+)\"(.*?)>/i", $text, $matches);
+		preg_match_all("/<(.*?)href=\"([^\"]+)\"(.*?)>/i", $text, $matches);
 		foreach($matches[2] as $match)
 		{
 			if(preg_match("/^(.*?)#(.*)$/", $match, $tokens)) $match = $tokens[1];
@@ -342,12 +337,6 @@ class YellowCommandline
 		$serverBase = $this->yellow->config->get("serverBase");
 		return !empty($serverScheme) && !empty($serverName) &&
 			$this->yellow->lookup->isValidLocation($serverBase) && $serverBase!="/";
-	}
-	
-	// Check static filesystem
-	function checkStaticFilesystem()
-	{
-		return strtoupperu(substru(PHP_OS, 0, 3)) != "WIN";
 	}
 	
 	// Check static directory

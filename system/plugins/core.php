@@ -5,7 +5,7 @@
 // Yellow core
 class YellowCore
 {
-	const Version = "0.6.2";
+	const Version = "0.6.3";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $files;				//files from file system
@@ -84,6 +84,21 @@ class YellowCore
 		$this->config->set("contentHomeDir", $pathHome);
 	}
 	
+	// Handle command
+	function command($name, $args = NULL)
+	{
+		$statusCode = 0;
+		if($this->plugins->isExisting($name))
+		{
+			$plugin = $this->plugins->plugins[$name];
+			if(method_exists($plugin["obj"], "onCommand")) $statusCode = $plugin["obj"]->onCommand(func_get_args());
+		} else {
+			$statusCode = 500;
+			$this->page->error($statusCode, "Plugin '$name' does not exist!");
+		}
+		return $statusCode;
+	}
+	
 	// Handle request
 	function request()
 	{
@@ -124,8 +139,8 @@ class YellowCore
 			if($this->toolbox->isRequestCleanUrl($location))
 			{
 				$statusCode = 303;
-				$locationArgs = $this->toolbox->getLocationArgsCleanUrl($this->config->get("contentPagination"));
-				$location = $this->lookup->normaliseUrl($serverScheme, $serverName, $base, $location.$locationArgs);
+				$location = $location.$this->getRequestLocationArgsClean();
+				$location = $this->lookup->normaliseUrl($serverScheme, $serverName, $base, $location);
 				$this->sendStatus($statusCode, $location);
 			}
 		} else {
@@ -184,7 +199,7 @@ class YellowCore
 		}
 		$this->page = new YellowPage($this);
 		$this->page->setRequestInformation($serverScheme, $serverName, $base, $location, $fileName);
-		$this->page->parseData($this->toolbox->getFileData($fileName), $cacheable, $statusCode, $pageError);
+		$this->page->parseData($this->toolbox->readFile($fileName), $cacheable, $statusCode, $pageError);
 		$this->text->setLanguage($this->page->get("language"));
 		$this->page->parseContent();
 		return $fileName;
@@ -229,7 +244,7 @@ class YellowCore
 			if(!$cacheable) @header("Cache-Control: no-cache, must-revalidate");
 			@header("Content-Type: ".$this->toolbox->getMimeContentType($fileName));
 			@header("Last-Modified: ".$lastModifiedFormatted);
-			echo $this->toolbox->getFileData($fileName);
+			echo $this->toolbox->readFile($fileName);
 		}
 		return $statusCode;
 	}
@@ -246,13 +261,20 @@ class YellowCore
 		}
 	}
 	
+	// Parse snippet
+	function snippet($name, $args = NULL)
+	{
+		$this->pages->snippetArgs = func_get_args();
+		$this->page->parseSnippet($name);
+	}
+	
 	// Return request information
 	function getRequestInformation($serverScheme = "", $serverName = "", $base = "")
 	{
 		$serverScheme = empty($serverScheme) ? $this->config->get("serverScheme") : $serverScheme;
 		$serverName = empty($serverName) ? $this->config->get("serverName") : $serverName;
 		$base = empty($base) ? $this->config->get("serverBase") : $base;
-		$location = $this->toolbox->getLocationClean();
+		$location = $this->toolbox->getLocation();
 		$location = substru($location, strlenu($base));
 		if(preg_match("/\.(css|js|jpg|png|txt|woff)$/", $location))
 		{
@@ -268,6 +290,12 @@ class YellowCore
 		}
 		if(empty($fileName)) $fileName = $this->lookup->findFileFromLocation($location);
 		return array($serverScheme, $serverName, $base, $location, $fileName);
+	}
+	
+	// Return request location
+	function getRequestLocationArgsClean()
+	{
+		return $this->toolbox->getLocationArgsClean($this->config->get("contentPagination"));
 	}
 	
 	// Return request language
@@ -291,7 +319,7 @@ class YellowCore
 	// Return static file from cache if available
 	function getStaticFileFromCache($location, $fileName, $cacheable, $statusCode)
 	{
-		if(PHP_SAPI != "cli" && $cacheable)
+		if(PHP_SAPI!="cli" && $cacheable)
 		{
 			if($statusCode == 200)
 			{
@@ -327,28 +355,6 @@ class YellowCore
 			$ok = $this->config->get("multiLanguageMode");
 		}
 		return $ok;
-	}
-	
-	// Execute command
-	function command($name, $args = NULL)
-	{
-		$statusCode = 0;
-		if($this->plugins->isExisting($name))
-		{
-			$plugin = $this->plugins->plugins[$name];
-			if(method_exists($plugin["obj"], "onCommand")) $statusCode = $plugin["obj"]->onCommand(func_get_args());
-		} else {
-			$statusCode = 500;
-			$this->page->error($statusCode, "Plugin '$name' does not exist!");
-		}
-		return $statusCode;
-	}
-	
-	// Execute snippet
-	function snippet($name, $args = NULL)
-	{
-		$this->pages->snippetArgs = func_get_args();
-		$this->page->parseSnippet($name);
 	}
 }
 	
@@ -418,14 +424,9 @@ class YellowPage
 	{
 		if($this->statusCode == 0)
 		{
-			$fileHandle = @fopen($this->fileName, "r");
-			if($fileHandle)
-			{
-				$this->statusCode = 200;
-				$this->rawData = fread($fileHandle, filesize($this->fileName));
-				fclose($fileHandle);
-				$this->parseMeta();
-			}
+			$this->rawData = $this->yellow->toolbox->readFile($this->fileName);
+			$this->statusCode = 200;
+			$this->parseMeta();
 		}
 	}
 	
@@ -502,7 +503,11 @@ class YellowPage
 				if(method_exists($plugin["obj"], "onParseContentRaw"))
 				{
 					$this->parser = $plugin["obj"];
-					$this->parserData = $this->parser->onParseContentRaw($this, $this->getContent(true));
+					$this->parserData = $this->getContent(true);
+					$this->parserData = preg_replace("/@pageRead/i", $this->get("pageRead"), $this->parserData);
+					$this->parserData = preg_replace("/@pageEdit/i", $this->get("pageEdit"), $this->parserData);
+					$this->parserData = preg_replace("/@pageError/i", $this->get("pageError"), $this->parserData);
+					$this->parserData = $this->parser->onParseContentRaw($this, $this->parserData);
 					foreach($this->yellow->plugins->plugins as $key=>$value)
 					{
 						if(method_exists($value["obj"], "onParseContentText"))
@@ -1210,20 +1215,11 @@ class YellowPages
 				$fileNames = $this->yellow->lookup->findChildrenFromLocation($location);
 				foreach($fileNames as $fileName)
 				{
-					$fileHandle = @fopen($fileName, "r");
-					if($fileHandle)
-					{
-						$fileData = fread($fileHandle, 4096);
-						$statusCode = filesize($fileName) <= 4096 ? 200 : 0;
-						fclose($fileHandle);
-					} else {
-						$fileData = "";
-						$statusCode = 0;
-					}
 					$page = new YellowPage($this->yellow);
 					$page->setRequestInformation($serverScheme, $serverName, $base,
 						$this->yellow->lookup->findLocationFromFile($fileName), $fileName);
-					$page->parseData($fileData, false, $statusCode);
+					$page->parseData($this->yellow->toolbox->readFile($fileName, 4096), false, 0);
+					if(strlenb($page->rawData) < 4096) $page->statusCode = 200;
 					array_push($this->pages[$location], $page);
 				}
 			}
@@ -1299,7 +1295,7 @@ class YellowPages
 		return new YellowPageCollection($this->yellow);
 	}
 	
-	// Return available languages
+	// Return languages in multi language mode
 	function getLanguages($showInvisible = false)
 	{
 		$languages = array();
@@ -1612,20 +1608,17 @@ class YellowConfig
 	// Load configuration from file
 	function load($fileName)
 	{
-		$fileData = @file($fileName);
-		if($fileData)
+		if(defined("DEBUG") && DEBUG>=2) echo "YellowConfig::load file:$fileName<br/>\n";
+		$this->modified = filemtime($fileName);
+		$fileData = $this->yellow->toolbox->readFile($fileName);
+		foreach($this->yellow->toolbox->getTextLines($fileData) as $line)
 		{
-			if(defined("DEBUG") && DEBUG>=2) echo "YellowConfig::load file:$fileName<br/>\n";
-			$this->modified = filemtime($fileName);
-			foreach($fileData as $line)
+			if(preg_match("/^\#/", $line)) continue;
+			preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
+			if(!empty($matches[1]) && !strempty($matches[2]))
 			{
-				if(preg_match("/^\#/", $line)) continue;
-				preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
-				if(!empty($matches[1]) && !strempty($matches[2]))
-				{
-					$this->set(lcfirst($matches[1]), $matches[2]);
-					if(defined("DEBUG") && DEBUG>=3) echo "YellowConfig::load ".lcfirst($matches[1]).":$matches[2]<br/>\n";
-				}
+				$this->set(lcfirst($matches[1]), $matches[2]);
+				if(defined("DEBUG") && DEBUG>=3) echo "YellowConfig::load ".lcfirst($matches[1]).":$matches[2]<br/>\n";
 			}
 		}
 	}
@@ -1712,26 +1705,22 @@ class YellowText
 		$regex = "/^".basename($fileName)."$/";
 		foreach($this->yellow->toolbox->getDirectoryEntries($path, $regex, true, false) as $entry)
 		{
-			$fileData = @file($entry);
-			if($fileData)
+			if(defined("DEBUG") && DEBUG>=2) echo "YellowText::load file:$entry<br/>\n";
+			$language = "";
+			$this->modified = max($this->modified, filemtime($entry));
+			$fileData = $this->yellow->toolbox->readFile($entry);
+			foreach($this->yellow->toolbox->getTextLines($fileData) as $line)
 			{
-				if(defined("DEBUG") && DEBUG>=2) echo "YellowText::load file:$entry<br/>\n";
-				$this->modified = max($this->modified, filemtime($entry));
-				$language = "";
-				foreach($fileData as $line)
+				if(preg_match("/^\#/", $line)) continue;
+				preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
+				if(empty($language))
 				{
-					preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
-					if(lcfirst($matches[1])=="language" && !strempty($matches[2])) { $language = $matches[2]; break; }
+					if(lcfirst($matches[1])=="language" && !strempty($matches[2])) $language = $matches[2];
 				}
-				foreach($fileData as $line)
+				if(!empty($language) && !empty($matches[1]) && !strempty($matches[2]))
 				{
-					if(preg_match("/^\#/", $line)) continue;
-					preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
-					if(!empty($language) && !empty($matches[1]) && !strempty($matches[2]))
-					{
-						$this->setText(lcfirst($matches[1]), $matches[2], $language);
-						if(defined("DEBUG") && DEBUG>=3) echo "YellowText::load ".lcfirst($matches[1]).":$matches[2]<br/>\n";
-					}
+					$this->setText(lcfirst($matches[1]), $matches[2], $language);
+					if(defined("DEBUG") && DEBUG>=3) echo "YellowText::load ".lcfirst($matches[1]).":$matches[2]<br/>\n";
 				}
 			}
 		}
@@ -1787,7 +1776,6 @@ class YellowText
 			} else {
 				foreach($this->text[$language] as $key=>$value)
 				{
-					if(substru($key, 0, strlenu("language")) == "language") $text[$key] = $value;
 					if(substru($key, 0, strlenu($filterStart)) == $filterStart) $text[$key] = $value;
 				}
 			}
@@ -1807,6 +1795,14 @@ class YellowText
 		$format = preg_replace("/(?<!\\\)D/", addcslashes(substru($weekday, 0, 3), 'A..Za..z'), $format);
 		$format = preg_replace("/(?<!\\\)l/", addcslashes($weekday, 'A..Za..z'), $format);
 		return date($format, $timestamp);
+	}
+	
+	// Return languages
+	function getLanguages()
+	{
+		$languages = array();
+		foreach($this->text as $key=>$value) array_push($languages, $key);
+		return $languages;
 	}
 	
 	// Return text modification date, Unix time or HTTP format
@@ -2125,6 +2121,7 @@ class YellowLookup
 				} else if(!preg_match("#^$pageBase#", $location)) {
 					$location = $pageBase.$location;
 				}
+				$location = strreplaceu(':', $this->yellow->toolbox->getLocationArgsSeparator(), $location);
 			}
 		} else {
 			if($filterStrict && !preg_match("/^(http|https|ftp|mailto):/", $location)) $location = "error-xss-filter";
@@ -2280,52 +2277,52 @@ class YellowToolbox
 	}
 	
 	// Return location from current HTTP request
-	function getLocation()
+	function getLocation($filterStrict = true)
 	{
-		$uri = $_SERVER["REQUEST_URI"];
-		return rawurldecode(($pos = strposu($uri, '?')) ? substru($uri, 0, $pos) : $uri);
-	}
-	
-	// Return location from current HTTP request, remove unwanted path tokens
-	function getLocationClean()
-	{
-		$string = $this->getLocation();
-		$location = ($string[0]=='/') ? '' : '/';
-		for($pos=0; $pos<strlenb($string); ++$pos)
+		$location = $_SERVER["REQUEST_URI"];
+		$location = rawurldecode(($pos = strposu($location, '?')) ? substru($location, 0, $pos) : $location);
+		if($filterStrict)
 		{
-			if($string[$pos] == '/')
+			$locationFiltered = "";
+			if($location[0] != '/') $location = '/'.$location;
+			for($pos=0; $pos<strlenb($location); ++$pos)
 			{
-				if($string[$pos+1] == '/') continue;
-				if($string[$pos+1] == '.')
+				if($location[$pos] == '/')
 				{
-					$posNew = $pos+1; while($string[$posNew] == '.') ++$posNew;
-					if($string[$posNew]=='/' || $string[$posNew]=='')
+					if($location[$pos+1] == '/') continue;
+					if($location[$pos+1] == '.')
 					{
-						$pos = $posNew-1;
-						continue;
+						$posNew = $pos+1; while($location[$posNew] == '.') ++$posNew;
+						if($location[$posNew]=='/' || $location[$posNew]=='')
+						{
+							$pos = $posNew-1;
+							continue;
+						}
 					}
 				}
+				$locationFiltered .= $location[$pos];
 			}
-			$location .= $string[$pos];
-		}
-		if(preg_match("/^(.*?\/)([^\/]+:.*)$/", $location, $matches))
-		{
-			$_SERVER["LOCATION"] = $location = $matches[1];
-			$_SERVER["LOCATION_ARGS"] = $matches[2];
-			foreach(explode('/', $matches[2]) as $token)
+			$location = $locationFiltered;
+			$separator = $this->getLocationArgsSeparator();
+			if(preg_match("/^(.*?\/)([^\/]+$separator.*)$/", $location, $matches))
 			{
-				preg_match("/^(.*?):(.*)$/", $token, $matches);
-				if(!empty($matches[1]) && !strempty($matches[2]))
+				$_SERVER["LOCATION"] = $location = $matches[1];
+				$_SERVER["LOCATION_ARGS"] = $matches[2];
+				foreach(explode('/', $matches[2]) as $token)
 				{
-					$matches[1] = strreplaceu(array("\x1c", "\x1d"), array('/', ':'), $matches[1]);
-					$matches[2] = strreplaceu(array("\x1c", "\x1d"), array('/', ':'), $matches[2]);
-					$_REQUEST[$matches[1]] = $matches[2];
+					preg_match("/^(.*?)$separator(.*)$/", $token, $matches);
+					if(!empty($matches[1]) && !strempty($matches[2]))
+					{
+						$matches[1] = strreplaceu(array("\x1c", "\x1d", "\x1e"), array('/', ':', '='), $matches[1]);
+						$matches[2] = strreplaceu(array("\x1c", "\x1d", "\x1e"), array('/', ':', '='), $matches[2]);
+						$_REQUEST[$matches[1]] = $matches[2];
+					}
 				}
+			} else {
+				$_SERVER["LOCATION"] = $location;
+				$_SERVER["LOCATION_ARGS"] = "";
 			}
-		} else {
-			$_SERVER["LOCATION"] = $location;
-			$_SERVER["LOCATION_ARGS"] = "";
-		}		
+		}
 		return $location;
 	}
 	
@@ -2335,13 +2332,14 @@ class YellowToolbox
 		return $_SERVER["LOCATION_ARGS"];
 	}
 	
-	// Return location arguments from current HTTP request, modify an argument
+	// Return location arguments from current HTTP request, modify existing arguments
 	function getLocationArgsNew($arg, $pagination)
 	{
+		$separator = $this->getLocationArgsSeparator();
 		preg_match("/^(.*?):(.*)$/", $arg, $args);
 		foreach(explode('/', $_SERVER["LOCATION_ARGS"]) as $token)
 		{
-			preg_match("/^(.*?):(.*)$/", $token, $matches);
+			preg_match("/^(.*?)$separator(.*)$/", $token, $matches);
 			if($matches[1] == $args[1]) { $matches[2] = $args[2]; $found = true; }
 			if(!empty($matches[1]) && !strempty($matches[2]))
 			{
@@ -2356,43 +2354,51 @@ class YellowToolbox
 		}
 		if(!empty($locationArgs))
 		{
-			if(!$this->isLocationArgsPagination($locationArgs, $pagination)) $locationArgs .= '/';
 			$locationArgs = $this->normaliseArgs($locationArgs, false, false);
+			if(!$this->isLocationArgsPagination($locationArgs, $pagination)) $locationArgs .= '/';
 		}
 		return $locationArgs;
 	}
 	
-	// Return location arguments from current HTTP request, convert form into clean URL
-	function getLocationArgsCleanUrl($pagination)
+	// Return location arguments from current HTTP request, convert form parameters
+	function getLocationArgsClean($pagination)
 	{
 		foreach(array_merge($_GET, $_POST) as $key=>$value)
 		{
 			if(!empty($key) && !strempty($value))
 			{
 				if(!empty($locationArgs)) $locationArgs .= '/';
-				$key = strreplaceu(array('/', ':'), array("\x1c", "\x1d"), $key);
-				$value = strreplaceu(array('/', ':'), array("\x1c", "\x1d"), $value);
+				$key = strreplaceu(array('/', ':', '='), array("\x1c", "\x1d", "\x1e"), $key);
+				$value = strreplaceu(array('/', ':', '='), array("\x1c", "\x1d", "\x1e"), $value);
 				$locationArgs .= "$key:$value";
 			}
 		}
 		if(!empty($locationArgs))
 		{
-			if(!$this->isLocationArgsPagination($locationArgs, $pagination)) $locationArgs .= '/';
 			$locationArgs = $this->normaliseArgs($locationArgs, false, false);
+			if(!$this->isLocationArgsPagination($locationArgs, $pagination)) $locationArgs .= '/';
 		}
 		return $locationArgs;
+	}
+
+	// Return location arguments separator
+	function getLocationArgsSeparator()
+	{
+		return (strtoupperu(substru(PHP_OS, 0, 3)) != "WIN") ? ':' : '=';
 	}
 	
 	// Check if location contains location arguments
 	function isLocationArgs($location)
 	{
-		return preg_match("/[^\/]+:.*$/", $location);
+		$separator = $this->getLocationArgsSeparator();
+		return preg_match("/[^\/]+$separator.*$/", $location);
 	}
 	
 	// Check if location contains pagination arguments
 	function isLocationArgsPagination($location, $pagination)
 	{
-		return preg_match("/^(.*\/)?$pagination:.*$/", $location);
+		$separator = $this->getLocationArgsSeparator();
+		return preg_match("/^(.*\/)?$pagination$separator.*$/", $location);
 	}
 
 	// Check if script location is requested
@@ -2429,7 +2435,8 @@ class YellowToolbox
 	{
 		if($appendSlash) $text .= '/';
 		if($filterStrict) $text = strreplaceu(' ', '-', strtoloweru($text));
-		return strreplaceu(array('%3A','%2F'), array(':','/'), rawurlencode($text));
+		$text = strreplaceu(':', $this->getLocationArgsSeparator(), $text);
+		return strreplaceu(array('%2F','%3A','%3D'), array('/',':','='), rawurlencode($text));
 	}
 	
 	// Normalise text into UTF-8 NFC
@@ -2610,7 +2617,7 @@ class YellowToolbox
 			$path = dirname($fileName);
 			if(!empty($path) && !is_dir($path)) @mkdir($path, 0777, true);
 		}
-		$fileHandle = @fopen($fileName, "w");
+		$fileHandle = @fopen($fileName, "wb");
 		if($fileHandle)
 		{
 			fwrite($fileHandle, $fileData);

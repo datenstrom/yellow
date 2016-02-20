@@ -1,11 +1,11 @@
 <?php
-// Copyright (c) 2013-2015 Datenstrom, http://datenstrom.se
+// Copyright (c) 2013-2016 Datenstrom, http://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 // Markdown plugin
 class YellowMarkdown
 {
-	const Version = "0.6.1";
+	const Version = "0.6.2";
 	var $yellow;			//access to API
 	
 	// Handle initialisation
@@ -42,16 +42,6 @@ class YellowMarkdownParser extends MarkdownExtraParser
 				$page->parserSafeMode && $page->statusCode==200);
 		};
 		parent::__construct();
-	}
-	
-	// Transform text
-	function transform($text)
-	{
-		$text = preg_replace("/@pageRead/i", $this->page->get("pageRead"), $text);
-		$text = preg_replace("/@pageEdit/i", $this->page->get("pageEdit"), $text);
-		$text = preg_replace("/@pageError/i", $this->page->get("pageError"), $text);
-		$text = preg_replace("/@pageFile/i", $this->page->get("pageFile"), $text);
-		return parent::transform($text);
 	}
 
 	// Return unique id attribute
@@ -209,7 +199,7 @@ class MarkdownParser {
 
 	### Version ###
 
-	const  MARKDOWNLIB_VERSION  =  "1.5.0";
+	const  MARKDOWNLIB_VERSION  =  "1.6.0";
 
 	### Simple Function Interface ###
 
@@ -1818,6 +1808,11 @@ class MarkdownExtraParser extends MarkdownParser {
 	public $fn_link_class = "footnote-ref";
 	public $fn_backlink_class = "footnote-backref";
 
+	# Content to be displayed within footnote backlinks. The default is '↩';
+	# the U+FE0E on the end is a Unicode variant selector used to prevent iOS
+	# from displaying the arrow character as an emoji.
+	public $fn_backlink_html = '&#8617;&#xFE0E;';
+
 	# Class name for table cell alignment (%% replaced left/center/right)
 	# For instance: 'go-%%' becomes 'go-left' or 'go-right' or 'go-center'
 	# If empty, the align attribute is used instead of a class name.
@@ -1917,9 +1912,9 @@ class MarkdownExtraParser extends MarkdownParser {
 	### Extra Attribute Parser ###
 
 	# Expression to use to catch attributes (includes the braces)
-	protected $id_class_attr_catch_re = '\{((?:[ ]*[#.a-z][-_:a-zA-Z0-9=]+){1,})[ ]*\}';
+	protected $id_class_attr_catch_re = '\{((?>[ ]*[#.a-z][-_:a-zA-Z0-9=]+){1,})[ ]*\}';
 	# Expression to use when parsing in a context when no capture is desired
-	protected $id_class_attr_nocatch_re = '\{(?:[ ]*[#.a-z][-_:a-zA-Z0-9=]+){1,}[ ]*\}';
+	protected $id_class_attr_nocatch_re = '\{(?>[ ]*[#.a-z][-_:a-zA-Z0-9=]+){1,}[ ]*\}';
 
 	protected function doExtraAttributes($tag_name, $attr, $defaultIdValue = null, $classes = array()) {
 	#
@@ -3261,6 +3256,7 @@ class MarkdownExtraParser extends MarkdownParser {
 				$title = $this->encodeAttribute($title);
 				$attr .= " title=\"$title\"";
 			}
+			$backlink_text = $this->fn_backlink_html;
 			$num = 0;
 			
 			while (!empty($this->footnotes_ordered)) {
@@ -3280,9 +3276,9 @@ class MarkdownExtraParser extends MarkdownParser {
 				$note_id = $this->encodeAttribute($note_id);
 
 				# Prepare backlink, multiple backlinks if multiple references
-				$backlink = "<a href=\"#fnref:$note_id\"$attr>&#8617;</a>";
+				$backlink = "<a href=\"#fnref:$note_id\"$attr>$backlink_text</a>";
 				for ($ref_num = 2; $ref_num <= $ref_count; ++$ref_num) {
-					$backlink .= " <a href=\"#fnref$ref_num:$note_id\"$attr>&#8617;</a>";
+					$backlink .= " <a href=\"#fnref$ref_num:$note_id\"$attr>$backlink_text</a>";
 				}
 				# Add backlink to last paragraph; create new paragraph if needed.
 				if (preg_match('{</p>$}', $footnote)) {

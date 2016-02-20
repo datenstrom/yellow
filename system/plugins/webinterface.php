@@ -1,11 +1,11 @@
 <?php
-// Copyright (c) 2013-2015 Datenstrom, http://datenstrom.se
+// Copyright (c) 2013-2016 Datenstrom, http://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 // Web interface plugin
 class YellowWebinterface
 {
-	const Version = "0.6.3";
+	const Version = "0.6.4";
 	var $yellow;				//access to API
 	var $active;				//web interface is active? (boolean)
 	var $userLoginFailed;		//web interface login failed? (boolean)
@@ -21,9 +21,9 @@ class YellowWebinterface
 		$this->yellow = $yellow;
 		$this->users = new YellowUsers($yellow);
 		$this->merge = new YellowMerge($yellow);
-		$this->yellow->config->setDefault("webinterfaceLocation", "/edit/");
 		$this->yellow->config->setDefault("webinterfaceServerScheme", $this->yellow->config->get("serverScheme"));
 		$this->yellow->config->setDefault("webinterfaceServerName", $this->yellow->config->get("serverName"));
+		$this->yellow->config->setDefault("webinterfaceLocation", "/edit/");
 		$this->yellow->config->setDefault("webinterfaceUserHashAlgorithm", "bcrypt");
 		$this->yellow->config->setDefault("webinterfaceUserHashCost", "10");
 		$this->yellow->config->setDefault("webinterfaceUserHome", "/");
@@ -67,7 +67,7 @@ class YellowWebinterface
 				if($page->statusCode == 424)
 				{
 					$title = $this->yellow->toolbox->createTextTitle($page->location);
-					$this->rawDataEdit = $this->getDataNew($title);
+					$this->rawDataEdit = $this->getRawDataNew($title);
 				}
 			}
 		}
@@ -99,21 +99,9 @@ class YellowWebinterface
 				$output .= "<script type=\"text/javascript\" src=\"".htmlspecialchars($location).".js\"></script>\n";
 				$output .= "<script type=\"text/javascript\">\n";
 				$output .= "// <![CDATA[\n";
-				if($this->isUser())
-				{
-					$output .= "yellow.page.title = ".json_encode($this->getDataTitle($this->rawDataEdit)).";\n";
-					$output .= "yellow.page.rawDataSource = ".json_encode($this->rawDataSource).";\n";
-					$output .= "yellow.page.rawDataEdit = ".json_encode($this->rawDataEdit).";\n";
-					$output .= "yellow.page.rawDataNew = ".json_encode($this->getDataNew()).";\n";
-					$output .= "yellow.page.pageFile = ".json_encode($this->yellow->page->get("pageFile")).";\n";
-					$output .= "yellow.page.userPermission = ".json_encode($this->userPermission).";\n";
-					$output .= "yellow.page.parserSafeMode = ".json_encode($this->yellow->page->parserSafeMode).";\n";
-					$output .= "yellow.page.statusCode = ".json_encode($this->yellow->page->statusCode).";\n";
-				}
-				$output .= "yellow.config = ".json_encode($this->getDataConfig()).";\n";
-				$language = $this->isUser() ? $this->users->getLanguage() : $this->yellow->page->get("language");
-				if(!$this->yellow->text->isLanguage($language)) $language = $this->yellow->config->get("language");
-				$output .= "yellow.text = ".json_encode($this->yellow->text->getData("webinterface", $language)).";\n";
+				$output .= "yellow.page = ".json_encode($this->getPageData()).";\n";
+				$output .= "yellow.config = ".json_encode($this->getConfigData()).";\n";
+				$output .= "yellow.text = ".json_encode($this->getTextData()).";\n";
 				if(defined("DEBUG") && DEBUG>=1) $output .= "yellow.debug = ".json_encode(DEBUG).";\n";
 				$output .= "// ]]>\n";
 				$output .= "</script>\n";
@@ -260,7 +248,7 @@ class YellowWebinterface
 			$this->rawDataSource = rawurldecode($_POST["rawdatasource"]);
 			$this->rawDataEdit = rawurldecode($_POST["rawdataedit"]);
 			$page = $this->getPageUpdate($serverScheme, $serverName, $base, $location, $fileName,
-				$this->rawDataSource, $this->rawDataEdit, $this->yellow->toolbox->getFileData($fileName));
+				$this->rawDataSource, $this->rawDataEdit, $this->yellow->toolbox->readFile($fileName));
 			if(!$page->isError())
 			{
 				if($this->yellow->toolbox->renameFile($fileName, $page->fileName) &&
@@ -511,14 +499,14 @@ class YellowWebinterface
 		return $page;
 	}
 	
-	// Return content data for new page
-	function getDataNew($title = "")
+	// Return raw data for new page
+	function getRawDataNew($title = "")
 	{
 		$fileName = $this->yellow->lookup->findFileFromLocation($this->yellow->page->location);
 		$fileName = $this->yellow->lookup->findFileNew($fileName,
 			$this->yellow->config->get("webinterfaceNewFile"), $this->yellow->config->get("configDir"),
 			$this->yellow->config->get("template"));
-		$fileData = $this->yellow->toolbox->getFileData($fileName);
+		$fileData = $this->yellow->toolbox->readFile($fileName);
 		$fileData = preg_replace("/@datetime/i", date("Y-m-d H:i:s"), $fileData);
 		$fileData = preg_replace("/@date/i", date("Y-m-d"), $fileData);
 		$fileData = preg_replace("/@username/i", $this->users->getName(), $fileData);
@@ -527,8 +515,26 @@ class YellowWebinterface
 		return $fileData;
 	}
 	
-	// Return configuration data including information of current user
-	function getDataConfig()
+	// Return page data including webinterface information
+	function getPageData()
+	{
+		$data = array();
+		if($this->isUser())
+		{
+			$data["title"] = $this->getDataTitle($this->rawDataEdit);
+			$data["rawDataSource"] = $this->rawDataSource;
+			$data["rawDataEdit"] = $this->rawDataEdit;
+			$data["rawDataNew"] = $this->getRawDataNew();
+			$data["userPermission"] = $this->userPermission;
+			$data["pageFile"] = $this->yellow->page->get("pageFile");
+			$data["parserSafeMode"] = $this->yellow->page->parserSafeMode;
+			$data["statusCode"] = $this->yellow->page->statusCode;
+		}
+		return $data;
+	}
+	
+	// Return configuration data including user information
+	function getConfigData()
 	{
 		$data = $this->yellow->config->getData("", "Location");
 		if($this->isUser())
@@ -541,12 +547,25 @@ class YellowWebinterface
 			$data["serverScheme"] = $this->yellow->config->get("serverScheme");
 			$data["serverName"] = $this->yellow->config->get("serverName");
 			$data["serverBase"] = $this->yellow->config->get("serverBase");
+			$data["serverTime"] = $this->yellow->config->get("serverTime");
+			$data["serverLanguages"] = $this->yellow->text->getLanguages();
 		} else {
 			$data["login"] = $this->yellow->page->statusCode==200;
 			$data["loginEmail"] = $this->yellow->config->get("loginEmail");
 			$data["loginPassword"] = $this->yellow->config->get("loginPassword");
 		}
 		return $data;
+	}
+	
+	// Return text strings
+	function getTextData()
+	{
+		$language = $this->isUser() ? $this->users->getLanguage() : $this->yellow->page->get("language");
+		if(!$this->yellow->text->isLanguage($language)) $language = $this->yellow->config->get("language");
+		$textLanguage = array_merge($this->yellow->text->getData("language", $language));
+		$textWebinterface = array_merge($this->yellow->text->getData("webinterface", $language));
+		$textYellow = array_merge($this->yellow->text->getData("yellow", $language));
+		return array_merge($textLanguage, $textWebinterface, $textYellow);
 	}
 	
 	// Check if web interface request
@@ -576,22 +595,19 @@ class YellowUsers
 	}
 
 	// Load users from file
-	function load($fileName) 
+	function load($fileName)
 	{
-		$fileData = @file($fileName);
-		if($fileData)
+		if(defined("DEBUG") && DEBUG>=2) echo "YellowUsers::load file:$fileName<br/>\n";
+		$fileData = $this->yellow->toolbox->readFile($fileName);
+		foreach($this->yellow->toolbox->getTextLines($fileData) as $line)
 		{
-			if(defined("DEBUG") && DEBUG>=2) echo "YellowUsers::load file:$fileName<br/>\n";
-			foreach($fileData as $line)
+			if(preg_match("/^\#/", $line)) continue;
+			preg_match("/^(.*?)\s*:\s*(.*?),\s*(.*?),\s*(.*?),\s*(.*?),\s*(.*?)\s*$/", $line, $matches);
+			if(!empty($matches[1]) && !empty($matches[2]) && !empty($matches[3]) && !empty($matches[4]) &&
+			   !empty($matches[5]) && !empty($matches[6]))
 			{
-				if(preg_match("/^\#/", $line)) continue;
-				preg_match("/^(.*?)\s*:\s*(.*?),\s*(.*?),\s*(.*?),\s*(.*?),\s*(.*?)\s*$/", $line, $matches);
-				if(!empty($matches[1]) && !empty($matches[2]) && !empty($matches[3]) && !empty($matches[4]) &&
-				   !empty($matches[5]) && !empty($matches[6]))
-				{
-					$this->set($matches[1], $matches[2], $matches[3], $matches[4], $matches[5], $matches[6]);
-					if(defined("DEBUG") && DEBUG>=3) echo "YellowUsers::load email:$matches[1]<br/>\n";
-				}
+				$this->set($matches[1], $matches[2], $matches[3], $matches[4], $matches[5], $matches[6]);
+				if(defined("DEBUG") && DEBUG>=3) echo "YellowUsers::load email:$matches[1]<br/>\n";
 			}
 		}
 	}
@@ -613,28 +629,25 @@ class YellowUsers
 	{
 		$email = strreplaceu(',', '-', $email);
 		$hash = strreplaceu(',', '-', $hash);
-		$fileData = @file($fileName);
-		if($fileData)
+		$fileData = $this->yellow->toolbox->readFile($fileName);
+		foreach($this->yellow->toolbox->getTextLines($fileData) as $line)
 		{
-			foreach($fileData as $line)
+			preg_match("/^(.*?)\s*:\s*(.*?),\s*(.*?),\s*(.*?),\s*(.*?),\s*(.*?)\s*$/", $line, $matches);
+			if(!empty($matches[1]) && !empty($matches[2]) && !empty($matches[3]) && !empty($matches[4]) &&
+			   !empty($matches[5]) && !empty($matches[6]))
 			{
-				preg_match("/^(.*?)\s*:\s*(.*?),\s*(.*?),\s*(.*?),\s*(.*?),\s*(.*?)\s*$/", $line, $matches);
-				if(!empty($matches[1]) && !empty($matches[2]) && !empty($matches[3]) && !empty($matches[4]) &&
-				   !empty($matches[5]) && !empty($matches[6]))
+				if($matches[1] == $email)
 				{
-					if($matches[1] == $email)
-					{
-						$name = strreplaceu(',', '-', empty($name) ? $matches[3] : $name);
-						$language = strreplaceu(',', '-', empty($language) ? $matches[4] : $language);
-						$status = strreplaceu(',', '-', empty($status) ? $matches[5] : $status);
-						$home = strreplaceu(',', '-', empty($home) ? $matches[6] : $home);
-						$fileDataNew .= "$email: $hash,$name,$language,$status,$home\n";
-						$found = true;
-						continue;
-					}
+					$name = strreplaceu(',', '-', empty($name) ? $matches[3] : $name);
+					$language = strreplaceu(',', '-', empty($language) ? $matches[4] : $language);
+					$status = strreplaceu(',', '-', empty($status) ? $matches[5] : $status);
+					$home = strreplaceu(',', '-', empty($home) ? $matches[6] : $home);
+					$fileDataNew .= "$email: $hash,$name,$language,$status,$home\n";
+					$found = true;
+					continue;
 				}
-				$fileDataNew .= $line;
 			}
+			$fileDataNew .= $line;
 		}
 		if(!$found)
 		{
@@ -661,7 +674,6 @@ class YellowUsers
 		if($this->isExisting($email))
 		{
 			$serverScheme = $this->yellow->config->get("webinterfaceServerScheme");
-			$serverName = $this->yellow->config->get("webinterfaceServerName");
 			$location = $this->yellow->config->get("serverBase").$this->yellow->config->get("webinterfaceLocation");
 			$session = $this->yellow->toolbox->createHash($this->users[$email]["hash"], "sha256");
 			if(empty($session)) $session = "error-hash-algorithm-sha256";
@@ -673,7 +685,6 @@ class YellowUsers
 	function destroyCookie($cookieName)
 	{
 		$serverScheme = $this->yellow->config->get("webinterfaceServerScheme");
-		$serverName = $this->yellow->config->get("webinterfaceServerName");
 		$location = $this->yellow->config->get("serverBase").$this->yellow->config->get("webinterfaceLocation");
 		setcookie($cookieName, "", time()-3600, $location, "", $serverScheme=="https");
 	}
