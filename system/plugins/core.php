@@ -771,28 +771,34 @@ class YellowPage
 	function getExtra($name)
 	{
 		$output = "";
-		if($name == "header")
-		{
-			if(is_file($this->yellow->config->get("themeDir").$this->get("theme").".css"))
-			{
-				$location = $this->yellow->config->get("serverBase").
-					$this->yellow->config->get("themeLocation").$this->get("theme").".css";
-				$output .= "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"".htmlspecialchars($location)."\" />\n";
-			}
-			if(is_file($this->yellow->config->get("imageDir").$this->yellow->config->get("iconFile")))
-			{
-				$location = $this->yellow->config->get("serverBase").
-					$this->yellow->config->get("imageLocation").$this->yellow->config->get("iconFile");
-				$contentType = $this->yellow->toolbox->getMimeContentType($this->yellow->config->get("iconFile"));
-				$output .= "<link rel=\"shortcut icon\" type=\"$contentType\" href=\"".htmlspecialchars($location)."\" />\n";
-			}
-		}
 		foreach($this->yellow->plugins->plugins as $key=>$value)
 		{
 			if(method_exists($value["obj"], "onExtra"))
 			{
 				$outputPlugin = $value["obj"]->onExtra($name);
 				if(!is_null($outputPlugin)) $output .= $outputPlugin;
+			}
+		}
+		if($name == "header")
+		{
+			if(is_file($this->yellow->config->get("themeDir").$this->get("theme").".css"))
+			{
+				$location = $this->yellow->config->get("serverBase").
+				$this->yellow->config->get("themeLocation").$this->get("theme").".css";
+				$output .= "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"".htmlspecialchars($location)."\" />\n";
+			}
+			if(is_file($this->yellow->config->get("themeDir").$this->get("theme").".js"))
+			{
+				$location = $this->yellow->config->get("serverBase").
+				$this->yellow->config->get("themeLocation").$this->get("theme").".js";
+				$output .= "<script type=\"text/javascript\" src=\"".htmlspecialchars($location)."\"></script>\n";
+			}
+			if(is_file($this->yellow->config->get("imageDir").$this->yellow->config->get("iconFile")))
+			{
+				$location = $this->yellow->config->get("serverBase").
+				$this->yellow->config->get("imageLocation").$this->yellow->config->get("iconFile");
+				$contentType = $this->yellow->toolbox->getMimeContentType($this->yellow->config->get("iconFile"));
+				$output .= "<link rel=\"shortcut icon\" type=\"$contentType\" href=\"".htmlspecialchars($location)."\" />\n";
 			}
 		}
 		return $this->normaliseExtra($output);
@@ -2571,12 +2577,6 @@ class YellowToolbox
 		return @rmdir($path);
 	}
 	
-	// Return file data, empty string if not found
-	function getFileData($fileName)
-	{
-		return is_readable($fileName) ? file_get_contents($fileName) : "";
-	}
-
 	// Return file extension
 	function getFileExtension($fileName)
 	{
@@ -2620,7 +2620,12 @@ class YellowToolbox
 		$fileHandle = @fopen($fileName, "wb");
 		if($fileHandle)
 		{
-			fwrite($fileHandle, $fileData);
+			if(flock($fileHandle, LOCK_EX))
+			{
+				ftruncate($fileHandle, 0);
+				fwrite($fileHandle, $fileData);
+				flock($fileHandle, LOCK_UN);
+			}
 			fclose($fileHandle);
 			$ok = true;
 		}
