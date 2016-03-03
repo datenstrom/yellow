@@ -469,6 +469,7 @@ class YellowPage
 			if(!$this->isExisting("titleHeader")) $this->set("titleHeader", $titleHeader);
 			if(!$this->isExisting("titleNavigation")) $this->set("titleNavigation", $this->get("title"));
 			if($this->get("titleContent") == "-") $this->set("titleContent", "");
+			if($this->get("status") == "hidden") $this->available = false;
 			$this->set("pageRead", $this->yellow->lookup->normaliseUrl(
 				$this->yellow->config->get("serverScheme"),
 				$this->yellow->config->get("serverName"),
@@ -479,11 +480,11 @@ class YellowPage
 				$this->yellow->config->get("serverBase"),
 				rtrim($this->yellow->config->get("webinterfaceLocation"), '/').$this->location));
 			$this->set("pageFile", $this->yellow->lookup->normaliseFile($this->fileName));
-			if($this->get("status") == "hidden") $this->available = false;
+			$this->set("pageType", $this->yellow->toolbox->getFileExtension($this->fileName));
 		} else {
-			$this->set("type", $this->yellow->toolbox->getFileExtension($this->fileName));
 			$this->set("modified", date("Y-m-d H:i:s", $this->yellow->toolbox->getFileModified($this->fileName)));
 			$this->set("pageFile", $this->yellow->lookup->normaliseFile($this->fileName, true));
+			$this->set("pageType", $this->yellow->toolbox->getFileExtension($this->fileName));
 		}
 		if(!empty($pageError)) $this->set("pageError", $pageError);
 		foreach($this->yellow->plugins->plugins as $key=>$value)
