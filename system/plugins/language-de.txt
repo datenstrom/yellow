@@ -3,7 +3,7 @@
 Language: de
 LanguageDescription: Deutsch
 LanguageAuthor: David Fehrmann
-LanguageVersion: 0.6.1
+LanguageVersion: 0.6.2
 
 BlogBy: von
 BlogFilter: Blog:
@@ -43,8 +43,8 @@ WebinterfaceDelete: -
 WebinterfaceCreateTitle: Neue Seite
 WebinterfaceDeleteTitle: Seite löschen
 WebinterfaceUserHelp: Hilfe
-WebinterfaceUserHelpUrl: https://github.com/datenstrom/yellow/wiki/Home-de
-WebinterfaceUserAccountUrl: https://github.com/datenstrom/yellow/wiki/How-to-add-a-user-account
+WebinterfaceUserHelpUrl: http://developers.datenstrom.se/help/help-de
+WebinterfaceUserAccountUrl: http://developers.datenstrom.se/help/how-to-add-a-user-account-de
 WebinterfaceUserLogout: Abmelden
 WikiFilter: Wiki:
 WikiTag: Tags:

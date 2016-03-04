@@ -3,7 +3,7 @@
 Language: fr
 LanguageDescription: Français
 LanguageAuthor: Juh Nibreh
-LanguageVersion: 0.6.1
+LanguageVersion: 0.6.2
 
 BlogBy: par
 BlogFilter: Blog:
@@ -43,8 +43,8 @@ WebinterfaceDelete: -
 WebinterfaceCreateTitle: Nouvelle page
 WebinterfaceDeleteTitle: Supprimer page
 WebinterfaceUserHelp: Aide
-WebinterfaceUserHelpUrl: https://github.com/datenstrom/yellow/wiki/Home-fr
-WebinterfaceUserAccountUrl: https://github.com/datenstrom/yellow/wiki/How-to-add-a-user-account
+WebinterfaceUserHelpUrl: http://developers.datenstrom.se/help/help-fr
+WebinterfaceUserAccountUrl: http://developers.datenstrom.se/help/how-to-add-a-user-account-fr
 WebinterfaceUserLogout: Déconnexion
 WikiFilter: Wiki:
 WikiTag: Tags:

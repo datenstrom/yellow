@@ -1,4 +1,4 @@
-/* Flatsite theme 0.6.1 */
+/* Flatsite theme 0.6.3 */
 /* Designer: Mark Mayberg */
 
 @import url(https://fonts.googleapis.com/css?family=Open+Sans:300,400,700);
@@ -22,8 +22,9 @@ a, img { border:none; text-decoration:none; }
 .sitename { display:block; float:left; }
 .sitename h1 { margin:0; }
 .sitename h1 a { color:#111; text-decoration:none; }
-.with-sidebar .main { margin-right:13em; }
-.with-sidebar .sidebar { float:right; width:12em; margin-top:4.3em; overflow:hidden; }
+.with-sidebar .main { margin-right:17em; }
+.with-sidebar .sidebar { float:right; width:14em; margin-top:4.3em; overflow:hidden; }
+.with-sidebar .sidebar { float:right; width:16em; margin-top:5em; overflow:hidden; font-size:0.9em; }
 .content h1:first-child, .content>*:first-child { margin-top:0; }
 .content h1 a:hover { text-decoration:none; }
 .content img { max-width:100%; height:auto; }
@@ -31,15 +32,19 @@ a, img { border:none; text-decoration:none; }
 .content table { border-spacing:0; border-collapse:collapse; }
 .content th { text-align:left; padding:0.3em; border-bottom:1px solid #ddd;}
 .content td { text-align:left; padding:0.3em; border-top:1px solid #ddd;}
-.content .flexible { position:relative; padding-bottom:56.25%; padding-top:30px; }
+.content .flexible { position:relative; padding-top:0; padding-bottom:56.25%; }
 .content .flexible iframe { position:absolute; top:0; left:0; width:100%; height:100%; }
 .content .toc { margin:0; padding:0; list-style:none; }
 .content .pagination { margin:1em 0; }
-.content code { border:1px solid #ddd; border-radius:3px; padding:0 0.5em; }
-.content pre>code { border:none; padding:0; }
-.content pre { overflow:auto; }
-.content .fourpages { margin:0; padding:0; list-style:none; width:100%; }
-.content .fourpages li { padding-bottom:1em; text-align:center; vertical-align:top; display:inline-block; width:24%; }
+.content blockquote { margin-left:0; padding-left:1em; border-left:.5em solid #0a0; }
+.content blockquote blockquote { margin-left:-1.5em; border-left:.5em solid #fb0; }
+.content blockquote blockquote blockquote { border-color:#d00; }
+.content code, pre { font-family:Consolas,"Liberation Mono",Menlo,Courier,monospace; font-size:90%;}
+.content code { padding:0.15em 0.4em; margin:0; background-color:#f7f7f7; border-radius:3px; }
+.content pre>code { padding:0; margin:0; white-space:pre; background:transparent; border:0; font-size:inherit; }
+.content pre { padding:1em; overflow:auto; line-height:1.45; background-color:#f7f7f7; border-radius:3px; }
+.content .threepages { margin:0; padding:0; list-style:none; width:100%; }
+.content .threepages li { padding-bottom:1em; text-align:center; vertical-align:top; display:inline-block; width:32%; }
 .footer { margin-top:2em; clear:both; }
 .footer a { color:#07d; }
 .footer a:hover { color:#07d; text-decoration:underline; }
@@ -122,7 +127,7 @@ a, img { border:none; text-decoration:none; }
 	.sitename h1, h1, h2 { font-size:1.2em; }
 	.sitename h1, .header, .navigation, .footer, .page { margin:0; padding:0; }
 	.sitename, .navigation, .navigation-tree { float:none; }
-	.navigation-search { padding-top: 0.5em; }
+	.navigation-search { padding-top:0.5em; }
 	.with-sidebar .main { margin-right:0em; }
 	.with-sidebar .sidebar { display:none; }
 }

@@ -3,7 +3,7 @@
 Language: en
 LanguageDescription: English
 LanguageAuthor: Mark Seuffert
-LanguageVersion: 0.6.1
+LanguageVersion: 0.6.2
 
 BlogBy: by
 BlogFilter: Blog:
@@ -43,8 +43,8 @@ WebinterfaceDelete: -
 WebinterfaceCreateTitle: New page
 WebinterfaceDeleteTitle: Delete page
 WebinterfaceUserHelp: Help
-WebinterfaceUserHelpUrl: https://github.com/datenstrom/yellow/wiki
-WebinterfaceUserAccountUrl: https://github.com/datenstrom/yellow/wiki/How-to-add-a-user-account
+WebinterfaceUserHelpUrl: http://developers.datenstrom.se/help/
+WebinterfaceUserAccountUrl: http://developers.datenstrom.se/help/how-to-add-a-user-account
 WebinterfaceUserLogout: Logout
 WikiFilter: Wiki:
 WikiTag: Tags:

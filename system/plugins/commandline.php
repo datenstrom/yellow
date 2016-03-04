@@ -16,7 +16,7 @@ class YellowCommandline
 	function onLoad($yellow)
 	{
 		$this->yellow = $yellow;
-		$this->yellow->config->setDefault("commandlineVersionUrl", "https://github.com/datenstrom/yellow-extensions");
+		$this->yellow->config->setDefault("commandlineVersionUrl", "https://github.com/datenstrom/yellow-plugins");
 	}
 	
 	// Handle command
