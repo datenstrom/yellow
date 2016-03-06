@@ -5,7 +5,7 @@
 // Markdown plugin
 class YellowMarkdown
 {
-	const Version = "0.6.2";
+	const Version = "0.6.3";
 	var $yellow;			//access to API
 	
 	// Handle initialisation
@@ -62,11 +62,21 @@ class YellowMarkdownParser extends MarkdownExtraParser
 	{
 		$text = preg_replace_callback("/<(\w+:[^\'\">\s]+)>/", array(&$this, "_doAutoLinks_url_callback"), $text);
 		$text = preg_replace_callback("/<([\w\-\.]+@[\w\-\.]+)>/", array(&$this, "_doAutoLinks_email_callback"), $text);
-		$text = preg_replace_callback("/\[(\w+)(.*?)\]/", array(&$this, "_doAutoLinks_shortcut_callback"), $text);
 		$text = preg_replace_callback("/\[\-\-(.*?)\-\-\]/", array(&$this, "_doAutoLinks_comment_callback"), $text);
+		$text = preg_replace_callback("/\[(\w+)(.*?)\]/", array(&$this, "_doAutoLinks_shortcut_callback"), $text);
+		$text = preg_replace_callback("/\:([\w\+\-\_]+)\:/", array(&$this, "_doAutoLinks_shortcode_callback"), $text);
 		$text = preg_replace_callback("/((http|https|ftp):\/\/\S+[^\'\"\,\.\;\:\s]+)/", array(&$this, "_doAutoLinks_url_callback"), $text);
 		$text = preg_replace_callback("/([\w\-\.]+@[\w\-\.]+\.[\w]{2,4})/", array(&$this, "_doAutoLinks_email_callback"), $text);
 		return $text;
+	}
+	
+	// Handle comments
+	function _doAutoLinks_comment_callback($matches)
+	{
+		$text = $matches[1];
+		$output = "<!--".htmlspecialchars($text, ENT_NOQUOTES)."-->";
+		if($text[0] == '-') $output = "";
+		return $this->hashBlock($output);
 	}
 	
 	// Handle shortcuts
@@ -77,13 +87,12 @@ class YellowMarkdownParser extends MarkdownExtraParser
 		return substr($output, 0, 4)=="<div" ? $this->hashBlock(trim($output)) : $this->hashPart(trim($output));
 	}
 
-	// Handle comments
-	function _doAutoLinks_comment_callback($matches)
+	// Handle shortcodes
+	function _doAutoLinks_shortcode_callback($matches)
 	{
-		$text = $matches[1];
-		$output = "<!--".htmlspecialchars($text, ENT_NOQUOTES)."-->";
-		if($text[0] == '-') $output = "";
-		return $this->hashBlock($output);
+		$output = $this->page->parseContentBlock("", trim($matches[1]), true);
+		if(is_null($output)) $output = htmlspecialchars($matches[0], ENT_NOQUOTES);
+		return $this->hashPart($output);
 	}
 	
 	// Handle fenced code blocks
