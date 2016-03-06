@@ -2486,6 +2486,7 @@ class YellowToolbox
 			case 424:	$text = "$serverProtocol $statusCode Not existing"; break;
 			case 444:	$text = "$serverProtocol $statusCode No response"; break;
 			case 500:	$text = "$serverProtocol $statusCode Server error"; break;
+			case 503:	$text = "$serverProtocol $statusCode Service unavailable"; break;
 			default:	$text = "$serverProtocol $statusCode Unknown status";
 		}
 		return $text;
