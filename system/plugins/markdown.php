@@ -90,7 +90,7 @@ class YellowMarkdownParser extends MarkdownExtraParser
 	// Handle shortcodes
 	function _doAutoLinks_shortcode_callback($matches)
 	{
-		$output = $this->page->parseContentBlock("", trim($matches[1]), true);
+		$output = $this->page->parseContentBlock("", $matches[1], true);
 		if(is_null($output)) $output = htmlspecialchars($matches[0], ENT_NOQUOTES);
 		return $this->hashPart($output);
 	}
