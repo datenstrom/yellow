@@ -223,10 +223,10 @@ class YellowCore
 		if(defined("DEBUG") && DEBUG>=1)
 		{
 			foreach($this->page->headerData as $key=>$value) echo "YellowCore::sendPage $key: $value<br/>\n";
-			$fileNameTheme = $this->config->get("themeDir").$this->page->get("theme").".css";
-			$templateName = $this->page->get("template");
-			$parserName = $this->page->get("parser");
-			echo "YellowCore::sendPage theme:$fileNameTheme template:$templateName parser:$parserName<br/>\n";
+			$theme = $this->page->get("theme");
+			$template = $this->page->get("template");
+			$parser = $this->page->get("parser");
+			echo "YellowCore::sendPage theme:$theme template:$template parser:$parser<br/>\n";
 		}
 		return $statusCode;
 	}
