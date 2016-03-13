@@ -5,7 +5,7 @@
 // Web interface plugin
 class YellowWebinterface
 {
-	const Version = "0.6.4";
+	const Version = "0.6.5";
 	var $yellow;				//access to API
 	var $active;				//web interface is active? (boolean)
 	var $userLoginFailed;		//web interface login failed? (boolean)
@@ -677,7 +677,7 @@ class YellowUsers
 			$location = $this->yellow->config->get("serverBase").$this->yellow->config->get("webinterfaceLocation");
 			$session = $this->yellow->toolbox->createHash($this->users[$email]["hash"], "sha256");
 			if(empty($session)) $session = "error-hash-algorithm-sha256";
-			setcookie($cookieName, "$email,$session", time()+60*60*24*30*365, $location, "", $serverScheme=="https");
+			setcookie($cookieName, "$email,$session", time()+60*60*24*365, $location, "", $serverScheme=="https");
 		}
 	}
 	
