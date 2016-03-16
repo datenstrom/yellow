@@ -288,6 +288,7 @@ class YellowCore
 				$fileName = $this->config->get("configDir").$this->config->get("robotsFile");
 			}
 		}
+		if($location == "/favicon.ico") $fileName = $this->config->get("themeDir").$this->config->get("iconFile");
 		if(empty($fileName)) $fileName = $this->lookup->findFileFromLocation($location);
 		return array($serverScheme, $serverName, $base, $location, $fileName);
 	}
@@ -794,10 +795,10 @@ class YellowPage
 				$this->yellow->config->get("themeLocation").$this->get("theme").".js";
 				$output .= "<script type=\"text/javascript\" src=\"".htmlspecialchars($location)."\"></script>\n";
 			}
-			if(is_file($this->yellow->config->get("imageDir").$this->yellow->config->get("iconFile")))
+			if(is_file($this->yellow->config->get("themeDir").$this->yellow->config->get("iconFile")))
 			{
 				$location = $this->yellow->config->get("serverBase").
-				$this->yellow->config->get("imageLocation").$this->yellow->config->get("iconFile");
+				$this->yellow->config->get("themeLocation").$this->yellow->config->get("iconFile");
 				$contentType = $this->yellow->toolbox->getMimeContentType($this->yellow->config->get("iconFile"));
 				$output .= "<link rel=\"shortcut icon\" type=\"$contentType\" href=\"".htmlspecialchars($location)."\" />\n";
 			}
