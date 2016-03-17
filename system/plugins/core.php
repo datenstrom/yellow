@@ -58,10 +58,11 @@ class YellowCore
 		$this->config->setDefault("textFile", "language-(.*).txt");
 		$this->config->setDefault("errorFile", "page-error-(.*).txt");
 		$this->config->setDefault("robotsFile", "robots.txt");
-		$this->config->setDefault("iconFile", "icon.png");
+		$this->config->setDefault("faviconFile", "favicon.ico");
 		$this->config->setDefault("template", "default");
 		$this->config->setDefault("navigation", "navigation");
 		$this->config->setDefault("sidebar", "sidebar");
+		$this->config->setDefault("siteicon", "icon");
 		$this->config->setDefault("parser", "markdown");
 		$this->config->setDefault("parserSafeMode", "0");
 		$this->config->setDefault("multiLanguageMode", "0");
@@ -276,7 +277,7 @@ class YellowCore
 		$base = empty($base) ? $this->config->get("serverBase") : $base;
 		$location = $this->toolbox->getLocation();
 		$location = substru($location, strlenu($base));
-		if(preg_match("/\.(css|js|jpg|png|txt|woff)$/", $location))
+		if(preg_match("/\.(css|ico|js|jpg|png|txt|woff)$/", $location))
 		{
 			$pluginLocationLength = strlenu($this->config->get("pluginLocation"));
 			$themeLocationLength = strlenu($this->config->get("themeLocation"));
@@ -286,9 +287,10 @@ class YellowCore
 				$fileName = $this->config->get("themeDir").substru($location, $themeLocationLength);
 			} else if($location == "/".$this->config->get("robotsFile")) {
 				$fileName = $this->config->get("configDir").$this->config->get("robotsFile");
+			} else if($location == "/".$this->config->get("faviconFile")) {
+				$fileName = $this->config->get("themeDir").$this->config->get("siteicon").".png";
 			}
 		}
-		if($location == "/favicon.ico") $fileName = $this->config->get("themeDir").$this->config->get("iconFile");
 		if(empty($fileName)) $fileName = $this->lookup->findFileFromLocation($location);
 		return array($serverScheme, $serverName, $base, $location, $fileName);
 	}
@@ -439,6 +441,7 @@ class YellowPage
 		{
 			$this->set("title", $this->yellow->toolbox->createTextTitle($this->location));
 			$this->set("sitename", $this->yellow->config->get("sitename"));
+			$this->set("siteicon", $this->yellow->config->get("siteicon"));
 			$this->set("author", $this->yellow->config->get("author"));
 			$this->set("language", $this->yellow->lookup->findLanguageFromFile($this->fileName,
 				$this->yellow->config->get("language")));
@@ -786,21 +789,22 @@ class YellowPage
 			if(is_file($this->yellow->config->get("themeDir").$this->get("theme").".css"))
 			{
 				$location = $this->yellow->config->get("serverBase").
-				$this->yellow->config->get("themeLocation").$this->get("theme").".css";
+					$this->yellow->config->get("themeLocation").$this->get("theme").".css";
 				$output .= "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"".htmlspecialchars($location)."\" />\n";
 			}
 			if(is_file($this->yellow->config->get("themeDir").$this->get("theme").".js"))
 			{
 				$location = $this->yellow->config->get("serverBase").
-				$this->yellow->config->get("themeLocation").$this->get("theme").".js";
+					$this->yellow->config->get("themeLocation").$this->get("theme").".js";
 				$output .= "<script type=\"text/javascript\" src=\"".htmlspecialchars($location)."\"></script>\n";
 			}
-			if(is_file($this->yellow->config->get("themeDir").$this->yellow->config->get("iconFile")))
+			if(is_file($this->yellow->config->get("themeDir").$this->get("siteicon").".png"))
 			{
 				$location = $this->yellow->config->get("serverBase").
-				$this->yellow->config->get("themeLocation").$this->yellow->config->get("iconFile");
-				$contentType = $this->yellow->toolbox->getMimeContentType($this->yellow->config->get("iconFile"));
-				$output .= "<link rel=\"shortcut icon\" type=\"$contentType\" href=\"".htmlspecialchars($location)."\" />\n";
+					$this->yellow->config->get("themeLocation").$this->get("siteicon").".png";
+				$contentType = $this->yellow->toolbox->getMimeContentType($location);
+				$output .= "<link rel=\"icon\" type=\"$contentType\" href=\"".htmlspecialchars($location)."\" />\n";
+				$output .= "<link rel=\"apple-touch-icon\" type=\"$contentType\" href=\"".htmlspecialchars($location)."\" />\n";
 			}
 		}
 		return $this->normaliseExtra($output);
