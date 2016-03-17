@@ -5,7 +5,7 @@
 // Command line plugin
 class YellowCommandline
 {
-	const Version = "0.6.6";
+	const Version = "0.6.7";
 	var $yellow;					//access to API
 	var $files;						//number of files
 	var $errors;					//number of errors
@@ -412,13 +412,13 @@ class YellowCommandline
 	{
 		$locations = array();
 		$fileNames = $this->yellow->toolbox->getDirectoryEntries(
-			$this->yellow->config->get("pluginDir"), "/\.(css|js|jpg|png|txt|woff)/", false, false);
+			$this->yellow->config->get("pluginDir"), "/\.(css|ico|js|jpg|png|txt|woff)/", false, false);
 		foreach($fileNames as $fileName)
 		{
 			array_push($locations, $this->yellow->config->get("pluginLocation").basename($fileName));
 		}
 		$fileNames = $this->yellow->toolbox->getDirectoryEntries(
-			$this->yellow->config->get("themeDir"), "/\.(css|js|jpg|png|txt|woff)/", false, false);
+			$this->yellow->config->get("themeDir"), "/\.(css|ico|js|jpg|png|txt|woff)/", false, false);
 		foreach($fileNames as $fileName)
 		{
 			array_push($locations, $this->yellow->config->get("themeLocation").basename($fileName));
