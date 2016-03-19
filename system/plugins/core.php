@@ -2400,8 +2400,9 @@ class YellowToolbox
 	}
 	
 	// Check if location contains location arguments
-	function isLocationArgs($location)
+	function isLocationArgs($location = "")
 	{
+		$location = empty($location) ? $_SERVER["LOCATION"].$_SERVER["LOCATION_ARGS"] : $location;
 		$separator = $this->getLocationArgsSeparator();
 		return preg_match("/[^\/]+$separator.*$/", $location);
 	}
