@@ -5,7 +5,7 @@
 // Command line plugin
 class YellowCommandline
 {
-	const Version = "0.6.7";
+	const Version = "0.6.8";
 	var $yellow;					//access to API
 	var $files;						//number of files
 	var $errors;					//number of errors
@@ -16,7 +16,8 @@ class YellowCommandline
 	function onLoad($yellow)
 	{
 		$this->yellow = $yellow;
-		$this->yellow->config->setDefault("commandlineVersionUrl", "https://github.com/datenstrom/yellow-plugins");
+		$this->yellow->config->setDefault("commandlinePluginsUrl", "https://github.com/datenstrom/yellow-plugins");
+		$this->yellow->config->setDefault("commandlineThemesUrl", "https://github.com/datenstrom/yellow-themes");
 	}
 	
 	// Handle command
@@ -62,10 +63,9 @@ class YellowCommandline
 		$statusCode = 0;
 		$serverSoftware = $this->yellow->toolbox->getServerSoftware();
 		echo "Yellow ".YellowCore::Version.", PHP ".PHP_VERSION.", $serverSoftware\n";
-		$url = $this->yellow->config->get("commandlineVersionUrl");
 		list($dummy, $command) = $args;
-		list($statusCode, $versionCurrent) = $this->getPluginVersion();
-		list($statusCode, $versionLatest) = $this->getPluginVersion($url);
+		list($statusCode, $versionCurrent) = $this->getSoftwareVersion();
+		list($statusCode, $versionLatest) = $this->getSoftwareVersion(false);
 		foreach($versionCurrent as $key=>$value)
 		{
 			if($versionCurrent[$key] >= $versionLatest[$key])
@@ -76,7 +76,7 @@ class YellowCommandline
 				++$updates;
 			}
 		}
-		if($statusCode != 200) echo "ERROR checking updates at $url: $versionLatest[error]\n";
+		if($statusCode != 200) echo "ERROR checking updates: $versionLatest[error]\n";
 		if($updates) echo "Yellow $command: $updates update".($updates==1 ? "":"s")." available at $url\n";
 		return $statusCode;
 	}
@@ -427,58 +427,62 @@ class YellowCommandline
 		return $locations;
 	}
 	
-	// Return plugin version
-	function getPluginVersion($url = "")
+	// Return software version
+	function getSoftwareVersion($current = true)
 	{
 		$version = array();
-		if(empty($url))
+		if($current)
 		{
 			$statusCode = 200;
-			$version["YellowCore"] = YellowCore::Version;
-			foreach($this->yellow->plugins->plugins as $key=>$value) $version[$value["class"]] = $value[version];
+			foreach($this->yellow->plugins->getData() as $key=>$value) $version[$key] = $value;
+			foreach($this->yellow->themes->getData() as $key=>$value) $version[$key] = $value;
 		} else {
-			if(extension_loaded("curl"))
-			{
-				$pluginVersionUrl = $this->getPluginVersionUrl($url);
-				$curlHandle = curl_init();
-				curl_setopt($curlHandle, CURLOPT_URL, $pluginVersionUrl);
-				curl_setopt($curlHandle, CURLOPT_USERAGENT, "Mozilla/5.0 (compatible; YellowCore/".YellowCore::Version).")";
-				curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, 1);
-				curl_setopt($curlHandle, CURLOPT_CONNECTTIMEOUT, 30);
-				$rawData = curl_exec($curlHandle);
-				$statusCode = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);
-				curl_close($curlHandle);
-				if($statusCode == 200)
-				{
-					if(defined("DEBUG") && DEBUG>=2) echo "YellowCommandline::getPluginVersion file:$pluginVersionUrl\n";
-					foreach($this->yellow->toolbox->getTextLines($rawData) as $line)
-					{
-						if(preg_match("/^(\w+)\s*:\s*([0-9\.]+)/", $line, $matches))
-						{
-							$version[$matches[1]] = $matches[2];
-							if(defined("DEBUG") && DEBUG>=3) echo "YellowCommandline::getPluginVersion $matches[1]:$matches[2]\n";
-						}
-					}
-				}
-				if($statusCode == 0) $statusCode = 444;
-				$version["error"] = $this->yellow->toolbox->getHttpStatusFormatted($statusCode);
-			} else {
-				$statusCode = 500;
-				$version["error"] = "Plugin 'commandline' requires cURL library!";
-			}
+			list($statusCodePlugins, $versionPlugins) = $this->getSoftwareVersionFromUrl($this->yellow->config->get("commandlinePluginsUrl"));
+			list($statusCodeThemes, $versionThemes) = $this->getSoftwareVersionFromUrl($this->yellow->config->get("commandlineThemesUrl"));
+			$statusCode = max($statusCodePlugins, $statusCodeThemes);
+			$version = array_merge($versionPlugins, $versionThemes);
 		}
-		uksort($version, strnatcasecmp);
 		return array($statusCode, $version);
 	}
 	
-	// Return plugin version URL from repository
-	function getPluginVersionUrl($url)
+	// Return software version URL from repository
+	function getSoftwareVersionFromUrl($url)
 	{
+		$version = array();
+		$urlVersion = $url;
 		if(preg_match("#^https://github.com/(.+)$#", $url, $matches))
 		{
-			$url = "https://raw.githubusercontent.com/".$matches[1]."/master/version.ini";
+			$urlVersion = "https://raw.githubusercontent.com/".$matches[1]."/master/version.ini";
 		}
-		return $url;
+		if(extension_loaded("curl"))
+		{
+			$curlHandle = curl_init();
+			curl_setopt($curlHandle, CURLOPT_URL, $urlVersion);
+			curl_setopt($curlHandle, CURLOPT_USERAGENT, "Mozilla/5.0 (compatible; YellowCore/".YellowCore::Version).")";
+			curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, 1);
+			curl_setopt($curlHandle, CURLOPT_CONNECTTIMEOUT, 30);
+			$rawData = curl_exec($curlHandle);
+			$statusCode = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);
+			curl_close($curlHandle);
+			if($statusCode == 200)
+			{
+				if(defined("DEBUG") && DEBUG>=2) echo "YellowCommandline::getSoftwareVersion location:$urlVersion\n";
+				foreach($this->yellow->toolbox->getTextLines($rawData) as $line)
+				{
+					if(preg_match("/^(\w+)\s*:\s*([0-9\.]+)/", $line, $matches))
+					{
+						$version[$matches[1]] = $matches[2];
+						if(defined("DEBUG") && DEBUG>=3) echo "YellowCommandline::getSoftwareVersion $matches[1]:$matches[2]\n";
+					}
+				}
+			}
+			if($statusCode == 0) $statusCode = 444;
+			$version["error"] = "$url - ".$this->yellow->toolbox->getHttpStatusFormatted($statusCode);
+		} else {
+			$statusCode = 500;
+			$version["error"] = "Plugin 'commandline' requires cURL library!";
+		}
+		return array($statusCode, $version);
 	}
 	
 	// Return command help

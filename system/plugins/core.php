@@ -10,6 +10,7 @@ class YellowCore
 	var $pages;				//pages from file system
 	var $files;				//files from file system
 	var $plugins;			//plugins
+	var $themes;			//themes
 	var $config;			//configuration
 	var $text;				//text strings
 	var $lookup;			//location and file lookup
@@ -21,6 +22,7 @@ class YellowCore
 		$this->pages = new YellowPages($this);
 		$this->files = new YellowFiles($this);
 		$this->plugins = new YellowPlugins($this);
+		$this->themes = new YellowThemes($this);
 		$this->config = new YellowConfig($this);
 		$this->text = new YellowText($this);
 		$this->lookup = new YellowLookup($this);
@@ -79,6 +81,7 @@ class YellowCore
 		}
 		$this->config->load($this->config->get("configDir").$this->config->get("configFile"));
 		$this->text->load($this->config->get("pluginDir").$this->config->get("textFile"));
+		$this->themes->load($this->config->get("themeDir")."(.*).css");
 		date_default_timezone_set($this->config->get("serverTime"));
 		list($pathRoot, $pathHome) = $this->lookup->getContentInformation();
 		$this->config->set("contentRootDir", $pathRoot);
@@ -561,7 +564,11 @@ class YellowPage
 					$output .= "Yellow ".YellowCore::Version.", PHP ".PHP_VERSION.", $serverSoftware<br />\n";
 					foreach($this->yellow->plugins->getData() as $key=>$value)
 					{
-						$output .= htmlspecialchars("$key: $value")."<br />\n";
+						$output .= htmlspecialchars("$key $value")."<br />\n";
+					}
+					foreach($this->yellow->themes->getData() as $key=>$value)
+					{
+						$output .= htmlspecialchars("$key $value")."<br />\n";
 					}
 				} else {
 					foreach($this->yellow->config->getData($text) as $key=>$value)
@@ -603,7 +610,7 @@ class YellowPage
 		{
 			$this->error(500, "Language '".$this->get("language")."' does not exist!");
 		}
-		if(!is_file($this->yellow->config->get("themeDir").$this->get("theme").".css"))
+		if(!$this->yellow->themes->isExisting($this->get("theme")))
 		{
 			$this->error(500, "Theme '".$this->get("theme")."' does not exist!");
 		}
@@ -1533,14 +1540,14 @@ class YellowFiles
 class YellowPlugins
 {
 	var $yellow;		//access to API
-	var $plugins;		//registered plugins
 	var $modified;		//plugin modification date
+	var $plugins;		//registered plugins
 
 	function __construct($yellow)
 	{
 		$this->yellow = $yellow;
-		$this->plugins = array();
 		$this->modified = 0;
+		$this->plugins = array();
 	}
 	
 	// Load plugins
@@ -1583,7 +1590,7 @@ class YellowPlugins
 	{
 		$version = array();
 		$version["YellowCore"] = YellowCore::Version;
-		foreach($this->plugins as $key=>$value) $version[$value["class"]] = $value[version];
+		foreach($this->plugins as $key=>$value) $version[$value["class"]] = $value["version"];
 		uksort($version, strnatcasecmp);
 		return $version;
 	}
@@ -1601,6 +1608,70 @@ class YellowPlugins
 	}
 }
 
+// Yellow themes
+class YellowThemes
+{
+	var $yellow;		//access to API
+	var $modified;		//theme modification date
+	var $themes;		//themes
+
+	function __construct($yellow)
+	{
+		$this->yellow = $yellow;
+		$this->modified = 0;
+		$this->themes = array();
+	}
+	
+	// Load themes
+	function load($fileName)
+	{
+		$path = dirname($fileName);
+		$regex = "/^".basename($fileName)."$/";
+		foreach($this->yellow->toolbox->getDirectoryEntries($path, $regex, true, false) as $entry)
+		{
+			$name = $this->yellow->lookup->normaliseName(basename($entry), true, true);
+			$theme = $version = "";
+			$this->modified = max($this->modified, filemtime($entry));
+			$fileData = $this->yellow->toolbox->readFile($entry, 4096);
+			foreach($this->yellow->toolbox->getTextLines($fileData) as $line)
+			{
+				preg_match("/^\/\*\s*(.*?)\s*:\s*(.*?)\s*\*\/$/", $line, $matches);
+				if(lcfirst($matches[1])=="theme" && !strempty($matches[2])) $theme = $matches[2];
+				if(lcfirst($matches[1])=="version" && !strempty($matches[2])) $version = $matches[2];
+				if(!empty($line) && $line[0]!= '/') break;
+			}
+			if(!empty($theme) && !empty($version))
+			{
+				$this->themes[$name] = array();
+				$this->themes[$name]["theme"] = $theme;
+				$this->themes[$name]["version"] = $version;
+				if(defined("DEBUG") && DEBUG>=3) echo "YellowThemes::load $theme:$version<br/>\n";
+			}
+		}
+	}
+	
+	// Return theme version
+	function getData()
+	{
+		$version = array();
+		foreach($this->themes as $key=>$value) $version[$value["theme"]] = $value["version"];
+		uksort($version, strnatcasecmp);
+		return $version;
+	}
+	
+	// Return theme modification date, Unix time or HTTP format
+	function getModified($httpFormat = false)
+	{
+		return $httpFormat ? $this->yellow->toolbox->getHttpDateFormatted($this->modified) : $this->modified;
+	}
+
+	// Check if theme exists
+	function isExisting($name)
+	{
+		return !is_null($this->themes[$name]);
+	}
+}
+	
 // Yellow configuration
 class YellowConfig
 {
