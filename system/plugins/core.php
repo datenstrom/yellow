@@ -81,11 +81,8 @@ class YellowCore
 		}
 		$this->config->load($this->config->get("configDir").$this->config->get("configFile"));
 		$this->text->load($this->config->get("pluginDir").$this->config->get("textFile"));
-		$this->themes->load($this->config->get("themeDir")."(.*).css");
-		date_default_timezone_set($this->config->get("serverTime"));
-		list($pathRoot, $pathHome) = $this->lookup->getContentInformation();
-		$this->config->set("contentRootDir", $pathRoot);
-		$this->config->set("contentHomeDir", $pathHome);
+		$this->lookup->load();
+		$this->themes->load();
 	}
 	
 	// Handle command
@@ -158,13 +155,13 @@ class YellowCore
 		}
 		if($statusCode == 0)
 		{
-			$statusCode = is_readable($fileName) ? 200 : 404;
-			$fileName = $this->getStaticFileFromCache($location, $fileName, $cacheable, $statusCode);
-			if($this->isStaticFile($fileName))
+			if($this->isStaticFile($location, $fileName, $cacheable))
 			{
-				$statusCode = $this->sendFile($statusCode, $fileName, $cacheable);
+				$fileName = $this->getStaticFileFromCache($location, $fileName, $cacheable);
+				$statusCode = $this->sendFile(200, $fileName, $cacheable);
 			} else {
-				$fileName = $this->readPage($serverScheme, $serverName, $base, $location, $fileName, $cacheable, $statusCode);
+				$fileName = $this->readPage($serverScheme, $serverName, $base, $location, $fileName, $cacheable,
+					max(is_readable($fileName) ? 200 : 404, $this->page->statusCode), $this->page->get("pageError"));
 				$statusCode = $this->sendPage();
 			}
 		}
@@ -323,26 +320,22 @@ class YellowCore
 	}
 	
 	// Return static file from cache if available
-	function getStaticFileFromCache($location, $fileName, $cacheable, $statusCode)
+	function getStaticFileFromCache($location, $fileName, $cacheable)
 	{
-		if(PHP_SAPI!="cli" && $cacheable)
+		if(PHP_SAPI!="cli" && is_readable($fileName) && $cacheable)
 		{
-			if($statusCode == 200)
-			{
-				$location .= $this->toolbox->getLocationArgs();
-				$fileNameStatic = rtrim($this->config->get("staticDir"), '/').$location;
-				if(!$this->lookup->isFileLocation($location)) $fileNameStatic .= $this->config->get("staticDefaultFile");
-			} else if($statusCode == 404) {
-				$fileNameStatic = $this->config->get("staticDir").$this->config->get("staticErrorFile");
-			}
+			$location .= $this->toolbox->getLocationArgs();
+			$fileNameStatic = rtrim($this->config->get("staticDir"), '/').$location;
+			if(!$this->lookup->isFileLocation($location)) $fileNameStatic .= $this->config->get("staticDefaultFile");
 			if(is_readable($fileNameStatic)) $fileName = $fileNameStatic;
 		}
 		return $fileName;
 	}
 	
 	// Check if static file
-	function isStaticFile($fileName)
+	function isStaticFile($location, $fileName, $cacheable)
 	{
+		$fileName = $this->getStaticFileFromCache($location, $fileName, $cacheable);
 		$staticDirLength = strlenu($this->config->get("staticDir"));
 		$systemDirLength = strlenu($this->config->get("systemDir"));
 		return substru($fileName, 0, $staticDirLength) == $this->config->get("staticDir") ||
@@ -604,7 +597,7 @@ class YellowPage
 		}
 		if(!$this->isCacheable()) $this->setHeader("Cache-Control", "no-cache, must-revalidate");
 		if(!$this->isHeader("Content-Type")) $this->setHeader("Content-Type", "text/html; charset=utf-8");
-		if(!$this->isHeader("Content-Modified")) $this->setHeader("Content-Modified", $this->getModified(true));
+		if(!$this->isHeader("Page-Modified")) $this->setHeader("Page-Modified", $this->getModified(true));
 		if(!$this->isHeader("Last-Modified")) $this->setHeader("Last-Modified", $this->getLastModified(true));
 		if(!$this->yellow->text->isLanguage($this->get("language")))
 		{
@@ -861,7 +854,7 @@ class YellowPage
 		return $this->isHeader($key) ? $this->headerData[$key] : "";
 	}
 	
-	// Return page content modification date, Unix time or HTTP format
+	// Return page modification date, Unix time or HTTP format
 	function getModified($httpFormat = false)
 	{
 		$modified = strtotime($this->get("modified"));
@@ -1623,11 +1616,10 @@ class YellowThemes
 	}
 	
 	// Load themes
-	function load($fileName)
+	function load()
 	{
-		$path = dirname($fileName);
-		$regex = "/^".basename($fileName)."$/";
-		foreach($this->yellow->toolbox->getDirectoryEntries($path, $regex, true, false) as $entry)
+		$path = $this->yellow->config->get("themeDir");
+		foreach($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.css$/", true, false) as $entry)
 		{
 			$name = $this->yellow->lookup->normaliseName(basename($entry), true, true);
 			$theme = $version = "";
@@ -1932,6 +1924,15 @@ class YellowLookup
 	function __construct($yellow)
 	{
 		$this->yellow = $yellow;
+	}
+
+	// Load file system information
+	function load()
+	{
+		list($pathRoot, $pathHome) = $this->getContentInformation();
+		$this->yellow->config->set("contentRootDir", $pathRoot);
+		$this->yellow->config->set("contentHomeDir", $pathHome);
+		date_default_timezone_set($this->yellow->config->get("serverTime"));
 	}
 	
 	// Return root locations
@@ -2546,27 +2547,28 @@ class YellowToolbox
 	}
 	
 	// Return human readable HTTP server status
-	function getHttpStatusFormatted($statusCode)
+	function getHttpStatusFormatted($statusCode, $shortFormat = false)
 	{
-		$serverProtocol = $_SERVER["SERVER_PROTOCOL"];
-		if(!preg_match("/^HTTP\//", $serverProtocol)) $serverProtocol = "HTTP/1.1";
 		switch($statusCode)
 		{
-			case 0:		$text = "$serverProtocol $statusCode No data"; break;
-			case 200:	$text = "$serverProtocol $statusCode OK"; break;
-			case 301:	$text = "$serverProtocol $statusCode Moved permanently"; break;
-			case 302:	$text = "$serverProtocol $statusCode Moved temporarily"; break;
-			case 303:	$text = "$serverProtocol $statusCode Reload please"; break;
-			case 304:	$text = "$serverProtocol $statusCode Not modified"; break;
-			case 400:	$text = "$serverProtocol $statusCode Bad request"; break;
-			case 404:	$text = "$serverProtocol $statusCode Not found"; break;
-			case 424:	$text = "$serverProtocol $statusCode Not existing"; break;
-			case 444:	$text = "$serverProtocol $statusCode No response"; break;
-			case 500:	$text = "$serverProtocol $statusCode Server error"; break;
-			case 503:	$text = "$serverProtocol $statusCode Service unavailable"; break;
-			default:	$text = "$serverProtocol $statusCode Unknown status";
+			case 0:		$text = "No data"; break;
+			case 200:	$text = "OK"; break;
+			case 301:	$text = "Moved permanently"; break;
+			case 302:	$text = "Moved temporarily"; break;
+			case 303:	$text = "Reload please"; break;
+			case 304:	$text = "Not modified"; break;
+			case 400:	$text = "Bad request"; break;
+			case 403:	$text = "Forbidden"; break;
+			case 404:	$text = "Not found"; break;
+			case 424:	$text = "Not existing"; break;
+			case 444:	$text = "No response"; break;
+			case 500:	$text = "Server error"; break;
+			case 503:	$text = "Service unavailable"; break;
+			default:	$text = "Error $statusCode";
 		}
-		return $text;
+		$serverProtocol = $_SERVER["SERVER_PROTOCOL"];
+		if(!preg_match("/^HTTP\//", $serverProtocol)) $serverProtocol = "HTTP/1.1";
+		return $shortFormat ? $text : "$serverProtocol $statusCode $text";
 	}
 							  
 	// Return human readable HTTP date
