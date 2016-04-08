@@ -104,7 +104,7 @@ a, img { border:none; text-decoration:none; }
 
 .form-control {
 	margin:0; padding:2px 4px;
-	display:inline-block;
+	display:inline-block; min-width:7em;
 	background-color:#fff; color:#555;
 	background-image:linear-gradient(to bottom, #fff, #fff);
 	border:1px solid #bbb;

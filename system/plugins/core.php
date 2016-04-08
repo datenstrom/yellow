@@ -29,6 +29,7 @@ class YellowCore
 		$this->toolbox = new YellowToolbox();
 		$this->config->setDefault("sitename", "Yellow");
 		$this->config->setDefault("author", "Yellow");
+		$this->config->setDefault("email", "postmaster");
 		$this->config->setDefault("language", "en");
 		$this->config->setDefault("theme", "default");
 		$this->config->setDefault("serverScheme", $this->toolbox->getServerScheme());
@@ -68,6 +69,7 @@ class YellowCore
 		$this->config->setDefault("parser", "markdown");
 		$this->config->setDefault("parserSafeMode", "0");
 		$this->config->setDefault("multiLanguageMode", "0");
+		$this->config->setDefault("installationMode", "0");
 		$this->load();
 	}
 	
@@ -126,8 +128,12 @@ class YellowCore
 		if($this->page->isError()) $statusCode = $this->processRequestError();
 		$this->toolbox->timerStop($time);
 		ob_end_flush();
-		if(defined("DEBUG") && DEBUG>=1) echo "YellowCore::request status:$statusCode location:$location<br/>\n";
-		if(defined("DEBUG") && DEBUG>=1) echo "YellowCore::request time:$time ms<br/>\n";
+		if(defined("DEBUG") && DEBUG>=1)
+		{
+			$handler = $this->getRequestHandler();
+			echo "YellowCore::request status:$statusCode location:$location handler:$handler<br/>\n";
+			echo "YellowCore::request time:$time ms<br/>\n";
+		}
 		return $statusCode;
 	}
 	
@@ -165,11 +171,7 @@ class YellowCore
 				$statusCode = $this->sendPage();
 			}
 		}
-		if(defined("DEBUG") && DEBUG>=1)
-		{
-			$handler = $this->getRequestHandler();
-			echo "YellowCore::processRequest file:$fileName handler:$handler<br/>\n";
-		}
+		if(defined("DEBUG") && DEBUG>=1) echo "YellowCore::processRequest file:$fileName<br/>\n";
 		return $statusCode;
 	}
 	
@@ -181,11 +183,7 @@ class YellowCore
 			$this->page->location, $this->page->fileName, $this->page->cacheable, $this->page->statusCode,
 			$this->page->get("pageError"));
 		$statusCode = $this->sendPage();
-		if(defined("DEBUG") && DEBUG>=1)
-		{
-			$handler = $this->getRequestHandler();
-			echo "YellowCore::processRequestError file:$fileName handler:$handler<br/>\n";
-		}
+		if(defined("DEBUG") && DEBUG>=1) echo "YellowCore::processRequestError file:$fileName<br/>\n";
 		return $statusCode;
 	}
 	
@@ -1696,6 +1694,36 @@ class YellowConfig
 				if(defined("DEBUG") && DEBUG>=3) echo "YellowConfig::load ".lcfirst($matches[1]).":$matches[2]<br/>\n";
 			}
 		}
+	}
+	
+	// Update configuration in file
+	function update($fileName, $config)
+	{
+		foreach($config as $key=>$value)
+		{
+			if(empty($key) || strempty($value)) { unset($config[$key]); continue; }
+			$this->set(lcfirst($key), $value);
+		}
+		$this->modified = time();
+		$fileData = $this->yellow->toolbox->readFile($fileName);
+		foreach($this->yellow->toolbox->getTextLines($fileData) as $line)
+		{
+			preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
+			$keyOriginal = $matches[1]; $keySearch = strtoloweru($matches[1]); $keyFound = "";
+			foreach($config as $key=>$value) if(strtoloweru($key) == $keySearch) { $keyFound = $key; break; }
+			if(!empty($keyFound))
+			{
+				$fileDataNew .= "$keyOriginal: $config[$keyFound]\n";
+				unset($config[$keyFound]);
+			} else {
+				$fileDataNew .= $line;
+			}
+		}
+		foreach($config as $key=>$value)
+		{
+			$fileDataNew .= "$key: $value\n";
+		}
+		return $this->yellow->toolbox->createFile($fileName, $fileDataNew);
 	}
 	
 	// Set default configuration
