@@ -9,5 +9,6 @@ php:
 before_script: 
   - echo "ServerScheme:http" >> system/config/config.ini
   - echo "ServerName:your.domain.name" >> system/config/config.ini
+  - echo "InstallationMode:0" >> system/config/config.ini
   - php yellow.php version
 script: php yellow.php build test
