@@ -1,4 +1,4 @@
-/* Yellow web interface 0.6.1 */
+/* Yellow web interface 0.6.6 */
 
 .yellow-bar { position:relative; overflow:hidden; height:2em; margin-bottom:10px; }
 .yellow-bar-left { display:block; float:left; }
@@ -54,7 +54,7 @@
 }
 .yellow-btn {
 	margin:0; padding:4px 22px;
-	display:inline-block; min-width:7em;
+	display:inline-block; min-width:8em;
 	background-color:#eaeaea; color:#333333;
 	background-image:linear-gradient(to bottom, #f8f8f8, #e1e1e1);
 	border:1px solid #bbb;
@@ -91,15 +91,34 @@
 
 #yellow-pane-login { text-align:center; white-space:nowrap; }
 #yellow-pane-login h1 { margin:0 1em; font-size:2em; }
-#yellow-pane-login-status { display:inline-block; }
-#yellow-pane-login-fields { width:15em; text-align:left; margin:0 auto; }
 #yellow-pane-login input { width:15em; box-sizing:border-box; }
 #yellow-pane-login .yellow-btn { width:15em; margin:1em 1em 0.5em 0; }
+#yellow-pane-login-fields { width:15em; text-align:left; margin:0 auto; }
+#yellow-pane-login-buttons { margin:0.5em 0; }
+#yellow-pane-login-buttons p { margin:0; }
+
+#yellow-pane-signup { text-align:center; white-space:nowrap; }
+#yellow-pane-signup h1 { margin:0 1em; font-size:2em; }
+#yellow-pane-signup input { width:15em; box-sizing:border-box; }
+#yellow-pane-signup .yellow-btn { width:15em; margin:1em 1em 0.5em 0; }
+#yellow-pane-signup-status { margin:0.5em 0; display:inline-block; }
+#yellow-pane-signup-fields { width:15em; text-align:left; margin:0 auto; }
+#yellow-pane-signup-buttons { margin-top:-0.5em; }
+
+#yellow-pane-recover { text-align:center; white-space:nowrap; }
+#yellow-pane-recover h1 { margin:0 1em; font-size:2em; }
+#yellow-pane-recover input { width:15em; box-sizing:border-box; }
+#yellow-pane-recover .yellow-btn { width:15em; margin:1em 1em 0.5em 0; }
+#yellow-pane-recover-status { margin:0.5em 0; display:inline-block; }
+#yellow-pane-recover-fields-first, #yellow-pane-recover-fields-second { width:15em; text-align:left; margin:0 auto; }
+#yellow-pane-recover-buttons { margin-top:-0.5em; }
+
 #yellow-pane-edit { }
 #yellow-pane-edit h1 { margin:0 0 10px 0; font-size:1.5em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 #yellow-pane-edit-page { padding:5px; outline:none; resize:none; }
 #yellow-pane-edit-buttons { margin-top:5px; }
 #yellow-pane-edit-buttons input { margin-right:10px; }
+#yellow-pane-edit-help { float:right; }
 #yellow-pane-user { cursor:pointer; }
 #yellow-pane-user a { text-decoration:none; }
 #yellow-pane-user a:hover { text-decoration:underline; }

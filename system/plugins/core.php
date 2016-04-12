@@ -5,7 +5,7 @@
 // Yellow core
 class YellowCore
 {
-	const Version = "0.6.3";
+	const Version = "0.6.4";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $files;				//files from file system
@@ -154,7 +154,7 @@ class YellowCore
 			if($this->isRequestContentDirectory($location))
 			{
 				$statusCode = 301;
-				$location = $this->lookup->isFileLocation($location) ? "$location/" : "/".$this->getRequestLanguage()."/";
+				$location = $this->lookup->isFileLocation($location) ? "$location/" : "/".$this->getRequestLanguage(true)."/";
 				$location = $this->lookup->normaliseUrl($serverScheme, $serverName, $base, $location);
 				$this->sendStatus($statusCode, $location);
 			}
@@ -300,9 +300,10 @@ class YellowCore
 	}
 	
 	// Return request language
-	function getRequestLanguage()
+	function getRequestLanguage($multiLanguage = false)
 	{
-		return $this->toolbox->detectBrowserLanguage($this->pages->getLanguages(), $this->config->get("language"));
+		$languages = $multiLanguage ? $this->pages->getLanguages() : $this->text->getLanguages();
+		return $this->toolbox->detectBrowserLanguage($languages, $this->config->get("language"));
 	}
 	
 	// Return request handler

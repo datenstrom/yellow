@@ -5,7 +5,7 @@
 // Command line plugin
 class YellowCommandline
 {
-	const Version = "0.6.8";
+	const Version = "0.6.9";
 	var $yellow;					//access to API
 	var $files;						//number of files
 	var $errors;					//number of errors
@@ -94,8 +94,13 @@ class YellowCommandline
 			} else {
 				$statusCode = 500;
 				$this->files = 0; $this->errors = 1;
-				$fileName = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
-				echo "ERROR building files: Please configure ServerScheme, ServerName, ServerBase, ServerTime in file '$fileName'!\n";
+				if($this->yellow->config->get("installationMode"))
+				{
+					echo "ERROR building files: Please open your website in a web browser to detect server settings!\n";
+				} else {
+					$fileName = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
+					echo "ERROR building files: Please configure ServerScheme, ServerName, ServerBase, ServerTime in file '$fileName'!\n";
+				}
 			}
 			echo "Yellow $command: $this->files file".($this->files!=1 ? 's' : '');
 			echo ", $this->errors error".($this->errors!=1 ? 's' : '');
@@ -332,10 +337,11 @@ class YellowCommandline
 	// Check static configuration
 	function checkStaticConfig()
 	{
+		$installationMode = $this->yellow->config->get("installationMode");
 		$serverScheme = $this->yellow->config->get("serverScheme");
 		$serverName = $this->yellow->config->get("serverName");
 		$serverBase = $this->yellow->config->get("serverBase");
-		return !empty($serverScheme) && !empty($serverName) &&
+		return !$installationMode && !empty($serverScheme) && !empty($serverName) &&
 			$this->yellow->lookup->isValidLocation($serverBase) && $serverBase!="/";
 	}
 	

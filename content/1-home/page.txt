@@ -1,7 +1,6 @@
 ---
 Title: Home
 ---
-Your website works! 
+Your website works!
 
-You can now [edit this page] or use your text editor.  
-For more information see [Yellow help](http://developers.datenstrom.se/help/).
+You can now [edit this page] or use your text editor.

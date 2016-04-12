@@ -1,9 +1,9 @@
-# Yellow text strings
+# Yellow language file
 
 Language: de
 LanguageDescription: Deutsch
 LanguageAuthor: David Fehrmann
-LanguageVersion: 0.6.2
+LanguageVersion: 0.6.4
 
 BlogBy: von
 BlogFilter: Blog:
@@ -29,23 +29,67 @@ SearchQuery: Suche:
 SearchResultsNone: Bitte einen Suchbegriff eingeben.
 SearchResultsEmpty: Keine Treffer für diese Suchanfrage.
 SearchButton: Suchen
-WebinterfaceLoginText: Yellow-Anmeldung
+WebinterfaceInstallationTitle: Willkommen
+WebinterfaceInstallationSitename: Webseite:
+WebinterfaceInstallationAuthor: Name:
+WebinterfaceInstallationHomePage: ---\nTitle: Home\n---\nDeine Webseite funktioniert!\n\nDu kannst [edit - diese Seite bearbeiten] oder einen Texteditor benutzen.
+WebinterfaceLoginTitle: Yellow
 WebinterfaceLoginEmail: E-Mail:
 WebinterfaceLoginPassword: Kennwort:
+WebinterfaceLoginRecover: Kennwort vergessen?
+WebinterfaceLoginSignup: Benutzerkonto erstellen?
 WebinterfaceLoginButton: Anmelden
+WebinterfaceSignupTitle: Benutzerkonto erstellen
+WebinterfaceSignupName: Name:
+WebinterfaceSignupEmail: E-Mail:
+WebinterfaceSignupPassword: Kennwort:
+WebinterfaceSignupButton: Erstellen
+WebinterfaceSignupStatusNone: Hier kannst du ein neues Benutzerkonto erstellen.
+WebinterfaceSignupStatusIncomplete: Bitte alle Felder ausfüllen.
+WebinterfaceSignupStatusInvalid: Bitte eine gültige E-Mail angeben.
+WebinterfaceSignupStatusWeak: Bitte eine anderes Kennwort angeben.
+WebinterfaceSignupStatusNext: Benutzerkonto wird erstellt, bitte überprüfe deine E-Mails.
+WebinterfaceRecoverTitle: Kennwort vergessen
+WebinterfaceRecoverEmail: E-Mail:
+WebinterfaceRecoverPassword: Kennwort:
+WebinterfaceRecoverButton: Absenden
+WebinterfaceRecoverStatusNone: Kein Problem, du kannst ein neues Kennwort erstellen.
+WebinterfaceRecoverStatusInvalid: Bitte eine gültige E-Mail angeben.
+WebinterfaceRecoverStatusPassword: Bitte ein neues Kennwort angeben.
+WebinterfaceRecoverStatusWeak: Bitte eine anderes Kennwort angeben.
+WebinterfaceRecoverStatusNext: Benutzerkonto wird wiederhergestellt, bitte überprüfe deine E-Mails.
+WebinterfaceConfirmSubject: Benutzerkonto bestätigen
+WebinterfaceConfirmMessage: Hallo @usershort, bitte bestätige dein Benutzerkonto. Klicke auf den folgenden Link.
+WebinterfaceConfirmStatusDone: Benutzerkonto wurde bestätigt. Vielen Dank!
+WebinterfaceConfirmStatusExpire: Benutzerkonto kann nicht bestätigt werden. Link ist abgelaufen!
+WebinterfaceApproveSubject: Benutzerkonto genehmigen
+WebinterfaceApproveMessage: Hallo @usershort, bitte genehmige ein neues Benutzerkonto für @useraccount. Klicke auf den folgenden Link.
+WebinterfaceApproveStatusDone: Benutzerkonto wurde genehmigt. Vielen Dank!
+WebinterfaceApproveStatusExpire: Benutzerkonto kann nicht genehmigt werden. Link ist abgelaufen!
+WebinterfaceRecoverSubject: Benutzerkonto wiederherstellen
+WebinterfaceRecoverMessage: Hallo @usershort, bitte bestätige dass du dein Kennwort vergessen hast. Klicke auf den folgenden Link.
+WebinterfaceRecoverStatusDone: Benutzerkonto wurde wiederhergestellt. Vielen Dank!
+WebinterfaceRecoverStatusExpire: Benutzerkonto kann nicht wiederhergestellt werden. Link ist abgelaufen!
+WebinterfaceWelcomeSubject: Willkommen
+WebinterfaceWelcomeMessage: Hallo @usershort, dein Benutzerkonto wurde erstellt. Viel Spass beim Bearbeiten der Webseite.
+WebinterfaceInformationSubject: Willkommen zurück
+WebinterfaceInformationMessage: Hallo @usershort, dein Benutzerkonto wurde wiederhergestellt. Viel Spass beim Bearbeiten der Webseite.
+WebinterfaceOkButton: Ok
+WebinterfaceCancelButton: Abbruch
 WebinterfaceCreateButton: Erzeugen
 WebinterfaceEditButton: Ändern
 WebinterfaceDeleteButton: Löschen
-WebinterfaceCancelButton: Abbruch
 WebinterfaceEdit: Seite ändern
 WebinterfaceCreate: +
 WebinterfaceDelete: -
 WebinterfaceCreateTitle: Neue Seite
 WebinterfaceDeleteTitle: Seite löschen
+WebinterfaceMarkdownHelp: Markdown
 WebinterfaceUserHelp: Hilfe
-WebinterfaceUserHelpUrl: http://developers.datenstrom.se/help/help-de
-WebinterfaceUserAccountUrl: http://developers.datenstrom.se/help/how-to-add-a-user-account-de
 WebinterfaceUserLogout: Abmelden
 WikiFilter: Wiki:
 WikiTag: Tags:
 WikiSpecialChanges: Letzte Änderungen
+YellowUrl: http://datenstrom.se/yellow/yellow-deutsch
+YellowUserHelpUrl: http://developers.datenstrom.se/help/help-de
+YellowMarkdownHelpUrl: http://developers.datenstrom.se/help/markdown-cheat-sheet-de

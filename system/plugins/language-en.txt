@@ -1,9 +1,9 @@
-# Yellow text strings
+# Yellow language file
 
 Language: en
 LanguageDescription: English
 LanguageAuthor: Mark Seuffert
-LanguageVersion: 0.6.2
+LanguageVersion: 0.6.4
 
 BlogBy: by
 BlogFilter: Blog:
@@ -16,7 +16,7 @@ ContactButton: Send message
 ContactStatusNone: Say hello. Your feedback is very welcome.
 ContactStatusIncomplete: Please fill out all fields.
 ContactStatusInvalid: Please enter a valid email.
-ContactStatusDone: You have sucessfully sent an email. Thank you!
+ContactStatusDone: You have sent an email. Thank you!
 ContactStatusError: Email could not be sent, please try again later!
 DateMonths: January, February, March, April, May, June, July, August, September, October, November, December
 DateWeekdays: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
@@ -29,23 +29,67 @@ SearchQuery: Search:
 SearchResultsNone: Enter a search term.
 SearchResultsEmpty: No results found.
 SearchButton: Search
-WebinterfaceLoginText: Yellow login
+WebinterfaceInstallationTitle: Welcome
+WebinterfaceInstallationSitename: Website:
+WebinterfaceInstallationAuthor: Name:
+WebinterfaceInstallationHomePage: ---\nTitle: Home\n---\nYour website works!\n\nYou can now [edit this page] or use your text editor.
+WebinterfaceLoginTitle: Yellow
 WebinterfaceLoginEmail: Email:
 WebinterfaceLoginPassword: Password:
+WebinterfaceLoginRecover: Forgot your password?
+WebinterfaceLoginSignup: Create user account?
 WebinterfaceLoginButton: Log in
+WebinterfaceSignupTitle: Create user account
+WebinterfaceSignupName: Name:
+WebinterfaceSignupEmail: Email:
+WebinterfaceSignupPassword: Password:
+WebinterfaceSignupButton: Create
+WebinterfaceSignupStatusNone: Here you can create a new user account.
+WebinterfaceSignupStatusIncomplete: Please fill out all fields.
+WebinterfaceSignupStatusInvalid: Please enter a valid email.
+WebinterfaceSignupStatusWeak: Please enter a different password.
+WebinterfaceSignupStatusNext: User account will be created, please check your emails.
+WebinterfaceRecoverTitle: Forgot your password
+WebinterfaceRecoverEmail: Email:
+WebinterfaceRecoverPassword: Password:
+WebinterfaceRecoverButton: Send
+WebinterfaceRecoverStatusNone: No problem, you can create a new password.
+WebinterfaceRecoverStatusInvalid: Please enter a valid email.
+WebinterfaceRecoverStatusPassword: Please enter a new password.
+WebinterfaceRecoverStatusWeak: Please enter a different password.
+WebinterfaceRecoverStatusNext: User account will be recovered, please check your emails.
+WebinterfaceConfirmSubject: Confirm user account
+WebinterfaceConfirmMessage: Hi @usershort, please confirm your user account. Click the following link.
+WebinterfaceConfirmStatusDone: User account confirmed. Thank you!
+WebinterfaceConfirmStatusExpire: User account can not be confirmed. Link has expired!
+WebinterfaceApproveSubject: Approve user account
+WebinterfaceApproveMessage: Hi @usershort, please approve a new user account for @useraccount. Click the following link.
+WebinterfaceApproveStatusDone: User account approved. Thank you!
+WebinterfaceApproveStatusExpire: User account can not be approved. Link has expired!
+WebinterfaceRecoverSubject: Recover user account
+WebinterfaceRecoverMessage: Hi @usershort, please confirm that you forgot your password. Click the following link.
+WebinterfaceRecoverStatusDone: User account recovered. Thank you!
+WebinterfaceRecoverStatusExpire: User account can not be recovered. Link has expired!
+WebinterfaceWelcomeSubject: Welcome
+WebinterfaceWelcomeMessage: Hi @usershort, your user account has been created. Have fun editing the website.
+WebinterfaceInformationSubject: Welcome back
+WebinterfaceInformationMessage: Hi @usershort, your user account has been recovered. Have fun editing the website.
+WebinterfaceOkButton: Ok
+WebinterfaceCancelButton: Cancel
 WebinterfaceCreateButton: Create
 WebinterfaceEditButton: Save
 WebinterfaceDeleteButton: Delete
-WebinterfaceCancelButton: Cancel
 WebinterfaceEdit: Edit page
 WebinterfaceCreate: +
 WebinterfaceDelete: -
 WebinterfaceCreateTitle: New page
 WebinterfaceDeleteTitle: Delete page
+WebinterfaceMarkdownHelp: Markdown
 WebinterfaceUserHelp: Help
-WebinterfaceUserHelpUrl: http://developers.datenstrom.se/help/
-WebinterfaceUserAccountUrl: http://developers.datenstrom.se/help/how-to-add-a-user-account
 WebinterfaceUserLogout: Logout
 WikiFilter: Wiki:
 WikiTag: Tags:
 WikiSpecialChanges: Recent changes
+YellowUrl: http://datenstrom.se/yellow
+YellowUserHelpUrl: http://developers.datenstrom.se/help/
+YellowMarkdownHelpUrl: http://developers.datenstrom.se/help/markdown-cheat-sheet
