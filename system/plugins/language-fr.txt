@@ -32,7 +32,7 @@ SearchButton: Rechercher
 WebinterfaceInstallationTitle: Bienvenue
 WebinterfaceInstallationSitename: Site web:
 WebinterfaceInstallationAuthor: Nom:
-WebinterfaceInstallationHomePage: ---\nTitle: Home\n---\nVotre site web fonctionne!\n\nVous pouvez [edit - modifier cette page] ou utilisez un éditeur de texte.
+WebinterfaceInstallationHomePage: ---\nTitle: Home\n---\nVotre site web fonctionne!\n\nVous pouvez [edit - modifier cette page] ou utiliser un éditeur de texte.
 WebinterfaceLoginTitle: Yellow
 WebinterfaceLoginEmail: Email:
 WebinterfaceLoginPassword: Mot de passe:
@@ -40,40 +40,40 @@ WebinterfaceLoginRecover: Mot de passe oublié?
 WebinterfaceLoginSignup: Créer un compte utilisateur?
 WebinterfaceLoginButton: Se connecter
 WebinterfaceSignupTitle: Créer un compte utilisateur
-WebinterfaceSignupName: Name:
+WebinterfaceSignupName: Nom:
 WebinterfaceSignupEmail: Email:
-WebinterfaceSignupPassword: Password:
-WebinterfaceSignupButton: Create
-WebinterfaceSignupStatusNone: Here you can create a new user account.
-WebinterfaceSignupStatusIncomplete: Please fill out all fields.
-WebinterfaceSignupStatusInvalid: Please enter a valid email.
-WebinterfaceSignupStatusWeak: Please enter a different password.
-WebinterfaceSignupStatusNext: User account will be created, please check your emails.
-WebinterfaceRecoverTitle: Forgot your password
+WebinterfaceSignupPassword: Mot de passe:
+WebinterfaceSignupButton: Créer
+WebinterfaceSignupStatusNone: Ici, vous pouvez créer un nouveau compte utilisateur.
+WebinterfaceSignupStatusIncomplete: Veuillez remplir tous les champs.
+WebinterfaceSignupStatusInvalid: S'il vous plaît, veuillez entrer une adresse email valide.
+WebinterfaceSignupStatusWeak: S'il vous plaît, choisissez un mot de passe différent.
+WebinterfaceSignupStatusNext: Votre compte a été créé, vérifiez vos emails.
+WebinterfaceRecoverTitle: Mot de passe oublié
 WebinterfaceRecoverEmail: Email:
-WebinterfaceRecoverPassword: Password:
-WebinterfaceRecoverButton: Send
-WebinterfaceRecoverStatusNone: No problem, you can create a new password.
-WebinterfaceRecoverStatusInvalid: Please enter a valid email.
-WebinterfaceRecoverStatusPassword: Please enter a new password.
-WebinterfaceRecoverStatusWeak: Please enter a different password.
-WebinterfaceRecoverStatusNext: User account will be recovered, please check your emails.
-WebinterfaceConfirmSubject: Confirm user account
-WebinterfaceConfirmMessage: Bonjour @usershort, please confirm your user account. Click the following link.
-WebinterfaceConfirmStatusDone: User account confirmed. Thank you!
-WebinterfaceConfirmStatusExpire: User account can not be confirmed. Link has expired!
-WebinterfaceApproveSubject: Approve user account
-WebinterfaceApproveMessage: Bonjour @usershort, please approve a new user account for @useraccount. Click the following link.
-WebinterfaceApproveStatusDone: User account approved. Thank you!
-WebinterfaceApproveStatusExpire: User account can not be approved. Link has expired!
-WebinterfaceRecoverSubject: Recover user account
-WebinterfaceRecoverMessage: Bonjour @usershort, please confirm that you forgot your password. Click the following link.
-WebinterfaceRecoverStatusDone: User account recovered. Thank you!
-WebinterfaceRecoverStatusExpire: User account can not be recovered. Link has expired!
-WebinterfaceWelcomeSubject: Welcome
-WebinterfaceWelcomeMessage: Bonjour @usershort, your user account has been created. Have fun editing the website.
-WebinterfaceInformationSubject: Welcome back
-WebinterfaceInformationMessage: Bonjour @usershort, your user account has been recovered. Have fun editing the website.
+WebinterfaceRecoverPassword: Mot de passe:
+WebinterfaceRecoverButton: Envoyer
+WebinterfaceRecoverStatusNone: Pas de problème, vous pouvez créer un nouveau mot de passe.
+WebinterfaceRecoverStatusInvalid: S'il vous plaît, veuillez entrer une adresse email valide.
+WebinterfaceRecoverStatusPassword: S'il vous plaît, choisissez un nouveau mot de passe.
+WebinterfaceRecoverStatusWeak: S'il vous plaît, choisissez un mot de passe différent.
+WebinterfaceRecoverStatusNext: Votre compte est à nouveau disponible, vérifiez vos emails.
+WebinterfaceConfirmSubject: Création d'un compte utilisateur.
+WebinterfaceConfirmMessage: Bonjour @usershort, veuillez confirmer la création de votre compte utilisateur. Cliquez sur le lien suivant.
+WebinterfaceConfirmStatusDone: Votre compte utilisateur est confirmé. Merci!
+WebinterfaceConfirmStatusExpire: Votre compte utilisateur ne peut pas être créé. Le lien de confirmation a expiré!
+WebinterfaceApproveSubject: Approuver un nouvel utilisateur.
+WebinterfaceApproveMessage: Bonjour @usershort, veuillez approuvez la création d'un nouveau compte utilisateur pour @useraccount. Cliquez sur le lien suivant.
+WebinterfaceApproveStatusDone: Compte utilisateur approuvé. Merci!
+WebinterfaceApproveStatusExpire: Le compte ne peut pas être approuvé. Le lien de confirmation a expiré!
+WebinterfaceRecoverSubject: Restauration d'un compte utilisateur.
+WebinterfaceRecoverMessage: Bonjour @usershort, veuillez confirmer que vous avez oublié votre mot de passe. Cliquez sur le lien suivant.
+WebinterfaceRecoverStatusDone: Compte utilisateur restauré. Merci!
+WebinterfaceRecoverStatusExpire: Le compte ne peut pas être restauré. Le lien de confirmation a expiré!
+WebinterfaceWelcomeSubject: Bienvenue
+WebinterfaceWelcomeMessage: Bonjour @usershort, votre compte utilisateur a bien été créé. Amusez-vous bien en éditant le site web.
+WebinterfaceInformationSubject: Bienvenue à nouveau
+WebinterfaceInformationMessage: Bonjour @usershort, votre compte utilisateur a bien été restauré. Amusez-vous bien en éditant le site web.
 WebinterfaceOkButton: Ok
 WebinterfaceCancelButton: Annuler
 WebinterfaceCreateButton: Créer
