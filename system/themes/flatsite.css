@@ -24,7 +24,6 @@ a, img { border:none; text-decoration:none; }
 .sitename h1 { margin:0; }
 .sitename h1 a { color:#111; text-decoration:none; }
 .with-sidebar .main { margin-right:17em; }
-.with-sidebar .sidebar { float:right; width:14em; margin-top:4.3em; overflow:hidden; }
 .with-sidebar .sidebar { float:right; width:16em; margin-top:5em; overflow:hidden; font-size:0.9em; }
 .content h1:first-child, .content>*:first-child { margin-top:0; }
 .content h1 a:hover { text-decoration:none; }
