@@ -77,7 +77,7 @@ class YellowCommandline
 			}
 		}
 		if($statusCode != 200) echo "ERROR checking updates: $versionLatest[error]\n";
-		if($updates) echo "Yellow $command: $updates update".($updates==1 ? "":"s")." available at $url\n";
+		if($updates) echo "Yellow $command: $updates update".($updates==1 ? "":"s")." available\n";
 		return $statusCode;
 	}
 		
