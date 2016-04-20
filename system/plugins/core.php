@@ -29,7 +29,7 @@ class YellowCore
 		$this->toolbox = new YellowToolbox();
 		$this->config->setDefault("sitename", "Yellow");
 		$this->config->setDefault("author", "Yellow");
-		$this->config->setDefault("email", "postmaster");
+		$this->config->setDefault("email", "webmaster");
 		$this->config->setDefault("language", "en");
 		$this->config->setDefault("theme", "default");
 		$this->config->setDefault("serverScheme", $this->toolbox->getServerScheme());
