@@ -50,11 +50,11 @@ class YellowCore
 		$this->config->setDefault("staticDir", "cache/");
 		$this->config->setDefault("staticDefaultFile", "index.html");
 		$this->config->setDefault("staticErrorFile", "404.html");
+		$this->config->setDefault("contentPagination", "page");
 		$this->config->setDefault("contentDir", "content/");
 		$this->config->setDefault("contentRootDir", "default/");
 		$this->config->setDefault("contentHomeDir", "home/");
 		$this->config->setDefault("contentDefaultFile", "page.txt");
-		$this->config->setDefault("contentPagination", "page");
 		$this->config->setDefault("contentExtension", ".txt");
 		$this->config->setDefault("configExtension", ".ini");
 		$this->config->setDefault("configFile", "config.ini");
