@@ -549,27 +549,31 @@ class YellowPage
 		{
 			if($name=="yellow" && $shortcut)
 			{
-				$output = "<span class=\"".htmlspecialchars($name)."\">\n";
-				if(empty($text))
+				$output = "Yellow ".YellowCore::Version;
+				if(!empty($text))
 				{
-					$serverSoftware = $this->yellow->toolbox->getServerSoftware();
-					$output .= "Yellow ".YellowCore::Version.", PHP ".PHP_VERSION.", $serverSoftware<br />\n";
-					foreach($this->yellow->plugins->getData() as $key=>$value)
+					$output = "<span class=\"".htmlspecialchars($name)."\">\n";
+					if($text == "version")
 					{
-						$output .= htmlspecialchars("$key $value")."<br />\n";
+						$serverSoftware = $this->yellow->toolbox->getServerSoftware();
+						$output .= "Yellow ".YellowCore::Version.", PHP ".PHP_VERSION.", $serverSoftware<br />\n";
+						foreach($this->yellow->plugins->getData() as $key=>$value)
+						{
+							$output .= htmlspecialchars("$key $value")."<br />\n";
+						}
+						foreach($this->yellow->themes->getData() as $key=>$value)
+						{
+							$output .= htmlspecialchars("$key $value")."<br />\n";
+						}
+					} else {
+						foreach($this->yellow->config->getData($text) as $key=>$value)
+						{
+							$output .= htmlspecialchars(ucfirst($key).": ".$value)."<br />\n";
+						}
 					}
-					foreach($this->yellow->themes->getData() as $key=>$value)
-					{
-						$output .= htmlspecialchars("$key $value")."<br />\n";
-					}
-				} else {
-					foreach($this->yellow->config->getData($text) as $key=>$value)
-					{
-						$output .= htmlspecialchars(ucfirst($key).": ".$value)."<br />\n";
-					}
+					$output .= "</span>\n";
+					if($this->parserSafeMode) $this->error(500, "Yellow '$text' is not available in safe mode!");
 				}
-				if($this->parserSafeMode) $this->error(500, "Yellow information are not available in safe mode!");
-				$output .= "</span>\n";
 			}
 		}
 		if(defined("DEBUG") && DEBUG>=3 && !empty($name)) echo "YellowPage::parseContentBlock name:$name shortcut:$shortcut<br/>\n";
