@@ -2784,7 +2784,7 @@ class YellowToolbox
 	function getTextLines($text)
 	{
 		$lines = array();
-		$split = preg_split("/(\R)/", $text, -1, PREG_SPLIT_DELIM_CAPTURE);
+		$split = preg_split("/(\R)/u", $text, -1, PREG_SPLIT_DELIM_CAPTURE);
 		for($i=0; $i<count($split)-1; $i+=2) array_push($lines, $split[$i].$split[$i+1]);
 		if($split[$i] != '') array_push($lines, $split[$i]);
 		return $lines;
