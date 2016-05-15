@@ -3,7 +3,7 @@
 Language: fr
 LanguageDescription: Français
 LanguageAuthor: Juh Nibreh
-LanguageVersion: 0.6.4
+LanguageVersion: 0.6.5
 
 BlogBy: par
 BlogFilter: Blog:
@@ -29,10 +29,8 @@ SearchQuery: Rechercher:
 SearchResultsNone: Entrez un mot dans le champ de recherche.
 SearchResultsEmpty: Pas de résultats.
 SearchButton: Rechercher
-WebinterfaceInstallationTitle: Bienvenue
-WebinterfaceInstallationSitename: Site web:
-WebinterfaceInstallationAuthor: Nom:
-WebinterfaceInstallationHomePage: ---\nTitle: Home\n---\nVotre site web fonctionne!\n\nVous pouvez [edit - modifier cette page] ou utiliser un éditeur de texte.
+WebinterfaceInstallationTitle: Bonjour
+WebinterfaceInstallationHomePage: Votre site web fonctionne!\n\nVous pouvez [edit - modifier cette page] ou utiliser un éditeur de texte.
 WebinterfaceLoginTitle: Yellow
 WebinterfaceLoginEmail: Email:
 WebinterfaceLoginPassword: Mot de passe:
@@ -73,7 +71,7 @@ WebinterfaceRecoverStatusExpire: Le compte ne peut pas être restauré. Le lien 
 WebinterfaceWelcomeSubject: Bienvenue
 WebinterfaceWelcomeMessage: Bonjour @usershort, votre compte utilisateur a bien été créé. Amusez-vous bien en éditant le site web.
 WebinterfaceInformationSubject: Bienvenue à nouveau
-WebinterfaceInformationMessage: Bonjour @usershort, votre compte utilisateur a bien été restauré. Amusez-vous bien en éditant le site web.
+WebinterfaceInformationMessage: Bonjour @usershort, votre compte utilisateur a bien été changé. Amusez-vous bien en éditant le site web.
 WebinterfaceOkButton: Ok
 WebinterfaceCancelButton: Annuler
 WebinterfaceCreateButton: Créer
@@ -85,6 +83,9 @@ WebinterfaceDelete: -
 WebinterfaceCreateTitle: Nouvelle page
 WebinterfaceDeleteTitle: Supprimer page
 WebinterfaceMarkdownHelp: Markdown
+WebinterfaceSettingsTitle: Paramètres
+WebinterfaceSettingsChangeEmail: Changez email
+WebinterfaceSettingsChangePassword: Changez mot de passe
 WebinterfaceUserHelp: Aide
 WebinterfaceUserLogout: Déconnexion
 WikiFilter: Wiki:

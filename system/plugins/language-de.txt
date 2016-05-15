@@ -3,7 +3,7 @@
 Language: de
 LanguageDescription: Deutsch
 LanguageAuthor: David Fehrmann
-LanguageVersion: 0.6.4
+LanguageVersion: 0.6.5
 
 BlogBy: von
 BlogFilter: Blog:
@@ -29,10 +29,8 @@ SearchQuery: Suche:
 SearchResultsNone: Bitte einen Suchbegriff eingeben.
 SearchResultsEmpty: Keine Treffer für diese Suchanfrage.
 SearchButton: Suchen
-WebinterfaceInstallationTitle: Willkommen
-WebinterfaceInstallationSitename: Webseite:
-WebinterfaceInstallationAuthor: Name:
-WebinterfaceInstallationHomePage: ---\nTitle: Home\n---\nDeine Webseite funktioniert!\n\nDu kannst [edit - diese Seite bearbeiten] oder einen Texteditor benutzen.
+WebinterfaceInstallationTitle: Hallo
+WebinterfaceInstallationHomePage: Deine Webseite funktioniert!\n\nDu kannst [edit - diese Seite bearbeiten] oder einen Texteditor benutzen.
 WebinterfaceLoginTitle: Yellow
 WebinterfaceLoginEmail: E-Mail:
 WebinterfaceLoginPassword: Kennwort:
@@ -73,7 +71,7 @@ WebinterfaceRecoverStatusExpire: Benutzerkonto kann nicht wiederhergestellt werd
 WebinterfaceWelcomeSubject: Willkommen
 WebinterfaceWelcomeMessage: Hallo @usershort, dein Benutzerkonto wurde erstellt. Viel Spass beim Bearbeiten der Webseite.
 WebinterfaceInformationSubject: Willkommen zurück
-WebinterfaceInformationMessage: Hallo @usershort, dein Benutzerkonto wurde wiederhergestellt. Viel Spass beim Bearbeiten der Webseite.
+WebinterfaceInformationMessage: Hallo @usershort, dein Benutzerkonto wurde geändert. Viel Spass beim Bearbeiten der Webseite.
 WebinterfaceOkButton: Ok
 WebinterfaceCancelButton: Abbruch
 WebinterfaceCreateButton: Erzeugen
@@ -85,6 +83,9 @@ WebinterfaceDelete: -
 WebinterfaceCreateTitle: Neue Seite
 WebinterfaceDeleteTitle: Seite löschen
 WebinterfaceMarkdownHelp: Markdown
+WebinterfaceSettingsTitle: Einstellungen
+WebinterfaceSettingsChangeEmail: Email ändern
+WebinterfaceSettingsChangePassword: Kennwort ändern
 WebinterfaceUserHelp: Hilfe
 WebinterfaceUserLogout: Abmelden
 WikiFilter: Wiki:
