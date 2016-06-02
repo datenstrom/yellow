@@ -5,7 +5,7 @@
 // Web interface plugin
 class YellowWebinterface
 {
-	const Version = "0.6.7";
+	const Version = "0.6.8";
 	var $yellow;				//access to API
 	var $active;				//web interface is active? (boolean)
 	var $userEmail;				//web interface user
@@ -13,6 +13,7 @@ class YellowWebinterface
 	var $userRestrictions;		//web interface user can change page? (boolean)
 	var $action;				//web interface action
 	var $status;				//web interface status
+	var $installation;			//web interface installation
 	var $users;					//web interface users
 	var $merge;					//web interface merge
 	var $rawDataSource;			//raw data of page for comparison
@@ -22,6 +23,7 @@ class YellowWebinterface
 	function onLoad($yellow)
 	{
 		$this->yellow = $yellow;
+		$this->installation = new YellowInstallation($yellow);
 		$this->users = new YellowUsers($yellow);
 		$this->merge = new YellowMerge($yellow);
 		$this->yellow->config->setDefault("webinterfaceServerScheme", $this->yellow->config->get("serverScheme"));
@@ -42,9 +44,10 @@ class YellowWebinterface
 	function onRequest($serverScheme, $serverName, $base, $location, $fileName)
 	{
 		$statusCode = 0;
-		if($this->checkRequest($location, $fileName))
+		if($this->yellow->config->get("installationMode"))
 		{
-			list($serverScheme, $serverName, $base, $location, $fileName) = $this->updateRequestInformation();
+			$statusCode = $this->installation->processRequest($serverScheme, $serverName, $base, $location, $fileName);
+		} else if($this->checkRequest($location)) {
 			$statusCode = $this->processRequest($serverScheme, $serverName, $base, $location, $fileName);
 		}
 		return $statusCode;
@@ -107,6 +110,7 @@ class YellowWebinterface
 		list($name, $command) = $args;		
 		switch($command)
 		{
+			case "clean":	$statusCode = $this->cleanCommand($args); break;
 			case "user":	$statusCode = $this->userCommand($args); break;
 			default:		$statusCode = 0;
 		}
@@ -117,6 +121,15 @@ class YellowWebinterface
 	function onCommandHelp()
 	{
 		return "user [EMAIL PASSWORD NAME LANGUAGE STATUS HOME]\n";
+	}
+
+	// Clean user accounts
+	function cleanCommand($args)
+	{
+		$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
+		$statusCode = $this->users->clean($fileNameUser) ? 200 : 500;
+		if($statusCode == 500) echo "ERROR cleaning configuration: Can't write file '$fileNameUser'!\n";
+		return status;
 	}
 	
 	// Update user account
@@ -160,7 +173,8 @@ class YellowWebinterface
 	function processRequest($serverScheme, $serverName, $base, $location, $fileName)
 	{
 		$statusCode = 0;
-		if($this->isActive() && $this->checkUser($location, $fileName))
+		list($serverScheme, $serverName, $base, $location, $fileName) = $this->updateRequestInformation();
+		if($this->checkUser($location, $fileName))
 		{
 			switch($_REQUEST["action"])
 			{
@@ -183,7 +197,6 @@ class YellowWebinterface
 				case "confirm":		$statusCode = $this->processRequestConfirm($serverScheme, $serverName, $base, $location, $fileName); break;
 				case "approve":		$statusCode = $this->processRequestApprove($serverScheme, $serverName, $base, $location, $fileName); break;
 				case "recover":		$statusCode = $this->processRequestRecover($serverScheme, $serverName, $base, $location, $fileName); break;
-				case "install":		$statusCode = $this->processRequestInstall($serverScheme, $serverName, $base, $location, $fileName); break;
 			}
 		}
 		if($statusCode == 0)
@@ -367,22 +380,23 @@ class YellowWebinterface
 	// Process request to change settings
 	function processRequestSettings($serverScheme, $serverName, $base, $location, $fileName)
 	{
-		$statusCode = 0;
-		if($this->getUserAccount($this->userEmail, "", "settings") == "ok")
+		$this->action = "settings";
+		$this->status = $this->getUserAccount($this->userEmail, "", $this->action);
+		if($this->status == "ok")
 		{
 			$name = trim(preg_replace("/[^\pL\d\-\. ]/u", "-", $_REQUEST["name"]));
 			$language = trim($_REQUEST["language"]);
 			$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
-			if($this->users->update($fileNameUser, $this->userEmail, "", $name, $language))
-			{
-				$statusCode = 303;
-				$location = $this->yellow->lookup->normaliseUrl($serverScheme, $serverName, $base, $location);
-				$this->yellow->sendStatus($statusCode, $location);
-			} else {
-				$statusCode = 500;
-				$this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
-				$this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
-			}
+			$this->status = $this->users->update($fileNameUser, $this->userEmail, "", $name, $language) ? "done" : "error";
+			if($this->status == "error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
+		}
+		if($this->status == "done")
+		{
+			$statusCode = 303;
+			$location = $this->yellow->lookup->normaliseUrl($serverScheme, $serverName, $base, $location);
+			$this->yellow->sendStatus($statusCode, $location);
+		} else {
+			$statusCode = $this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
 		}
 		return $statusCode;
 	}
@@ -470,63 +484,6 @@ class YellowWebinterface
 		return $statusCode;
 	}
 
-	// Process request to install
-	function processRequestInstall($serverScheme, $serverName, $base, $location, $fileName)
-	{
-		$statusCode = 0;
-		if($this->yellow->config->get("installationMode"))
-		{
-			$fileName = $this->yellow->config->get("configDir")."page-installation.txt";
-			$this->yellow->pages->pages["root/"] = array();
-			$this->yellow->page = new YellowPage($this->yellow);
-			$this->yellow->page->setRequestInformation($serverScheme, $serverName, $base, $location, $fileName);
-			$this->yellow->page->parseData($this->getRawDataInstallation($fileName, $this->yellow->getRequestLanguage()), false, 404);
-			$this->yellow->page->parserSafeMode = false;
-			$this->yellow->page->parseContent();
-			$name = trim(preg_replace("/[^\pL\d\-\. ]/u", "-", $_REQUEST["name"]));
-			$email = trim($_REQUEST["email"]);
-			$password = trim($_REQUEST["password"]);
-			$language = trim($_REQUEST["language"]);
-			$status = trim($_REQUEST["status"]);
-			if($status == "install")
-			{
-				$status = "ok";
-				$fileNameHome = $this->yellow->lookup->findFileFromLocation("/");
-				$fileData = strreplaceu("\r\n", "\n", $this->yellow->toolbox->readFile($fileNameHome));
-				if($fileData==$this->getRawDataHome("en") && $language!="en")
-				{
-					$status = $this->yellow->toolbox->createFile($fileNameHome, $this->getRawDataHome($language)) ? "ok" : "error";
-					if($status == "error") $this->yellow->page->error(500, "Can't write file '$fileNameHome'!");
-				}
-			}
-			if($status == "ok")
-			{
-				if(!empty($email) && !empty($password) && $this->getUserAccount($email, $password, "install") == "ok")
-				{
-					$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
-					$status = $this->users->update($fileNameUser, $email, $password, $name, $language, "active", "/") ? "ok" : "error";
-					if($status == "error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
-				}
-			}
-			if($status == "ok")
-			{
-				if($this->yellow->config->get("sitename") == "Yellow") $_REQUEST["sitename"] = $name;
-				$fileNameConfig = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
-				$status = $this->yellow->config->update($fileNameConfig, $this->getInstallationData()) ? "done" : "error";
-				if($status == "error") $this->yellow->page->error(500, "Can't write file '$fileNameConfig'!");
-			}
-			if($status == "done")
-			{
-				$statusCode = 303;
-				$location = $this->yellow->lookup->normaliseUrl($serverScheme, $serverName, $base, $location);
-				$this->yellow->sendStatus($statusCode, $location);
-			} else {
-				$statusCode = $this->yellow->sendPage();
-			}
-		}
-		return $statusCode;
-	}
-	
 	// Send mail to web interface user
 	function sendMail($serverScheme, $serverName, $base, $email, $action)
 	{
@@ -568,7 +525,7 @@ class YellowWebinterface
 	}
 
 	// Check web interface request
-	function checkRequest($location, $fileName)
+	function checkRequest($location)
 	{
 		if($this->yellow->toolbox->getServerScheme()==$this->yellow->config->get("webinterfaceServerScheme") &&
 		   $this->yellow->toolbox->getServerName()==$this->yellow->config->get("webinterfaceServerName"))
@@ -576,12 +533,7 @@ class YellowWebinterface
 			$locationLength = strlenu($this->yellow->config->get("webinterfaceLocation"));
 			$this->active = substru($location, 0, $locationLength) == $this->yellow->config->get("webinterfaceLocation");
 		}
-		if($this->yellow->config->get("installationMode"))
-		{
-			$_REQUEST["action"] =  $this->yellow->isStaticFile($location, $fileName, false) ? "" : "install";
-			$this->active = false;
-		}
-		return $this->yellow->config->get("installationMode") || $this->isActive();
+		return $this->isActive();
 	}
 	
 	// Check web interface user
@@ -784,42 +736,6 @@ class YellowWebinterface
 		return $page;
 	}
 	
-	// Return raw data for installation page
-	function getRawDataInstallation($fileName, $language)
-	{
-		$fileData = $this->yellow->toolbox->readFile($fileName);
-		if(empty($fileData))
-		{
-			$this->yellow->text->setLanguage($language);
-			$fileData = "---\nTitle:".$this->yellow->text->get("webinterfaceInstallationTitle")."\nLanguage:$language\nNavigation:navigation\n---\n";
-			$fileData .= "<form class=\"installation-form\" action=\"".$this->yellow->page->getLocation()."\" method=\"post\">\n";
-			$fileData .= "<p><label for=\"name\">".$this->yellow->text->get("webinterfaceSignupName")."</label><br /><input class=\"form-control\" type=\"text\" maxlength=\"64\" name=\"name\" id=\"name\" value=\"\"></p>\n";
-			$fileData .= "<p><label for=\"email\">".$this->yellow->text->get("webinterfaceSignupEmail")."</label><br /><input class=\"form-control\" type=\"text\" maxlength=\"64\" name=\"email\" id=\"email\" value=\"\"></p>\n";
-			$fileData .= "<p><label for=\"password\">".$this->yellow->text->get("webinterfaceSignupPassword")."</label><br /><input class=\"form-control\" type=\"password\" maxlength=\"64\" name=\"password\" id=\"password\" value=\"\"></p>\n";
-			if(count($this->yellow->text->getLanguages()) > 1)
-			{
-				$fileData .= "<p>";
-				foreach($this->yellow->text->getLanguages() as $language)
-				{
-					$checked = $language==$this->yellow->text->language ? " checked=\"checked\"" : "";
-					$fileData .= "<label for=\"$language\"><input type=\"radio\" name=\"language\" id=\"$language\" value=\"$language\"$checked> ".$this->yellow->text->getTextHtml("languageDescription", $language)."</label><br />";
-				}
-				$fileData .= "</p>\n";
-			}
-			$fileData .= "<input class=\"btn\" type=\"submit\" value=\"".$this->yellow->text->get("webinterfaceOkButton")."\" />\n";
-			$fileData .= "<input type=\"hidden\" name=\"status\" value=\"install\" />\n";
-			$fileData .= "</form>\n";
-		}
-		return $fileData;
-	}
-	
-	// Return raw data for home page
-	function getRawDataHome($language)
-	{
-		$rawData = "---\nTitle: Home\n---\n".strreplaceu("\\n", "\n", $this->yellow->text->getText("webinterfaceInstallationHomePage", $language));
-		return $rawData;
-	}
-	
 	// Return raw data for new page
 	function getRawDataNew($location = "")
 	{
@@ -827,18 +743,18 @@ class YellowWebinterface
 		$fileName = $this->yellow->lookup->findFileNew($fileName,
 			$this->yellow->config->get("webinterfaceNewFile"), $this->yellow->config->get("configDir"),
 			$this->yellow->config->get("template"));
-		$fileData = $this->yellow->toolbox->readFile($fileName);
-		$fileData = preg_replace("/@datetime/i", date("Y-m-d H:i:s"), $fileData);
-		$fileData = preg_replace("/@date/i", date("Y-m-d"), $fileData);
-		$fileData = preg_replace("/@usershort/i", strtok($this->users->getName($this->userEmail), " "), $fileData);
-		$fileData = preg_replace("/@username/i", $this->users->getName($this->userEmail), $fileData);
-		$fileData = preg_replace("/@userlanguage/i", $this->users->getLanguage($this->userEmail), $fileData);
+		$rawData = $this->yellow->toolbox->readFile($fileName);
+		$rawData = preg_replace("/@datetime/i", date("Y-m-d H:i:s"), $rawData);
+		$rawData = preg_replace("/@date/i", date("Y-m-d"), $rawData);
+		$rawData = preg_replace("/@usershort/i", strtok($this->users->getName($this->userEmail), " "), $rawData);
+		$rawData = preg_replace("/@username/i", $this->users->getName($this->userEmail), $rawData);
+		$rawData = preg_replace("/@userlanguage/i", $this->users->getLanguage($this->userEmail), $rawData);
 		if(!empty($location))
 		{
 			$title = $this->yellow->toolbox->createTextTitle($location);
-			$fileData = $this->updateDataTitle($fileData, $title);
+			$rawData = $this->updateDataTitle($rawData, $title);
 		}
-		return $fileData;
+		return $rawData;
 	}
 	
 	// Return page data including login information
@@ -882,30 +798,13 @@ class YellowWebinterface
 			{
 				$data["serverLanguages"][$language] = $this->yellow->text->getTextHtml("languageDescription", $language);
 			}
-			$data["serverVersion"] = YellowCore::Version;
+			$data["serverVersion"] = "Yellow ".YellowCore::Version;
 		} else {
 			$data["loginEmail"] = $this->yellow->config->get("loginEmail");
 			$data["loginPassword"] = $this->yellow->config->get("loginPassword");
 			$data["loginButtons"] = intval($this->users->isWebmaster());
 		}
 		if(defined("DEBUG") && DEBUG>=1) $data["debug"] = DEBUG;
-		return $data;
-	}
-	
-	// Return installation data
-	function getInstallationData()
-	{
-		$data = array();
-		foreach($_REQUEST as $key=>$value)
-		{
-			if(!$this->yellow->config->isExisting($key)) continue;
-			$data[$key] = trim($value);
-		}
-		$data["# serverScheme"] = $this->yellow->toolbox->getServerScheme();
-		$data["# serverName"] = $this->yellow->toolbox->getServerName();
-		$data["# serverBase"] = $this->yellow->toolbox->getServerBase();
-		$data["# serverTime"] = $this->yellow->toolbox->getServerTime();
-		$data["installationMode"] = "0";
 		return $data;
 	}
 	
@@ -964,6 +863,127 @@ class YellowWebinterface
 		return $this->active;
 	}
 }
+	
+// Yellow installation
+class YellowInstallation
+{
+	var $yellow;		//access to API
+	
+	function __construct($yellow)
+	{
+		$this->yellow = $yellow;
+	}
+	
+	// Process request to install
+	function processRequest($serverScheme, $serverName, $base, $location, $fileName)
+	{
+		$statusCode = 0;
+		if(!$this->yellow->isStaticFile($location, $fileName, false))
+		{
+			$fileName = $this->yellow->config->get("configDir")."page-installation.txt";
+			$this->yellow->pages->pages["root/"] = array();
+			$this->yellow->page = new YellowPage($this->yellow);
+			$this->yellow->page->setRequestInformation($serverScheme, $serverName, $base, $location, $fileName);
+			$this->yellow->page->parseData($this->getRawDataWelcome($fileName, $this->yellow->getRequestLanguage()), false, 404);
+			$this->yellow->page->parserSafeMode = false;
+			$this->yellow->page->parseContent();
+			$name = trim(preg_replace("/[^\pL\d\-\. ]/u", "-", $_REQUEST["name"]));
+			$email = trim($_REQUEST["email"]);
+			$password = trim($_REQUEST["password"]);
+			$language = trim($_REQUEST["language"]);
+			$status = trim($_REQUEST["status"]);
+			if($status == "install")
+			{
+				$status = "ok";
+				$fileNameHome = $this->yellow->lookup->findFileFromLocation("/");
+				$fileData = strreplaceu("\r\n", "\n", $this->yellow->toolbox->readFile($fileNameHome));
+				if($fileData==$this->getRawDataHome("en") && $language!="en")
+				{
+					$status = $this->yellow->toolbox->createFile($fileNameHome, $this->getRawDataHome($language)) ? "ok" : "error";
+					if($status == "error") $this->yellow->page->error(500, "Can't write file '$fileNameHome'!");
+				}
+			}
+			if($status == "ok")
+			{
+				if(!empty($email) && !empty($password))
+				{
+					$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
+					$status = $this->yellow->plugins->get("webinterface")->users->update($fileNameUser, $email, $password, $name, $language) ? "ok" : "error";
+					if($status == "error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
+				}
+			}
+			if($status == "ok")
+			{
+				if($this->yellow->config->get("sitename") == "Yellow") $_REQUEST["sitename"] = $name;
+				$fileNameConfig = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
+				$status = $this->yellow->config->update($fileNameConfig, $this->getConfigData()) ? "done" : "error";
+				if($status == "error") $this->yellow->page->error(500, "Can't write file '$fileNameConfig'!");
+			}
+			if($status == "done")
+			{
+				$statusCode = 303;
+				$location = $this->yellow->lookup->normaliseUrl($serverScheme, $serverName, $base, $location);
+				$this->yellow->sendStatus($statusCode, $location);
+			} else {
+				$statusCode = $this->yellow->sendPage();
+			}
+		}
+		return $statusCode;
+	}
+	
+	// Return raw data for welcome page
+	function getRawDataWelcome($fileName, $language)
+	{
+		$rawData = $this->yellow->toolbox->readFile($fileName);
+		if(empty($rawData))
+		{
+			$this->yellow->text->setLanguage($language);
+			$rawData = "---\nTitle:".$this->yellow->text->get("webinterfaceInstallationTitle")."\nLanguage:$language\nNavigation:navigation\n---\n";
+			$rawData .= "<form class=\"installation-form\" action=\"".$this->yellow->page->getLocation()."\" method=\"post\">\n";
+			$rawData .= "<p><label for=\"name\">".$this->yellow->text->get("webinterfaceSignupName")."</label><br /><input class=\"form-control\" type=\"text\" maxlength=\"64\" name=\"name\" id=\"name\" value=\"\"></p>\n";
+			$rawData .= "<p><label for=\"email\">".$this->yellow->text->get("webinterfaceSignupEmail")."</label><br /><input class=\"form-control\" type=\"text\" maxlength=\"64\" name=\"email\" id=\"email\" value=\"\"></p>\n";
+			$rawData .= "<p><label for=\"password\">".$this->yellow->text->get("webinterfaceSignupPassword")."</label><br /><input class=\"form-control\" type=\"password\" maxlength=\"64\" name=\"password\" id=\"password\" value=\"\"></p>\n";
+			if(count($this->yellow->text->getLanguages()) > 1)
+			{
+				$rawData .= "<p>";
+				foreach($this->yellow->text->getLanguages() as $language)
+				{
+					$checked = $language==$this->yellow->text->language ? " checked=\"checked\"" : "";
+					$rawData .= "<label for=\"$language\"><input type=\"radio\" name=\"language\" id=\"$language\" value=\"$language\"$checked> ".$this->yellow->text->getTextHtml("languageDescription", $language)."</label><br />";
+				}
+				$rawData .= "</p>\n";
+			}
+			$rawData .= "<input class=\"btn\" type=\"submit\" value=\"".$this->yellow->text->get("webinterfaceOkButton")."\" />\n";
+			$rawData .= "<input type=\"hidden\" name=\"status\" value=\"install\" />\n";
+			$rawData .= "</form>\n";
+		}
+		return $rawData;
+	}
+	
+	// Return raw data for home page
+	function getRawDataHome($language)
+	{
+		$rawData = "---\nTitle: Home\n---\n".strreplaceu("\\n", "\n", $this->yellow->text->getText("webinterfaceInstallationHomePage", $language));
+		return $rawData;
+	}
+	
+	// Return configuration data
+	function getConfigData()
+	{
+		$data = array();
+		foreach($_REQUEST as $key=>$value)
+		{
+			if(!$this->yellow->config->isExisting($key)) continue;
+			$data[$key] = trim($value);
+		}
+		$data["# serverScheme"] = $this->yellow->toolbox->getServerScheme();
+		$data["# serverName"] = $this->yellow->toolbox->getServerName();
+		$data["# serverBase"] = $this->yellow->toolbox->getServerBase();
+		$data["# serverTime"] = $this->yellow->toolbox->getServerTime();
+		$data["installationMode"] = "0";
+		return $data;
+	}
+}
 
 // Yellow users
 class YellowUsers
@@ -993,6 +1013,21 @@ class YellowUsers
 				if(defined("DEBUG") && DEBUG>=3) echo "YellowUsers::load email:$matches[1]<br/>\n";
 			}
 		}
+	}
+	
+	// Clean users in file
+	function clean($fileName)
+	{
+		$fileData = $this->yellow->toolbox->readFile($fileName);
+		foreach($this->yellow->toolbox->getTextLines($fileData) as $line)
+		{
+			preg_match("/^\s*(.*?)\s*:\s*(.*?),\s*(.*?),\s*(.*?),\s*(.*?),\s*(.*?)\s*$/", $line, $matches);
+			if(empty($matches[5]) || $matches[5]=="active" || $matches[5]=="inactive")
+			{
+				$fileDataNew .= $line;
+			}
+		}
+		return $this->yellow->toolbox->createFile($fileName, $fileDataNew);
 	}
 	
 	// Update users in file
