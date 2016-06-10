@@ -974,23 +974,28 @@ class YellowDataCollection extends ArrayObject
 		parent::__construct(array());
 	}
 	
+	// Return array element
 	function offsetGet($key)
 	{
 		if(is_string($key)) $key = lcfirst($key);
 		return parent::offsetGet($key);
 	}
 	
+	// Set array element
 	function offsetSet($key, $value)
 	{
 		if(is_string($key)) $key = lcfirst($key);
 		parent::offsetSet($key, $value);
 	}
+	
+	// Remove array element
 	function offsetUnset($key)
 	{
 		if(is_string($key)) $key = lcfirst($key);
 		parent::offsetUnset($key);
 	}
 	
+	// Check if array element exists
 	function offsetExists($key)
 	{
 		if(is_string($key)) $key = lcfirst($key);
