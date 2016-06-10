@@ -5,7 +5,7 @@
 <div class="navigation">
 <ul>
 <?php foreach($pages as $page): ?>
-<li><a<?php echo $page->isActive() ? " class=\"active\"" : "" ?> href="<?php echo $page->getLocation() ?>"><?php echo $page->getHtml("titleNavigation") ?></a></li>
+<li><a<?php echo $page->isActive() ? " class=\"active\"" : "" ?> href="<?php echo $page->getLocation(true) ?>"><?php echo $page->getHtml("titleNavigation") ?></a></li>
 <?php endforeach ?>
 <?php foreach($pagesMultiLanguage as $page): ?>
 <li><a href="<?php echo $page->getLocation().$yellow->toolbox->getLocationArgs() ?>"><?php echo $yellow->text->getTextHtml("languageDescription", $page->get("language")) ?></a></li>

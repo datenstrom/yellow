@@ -369,10 +369,10 @@ class YellowPage
 	var $rawData;				//raw data of page
 	var $metaDataOffsetBytes;	//meta data offset
 	var $metaData;				//meta data
+	var $pageCollection;		//page collection
+	var $pageRelations;			//page relations
 	var $headerData;			//response header
 	var $outputData;			//response output
-	var $pages;					//page collection
-	var $pageRelations;			//page relations
 	var $parser;				//content parser
 	var $parserData;			//content data of page
 	var $parserSafeMode;		//page is parsed in safe mode? (boolean)
@@ -385,10 +385,10 @@ class YellowPage
 	function __construct($yellow)
 	{
 		$this->yellow = $yellow;
-		$this->metaData = array();
-		$this->headerData = array();
-		$this->pages = new YellowPageCollection($yellow);
+		$this->metaData = new YellowDataCollection();
+		$this->pageCollection = new YellowPageCollection($yellow);
 		$this->pageRelations = array();
+		$this->headerData = array();
 	}
 
 	// Set request information
@@ -431,7 +431,7 @@ class YellowPage
 	// Parse page meta data
 	function parseMeta($pageError = "")
 	{
-		$this->metaData = array();
+		$this->metaData = new YellowDataCollection();
 		if(!is_null($this->rawData))
 		{
 			$this->set("title", $this->yellow->toolbox->createTextTitle($this->location));
@@ -455,7 +455,7 @@ class YellowPage
 				foreach(preg_split("/[\r\n]+/", $parts[2]) as $line)
 				{
 					preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
-					if(!empty($matches[1]) && !strempty($matches[2])) $this->set(lcfirst($matches[1]), $matches[2]);
+					if(!empty($matches[1]) && !strempty($matches[2])) $this->set($matches[1], $matches[2]);
 				}
 			} else if(preg_match("/^(\xEF\xBB\xBF)?([^\r\n]+)[\r\n]+=+[\r\n]+/", $this->rawData, $parts)) {
 				$this->metaDataOffsetBytes = strlenb($parts[0]);
@@ -742,13 +742,13 @@ class YellowPage
 	// Set page collection with additional pages for current page
 	function setPages($pages)
 	{
-		$this->pages = $pages;
+		$this->pageCollection = $pages;
 	}
 
 	// Return page collection with additional pages for current page
 	function getPages()
 	{
-		return $this->pages;
+		return $this->pageCollection;
 	}
 	
 	// Set related page
@@ -763,10 +763,10 @@ class YellowPage
 		return !is_null($this->pageRelations[$key]) ? $this->pageRelations[$key] : $this;
 	}
 	
-	// Return absolute page location
-	function getLocation()
+	// Return page location
+	function getLocation($absoluteLocation = true)
 	{
-		return $this->base.$this->location;
+		return $absoluteLocation ? $this->base.$this->location : $this->location;
 	}
 	
 	// Return page URL with server scheme and server name
@@ -963,6 +963,38 @@ class YellowPage
 	function isPage($key)
 	{
 		return !is_null($this->pageRelations[$key]);
+	}
+}
+
+// Yellow data collection as array
+class YellowDataCollection extends ArrayObject
+{
+	function __construct()
+	{
+		parent::__construct(array());
+	}
+	
+	function offsetGet($key)
+	{
+		if(is_string($key)) $key = lcfirst($key);
+		return parent::offsetGet($key);
+	}
+	
+	function offsetSet($key, $value)
+	{
+		if(is_string($key)) $key = lcfirst($key);
+		parent::offsetSet($key, $value);
+	}
+	function offsetUnset($key)
+	{
+		if(is_string($key)) $key = lcfirst($key);
+		parent::offsetUnset($key);
+	}
+	
+	function offsetExists($key)
+	{
+		if(is_string($key)) $key = lcfirst($key);
+		return parent::offsetExists($key);
 	}
 }
 
@@ -1679,8 +1711,8 @@ class YellowConfig
 	{
 		$this->yellow = $yellow;
 		$this->modified = 0;
-		$this->config = array();
-		$this->configDefaults = array();
+		$this->config = new YellowDataCollection();
+		$this->configDefaults = new YellowDataCollection();
 	}
 	
 	// Load configuration from file
@@ -1695,8 +1727,8 @@ class YellowConfig
 			preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
 			if(!empty($matches[1]) && !strempty($matches[2]))
 			{
-				$this->set(lcfirst($matches[1]), $matches[2]);
-				if(defined("DEBUG") && DEBUG>=3) echo "YellowConfig::load ".lcfirst($matches[1]).":$matches[2]<br/>\n";
+				$this->set($matches[1], $matches[2]);
+				if(defined("DEBUG") && DEBUG>=3) echo "YellowConfig::load $matches[1]:$matches[2]<br/>\n";
 			}
 		}
 	}
@@ -1707,7 +1739,7 @@ class YellowConfig
 		foreach($config as $key=>$value)
 		{
 			if(empty($key) || strempty($value)) { unset($config[$key]); continue; }
-			$this->set(lcfirst($key), $value);
+			$this->set($key, $value);
 		}
 		$this->modified = time();
 		$fileData = $this->yellow->toolbox->readFile($fileName);
@@ -1767,9 +1799,9 @@ class YellowConfig
 		$config = array();
 		if(empty($filterStart) && empty($filterEnd))
 		{
-			$config = array_merge($this->configDefaults, $this->config);
+			$config = array_merge($this->configDefaults->getArrayCopy(), $this->config->getArrayCopy());
 		} else {
-			foreach(array_merge($this->configDefaults, $this->config) as $key=>$value)
+			foreach(array_merge($this->configDefaults->getArrayCopy(), $this->config->getArrayCopy()) as $key=>$value)
 			{
 				if(!empty($filterStart) && substru($key, 0, strlenu($filterStart))==$filterStart) $config[$key] = $value;
 				if(!empty($filterEnd) && substru($key, -strlenu($filterEnd))==$filterEnd) $config[$key] = $value;
@@ -1803,7 +1835,7 @@ class YellowText
 	{
 		$this->yellow = $yellow;
 		$this->modified = 0;
-		$this->text = array();
+		$this->text = new YellowDataCollection();
 	}
 	
 	// Load text strings from file
@@ -1827,8 +1859,8 @@ class YellowText
 				}
 				if(!empty($language) && !empty($matches[1]) && !strempty($matches[2]))
 				{
-					$this->setText(lcfirst($matches[1]), $matches[2], $language);
-					if(defined("DEBUG") && DEBUG>=3) echo "YellowText::load ".lcfirst($matches[1]).":$matches[2]<br/>\n";
+					$this->setText($matches[1], $matches[2], $language);
+					if(defined("DEBUG") && DEBUG>=3) echo "YellowText::load $matches[1]:$matches[2]<br/>\n";
 				}
 			}
 		}
@@ -1843,7 +1875,7 @@ class YellowText
 	// Set text string for specific language
 	function setText($key, $value, $language)
 	{
-		if(is_null($this->text[$language])) $this->text[$language] = array();
+		if(is_null($this->text[$language])) $this->text[$language] = new YellowDataCollection();
 		$this->text[$language][$key] = $value;
 	}
 	
