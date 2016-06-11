@@ -5,7 +5,7 @@
 // Command line plugin
 class YellowCommandline
 {
-	const Version = "0.6.9";
+	const Version = "0.6.10";
 	var $yellow;					//access to API
 	var $files;						//number of files
 	var $errors;					//number of errors
@@ -18,6 +18,7 @@ class YellowCommandline
 		$this->yellow = $yellow;
 		$this->yellow->config->setDefault("commandlinePluginsUrl", "https://github.com/datenstrom/yellow-plugins");
 		$this->yellow->config->setDefault("commandlineThemesUrl", "https://github.com/datenstrom/yellow-themes");
+		$this->yellow->config->setDefault("commandlineVersionFile", "version.ini");
 	}
 	
 	// Handle command
@@ -68,7 +69,7 @@ class YellowCommandline
 		list($statusCode, $versionLatest) = $this->getSoftwareVersion(false);
 		foreach($versionCurrent as $key=>$value)
 		{
-			if($versionCurrent[$key] >= $versionLatest[$key])
+			if(strnatcasecmp($versionCurrent[$key], $versionLatest[$key]) >= 0)
 			{
 				echo "$key $value\n";
 			} else {
@@ -451,14 +452,14 @@ class YellowCommandline
 		return array($statusCode, $version);
 	}
 	
-	// Return software version URL from repository
+	// Return software version from URL
 	function getSoftwareVersionFromUrl($url)
 	{
 		$version = array();
 		$urlVersion = $url;
 		if(preg_match("#^https://github.com/(.+)$#", $url, $matches))
 		{
-			$urlVersion = "https://raw.githubusercontent.com/".$matches[1]."/master/version.ini";
+			$urlVersion = "https://raw.githubusercontent.com/".$matches[1]."/master/".$this->yellow->config->get("commandlineVersionFile");
 		}
 		if(extension_loaded("curl"))
 		{
