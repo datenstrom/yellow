@@ -8,4 +8,4 @@ Yellow is for people who make websites. [Get support](http://developers.datenstr
 2. Copy all files to your web hosting.  
 3. Open your website in a web browser. [Learn more](http://developers.datenstrom.se/help/).
 
-Yellow is a flat-file CMS and a static site generator.
+All files are licensed under [GPLv2](http://opensource.org/licenses/GPL-2.0) unless stated otherwise.
