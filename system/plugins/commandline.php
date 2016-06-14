@@ -5,7 +5,7 @@
 // Command line plugin
 class YellowCommandline
 {
-	const Version = "0.6.10";
+	const Version = "0.6.11";
 	var $yellow;					//access to API
 	var $files;						//number of files
 	var $errors;					//number of errors
@@ -65,11 +65,11 @@ class YellowCommandline
 		$serverSoftware = $this->yellow->toolbox->getServerSoftware();
 		echo "Yellow ".YellowCore::Version.", PHP ".PHP_VERSION.", $serverSoftware\n";
 		list($dummy, $command) = $args;
-		list($statusCode, $versionCurrent) = $this->getSoftwareVersion();
-		list($statusCode, $versionLatest) = $this->getSoftwareVersion(false);
-		foreach($versionCurrent as $key=>$value)
+		list($statusCode, $dataCurrent) = $this->getSoftwareVersion();
+		list($statusCode, $dataLatest) = $this->getSoftwareVersion(false);
+		foreach($dataCurrent as $key=>$value)
 		{
-			if(strnatcasecmp($versionCurrent[$key], $versionLatest[$key]) >= 0)
+			if(strnatcasecmp($dataCurrent[$key], $dataLatest[$key]) >= 0)
 			{
 				echo "$key $value\n";
 			} else {
@@ -77,7 +77,7 @@ class YellowCommandline
 				++$updates;
 			}
 		}
-		if($statusCode != 200) echo "ERROR checking updates: $versionLatest[error]\n";
+		if($statusCode != 200) echo "ERROR checking updates: $dataLatest[error]\n";
 		if($updates) echo "Yellow $command: $updates update".($updates==1 ? "":"s")." available\n";
 		return $statusCode;
 	}
@@ -437,25 +437,25 @@ class YellowCommandline
 	// Return software version
 	function getSoftwareVersion($current = true)
 	{
-		$version = array();
+		$data = array();
 		if($current)
 		{
 			$statusCode = 200;
-			foreach($this->yellow->plugins->getData() as $key=>$value) $version[$key] = $value;
-			foreach($this->yellow->themes->getData() as $key=>$value) $version[$key] = $value;
+			foreach($this->yellow->plugins->getData() as $key=>$value) $data[$key] = $value;
+			foreach($this->yellow->themes->getData() as $key=>$value) $data[$key] = $value;
 		} else {
-			list($statusCodePlugins, $versionPlugins) = $this->getSoftwareVersionFromUrl($this->yellow->config->get("commandlinePluginsUrl"));
-			list($statusCodeThemes, $versionThemes) = $this->getSoftwareVersionFromUrl($this->yellow->config->get("commandlineThemesUrl"));
+			list($statusCodePlugins, $dataPlugins) = $this->getSoftwareVersionFromUrl($this->yellow->config->get("commandlinePluginsUrl"));
+			list($statusCodeThemes, $dataThemes) = $this->getSoftwareVersionFromUrl($this->yellow->config->get("commandlineThemesUrl"));
 			$statusCode = max($statusCodePlugins, $statusCodeThemes);
-			$version = array_merge($versionPlugins, $versionThemes);
+			$data = array_merge($dataPlugins, $dataThemes);
 		}
-		return array($statusCode, $version);
+		return array($statusCode, $data);
 	}
 	
 	// Return software version from URL
 	function getSoftwareVersionFromUrl($url)
 	{
-		$version = array();
+		$data = array();
 		$urlVersion = $url;
 		if(preg_match("#^https://github.com/(.+)$#", $url, $matches))
 		{
@@ -476,20 +476,22 @@ class YellowCommandline
 				if(defined("DEBUG") && DEBUG>=2) echo "YellowCommandline::getSoftwareVersion location:$urlVersion\n";
 				foreach($this->yellow->toolbox->getTextLines($rawData) as $line)
 				{
-					if(preg_match("/^(\w+)\s*:\s*([0-9\.]+)/", $line, $matches))
+					preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
+					if(!empty($matches[1]) && !empty($matches[2]))
 					{
-						$version[$matches[1]] = $matches[2];
-						if(defined("DEBUG") && DEBUG>=3) echo "YellowCommandline::getSoftwareVersion $matches[1]:$matches[2]\n";
+						list($version, $url) = explode(',', $matches[2]);
+						$data[$matches[1]] = $version;
+						if(defined("DEBUG") && DEBUG>=3) echo "YellowCommandline::getSoftwareVersion $matches[1]:$version\n";
 					}
 				}
 			}
 			if($statusCode == 0) $statusCode = 444;
-			$version["error"] = "$url - ".$this->yellow->toolbox->getHttpStatusFormatted($statusCode);
+			$data["error"] = "$url - ".$this->yellow->toolbox->getHttpStatusFormatted($statusCode);
 		} else {
 			$statusCode = 500;
-			$version["error"] = "Plugin 'commandline' requires cURL library!";
+			$data["error"] = "Plugin 'commandline' requires cURL library!";
 		}
-		return array($statusCode, $version);
+		return array($statusCode, $data);
 	}
 	
 	// Return command help

@@ -1595,19 +1595,19 @@ class YellowPlugins
 		}
 		foreach($this->plugins as $key=>$value)
 		{
-			$this->plugins[$key]["obj"] = new $value["class"];
-			if(defined("DEBUG") && DEBUG>=3) echo "YellowPlugins::load $value[class]:$value[version]<br/>\n";
+			$this->plugins[$key]["obj"] = new $value["plugin"];
+			if(defined("DEBUG") && DEBUG>=3) echo "YellowPlugins::load $value[plugin]:$value[version]<br/>\n";
 			if(method_exists($this->plugins[$key]["obj"], "onLoad")) $this->plugins[$key]["obj"]->onLoad($yellow);
 		}
 	}
 	
 	// Register plugin
-	function register($name, $class, $version)
+	function register($name, $plugin, $version)
 	{
 		if(!$this->isExisting($name))
 		{
 			$this->plugins[$name] = array();
-			$this->plugins[$name]["class"] = $class;
+			$this->plugins[$name]["plugin"] = $plugin;
 			$this->plugins[$name]["version"] = $version;
 		}
 	}
@@ -1621,11 +1621,11 @@ class YellowPlugins
 	// Return plugin version
 	function getData()
 	{
-		$version = array();
-		$version["YellowCore"] = YellowCore::Version;
-		foreach($this->plugins as $key=>$value) $version[$value["class"]] = $value["version"];
-		uksort($version, strnatcasecmp);
-		return $version;
+		$data = array();
+		$data["YellowCore"] = YellowCore::Version;
+		foreach($this->plugins as $key=>$value) $data[$value["plugin"]] = $value["version"];
+		uksort($data, strnatcasecmp);
+		return $data;
 	}
 	
 	// Return plugin modification date, Unix time or HTTP format
@@ -1685,10 +1685,10 @@ class YellowThemes
 	// Return theme version
 	function getData()
 	{
-		$version = array();
-		foreach($this->themes as $key=>$value) $version[$value["theme"]] = $value["version"];
-		uksort($version, strnatcasecmp);
-		return $version;
+		$data = array();
+		foreach($this->themes as $key=>$value) $data[$value["theme"]] = $value["version"];
+		uksort($data, strnatcasecmp);
+		return $data;
 	}
 	
 	// Return theme modification date, Unix time or HTTP format
