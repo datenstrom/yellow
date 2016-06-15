@@ -481,11 +481,10 @@ class YellowPage
 				$this->yellow->config->get("serverBase"),
 				rtrim($this->yellow->config->get("webinterfaceLocation"), '/').$this->location));
 			$this->set("pageFile", $this->yellow->lookup->normaliseFile($this->fileName));
-			$this->set("pageType", $this->yellow->toolbox->getFileExtension($this->fileName));
 		} else {
+			$this->set("type", $this->yellow->toolbox->getFileExtension($this->fileName));
 			$this->set("modified", date("Y-m-d H:i:s", $this->yellow->toolbox->getFileModified($this->fileName)));
 			$this->set("pageFile", $this->yellow->lookup->normaliseFile($this->fileName, true));
-			$this->set("pageType", $this->yellow->toolbox->getFileExtension($this->fileName));
 		}
 		if(!empty($pageError)) $this->set("pageError", $pageError);
 		foreach($this->yellow->plugins->plugins as $key=>$value)
