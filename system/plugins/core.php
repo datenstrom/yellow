@@ -39,10 +39,12 @@ class YellowCore
 		$this->config->setDefault("imageLocation", "/media/images/");
 		$this->config->setDefault("pluginLocation", "/media/plugins/");
 		$this->config->setDefault("themeLocation", "/media/themes/");
+		$this->config->setDefault("assetLocation", "/media/themes/assets/");
 		$this->config->setDefault("systemDir", "system/");
 		$this->config->setDefault("configDir", "system/config/");
 		$this->config->setDefault("pluginDir", "system/plugins/");
 		$this->config->setDefault("themeDir", "system/themes/");
+		$this->config->setDefault("assetDir", "system/themes/assets/");
 		$this->config->setDefault("snippetDir", "system/themes/snippets/");
 		$this->config->setDefault("templateDir", "system/themes/templates/");
 		$this->config->setDefault("mediaDir", "media/");
@@ -286,7 +288,7 @@ class YellowCore
 			} else if($location == "/".$this->config->get("robotsFile")) {
 				$fileName = $this->config->get("configDir").$this->config->get("robotsFile");
 			} else if($location == "/".$this->config->get("faviconFile")) {
-				$fileName = $this->config->get("themeDir").$this->config->get("siteicon").".png";
+				$fileName = $this->config->get("assetDir").$this->config->get("siteicon").".png";
 			}
 		}
 		if(empty($fileName)) $fileName = $this->lookup->findFileFromLocation($location);
@@ -795,16 +797,16 @@ class YellowPage
 					$this->yellow->config->get("themeLocation").$this->get("theme").".css";
 				$output .= "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"".htmlspecialchars($location)."\" />\n";
 			}
-			if(is_file($this->yellow->config->get("themeDir").$this->get("theme").".js"))
+			if(is_file($this->yellow->config->get("assetDir").$this->get("theme").".js"))
 			{
 				$location = $this->yellow->config->get("serverBase").
-					$this->yellow->config->get("themeLocation").$this->get("theme").".js";
+					$this->yellow->config->get("assetLocation").$this->get("theme").".js";
 				$output .= "<script type=\"text/javascript\" src=\"".htmlspecialchars($location)."\"></script>\n";
 			}
-			if(is_file($this->yellow->config->get("themeDir").$this->get("siteicon").".png"))
+			if(is_file($this->yellow->config->get("assetDir").$this->get("siteicon").".png"))
 			{
 				$location = $this->yellow->config->get("serverBase").
-					$this->yellow->config->get("themeLocation").$this->get("siteicon").".png";
+					$this->yellow->config->get("assetLocation").$this->get("siteicon").".png";
 				$contentType = $this->yellow->toolbox->getMimeContentType($location);
 				$output .= "<link rel=\"icon\" type=\"$contentType\" href=\"".htmlspecialchars($location)."\" />\n";
 				$output .= "<link rel=\"apple-touch-icon\" type=\"$contentType\" href=\"".htmlspecialchars($location)."\" />\n";
