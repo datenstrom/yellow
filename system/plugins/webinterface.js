@@ -51,6 +51,7 @@ yellow.webinterface =
 		if(body && body.firstChild && !document.getElementById("yellow-bar"))
 		{
 			this.createBar("yellow-bar");
+			this.createPane("yellow-pane-edit", "none", "none");
 			this.action(yellow.page.action, yellow.page.status);
 			clearInterval(this.intervalId);
 		}
