@@ -91,6 +91,6 @@ WebinterfaceUserLogout: Abmelden
 WikiFilter: Wiki:
 WikiTag: Tags:
 WikiSpecialChanges: Letzte Änderungen
-YellowUrl: http://datenstrom.se/yellow/yellow-deutsch
+YellowUrl: http://datenstrom.se/de/yellow/
 YellowUserHelpUrl: http://developers.datenstrom.se/help/help-de
 YellowMarkdownHelpUrl: http://developers.datenstrom.se/help/markdown-cheat-sheet-de

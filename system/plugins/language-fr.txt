@@ -91,6 +91,6 @@ WebinterfaceUserLogout: Déconnexion
 WikiFilter: Wiki:
 WikiTag: Tags:
 WikiSpecialChanges: Changements récents
-YellowUrl: http://datenstrom.se/yellow/yellow-français
+YellowUrl: http://datenstrom.se/fr/yellow/
 YellowUserHelpUrl: http://developers.datenstrom.se/help/help-fr
 YellowMarkdownHelpUrl: http://developers.datenstrom.se/help/markdown-cheat-sheet-fr
