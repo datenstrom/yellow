@@ -146,7 +146,7 @@ class YellowUpdate
 		{
 			$this->yellow->text->setLanguage($language);
 			$rawData = "---\nTitle:".$this->yellow->text->get("webinterfaceInstallationTitle")."\nLanguage:$language\nNavigation:navigation\n---\n";
-			$rawData .= "<form class=\"installation-form\" action=\"".$this->yellow->page->getLocation()."\" method=\"post\">\n";
+			$rawData .= "<form class=\"installation-form\" action=\"".$this->yellow->page->getLocation(true)."\" method=\"post\">\n";
 			$rawData .= "<p><label for=\"name\">".$this->yellow->text->get("webinterfaceSignupName")."</label><br /><input class=\"form-control\" type=\"text\" maxlength=\"64\" name=\"name\" id=\"name\" value=\"\"></p>\n";
 			$rawData .= "<p><label for=\"email\">".$this->yellow->text->get("webinterfaceSignupEmail")."</label><br /><input class=\"form-control\" type=\"text\" maxlength=\"64\" name=\"email\" id=\"email\" value=\"\"></p>\n";
 			$rawData .= "<p><label for=\"password\">".$this->yellow->text->get("webinterfaceSignupPassword")."</label><br /><input class=\"form-control\" type=\"password\" maxlength=\"64\" name=\"password\" id=\"password\" value=\"\"></p>\n";

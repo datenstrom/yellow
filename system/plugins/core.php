@@ -1194,7 +1194,7 @@ class YellowPageCollection extends ArrayObject
 		if($pageNumber>=1 && $pageNumber<=$this->paginationCount)
 		{
 			$pagination = $this->yellow->config->get("contentPagination");
-			$location = $this->yellow->page->getLocation();
+			$location = $this->yellow->page->getLocation(true);
 			$locationArgs = $this->yellow->toolbox->getLocationArgsNew(
 				$pageNumber>1 ? "$pagination:$pageNumber" : "$pagination:", $pagination);
 		}

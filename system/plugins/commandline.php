@@ -241,7 +241,7 @@ class YellowCommandline
 		$path = rtrim(empty($path) ? $this->yellow->config->get("staticDir") : $path, '/');
 		if(empty($location))
 		{
-			$statusCode = max($statusCode, $this->commandForward("all", "clean"));
+			$statusCode = max($statusCode, $this->commandForward("clean"));
 			$statusCode = max($statusCode, $this->cleanStaticDirectory($path));
 		} else {
 			$statusCode = $this->cleanStaticFile($path, $location);
