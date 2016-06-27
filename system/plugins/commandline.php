@@ -5,7 +5,7 @@
 // Command line plugin
 class YellowCommandline
 {
-	const Version = "0.6.11";
+	const Version = "0.6.12";
 	var $yellow;					//access to API
 	var $files;						//number of files
 	var $errors;					//number of errors
@@ -16,27 +16,19 @@ class YellowCommandline
 	function onLoad($yellow)
 	{
 		$this->yellow = $yellow;
-		$this->yellow->config->setDefault("commandlinePluginsUrl", "https://github.com/datenstrom/yellow-plugins");
-		$this->yellow->config->setDefault("commandlineThemesUrl", "https://github.com/datenstrom/yellow-themes");
-		$this->yellow->config->setDefault("commandlineVersionFile", "version.ini");
 	}
 	
 	// Handle command
 	function onCommand($args)
 	{
-		list($name, $command) = $args;
+		list($command) = $args;
 		switch($command)
 		{
 			case "":		$statusCode = $this->helpCommand(); break;
-			case "version":	$statusCode = $this->versionCommand($args); break;
 			case "build":	$statusCode = $this->buildCommand($args); break;
 			case "clean":	$statusCode = $this->cleanCommand($args); break;
-			default:		$statusCode = $this->pluginCommand($args);
-		}
-		if($statusCode == 0)
-		{
-			$statusCode = 400;
-			echo "Yellow $command: Command not found\n";
+			case "version":	$statusCode = $this->versionCommand($args); break;
+			default:		$statusCode = 0;
 		}
 		return $statusCode;
 	}
@@ -44,9 +36,9 @@ class YellowCommandline
 	// Handle command help
 	function onCommandHelp()
 	{
-		$help .= "version\n";
 		$help .= "build [DIRECTORY LOCATION]\n";
 		$help .= "clean [DIRECTORY LOCATION]\n";
+		$help .= "version\n";
 		return $help;
 	}
 	
@@ -58,35 +50,11 @@ class YellowCommandline
 		return 200;
 	}
 	
-	// Show software version and updates
-	function versionCommand($args)
-	{
-		$statusCode = 0;
-		$serverSoftware = $this->yellow->toolbox->getServerSoftware();
-		echo "Yellow ".YellowCore::Version.", PHP ".PHP_VERSION.", $serverSoftware\n";
-		list($dummy, $command) = $args;
-		list($statusCode, $dataCurrent) = $this->getSoftwareVersion();
-		list($statusCode, $dataLatest) = $this->getSoftwareVersion(false);
-		foreach($dataCurrent as $key=>$value)
-		{
-			if(strnatcasecmp($dataCurrent[$key], $dataLatest[$key]) >= 0)
-			{
-				echo "$key $value\n";
-			} else {
-				echo "$key $value - Update available\n";
-				++$updates;
-			}
-		}
-		if($statusCode != 200) echo "ERROR checking updates: $dataLatest[error]\n";
-		if($updates) echo "Yellow $command: $updates update".($updates==1 ? "":"s")." available\n";
-		return $statusCode;
-	}
-		
 	// Build static files
 	function buildCommand($args)
 	{
 		$statusCode = 0;
-		list($dummy, $command, $path, $location) = $args;
+		list($command, $path, $location) = $args;
 		if(empty($location) || $location[0]=='/')
 		{
 			if($this->checkStaticConfig())
@@ -95,13 +63,9 @@ class YellowCommandline
 			} else {
 				$statusCode = 500;
 				$this->files = 0; $this->errors = 1;
-				if($this->yellow->config->get("installationMode"))
-				{
-					echo "ERROR building files: Please open your website in a web browser to detect server settings!\n";
-				} else {
-					$fileName = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
-					echo "ERROR building files: Please configure ServerScheme, ServerName, ServerBase, ServerTime in file '$fileName'!\n";
-				}
+				$fileName = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
+				echo "ERROR building files: Please configure ServerScheme, ServerName, ServerBase, ServerTime in file '$fileName'!\n";
+				echo "ERROR building files: To see your web server configuration, open your website in a web browser!\n";
 			}
 			echo "Yellow $command: $this->files file".($this->files!=1 ? 's' : '');
 			echo ", $this->errors error".($this->errors!=1 ? 's' : '');
@@ -116,7 +80,6 @@ class YellowCommandline
 	// Build static files and additional locations
 	function buildStatic($path, $location)
 	{
-		$this->yellow->toolbox->timerStart($time);
 		$path = rtrim(empty($path) ? $this->yellow->config->get("staticDir") : $path, '/');
 		$this->files = $this->errors = $statusCode = 0;
 		$this->locationsArgs = $this->locationsArgsPagination = array();
@@ -156,8 +119,6 @@ class YellowCommandline
 		} else {
 			$statusCode = $this->buildStaticFile($path, $location);
 		}
-		$this->yellow->toolbox->timerStop($time);
-		if(defined("DEBUG") && DEBUG>=1) echo "YellowCommandline::buildStatic time:$time ms\n";
 		return $statusCode;
 	}
 	
@@ -261,7 +222,7 @@ class YellowCommandline
 	function cleanCommand($args)
 	{
 		$statusCode = 0;
-		list($dummy, $command, $path, $location) = $args;
+		list($command, $path, $location) = $args;
 		if(empty($location) || $location[0]=='/')
 		{
 			$statusCode = $this->cleanStatic($path, $location);
@@ -280,7 +241,7 @@ class YellowCommandline
 		$path = rtrim(empty($path) ? $this->yellow->config->get("staticDir") : $path, '/');
 		if(empty($location))
 		{
-			$statusCode = max($statusCode, $this->pluginCommand(array("all", "clean")));
+			$statusCode = max($statusCode, $this->commandForward("all", "clean"));
 			$statusCode = max($statusCode, $this->cleanStaticDirectory($path));
 		} else {
 			$statusCode = $this->cleanStaticFile($path, $location);
@@ -319,30 +280,53 @@ class YellowCommandline
 		return $statusCode;
 	}
 	
-	// Forward plugin command
-	function pluginCommand($args)
+	// Forward command to other plugins
+	function commandForward($args)
 	{
 		$statusCode = 0;
 		foreach($this->yellow->plugins->plugins as $key=>$value)
 		{
-			if($key == "commandline") continue;
-			if(method_exists($value["obj"], "onCommand"))
+			if(method_exists($value["obj"], "onCommand") && $found)
 			{
-				$statusCode = $value["obj"]->onCommand($args);
+				$statusCode = $value["obj"]->onCommand(func_get_args());
 				if($statusCode != 0) break;
 			}
+			if($key == "commandline") $found = true;
 		}
+		return $statusCode;
+	}
+	
+	// Show software version and updates
+	function versionCommand($args)
+	{
+		$statusCode = 0;
+		$serverSoftware = $this->yellow->toolbox->getServerSoftware();
+		echo "Yellow ".YellowCore::Version.", PHP ".PHP_VERSION.", $serverSoftware\n";
+		list($command) = $args;
+		list($statusCode, $dataCurrent) = $this->getSoftwareVersion();
+		list($statusCode, $dataLatest) = $this->getSoftwareVersion(true);
+		foreach($dataCurrent as $key=>$value)
+		{
+			if(strnatcasecmp($dataCurrent[$key], $dataLatest[$key]) >= 0)
+			{
+				echo "$key $value\n";
+			} else {
+				echo "$key $value - Update available\n";
+				++$updates;
+			}
+		}
+		if($statusCode != 200) echo "ERROR checking updates: $dataLatest[error]\n";
+		if($updates) echo "Yellow $command: $updates update".($updates==1 ? "":"s")." available\n";
 		return $statusCode;
 	}
 	
 	// Check static configuration
 	function checkStaticConfig()
 	{
-		$installationMode = $this->yellow->config->get("installationMode");
 		$serverScheme = $this->yellow->config->get("serverScheme");
 		$serverName = $this->yellow->config->get("serverName");
 		$serverBase = $this->yellow->config->get("serverBase");
-		return !$installationMode && !empty($serverScheme) && !empty($serverName) &&
+		return !empty($serverScheme) && !empty($serverName) &&
 			$this->yellow->lookup->isValidLocation($serverBase) && $serverBase!="/";
 	}
 	
@@ -434,66 +418,6 @@ class YellowCommandline
 		return $locations;
 	}
 	
-	// Return software version
-	function getSoftwareVersion($current = true)
-	{
-		$data = array();
-		if($current)
-		{
-			$statusCode = 200;
-			foreach($this->yellow->plugins->getData() as $key=>$value) $data[$key] = $value;
-			foreach($this->yellow->themes->getData() as $key=>$value) $data[$key] = $value;
-		} else {
-			list($statusCodePlugins, $dataPlugins) = $this->getSoftwareVersionFromUrl($this->yellow->config->get("commandlinePluginsUrl"));
-			list($statusCodeThemes, $dataThemes) = $this->getSoftwareVersionFromUrl($this->yellow->config->get("commandlineThemesUrl"));
-			$statusCode = max($statusCodePlugins, $statusCodeThemes);
-			$data = array_merge($dataPlugins, $dataThemes);
-		}
-		return array($statusCode, $data);
-	}
-	
-	// Return software version from URL
-	function getSoftwareVersionFromUrl($url)
-	{
-		$data = array();
-		$urlVersion = $url;
-		if(preg_match("#^https://github.com/(.+)$#", $url, $matches))
-		{
-			$urlVersion = "https://raw.githubusercontent.com/".$matches[1]."/master/".$this->yellow->config->get("commandlineVersionFile");
-		}
-		if(extension_loaded("curl"))
-		{
-			$curlHandle = curl_init();
-			curl_setopt($curlHandle, CURLOPT_URL, $urlVersion);
-			curl_setopt($curlHandle, CURLOPT_USERAGENT, "Mozilla/5.0 (compatible; YellowCore/".YellowCore::Version).")";
-			curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, 1);
-			curl_setopt($curlHandle, CURLOPT_CONNECTTIMEOUT, 30);
-			$rawData = curl_exec($curlHandle);
-			$statusCode = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);
-			curl_close($curlHandle);
-			if($statusCode == 200)
-			{
-				if(defined("DEBUG") && DEBUG>=2) echo "YellowCommandline::getSoftwareVersion location:$urlVersion\n";
-				foreach($this->yellow->toolbox->getTextLines($rawData) as $line)
-				{
-					preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
-					if(!empty($matches[1]) && !empty($matches[2]))
-					{
-						list($version, $url) = explode(',', $matches[2]);
-						$data[$matches[1]] = $version;
-						if(defined("DEBUG") && DEBUG>=3) echo "YellowCommandline::getSoftwareVersion $matches[1]:$version\n";
-					}
-				}
-			}
-			if($statusCode == 0) $statusCode = 444;
-			$data["error"] = "$url - ".$this->yellow->toolbox->getHttpStatusFormatted($statusCode);
-		} else {
-			$statusCode = 500;
-			$data["error"] = "Plugin 'commandline' requires cURL library!";
-		}
-		return array($statusCode, $data);
-	}
-	
 	// Return command help
 	function getCommandHelp()
 	{
@@ -511,6 +435,21 @@ class YellowCommandline
 		}
 		uksort($data, strnatcasecmp);
 		return $data;
+	}
+
+	// Return software version
+	function getSoftwareVersion($latest = false)
+	{
+		$data = array();
+		if($this->yellow->plugins->isExisting("update"))
+		{
+			list($statusCode, $data) = $this->yellow->plugins->get("update")->getSoftwareVersion($latest);
+		} else {
+			$statusCode = 200;
+			foreach($this->yellow->plugins->getData() as $key=>$value) $data[$key] = $value;
+			foreach($this->yellow->themes->getData() as $key=>$value) $data[$key] = $value;
+		}
+		return array($statusCode, $data);
 	}
 }
 	

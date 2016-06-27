@@ -89,21 +89,6 @@ class YellowCore
 		$this->themes->load();
 	}
 	
-	// Handle command
-	function command($name, $args = NULL)
-	{
-		$statusCode = 0;
-		if($this->plugins->isExisting($name))
-		{
-			$plugin = $this->plugins->plugins[$name];
-			if(method_exists($plugin["obj"], "onCommand")) $statusCode = $plugin["obj"]->onCommand(func_get_args());
-		} else {
-			$statusCode = 500;
-			$this->page->error($statusCode, "Plugin '$name' does not exist!");
-		}
-		return $statusCode;
-	}
-	
 	// Handle request
 	function request()
 	{
@@ -260,6 +245,30 @@ class YellowCore
 		{
 			foreach($this->page->headerData as $key=>$value) echo "YellowCore::sendStatus $key: $value<br/>\n";
 		}
+	}
+	
+	// Handle command
+	function command($args = NULL)
+	{
+		$statusCode = 0;
+		$this->toolbox->timerStart($time);
+		foreach($this->plugins->plugins as $key=>$value)
+		{
+			if(method_exists($value["obj"], "onCommand"))
+			{
+				$statusCode = $value["obj"]->onCommand(func_get_args());
+				if($statusCode != 0) break;
+			}
+		}
+		$this->toolbox->timerStop($time);
+		if(defined("DEBUG") && DEBUG>=1) echo "YellowCore::command time:$time ms<br/>\n";
+		if($statusCode == 0)
+		{
+			$statusCode = 400;
+			list($name, $command) = func_get_args();
+			echo "Yellow $command: Command not found\n";
+		}
+		return $statusCode;
 	}
 	
 	// Parse snippet
