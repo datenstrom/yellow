@@ -2009,10 +2009,42 @@ class YellowLookup
 	// Load file system information
 	function load()
 	{
-		list($pathRoot, $pathHome) = $this->getContentInformation();
+		list($pathRoot, $pathHome) = $this->detectFileSystem();
 		$this->yellow->config->set("contentRootDir", $pathRoot);
 		$this->yellow->config->set("contentHomeDir", $pathHome);
 		date_default_timezone_set($this->yellow->config->get("serverTime"));
+	}
+	
+	// Detect file system
+	function detectFileSystem()
+	{
+		$path = $this->yellow->config->get("contentDir");
+		$pathRoot = $this->yellow->config->get("contentRootDir");
+		$pathHome = $this->yellow->config->get("contentHomeDir");
+		if(!$this->yellow->config->get("multiLanguageMode")) $pathRoot = "";
+		if(!empty($pathRoot))
+		{
+			$token = $root = rtrim($pathRoot, '/');
+			foreach($this->yellow->toolbox->getDirectoryEntries($path, "/.*/", true, true, false) as $entry)
+			{
+				if(empty($firstRoot)) { $firstRoot = $token = $entry; }
+				if($this->normaliseName($entry) == $root) { $token = $entry; break; }
+			}
+			$pathRoot = $this->normaliseName($token)."/";
+			$path .= "$firstRoot/";
+		}
+		if(!empty($pathHome))
+		{
+			$token = $home = rtrim($pathHome, '/');
+			foreach($this->yellow->toolbox->getDirectoryEntries($path, "/.*/", true, true, false) as $entry)
+			{
+				if(empty($firstHome)) { $firstHome = $token = $entry; }
+				if($this->normaliseName($entry) == $home) { $token = $entry; break; }
+			}
+			$pathHome = $this->normaliseName($token)."/";
+			if(count($this->yellow->toolbox->getDirectoryEntries($path.$token, "/.*/", true, true, false))) $invalid = true;
+		}
+		return array($pathRoot, $invalid ? "invalid" : $pathHome);
 	}
 	
 	// Return root locations
@@ -2305,37 +2337,6 @@ class YellowLookup
 		return $url;
 	}
 	
-	// Return content information
-	function getContentInformation()
-	{
-		$path = $this->yellow->config->get("contentDir");
-		$pathRoot = $this->yellow->config->get("contentRootDir");
-		$pathHome = $this->yellow->config->get("contentHomeDir");
-		if(!$this->yellow->config->get("multiLanguageMode")) $pathRoot = "";
-		if(!empty($pathRoot))
-		{
-			$token = $root = rtrim($pathRoot, '/');
-			foreach($this->yellow->toolbox->getDirectoryEntries($path, "/.*/", true, true, false) as $entry)
-			{
-				if(empty($firstRoot)) { $firstRoot = $token = $entry; }
-				if($this->normaliseName($entry) == $root) { $token = $entry; break; }
-			}
-			$pathRoot = $this->normaliseName($token)."/";
-			$path .= "$firstRoot/";
-		}
-		if(!empty($pathHome))
-		{
-			$token = $home = rtrim($pathHome, '/');
-			foreach($this->yellow->toolbox->getDirectoryEntries($path, "/.*/", true, true, false) as $entry)
-			{
-				if(empty($firstHome)) { $firstHome = $token = $entry; }
-				if($this->normaliseName($entry) == $home) { $token = $entry; break; }
-			}
-			$pathHome = $this->normaliseName($token)."/";
-		}
-		return array($pathRoot, $pathHome);
-	}
-
 	// Return directory location
 	function getDirectoryLocation($location)
 	{
