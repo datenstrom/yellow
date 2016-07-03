@@ -118,7 +118,7 @@ class YellowWebinterface
 	// Handle command help
 	function onCommandHelp()
 	{
-		return "user [EMAIL PASSWORD NAME LANGUAGE STATUS]\n";
+		return "user [EMAIL PASSWORD NAME LANGUAGE]\n";
 	}
 
 	// Clean user accounts
@@ -128,14 +128,14 @@ class YellowWebinterface
 		$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
 		if(!$this->users->clean($fileNameUser)) $statusCode = 500;
 		if($statusCode == 500) echo "ERROR cleaning configuration: Can't write file '$fileNameUser'!\n";
-		return status;
+		return $statusCode;
 	}
 	
 	// Update user account
 	function userCommand($args)
 	{
 		$statusCode = 0;
-		list($command, $email, $password, $name, $language, $status) = $args;
+		list($command, $email, $password, $name, $language) = $args;
 		if(!empty($email) && !empty($password))
 		{
 			$userExisting = $this->users->isExisting($email);
@@ -148,7 +148,7 @@ class YellowWebinterface
 			if($status == "ok")
 			{
 				$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
-				$status = $this->users->update($fileNameUser, $email, $password, $name, $language, $status) ? "ok" : "error";
+				$status = $this->users->update($fileNameUser, $email, $password, $name, $language, "active") ? "ok" : "error";
 				if($status == "error") echo "ERROR updating configuration: Can't write file '$fileNameUser'!\n";
 			}
 			if($status == "ok")
@@ -823,7 +823,7 @@ class YellowWebinterface
 		foreach($this->users->users as $key=>$value)
 		{
 			$data[$key] = "$value[email] password $value[name] $value[language] $value[status]";
-			if($this->getUserRestrictions($value["email"], "/locationcheck/", "/filecheck")) $data[$key] .= " - User restricted";
+			if($this->getUserRestrictions($value["email"], "/locationcheck/", "/filecheck")) $data[$key] .= " restrictions";
 		}
 		usort($data, strnatcasecmp);
 		return $data;
