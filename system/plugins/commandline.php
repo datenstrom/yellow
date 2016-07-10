@@ -177,17 +177,17 @@ class YellowCommandline
 			++$this->errors;
 			echo "ERROR building location '$location', ".$this->yellow->page->getStatusCode(true)."\n";
 		}
-		if(defined("DEBUG") && DEBUG>=1) echo "YellowCommandline::buildStaticFile status:$statusCode location:$location\n";
+		if(defined("DEBUG") && DEBUG>=1) echo "YellowCommandline::buildStaticFile status:$statusCode location:$location<br/>\n";
 		return $statusCode;
 	}
 	
 	// Analyse static file, detect locations with arguments
-	function analyseStaticFile($text)
+	function analyseStaticFile($rawData)
 	{
 		$serverName = $this->yellow->config->get("serverName");
 		$serverBase = $this->yellow->config->get("serverBase");
 		$pagination = $this->yellow->config->get("contentPagination");
-		preg_match_all("/<(.*?)href=\"([^\"]+)\"(.*?)>/i", $text, $matches);
+		preg_match_all("/<(.*?)href=\"([^\"]+)\"(.*?)>/i", $rawData, $matches);
 		foreach($matches[2] as $match)
 		{
 			if(preg_match("/^(.*?)#(.*)$/", $match, $tokens)) $match = $tokens[1];
@@ -205,14 +205,14 @@ class YellowCommandline
 				if(is_null($this->locationsArgs[$location]))
 				{
 					$this->locationsArgs[$location] = $location;
-					if(defined("DEBUG") && DEBUG>=2) echo "YellowCommandline::analyseStaticFile detected location:$location\n";
+					if(defined("DEBUG") && DEBUG>=2) echo "YellowCommandline::analyseStaticFile detected location:$location<br/>\n";
 				}
 			} else {
 				$location = rtrim($location, "0..9");
 				if(is_null($this->locationsArgsPagination[$location]))
 				{
 					$this->locationsArgsPagination[$location] = $location;
-					if(defined("DEBUG") && DEBUG>=2) echo "YellowCommandline::analyseStaticFile detected location:$location\n";
+					if(defined("DEBUG") && DEBUG>=2) echo "YellowCommandline::analyseStaticFile detected location:$location<br/>\n";
 				}
 			}
 		}

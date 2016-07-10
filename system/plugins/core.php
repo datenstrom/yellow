@@ -47,6 +47,7 @@ class YellowCore
 		$this->config->setDefault("assetDir", "system/themes/assets/");
 		$this->config->setDefault("snippetDir", "system/themes/snippets/");
 		$this->config->setDefault("templateDir", "system/themes/templates/");
+		$this->config->setDefault("trashDir", "system/trash/");
 		$this->config->setDefault("mediaDir", "media/");
 		$this->config->setDefault("imageDir", "media/images/");
 		$this->config->setDefault("staticDir", "cache/");
@@ -175,7 +176,7 @@ class YellowCore
 	}
 	
 	// Read page
-	function readPage($serverScheme, $serverName, $base, $location, $fileName, $cacheable, $statusCode, $pageError = "")
+	function readPage($serverScheme, $serverName, $base, $location, $fileName, $cacheable, $statusCode, $pageError)
 	{
 		if($statusCode >= 400)
 		{
@@ -261,13 +262,13 @@ class YellowCore
 			}
 		}
 		$this->toolbox->timerStop($time);
-		if(defined("DEBUG") && DEBUG>=1) echo "YellowCore::command time:$time ms<br/>\n";
 		if($statusCode == 0)
 		{
 			$statusCode = 400;
-			list($name, $command) = func_get_args();
+			list($command) = func_get_args();
 			echo "Yellow $command: Command not found\n";
 		}
+		if(defined("DEBUG") && DEBUG>=1) echo "YellowCore::command time:$time ms<br/>\n";
 		return $statusCode;
 	}
 	
@@ -332,7 +333,7 @@ class YellowCore
 	// Return static file from cache if available
 	function getStaticFileFromCache($location, $fileName, $cacheable)
 	{
-		if(PHP_SAPI!="cli" && is_readable($fileName) && $cacheable)
+		if(is_readable($fileName) && $cacheable && PHP_SAPI!="cli")
 		{
 			$location .= $this->toolbox->getLocationArgs();
 			$fileNameStatic = rtrim($this->config->get("staticDir"), '/').$location;
@@ -1868,10 +1869,7 @@ class YellowText
 			{
 				if(preg_match("/^\#/", $line)) continue;
 				preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
-				if(empty($language))
-				{
-					if(lcfirst($matches[1])=="language" && !strempty($matches[2])) $language = $matches[2];
-				}
+				if(lcfirst($matches[1])=="language" && !strempty($matches[2])) $language = $matches[2];
 				if(!empty($language) && !empty($matches[1]) && !strempty($matches[2]))
 				{
 					$this->setText($matches[1], $matches[2], $language);
@@ -2399,6 +2397,17 @@ class YellowLookup
 		for($i=1; $i<count($tokens); ++$i) $string .= '/'.$this->normaliseName($tokens[$i]);
 		return $location == $string;
 	}
+	
+	// Check if file is valid
+	function isValidFile($fileName)
+	{
+		$contentDirLength = strlenu($this->yellow->config->get("contentDir"));
+		$mediaDirLength = strlenu($this->yellow->config->get("mediaDir"));
+		$systemDirLength = strlenu($this->yellow->config->get("systemDir"));
+		return substru($fileName, 0, $contentDirLength) == $this->yellow->config->get("contentDir") ||
+			substru($fileName, 0, $mediaDirLength) == $this->yellow->config->get("mediaDir") ||
+			substru($fileName, 0, $systemDirLength) == $this->yellow->config->get("systemDir");
+	}
 }
 
 // Yellow toolbox with helpers
@@ -2448,26 +2457,7 @@ class YellowToolbox
 		$location = rawurldecode(($pos = strposu($location, '?')) ? substru($location, 0, $pos) : $location);
 		if($filterStrict)
 		{
-			$locationFiltered = "";
-			if($location[0] != '/') $location = '/'.$location;
-			for($pos=0; $pos<strlenb($location); ++$pos)
-			{
-				if($location[$pos] == '/')
-				{
-					if($location[$pos+1] == '/') continue;
-					if($location[$pos+1] == '.')
-					{
-						$posNew = $pos+1; while($location[$posNew] == '.') ++$posNew;
-						if($location[$posNew]=='/' || $location[$posNew]=='')
-						{
-							$pos = $posNew-1;
-							continue;
-						}
-					}
-				}
-				$locationFiltered .= $location[$pos];
-			}
-			$location = $locationFiltered;
+			$location = $this->normaliseTokens($location, true);
 			$separator = $this->getLocationArgsSeparator();
 			if(preg_match("/^(.*?\/)([^\/]+$separator.*)$/", $location, $matches))
 			{
@@ -2594,6 +2584,31 @@ class YellowToolbox
 			$requestData = array(&$_GET, &$_POST, &$_COOKIE, &$_REQUEST);
 			foreach($requestData as &$data) $data = stripArray($data);
 		}
+	}
+	
+	// Normalise path or location, take care of relative path tokens
+	function normaliseTokens($text, $prependSlash = false)
+	{
+		$textFiltered = "";
+		if($prependSlash && $text[0]!='/') $textFiltered .= '/';
+		for($pos=0; $pos<strlenb($text); ++$pos)
+		{
+			if($text[$pos]=='/' || $pos==0)
+			{
+				if($text[$pos+1] == '/') continue;
+				if($text[$pos+1] == '.')
+				{
+					$posNew = $pos+1; while($text[$posNew] == '.') ++$posNew;
+					if($text[$posNew]=='/' || $text[$posNew]=='')
+					{
+						$pos = $posNew-1;
+						continue;
+					}
+				}
+			}
+			$textFiltered .= $text[$pos];
+		}
+		return $textFiltered;
 	}
 	
 	// Normalise location arguments
@@ -2823,9 +2838,19 @@ class YellowToolbox
 	}
 
 	// Delete file
-	function deleteFile($fileName)
+	function deleteFile($fileName, $pathTrash = "")
 	{
-		return @unlink($fileName);
+		if(empty($pathTrash))
+		{
+			$ok = @unlink($fileName);
+		} else {
+			$fileNameDest = $pathTrash;
+			$fileNameDest .= pathinfo($fileName, PATHINFO_FILENAME);
+			$fileNameDest .= "-".str_replace(array(" ", ":"), "-", date("Y-m-d H:i:s", filemtime($fileName)));
+			$fileNameDest .= ".".pathinfo($fileName, PATHINFO_EXTENSION);
+			$ok = $this->renameFile($fileName, $fileNameDest, true);
+		}
+		return $ok;
 	}
 	
 	// Return lines from text string
