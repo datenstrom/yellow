@@ -118,9 +118,9 @@ class YellowUpdate
 				if(!empty($software) && !empty($matches[1]) && !empty($matches[2]))
 				{
 					list($fileName, $flags) = explode(',', $matches[2], 2);
-					$modified = $zip->statName($pathBase.$fileName)["mtime"];
+					$metaData = $zip->statName($pathBase.$fileName);
 					$rawData = $zip->getFromName($pathBase.$fileName);
-					$statusCode = $this->updateSoftwareFile($matches[1], $modified, $rawData, $flags, $software);
+					$statusCode = $this->updateSoftwareFile($matches[1], $metaData["mtime"], $rawData, $flags, $software);
 					if($statusCode != 200) break;
 				}
 			}
