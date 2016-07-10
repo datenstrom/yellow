@@ -200,7 +200,6 @@ class YellowWebinterface
 		if($statusCode == 0)
 		{
 			$statusCode = $this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
-			$fileNameConfig = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
 			if($this->action == "fail") $this->yellow->page->error(500, "Login failed, [please log in](javascript:yellow.action('login');)!");
 		}
 		return $statusCode;

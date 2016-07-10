@@ -144,7 +144,7 @@ a, img { border:none; text-decoration:none; }
 	.sitename h1, .header, .navigation, .footer, .page { margin:0; padding:0; }
 	.sitename, .navigation, .navigation-tree { float:none; }
 	.navigation-search { padding-top:0.5em; }
-	.with-sidebar .main { margin-right:0em; }
+	.with-sidebar .main { margin-right:0; }
 	.with-sidebar .sidebar { display:none; }
 	.footer-right { display:none; }
 }

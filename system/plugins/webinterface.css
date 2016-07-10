@@ -11,7 +11,7 @@
 
 .yellow-pane {
 	position:absolute; display:none; z-index:100;
-	margin:10px 0px; padding:10px;
+	margin:10px 0; padding:10px;
 	background-color:#fff; color:#000;
 	border:1px solid #bbb; 
 	border-radius:4px; box-shadow:2px 4px 10px rgba(0, 0, 0, 0.2);
