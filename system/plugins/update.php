@@ -63,7 +63,7 @@ class YellowUpdate
 				if(empty($feature) || preg_match("/$feature/i", $key)) ++$updates;
 			}
 		}
-		if($statusCode != 200) echo "ERROR checking updates: $data[error]\n";
+		if($statusCode != 200) echo "ERROR checking updates: $dataLatest[error]\n";
 		if($updates)
 		{
 			echo "Yellow $command: $updates update".($updates==1 ? "":"s")." available\n";

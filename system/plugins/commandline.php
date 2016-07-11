@@ -428,7 +428,7 @@ class YellowCommandline
 			{
 				foreach(preg_split("/[\r\n]+/", $value["obj"]->onCommandHelp()) as $line)
 				{
-					list($command, $text) = explode(' ', $line, 2);
+					list($command) = explode(' ', $line);
 					if(!empty($command) && is_null($data[$command])) $data[$command] = $line;
 				}
 			}
