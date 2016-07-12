@@ -46,6 +46,7 @@ class YellowCommandline
 	function helpCommand()
 	{
 		echo "Yellow ".YellowCore::Version."\n";
+		$lineCounter = 0;
 		foreach($this->getCommandHelp() as $line) echo (++$lineCounter>1 ? "        " : "Syntax: ")."yellow.php $line\n";
 		return 200;
 	}
