@@ -11,7 +11,7 @@ var yellow =
 	onKeydown: function(e) { yellow.webinterface.hidePanesOnKeydown(yellow.toolbox.getEventKeycode(e)); },
 	onUpdate: function() { yellow.webinterface.updatePane(yellow.webinterface.paneId, yellow.webinterface.paneAction, yellow.webinterface.paneStatus); },
 	onResize: function() { yellow.webinterface.resizePane(yellow.webinterface.paneId, yellow.webinterface.paneAction, yellow.webinterface.paneStatus); }
-}
+};
 
 // Yellow web interface
 yellow.webinterface =
@@ -270,7 +270,7 @@ yellow.webinterface =
 					document.getElementById("yellow-pane-edit-page").value = string;
 					yellow.toolbox.setCursorPosition(document.getElementById("yellow-pane-edit-page"), 0);
 				}
-				paneAction = this.getPaneAction(paneId, paneAction)
+				paneAction = this.getPaneAction(paneId, paneAction);
 				if(paneAction)
 				{
 					var key, className;
@@ -476,11 +476,11 @@ yellow.webinterface =
 	getText: function(key, prefix, postfix)
 	{
 		if(!prefix) prefix = "webinterface";
-		if(!postfix) postfix = ""
+		if(!postfix) postfix = "";
 		key = prefix + key.charAt(0).toUpperCase() + key.slice(1) + postfix.charAt(0).toUpperCase() + postfix.slice(1);
 		return (key in yellow.text) ? yellow.text[key] : "["+key+"]";
 	}
-}
+};
 
 // Yellow toolbox with helpers
 yellow.toolbox =
@@ -529,14 +529,14 @@ yellow.toolbox =
 	addEvent: function(element, type, handler)
 	{
 		if(element.addEventListener) element.addEventListener(type, handler, false);
-		else element.attachEvent('on'+type, handler);
+		else element.attachEvent("on"+type, handler);
 	},
 	
 	// Remove event handler
 	removeEvent: function(element, type, handler)
 	{
 		if(element.removeEventListener) element.removeEventListener(type, handler, false);
-		else element.detachEvent('on'+type, handler);
+		else element.detachEvent("on"+type, handler);
 	},
 	
 	// Return element of event
@@ -550,7 +550,7 @@ yellow.toolbox =
 	getEventKeycode: function(e)
 	{
 		e = e ? e : window.event;
-		return e.keyCode
+		return e.keyCode;
 	},
 	
 	// Return element length
@@ -704,7 +704,7 @@ yellow.toolbox =
 			element.setSelectionRange(pos, pos);
 		} else if(element.createTextRange) {
 			var range = element.createTextRange();
-			range.move('character', pos);
+			range.move("character", pos);
 			range.select();
 		}
 	},
@@ -720,7 +720,7 @@ yellow.toolbox =
 			var range = document.selection.createRange();
 			var rangeDuplicate = range.duplicate();
 			rangeDuplicate.moveToElementText(element);
-			rangeDuplicate.setEndPoint('EndToEnd', range);
+			rangeDuplicate.setEndPoint("EndToEnd", range);
 			pos = rangeDuplicate.text.length - range.text.length;
 		}
 		return pos;
@@ -769,6 +769,6 @@ yellow.toolbox =
 		document.body.appendChild(elementForm);
 		elementForm.submit();
 	}
-}
+};
 
 yellow.webinterface.intervalId = setInterval("yellow.onLoad()", 1);

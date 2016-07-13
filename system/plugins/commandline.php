@@ -132,12 +132,7 @@ class YellowCommandline
 		if(!is_readable($this->yellow->page->fileName))
 		{
 			ob_start();
-			$_SERVER["SERVER_PROTOCOL"] = "HTTP/1.1";
-			$_SERVER["SERVER_NAME"] = $this->yellow->config->get("serverName");
-			$_SERVER["REQUEST_URI"] = $this->yellow->config->get("serverBase").$location;
-			$_SERVER["SCRIPT_NAME"] = $this->yellow->config->get("serverBase")."/yellow.php";
-			$_REQUEST = array();
-			$statusCode = $this->yellow->request();
+			$statusCode = $this->requestStaticFile($location);
 			if($statusCode<400 || $error)
 			{
 				$fileData = ob_get_contents();
@@ -180,6 +175,18 @@ class YellowCommandline
 		}
 		if(defined("DEBUG") && DEBUG>=1) echo "YellowCommandline::buildStaticFile status:$statusCode location:$location<br/>\n";
 		return $statusCode;
+	}
+	
+	// Request static file
+	function requestStaticFile($location)
+	{
+		$_SERVER["SERVER_PROTOCOL"] = "HTTP/1.1";
+		$_SERVER["SERVER_NAME"] = $this->yellow->config->get("serverName");
+		$_SERVER["REQUEST_URI"] = $this->yellow->config->get("serverBase").$location;
+		$_SERVER["SCRIPT_NAME"] = $this->yellow->config->get("serverBase")."/yellow.php";
+		$_SERVER["REMOTE_ADDR"] = "127.0.0.1";
+		$_REQUEST = array();
+		return $this->yellow->request();
 	}
 	
 	// Analyse static file, detect locations with arguments
