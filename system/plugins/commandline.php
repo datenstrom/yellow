@@ -5,7 +5,7 @@
 // Command line plugin
 class YellowCommandline
 {
-	const Version = "0.6.12";
+	const Version = "0.6.13";
 	var $yellow;					//access to API
 	var $files;						//number of files
 	var $errors;					//number of errors
@@ -249,7 +249,7 @@ class YellowCommandline
 		$path = rtrim(empty($path) ? $this->yellow->config->get("staticDir") : $path, '/');
 		if(empty($location))
 		{
-			$statusCode = max($statusCode, $this->commandForward("clean"));
+			$statusCode = max($statusCode, $this->commandBroadcast("clean", "all"));
 			$statusCode = max($statusCode, $this->cleanStaticDirectory($path));
 		} else {
 			$statusCode = $this->cleanStaticFile($path, $location);
@@ -288,18 +288,18 @@ class YellowCommandline
 		return $statusCode;
 	}
 	
-	// Forward command to other plugins
-	function commandForward($args)
+	// Broadcast command to other plugins
+	function commandBroadcast($args)
 	{
 		$statusCode = 0;
 		foreach($this->yellow->plugins->plugins as $key=>$value)
 		{
-			if(method_exists($value["obj"], "onCommand") && $found)
+			if($key == "commandline") continue;
+			if(method_exists($value["obj"], "onCommand"))
 			{
 				$statusCode = $value["obj"]->onCommand(func_get_args());
 				if($statusCode != 0) break;
 			}
-			if($key == "commandline") $found = true;
 		}
 		return $statusCode;
 	}
@@ -345,6 +345,7 @@ class YellowCommandline
 		if(!empty($path))
 		{
 			if($path == rtrim($this->yellow->config->get("staticDir"), '/')) $ok = true;
+			if($path == rtrim($this->yellow->config->get("trashDir"), '/')) $ok = true;			
 			if(is_file("$path/".$this->yellow->config->get("staticDefaultFile"))) $ok = true;
 			if(is_file("$path/yellow.php")) $ok = false;
 		}

@@ -125,9 +125,13 @@ class YellowWebinterface
 	function cleanCommand($args)
 	{
 		$statusCode = 0;
-		$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
-		if(!$this->users->clean($fileNameUser)) $statusCode = 500;
-		if($statusCode == 500) echo "ERROR cleaning configuration: Can't write file '$fileNameUser'!\n";
+		list($command, $path) = $args;
+		if($path == "all")
+		{
+			$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
+			if(!$this->users->clean($fileNameUser)) $statusCode = 500;
+			if($statusCode == 500) echo "ERROR cleaning configuration: Can't write file '$fileNameUser'!\n";
+		}
 		return $statusCode;
 	}
 	

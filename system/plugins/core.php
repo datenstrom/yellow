@@ -261,13 +261,13 @@ class YellowCore
 				if($statusCode != 0) break;
 			}
 		}
-		$this->toolbox->timerStop($time);
 		if($statusCode == 0)
 		{
 			$statusCode = 400;
 			list($command) = func_get_args();
 			echo "Yellow $command: Command not found\n";
 		}
+		$this->toolbox->timerStop($time);
 		if(defined("DEBUG") && DEBUG>=1) echo "YellowCore::command time:$time ms<br/>\n";
 		return $statusCode;
 	}
@@ -1604,6 +1604,11 @@ class YellowPlugins
 			global $yellow;
 			require_once($entry);
 		}
+		$callback = function($a, $b)
+		{
+			return $a["priority"] - $b["priority"];
+		};
+		uasort($this->plugins, $callback);
 		foreach($this->plugins as $key=>$value)
 		{
 			$this->plugins[$key]["obj"] = new $value["plugin"];
@@ -1613,13 +1618,15 @@ class YellowPlugins
 	}
 	
 	// Register plugin
-	function register($name, $plugin, $version)
+	function register($name, $plugin, $version, $priority = 0)
 	{
 		if(!$this->isExisting($name))
 		{
+			if($priority == 0) $priority = count($this->plugins) + 10;
 			$this->plugins[$name] = array();
 			$this->plugins[$name]["plugin"] = $plugin;
 			$this->plugins[$name]["version"] = $version;
+			$this->plugins[$name]["priority"] = $priority;
 		}
 	}
 	
@@ -2713,7 +2720,7 @@ class YellowToolbox
 					}
 				}
 			}
-			if($sort) natsort($entries);
+			if($sort) natcasesort($entries);
 			closedir($dirHandle);
 		}
 		return $entries;
