@@ -5,7 +5,7 @@
 // Web interface plugin
 class YellowWebinterface
 {
-	const Version = "0.6.9";
+	const VERSION = "0.6.9";
 	var $yellow;				//access to API
 	var $active;				//web interface is active? (boolean)
 	var $userEmail;				//web interface user
@@ -60,19 +60,19 @@ class YellowWebinterface
 			{
 				if(empty($this->rawDataSource)) $this->rawDataSource = $page->rawData;
 				if(empty($this->rawDataEdit)) $this->rawDataEdit = $page->rawData;
-				if($page->statusCode == 424) $this->rawDataEdit = $this->getRawDataNew($page->location);
+				if($page->statusCode==424) $this->rawDataEdit = $this->getRawDataNew($page->location);
 			}
 			if(empty($this->userLanguage)) $this->userLanguage = $page->get("language");
 			if(empty($this->action)) $this->action = $this->isUser() ? "none" : "login";
 			if(empty($this->status)) $this->status = "none";
-			if($this->status == "error") $this->action = "error";
+			if($this->status=="error") $this->action = "error";
 		}
 	}
 	
 	// Handle page content parsing of custom block
 	function onParseContentBlock($page, $name, $text, $shortcut)
 	{
-		$output = NULL;
+		$output = null;
 		if($name=="edit" && $shortcut)
 		{
 			$editText = "$name $text";
@@ -85,7 +85,7 @@ class YellowWebinterface
 	// Handle page extra HTML data
 	function onExtra($name)
 	{
-		$output = NULL;
+		$output = null;
 		if($this->isActive() && $name=="header")
 		{
 			$location = $this->yellow->config->get("serverBase").$this->yellow->config->get("pluginLocation")."webinterface";
@@ -126,11 +126,11 @@ class YellowWebinterface
 	{
 		$statusCode = 0;
 		list($command, $path) = $args;
-		if($path == "all")
+		if($path=="all")
 		{
 			$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
 			if(!$this->users->clean($fileNameUser)) $statusCode = 500;
-			if($statusCode == 500) echo "ERROR cleaning configuration: Can't write file '$fileNameUser'!\n";
+			if($statusCode==500) echo "ERROR cleaning configuration: Can't write file '$fileNameUser'!\n";
 		}
 		return $statusCode;
 	}
@@ -149,17 +149,17 @@ class YellowWebinterface
 				case "invalid":	echo "ERROR updating configuration: Please enter a valid email!\n"; break;
 				case "weak": echo "ERROR updating configuration: Please enter a different password!\n"; break;
 			}
-			if($status == "ok")
+			if($status=="ok")
 			{
 				$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
 				$status = $this->users->update($fileNameUser, $email, $password, $name, $language, "active") ? "ok" : "error";
-				if($status == "error") echo "ERROR updating configuration: Can't write file '$fileNameUser'!\n";
+				if($status=="error") echo "ERROR updating configuration: Can't write file '$fileNameUser'!\n";
 			}
-			if($status == "ok")
+			if($status=="ok")
 			{
 				$algorithm = $this->yellow->config->get("webinterfaceUserHashAlgorithm");
 				$status = substru($this->users->getHash($email), 0, 5)!="error-hash" ? "ok" : "error";
-				if($status == "error") echo "ERROR updating configuration: Hash algorithm '$algorithm' not supported!\n";
+				if($status=="error") echo "ERROR updating configuration: Hash algorithm '$algorithm' not supported!\n";
 			}
 			$statusCode = $status=="ok" ? 200 : 500;
 			echo "Yellow $command: User account ".($statusCode!=200 ? "not " : "");
@@ -201,10 +201,10 @@ class YellowWebinterface
 				case "recover":		$statusCode = $this->processRequestRecover($serverScheme, $serverName, $base, $location, $fileName); break;
 			}
 		}
-		if($statusCode == 0)
+		if($statusCode==0)
 		{
 			$statusCode = $this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
-			if($this->action == "fail") $this->yellow->page->error(500, "Login failed, [please log in](javascript:yellow.action('login');)!");
+			if($this->action=="fail") $this->yellow->page->error(500, "Login failed, [please log in](javascript:yellow.action('login');)!");
 		}
 		return $statusCode;
 	}
@@ -237,7 +237,7 @@ class YellowWebinterface
 	{
 		$statusCode = 0;
 		$home = $this->users->getHome($this->userEmail);
-		if(substru($location, 0, strlenu($home)) == $home)
+		if(substru($location, 0, strlenu($home))==$home)
 		{
 			$statusCode = 303;
 			$location = $this->yellow->lookup->normaliseUrl($serverScheme, $serverName, $base, $location);
@@ -273,19 +273,19 @@ class YellowWebinterface
 		$email = trim($_REQUEST["email"]);
 		$password = trim($_REQUEST["password"]);
 		if(empty($name) || empty($email) || empty($password)) $this->status = "incomplete";
-		if($this->status == "ok") $this->status = $this->getUserAccount($email, $password, $this->action);
-		if($this->status == "ok" && !$this->users->isWebmaster()) $this->status = "next";
-		if($this->status == "ok" && $this->users->isExisting($email)) $this->status = "next";
-		if($this->status == "ok")
+		if($this->status=="ok") $this->status = $this->getUserAccount($email, $password, $this->action);
+		if($this->status=="ok" && !$this->users->isWebmaster()) $this->status = "next";
+		if($this->status=="ok" && $this->users->isExisting($email)) $this->status = "next";
+		if($this->status=="ok")
 		{
 			$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
 			$this->status = $this->users->update($fileNameUser, $email, $password, $name, "", "unconfirmed") ? "ok" : "error";
-			if($this->status == "error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
+			if($this->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
 		}
-		if($this->status == "ok")
+		if($this->status=="ok")
 		{
 			$this->status = $this->sendMail($serverScheme, $serverName, $base, $email, "confirm") ? "next" : "error";
-			if($this->status == "error") $this->yellow->page->error(500, "Can't send email on this server!");
+			if($this->status=="error") $this->yellow->page->error(500, "Can't send email on this server!");
 		}
 		$statusCode = $this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
 		return $statusCode;
@@ -298,16 +298,16 @@ class YellowWebinterface
 		$this->status = "ok";
 		$email = $_REQUEST["email"];
 		$this->status = $this->getUserRequest($email, $_REQUEST["action"], $_REQUEST["expire"], $_REQUEST["id"]);
-		if($this->status == "ok")
+		if($this->status=="ok")
 		{
 			$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
 			$this->status = $this->users->update($fileNameUser, $email, "", "", "", "unapproved") ? "ok" : "error";
-			if($this->status == "error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
+			if($this->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
 		}
-		if($this->status == "ok")
+		if($this->status=="ok")
 		{
 			$this->status = $this->sendMail($serverScheme, $serverName, $base, $email, "approve") ? "done" : "error";
-			if($this->status == "error") $this->yellow->page->error(500, "Can't send email on this server!");
+			if($this->status=="error") $this->yellow->page->error(500, "Can't send email on this server!");
 		}
 		$statusCode = $this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
 		return $statusCode;
@@ -320,16 +320,16 @@ class YellowWebinterface
 		$this->status = "ok";
 		$email = $_REQUEST["email"];
 		$this->status = $this->getUserRequest($email, $_REQUEST["action"], $_REQUEST["expire"], $_REQUEST["id"]);
-		if($this->status == "ok")
+		if($this->status=="ok")
 		{
 			$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
 			$this->status = $this->users->update($fileNameUser, $email, "", "", "", "active") ? "ok" : "error";
-			if($this->status == "error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
+			if($this->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
 		}
-		if($this->status == "ok")
+		if($this->status=="ok")
 		{
 			$this->status = $this->sendMail($serverScheme, $serverName, $base, $email, "welcome") ? "done" : "error";
-			if($this->status == "error") $this->yellow->page->error(500, "Can't send email on this server!");
+			if($this->status=="error") $this->yellow->page->error(500, "Can't send email on this server!");
 		}
 		$statusCode = $this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
 		return $statusCode;
@@ -345,31 +345,31 @@ class YellowWebinterface
 		if(empty($_REQUEST["id"]))
 		{
 			if(!filter_var($email, FILTER_VALIDATE_EMAIL)) $this->status = "invalid";
-			if($this->status == "ok" && !$this->users->isWebmaster()) $this->status = "next";
-			if($this->status == "ok" && !$this->users->isExisting($email)) $this->status = "next";
-			if($this->status == "ok")
+			if($this->status=="ok" && !$this->users->isWebmaster()) $this->status = "next";
+			if($this->status=="ok" && !$this->users->isExisting($email)) $this->status = "next";
+			if($this->status=="ok")
 			{
 				$this->status = $this->sendMail($serverScheme, $serverName, $base, $email, "recover") ? "next" : "error";
-				if($this->status == "error") $this->yellow->page->error(500, "Can't send email on this server!");
+				if($this->status=="error") $this->yellow->page->error(500, "Can't send email on this server!");
 			}
 		} else {
 			$this->status = $this->getUserRequest($email, $_REQUEST["action"], $_REQUEST["expire"], $_REQUEST["id"]);
-			if($this->status == "ok")
+			if($this->status=="ok")
 			{
 				if(empty($password)) $this->status = "password";
-				if($this->status == "ok") $this->status = $this->getUserAccount($email, $password, $this->action);
-				if($this->status == "ok")
+				if($this->status=="ok") $this->status = $this->getUserAccount($email, $password, $this->action);
+				if($this->status=="ok")
 				{
 					$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
 					$this->status = $this->users->update($fileNameUser, $email, $password) ? "ok" : "error";
-					if($this->status == "error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
+					if($this->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
 				}
-				if($this->status == "ok")
+				if($this->status=="ok")
 				{
 					$this->userEmail = "";
 					$this->users->destroyCookie("login");
 					$this->status = $this->sendMail($serverScheme, $serverName, $base, $email, "information") ? "done" : "error";
-					if($this->status == "error") $this->yellow->page->error(500, "Can't send email on this server!");
+					if($this->status=="error") $this->yellow->page->error(500, "Can't send email on this server!");
 				}
 			}
 		}
@@ -382,15 +382,15 @@ class YellowWebinterface
 	{
 		$this->action = "settings";
 		$this->status = $this->getUserAccount($this->userEmail, "", $this->action);
-		if($this->status == "ok")
+		if($this->status=="ok")
 		{
 			$name = trim(preg_replace("/[^\pL\d\-\. ]/u", "-", $_REQUEST["name"]));
 			$language = trim($_REQUEST["language"]);
 			$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
 			$this->status = $this->users->update($fileNameUser, $this->userEmail, "", $name, $language) ? "done" : "error";
-			if($this->status == "error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
+			if($this->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
 		}
-		if($this->status == "done")
+		if($this->status=="done")
 		{
 			$statusCode = 303;
 			$location = $this->yellow->lookup->normaliseUrl($serverScheme, $serverName, $base, $location);
@@ -495,7 +495,7 @@ class YellowWebinterface
 			$id = $this->users->createUserRequestId($email, $action, $expire);
 			$url = "$serverScheme://$serverName$base"."/action:$action/email:$email/expire:$expire/id:$id/";
 		}
-		if($action == "approve")
+		if($action=="approve")
 		{
 			$account = $email;
 			$name = $this->yellow->config->get("author");
@@ -531,7 +531,7 @@ class YellowWebinterface
 		   $this->yellow->toolbox->getServerName()==$this->yellow->config->get("webinterfaceServerName"))
 		{
 			$locationLength = strlenu($this->yellow->config->get("webinterfaceLocation"));
-			$this->active = substru($location, 0, $locationLength) == $this->yellow->config->get("webinterfaceLocation");
+			$this->active = substru($location, 0, $locationLength)==$this->yellow->config->get("webinterfaceLocation");
 		}
 		return $this->isActive();
 	}
@@ -539,7 +539,7 @@ class YellowWebinterface
 	// Check web interface user
 	function checkUser($location, $fileName)
 	{
-		if($_POST["action"] == "login")
+		if($_POST["action"]=="login")
 		{
 			$email = $_POST["email"];
 			$password = $_POST["password"];
@@ -585,7 +585,7 @@ class YellowWebinterface
 	// Return user account changes
 	function getUserAccount($email, $password, $action)
 	{
-		$status = NULL;
+		$status = null;
 		foreach($this->yellow->plugins->plugins as $key=>$value)
 		{
 			if(method_exists($value["obj"], "onUserAccount"))
@@ -606,7 +606,7 @@ class YellowWebinterface
 	// Return user restrictions to change page
 	function getUserRestrictions($email, $location, $fileName)
 	{
-		$userRestrictions = NULL;
+		$userRestrictions = null;
 		foreach($this->yellow->plugins->plugins as $key=>$value)
 		{
 			if(method_exists($value["obj"], "onUserRestrictions"))
@@ -618,7 +618,7 @@ class YellowWebinterface
 		if(is_null($userRestrictions))
 		{
 			$userRestrictions = !is_dir(dirname($fileName)) || strlenu(basename($fileName))>128;
-			$userRestrictions |= substru($location, 0, strlenu($this->users->getHome($email))) != $this->users->getHome($email);
+			$userRestrictions |= substru($location, 0, strlenu($this->users->getHome($email)))!=$this->users->getHome($email);
 		}
 		return $userRestrictions;
 	}
@@ -717,7 +717,7 @@ class YellowWebinterface
 					$page->get($prefix), $page->get("title"), $fileName,
 					$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
 				$page->location = $this->yellow->lookup->findLocationFromFile($page->fileName);
-				if($pageSource->location != $page->location)
+				if($pageSource->location!=$page->location)
 				{
 					if(!$this->yellow->lookup->isFileLocation($page->location))
 					{
@@ -769,7 +769,7 @@ class YellowWebinterface
 			$data["pageFile"] = $this->yellow->page->get("pageFile");
 			$data["parserSafeMode"] = $this->yellow->page->parserSafeMode;
 		}
-		if($this->action != "none") $data = array_merge($data, $this->getRequestData());
+		if($this->action!="none") $data = array_merge($data, $this->getRequestData());
 		$data["action"] = $this->action;
 		$data["status"] = $this->status;
 		$data["statusCode"] = $this->yellow->page->statusCode;
@@ -797,7 +797,7 @@ class YellowWebinterface
 			{
 				$data["serverLanguages"][$language] = $this->yellow->text->getTextHtml("languageDescription", $language);
 			}
-			$data["serverVersion"] = "Yellow ".YellowCore::Version;
+			$data["serverVersion"] = "Yellow ".YellowCore::VERSION;
 		} else {
 			$data["loginEmail"] = $this->yellow->config->get("loginEmail");
 			$data["loginPassword"] = $this->yellow->config->get("loginPassword");
@@ -1076,7 +1076,7 @@ class YellowUsers
 	// Check if web master exists
 	function isWebmaster()
 	{
-		return substru($this->yellow->config->get("email"), 0, 7) != "noreply";
+		return substru($this->yellow->config->get("email"), 0, 7)!="noreply";
 	}
 	
 	// Check if user exists
@@ -1090,20 +1090,20 @@ class YellowUsers
 class YellowMerge
 {
 	var $yellow;		//access to API
-	const Add = '+';	//merge types
-	const Modify = '*';
-	const Remove = '-';
-	const Same = ' ';
+	const ADD = '+';	//merge types
+	const MODIFY = '*';
+	const REMOVE = '-';
+	const SAME = ' ';
 	
 	function __construct($yellow)
 	{
 		$this->yellow = $yellow;
 	}
 	
-	// Merge text, NULL if not possible
+	// Merge text, null if not possible
 	function merge($textSource, $textMine, $textYours, $showDiff = false)
 	{
-		if($textMine != $textYours)
+		if($textMine!=$textYours)
 		{
 			$diffMine = $this->buildDiff($textSource, $textMine);
 			$diffYours = $this->buildDiff($textSource, $textYours);
@@ -1130,37 +1130,37 @@ class YellowMerge
 		{
 			--$sourceEnd; --$otherEnd;
 		}
-		for($pos=0; $pos<$textStart; ++$pos) array_push($diff, array(YellowMerge::Same, $textSource[$pos], false));
+		for($pos=0; $pos<$textStart; ++$pos) array_push($diff, array(YellowMerge::SAME, $textSource[$pos], false));
 		$lcs = $this->buildDiffLCS($textSource, $textOther, $textStart, $sourceEnd-$textStart, $otherEnd-$textStart);
 		for($x=0,$y=0,$xEnd=$otherEnd-$textStart,$yEnd=$sourceEnd-$textStart; $x<$xEnd || $y<$yEnd;)
 		{
 			$max = $lcs[$y][$x];
 			if($y<$yEnd && $lcs[$y+1][$x]==$max)
 			{
-				array_push($diff, array(YellowMerge::Remove, $textSource[$textStart+$y], false));
-				if($lastRemove == -1) $lastRemove = count($diff)-1;
+				array_push($diff, array(YellowMerge::REMOVE, $textSource[$textStart+$y], false));
+				if($lastRemove==-1) $lastRemove = count($diff)-1;
 				++$y;
 				continue;
 			}
 			if($x<$xEnd && $lcs[$y][$x+1]==$max)
 			{
-				if($lastRemove==-1 || $diff[$lastRemove][0]!=YellowMerge::Remove)
+				if($lastRemove==-1 || $diff[$lastRemove][0]!=YellowMerge::REMOVE)
 				{
-					array_push($diff, array(YellowMerge::Add, $textOther[$textStart+$x], false));
+					array_push($diff, array(YellowMerge::ADD, $textOther[$textStart+$x], false));
 					$lastRemove = -1;
 				} else {
-					$diff[$lastRemove] = array(YellowMerge::Modify, $textOther[$textStart+$x], false);
+					$diff[$lastRemove] = array(YellowMerge::MODIFY, $textOther[$textStart+$x], false);
 					++$lastRemove; if(count($diff)==$lastRemove) $lastRemove = -1;
 				}
 				++$x;
 				continue;
 			}
-			array_push($diff, array(YellowMerge::Same, $textSource[$textStart+$y], false));
+			array_push($diff, array(YellowMerge::SAME, $textSource[$textStart+$y], false));
 			$lastRemove = -1;
 			++$x;
 			++$y;
 		}
-		for($pos=$sourceEnd;$pos<$sourceSize; ++$pos) array_push($diff, array(YellowMerge::Same, $textSource[$pos], false));
+		for($pos=$sourceEnd;$pos<$sourceSize; ++$pos) array_push($diff, array(YellowMerge::SAME, $textSource[$pos], false));
 		return $diff;
 	}
 	
@@ -1172,7 +1172,7 @@ class YellowMerge
 		{
 			for($x=$xEnd-1; $x>=0; --$x)
 			{
-				if($textSource[$textStart+$y] == $textOther[$textStart+$x])
+				if($textSource[$textStart+$y]==$textOther[$textStart+$x])
 				{
 					$lcs[$y][$x] = $lcs[$y+1][$x+1]+1;
 				} else {
@@ -1192,29 +1192,29 @@ class YellowMerge
 		{
 			$typeMine = $diffMine[$posMine][0];
 			$typeYours = $diffYours[$posYours][0];
-			if($typeMine==YellowMerge::Same)
+			if($typeMine==YellowMerge::SAME)
 			{
 				array_push($diff, $diffYours[$posYours]);
-			} else if($typeYours==YellowMerge::Same) {
+			} else if($typeYours==YellowMerge::SAME) {
 				array_push($diff, $diffMine[$posMine]);
-			} else if($typeMine==YellowMerge::Add && $typeYours==YellowMerge::Add) {
+			} else if($typeMine==YellowMerge::ADD && $typeYours==YellowMerge::ADD) {
 				$this->mergeConflict($diff, $diffMine[$posMine], $diffYours[$posYours], false);
-			} else if($typeMine==YellowMerge::Modify && $typeYours==YellowMerge::Modify) {
+			} else if($typeMine==YellowMerge::MODIFY && $typeYours==YellowMerge::MODIFY) {
 				$this->mergeConflict($diff, $diffMine[$posMine], $diffYours[$posYours], false);
-			} else if($typeMine==YellowMerge::Remove && $typeYours==YellowMerge::Remove) {
+			} else if($typeMine==YellowMerge::REMOVE && $typeYours==YellowMerge::REMOVE) {
 				array_push($diff, $diffMine[$posMine]);
-			} else if($typeMine==YellowMerge::Add) {
+			} else if($typeMine==YellowMerge::ADD) {
 				array_push($diff, $diffMine[$posMine]);
-			} else if($typeYours==YellowMerge::Add) {
+			} else if($typeYours==YellowMerge::ADD) {
 				array_push($diff, $diffYours[$posYours]);
 			} else {
 				$this->mergeConflict($diff, $diffMine[$posMine], $diffYours[$posYours], true);
 			}
 			if(defined("DEBUG") && DEBUG>=2) echo "YellowMerge::mergeDiff $typeMine $typeYours pos:$posMine\t$posYours<br/>\n";
-			if($typeMine==YellowMerge::Add || $typeYours==YellowMerge::Add)
+			if($typeMine==YellowMerge::ADD || $typeYours==YellowMerge::ADD)
 			{
-				if($typeMine==YellowMerge::Add) ++$posMine;
-				if($typeYours==YellowMerge::Add) ++$posYours;
+				if($typeMine==YellowMerge::ADD) ++$posMine;
+				if($typeYours==YellowMerge::ADD) ++$posYours;
 			} else {
 				++$posMine;
 				++$posYours;
@@ -1247,7 +1247,7 @@ class YellowMerge
 		}
 	}
 	
-	// Return merged text, NULL if not possible
+	// Return merged text, null if not possible
 	function getOutput($diff, $showDiff = false)
 	{
 		$output = "";
@@ -1255,7 +1255,7 @@ class YellowMerge
 		{
 			for($i=0; $i<count($diff); ++$i)
 			{
-				if($diff[$i][0] != YellowMerge::Remove) $output .= $diff[$i][1];
+				if($diff[$i][0]!=YellowMerge::REMOVE) $output .= $diff[$i][1];
 				$conflict |= $diff[$i][2];
 			}
 		} else {
@@ -1265,9 +1265,9 @@ class YellowMerge
 				$output .= $diff[$i][1];
 			}
 		}
-		return !$conflict ? $output : NULL;
+		return !$conflict ? $output : null;
 	}
 }
 
-$yellow->plugins->register("webinterface", "YellowWebinterface", YellowWebinterface::Version);
+$yellow->plugins->register("webinterface", "YellowWebinterface", YellowWebinterface::VERSION);
 ?>

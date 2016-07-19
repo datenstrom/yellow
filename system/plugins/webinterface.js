@@ -729,7 +729,7 @@ yellow.toolbox =
 	// Check if element exists and is visible
 	isVisible: function(element)
 	{
-		return element && element.style.display != "none";
+		return element && element.style.display!="none";
 	},
 	
 	// Encode newline characters

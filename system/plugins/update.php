@@ -5,7 +5,7 @@
 // Update plugin
 class YellowUpdate
 {
-	const Version = "0.6.4";
+	const VERSION = "0.6.4";
 	var $yellow;					//access to API
 	
 	// Handle initialisation
@@ -63,12 +63,12 @@ class YellowUpdate
 				list($version, $url) = explode(',', $value);
 				echo "$key $version\n";
 			}
-			if($statusCode == 200) $statusCode = $this->download($data);
-			if($statusCode == 200) $statusCode = $this->update();
-			if($statusCode != 200) echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
+			if($statusCode==200) $statusCode = $this->download($data);
+			if($statusCode==200) $statusCode = $this->update();
+			if($statusCode!=200) echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
 			echo "Yellow $command: Software ".($statusCode!=200 ? "not " : "")."updated\n";
 		} else {
-			if($statusCode != 200) echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
+			if($statusCode!=200) echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
 			echo "Yellow $command: No updates available\n";
 		}
 		return $statusCode;
@@ -78,9 +78,9 @@ class YellowUpdate
 	function updateCommandPending($args)
 	{
 		$statusCode = $this->update();
-		if($statusCode != 0)
+		if($statusCode!=0)
 		{
-			if($statusCode != 200) echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
+			if($statusCode!=200) echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
 			echo "Yellow has ".($statusCode!=200 ? "not " : "")."been updated: Please run command again\n";
 		}
 		return $statusCode;
@@ -104,7 +104,7 @@ class YellowUpdate
 				break;
 			}
 		}
-		if($statusCode == 200)
+		if($statusCode==200)
 		{
 			foreach($data as $key=>$value)
 			{
@@ -128,10 +128,10 @@ class YellowUpdate
 			if(method_exists($value["obj"], "onUpdate"))
 			{
 				$statusCode = $value["obj"]->onUpdate($this->yellow->getRequestHandler());
-				if($statusCode != 0) break;
+				if($statusCode!=0) break;
 			}
 		}
-		if($statusCode == 0)
+		if($statusCode==0)
 		{
 			$path = $this->yellow->config->get("pluginDir");
 			foreach($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.zip$/", true, false) as $entry)
@@ -154,7 +154,7 @@ class YellowUpdate
 	{
 		$statusCode = 0;
 		$zip = new ZipArchive();
-		if($zip->open($path) === true)
+		if($zip->open($path)===true)
 		{
 			$fileNameInformation = $this->yellow->config->get("updateInformationFile");
 			for($i=0; $i<$zip->numFiles; ++$i)
@@ -165,7 +165,7 @@ class YellowUpdate
 					preg_match("#^(.*\/).*?$#", $fileName, $matches);
 					$pathBase = $matches[1];
 				}
-				if($fileName == $pathBase.$fileNameInformation)
+				if($fileName==$pathBase.$fileNameInformation)
 				{
 					$fileData = $zip->getFromIndex($i);
 					break;
@@ -183,7 +183,7 @@ class YellowUpdate
 					$metaData = $zip->statName($pathBase.$fileName);
 					$modified = $metaData ? $metaData["mtime"] : 0;
 					$statusCode = $this->updateSoftwareFile($matches[1], $fileData, $modified, $flags, $software);
-					if($statusCode != 200) break;
+					if($statusCode!=200) break;
 				}
 			}
 			$zip->close();
@@ -247,7 +247,7 @@ class YellowUpdate
 		if($this->isContentFile($fileName))
 		{
 			$statusCode = $this->update();
-			if($statusCode == 200)
+			if($statusCode==200)
 			{
 				$statusCode = 303;
 				$location = $this->yellow->lookup->normaliseUrl($serverScheme, $serverName, $base, $location);
@@ -276,7 +276,7 @@ class YellowUpdate
 			$password = trim($_REQUEST["password"]);
 			$language = trim($_REQUEST["language"]);
 			$status = trim($_REQUEST["status"]);
-			if($status == "install")
+			if($status=="install")
 			{
 				$status = "ok";
 				$fileNameHome = $this->yellow->lookup->findFileFromLocation("/");
@@ -284,26 +284,26 @@ class YellowUpdate
 				if($fileData==$this->getRawDataHome("en") && $language!="en")
 				{
 					$status = $this->yellow->toolbox->createFile($fileNameHome, $this->getRawDataHome($language)) ? "ok" : "error";
-					if($status == "error") $this->yellow->page->error(500, "Can't write file '$fileNameHome'!");
+					if($status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameHome'!");
 				}
 			}
-			if($status == "ok")
+			if($status=="ok")
 			{
 				if(!empty($email) && !empty($password) && $this->yellow->plugins->isExisting("webinterface"))
 				{
 					$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
 					$status = $this->yellow->plugins->get("webinterface")->users->update($fileNameUser, $email, $password, $name, $language) ? "ok" : "error";
-					if($status == "error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
+					if($status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
 				}
 			}
-			if($status == "ok")
+			if($status=="ok")
 			{
-				if($this->yellow->config->get("sitename") == "Yellow") $_REQUEST["sitename"] = $name;
+				if($this->yellow->config->get("sitename")=="Yellow") $_REQUEST["sitename"] = $name;
 				$fileNameConfig = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
 				$status = $this->yellow->config->update($fileNameConfig, $this->getConfigData()) ? "done" : "error";
-				if($status == "error") $this->yellow->page->error(500, "Can't write file '$fileNameConfig'!");
+				if($status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameConfig'!");
 			}
-			if($status == "done")
+			if($status=="done")
 			{
 				$statusCode = 303;
 				$location = $this->yellow->lookup->normaliseUrl($serverScheme, $serverName, $base, $location);
@@ -327,7 +327,7 @@ class YellowUpdate
 			$rawData .= "<p><label for=\"name\">".$this->yellow->text->get("webinterfaceSignupName")."</label><br /><input class=\"form-control\" type=\"text\" maxlength=\"64\" name=\"name\" id=\"name\" value=\"\"></p>\n";
 			$rawData .= "<p><label for=\"email\">".$this->yellow->text->get("webinterfaceSignupEmail")."</label><br /><input class=\"form-control\" type=\"text\" maxlength=\"64\" name=\"email\" id=\"email\" value=\"\"></p>\n";
 			$rawData .= "<p><label for=\"password\">".$this->yellow->text->get("webinterfaceSignupPassword")."</label><br /><input class=\"form-control\" type=\"password\" maxlength=\"64\" name=\"password\" id=\"password\" value=\"\"></p>\n";
-			if(count($this->yellow->text->getLanguages()) > 1)
+			if(count($this->yellow->text->getLanguages())>1)
 			{
 				$rawData .= "<p>";
 				foreach($this->yellow->text->getLanguages() as $language)
@@ -379,7 +379,7 @@ class YellowUpdate
 			list($version, $url) = explode(',', $dataLatest[$key]);
 			if(empty($feature))
 			{
-				if(strnatcasecmp($dataCurrent[$key], $version) < 0) $data[$key] = $dataLatest[$key];
+				if(strnatcasecmp($dataCurrent[$key], $version)<0) $data[$key] = $dataLatest[$key];
 			} else {
 				if(preg_match("/$feature/i", $key) && $version) $data[$key] = $dataLatest[$key];
 			}
@@ -398,7 +398,7 @@ class YellowUpdate
 			list($statusCodePlugins, $fileDataPlugins) = $this->getSoftwareFile($urlPlugins, $rawFormat);
 			list($statusCodeThemes, $fileDataThemes) = $this->getSoftwareFile($urlThemes, $rawFormat);
 			$statusCode = max($statusCodePlugins, $statusCodeThemes);
-			if($statusCode == 200)
+			if($statusCode==200)
 			{
 				foreach($this->yellow->toolbox->getTextLines($fileDataPlugins."\n".$fileDataThemes) as $line)
 				{
@@ -431,16 +431,16 @@ class YellowUpdate
 			}
 			$curlHandle = curl_init();
 			curl_setopt($curlHandle, CURLOPT_URL, $urlRequest);
-			curl_setopt($curlHandle, CURLOPT_USERAGENT, "Mozilla/5.0 (compatible; YellowCore/".YellowCore::Version).")";
+			curl_setopt($curlHandle, CURLOPT_USERAGENT, "Mozilla/5.0 (compatible; YellowCore/".YellowCore::VERSION).")";
 			curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, 1);
 			curl_setopt($curlHandle, CURLOPT_CONNECTTIMEOUT, 30);
 			$rawData = curl_exec($curlHandle);
 			$statusCode = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);
 			curl_close($curlHandle);
-			if($statusCode == 200)
+			if($statusCode==200)
 			{
 				$fileData = $rawData;
-			} else if($statusCode == 0) {
+			} else if($statusCode==0) {
 				$statusCode = 444;
 				$this->yellow->page->error($statusCode, "No response from server!");
 			} else {
@@ -471,9 +471,9 @@ class YellowUpdate
 	function isContentFile($fileName)
 	{
 		$contentDirLength = strlenu($this->yellow->config->get("contentDir"));
-		return substru($fileName, 0, $contentDirLength) == $this->yellow->config->get("contentDir");
+		return substru($fileName, 0, $contentDirLength)==$this->yellow->config->get("contentDir");
 	}
 }
 	
-$yellow->plugins->register("update", "YellowUpdate", YellowUpdate::Version, 1);
+$yellow->plugins->register("update", "YellowUpdate", YellowUpdate::VERSION, 1);
 ?>

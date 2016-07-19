@@ -5,7 +5,7 @@
 // Language plugin
 class YellowLanguage
 {
-	const Version = "0.6.5";
+	const VERSION = "0.6.5";
 	var $yellow;			//access to API
 	
 	// Handle initialisation
@@ -15,5 +15,5 @@ class YellowLanguage
 	}
 }
 
-$yellow->plugins->register("language", "YellowLanguage", YellowLanguage::Version);
+$yellow->plugins->register("language", "YellowLanguage", YellowLanguage::VERSION);
 ?>

@@ -5,7 +5,7 @@
 // Command line plugin
 class YellowCommandline
 {
-	const Version = "0.6.14";
+	const VERSION = "0.6.14";
 	var $yellow;					//access to API
 	var $files;						//number of files
 	var $errors;					//number of errors
@@ -45,7 +45,7 @@ class YellowCommandline
 	// Show available commands
 	function helpCommand()
 	{
-		echo "Yellow ".YellowCore::Version."\n";
+		echo "Yellow ".YellowCore::VERSION."\n";
 		$lineCounter = 0;
 		foreach($this->getCommandHelp() as $line) echo (++$lineCounter>1 ? "        " : "Syntax: ")."yellow.php $line\n";
 		return 200;
@@ -97,7 +97,7 @@ class YellowCommandline
 			}
 			foreach($this->locationsArgsPagination as $location)
 			{
-				if(substru($location, -1) != $this->yellow->toolbox->getLocationArgsSeparator())
+				if(substru($location, -1)!=$this->yellow->toolbox->getLocationArgsSeparator())
 				{
 					$statusCode = max($statusCode, $this->buildStaticFile($path, $location, false, true));
 				}
@@ -105,7 +105,7 @@ class YellowCommandline
 				{
 					$statusCodeLocation = $this->buildStaticFile($path, $location.$pageNumber, false, true);
 					$statusCode = max($statusCode, $statusCodeLocation);
-					if($statusCodeLocation == 100) break;
+					if($statusCodeLocation==100) break;
 				}
 			}
 			foreach($this->getMediaLocations() as $location)
@@ -137,7 +137,7 @@ class YellowCommandline
 			{
 				$fileData = ob_get_contents();
 				$modified = strtotime($this->yellow->page->getHeader("Last-Modified"));
-				if($modified == 0) $modified = filemtime($this->yellow->page->fileName);
+				if($modified==0) $modified = filemtime($this->yellow->page->fileName);
 				if($statusCode>=301 && $statusCode<=303)
 				{
 					$fileData = $this->getStaticRedirect($this->yellow->page->getHeader("Location"));
@@ -167,8 +167,8 @@ class YellowCommandline
 		if($statusCode==200 && $analyse) $this->analyseStaticFile($fileData);
 		if($statusCode==404 && $error) $statusCode = 200;
 		if($statusCode==404 && $probe) $statusCode = 100;
-		if($statusCode >= 200) ++$this->files;
-		if($statusCode >= 400)
+		if($statusCode>=200) ++$this->files;
+		if($statusCode>=400)
 		{
 			++$this->errors;
 			echo "ERROR building location '$location', ".$this->yellow->page->getStatusCode(true)."\n";
@@ -201,11 +201,11 @@ class YellowCommandline
 			if(preg_match("/^(.*?)#(.*)$/", $match, $tokens)) $match = $tokens[1];
 			if(preg_match("/^\w+:\/+(.*?)(\/.*)$/", $match, $tokens))
 			{
-				if($tokens[1] != $serverName) continue;
+				if($tokens[1]!=$serverName) continue;
 				$match = $tokens[2];
 			}
 			if(!$this->yellow->toolbox->isLocationArgs($match)) continue;
-			if(substru($match, 0, strlenu($serverBase)) != $serverBase) continue;
+			if(substru($match, 0, strlenu($serverBase))!=$serverBase) continue;
 			$location = rawurldecode(substru($match, strlenu($serverBase)));
 			if(!$this->yellow->toolbox->isLocationArgsPagination($location, $pagination))
 			{
@@ -294,11 +294,11 @@ class YellowCommandline
 		$statusCode = 0;
 		foreach($this->yellow->plugins->plugins as $key=>$value)
 		{
-			if($key == "commandline") continue;
+			if($key=="commandline") continue;
 			if(method_exists($value["obj"], "onCommand"))
 			{
 				$statusCode = $value["obj"]->onCommand(func_get_args());
-				if($statusCode != 0) break;
+				if($statusCode!=0) break;
 			}
 		}
 		return $statusCode;
@@ -309,13 +309,13 @@ class YellowCommandline
 	{
 		$statusCode = 0;
 		$serverSoftware = $this->yellow->toolbox->getServerSoftware();
-		echo "Yellow ".YellowCore::Version.", PHP ".PHP_VERSION.", $serverSoftware\n";
+		echo "Yellow ".YellowCore::VERSION.", PHP ".PHP_VERSION.", $serverSoftware\n";
 		list($command) = $args;
 		list($statusCode, $dataCurrent) = $this->getSoftwareVersion();
 		list($statusCode, $dataLatest) = $this->getSoftwareVersion(true);
 		foreach($dataCurrent as $key=>$value)
 		{
-			if(strnatcasecmp($dataCurrent[$key], $dataLatest[$key]) >= 0)
+			if(strnatcasecmp($dataCurrent[$key], $dataLatest[$key])>=0)
 			{
 				echo "$key $value\n";
 			} else {
@@ -323,7 +323,7 @@ class YellowCommandline
 				++$updates;
 			}
 		}
-		if($statusCode != 200) echo "ERROR checking updates: ".$this->yellow->page->get("pageError")."\n";
+		if($statusCode!=200) echo "ERROR checking updates: ".$this->yellow->page->get("pageError")."\n";
 		if($updates) echo "Yellow $command: $updates update".($updates==1 ? "":"s")." available\n";
 		return $statusCode;
 	}
@@ -344,8 +344,8 @@ class YellowCommandline
 		$ok = false;
 		if(!empty($path))
 		{
-			if($path == rtrim($this->yellow->config->get("staticDir"), '/')) $ok = true;
-			if($path == rtrim($this->yellow->config->get("trashDir"), '/')) $ok = true;			
+			if($path==rtrim($this->yellow->config->get("staticDir"), '/')) $ok = true;
+			if($path==rtrim($this->yellow->config->get("trashDir"), '/')) $ok = true;
 			if(is_file("$path/".$this->yellow->config->get("staticDefaultFile"))) $ok = true;
 			if(is_file("$path/yellow.php")) $ok = false;
 		}
@@ -355,11 +355,11 @@ class YellowCommandline
 	// Return static file
 	function getStaticFile($path, $location, $statusCode)
 	{
-		if($statusCode < 400)
+		if($statusCode<400)
 		{
 			$fileName = $path.$location;
 			if(!$this->yellow->lookup->isFileLocation($location)) $fileName .= $this->yellow->config->get("staticDefaultFile");
-		} else if($statusCode == 404) {
+		} else if($statusCode==404) {
 			$fileName = $path."/".$this->yellow->config->get("staticErrorFile");
 		}
 		return $fileName;
@@ -462,5 +462,5 @@ class YellowCommandline
 	}
 }
 	
-$yellow->plugins->register("commandline", "YellowCommandline", YellowCommandline::Version);
+$yellow->plugins->register("commandline", "YellowCommandline", YellowCommandline::VERSION);
 ?>
