@@ -5,7 +5,7 @@
 // Command line plugin
 class YellowCommandline
 {
-	const Version = "0.6.13";
+	const Version = "0.6.14";
 	var $yellow;					//access to API
 	var $files;						//number of files
 	var $errors;					//number of errors
@@ -323,7 +323,7 @@ class YellowCommandline
 				++$updates;
 			}
 		}
-		if($statusCode != 200) echo "ERROR checking updates: $dataLatest[error]\n";
+		if($statusCode != 200) echo "ERROR checking updates: ".$this->yellow->page->get("pageError")."\n";
 		if($updates) echo "Yellow $command: $updates update".($updates==1 ? "":"s")." available\n";
 		return $statusCode;
 	}
