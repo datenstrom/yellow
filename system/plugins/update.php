@@ -60,7 +60,7 @@ class YellowUpdate
 		{
 			foreach($data as $key=>$value)
 			{
-				list($version, $url) = explode(',', $value);
+				list($version) = explode(',', $value);
 				echo "$key $version\n";
 			}
 			if($statusCode==200) $statusCode = $this->download($data);
@@ -376,7 +376,7 @@ class YellowUpdate
 		list($statusCode, $dataLatest) = $this->getSoftwareVersion(true, true);
 		foreach($dataCurrent as $key=>$value)
 		{
-			list($version, $url) = explode(',', $dataLatest[$key]);
+			list($version) = explode(',', $dataLatest[$key]);
 			if(empty($feature))
 			{
 				if(strnatcasecmp($dataCurrent[$key], $version)<0) $data[$key] = $dataLatest[$key];
@@ -405,7 +405,7 @@ class YellowUpdate
 					preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
 					if(!empty($matches[1]) && !empty($matches[2]))
 					{
-						list($version, $url) = explode(',', $matches[2]);
+						list($version) = explode(',', $matches[2]);
 						$data[$matches[1]] = $rawFormat ? $matches[2] : $version;
 					}
 				}
