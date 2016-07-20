@@ -3,7 +3,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 require_once("system/plugins/core.php");
-if(PHP_SAPI != "cli")
+if(PHP_SAPI!="cli")
 {
 	$yellow = new YellowCore();
 	$yellow->plugins->load();
