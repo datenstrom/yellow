@@ -61,7 +61,7 @@ WebinterfaceConfirmMessage: Bonjour @usershort, veuillez confirmer la création 
 WebinterfaceConfirmStatusDone: Votre compte utilisateur est confirmé. Merci!
 WebinterfaceConfirmStatusExpire: Votre compte utilisateur ne peut pas être créé. Le lien de confirmation a expiré!
 WebinterfaceApproveSubject: Approuver un nouvel utilisateur.
-WebinterfaceApproveMessage: Bonjour @usershort, veuillez approuvez la création d'un nouveau compte utilisateur pour @useraccount. Cliquez sur le lien suivant.
+WebinterfaceApproveMessage: Bonjour @usershort, veuillez approuver la création d'un nouveau compte utilisateur pour @useraccount. Cliquez sur le lien suivant.
 WebinterfaceApproveStatusDone: Compte utilisateur approuvé. Merci!
 WebinterfaceApproveStatusExpire: Le compte ne peut pas être approuvé. Le lien de confirmation a expiré!
 WebinterfaceRecoverSubject: Restauration d'un compte utilisateur.
