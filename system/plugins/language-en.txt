@@ -3,7 +3,7 @@
 Language: en
 LanguageDescription: English
 LanguageAuthor: Mark Seuffert
-LanguageVersion: 0.6.5
+LanguageVersion: 0.6.6
 
 BlogBy: by
 BlogFilter: Blog:
@@ -91,6 +91,6 @@ WebinterfaceUserLogout: Logout
 WikiFilter: Wiki:
 WikiTag: Tags:
 WikiSpecialChanges: Recent changes
-YellowUrl: http://datenstrom.se/yellow
-YellowUserHelpUrl: http://developers.datenstrom.se/help/
-YellowMarkdownHelpUrl: http://developers.datenstrom.se/help/markdown-cheat-sheet
+YellowUrl: https://datenstrom.se/yellow
+YellowUserHelpUrl: https://developers.datenstrom.se/help/
+YellowMarkdownHelpUrl: https://developers.datenstrom.se/help/markdown-cheat-sheet

@@ -3,7 +3,7 @@
 Language: fr
 LanguageDescription: Français
 LanguageAuthor: Juh Nibreh
-LanguageVersion: 0.6.5
+LanguageVersion: 0.6.6
 
 BlogBy: par
 BlogFilter: Blog:
@@ -91,6 +91,6 @@ WebinterfaceUserLogout: Déconnexion
 WikiFilter: Wiki:
 WikiTag: Tags:
 WikiSpecialChanges: Changements récents
-YellowUrl: http://datenstrom.se/fr/yellow/
-YellowUserHelpUrl: http://developers.datenstrom.se/help/help-fr
-YellowMarkdownHelpUrl: http://developers.datenstrom.se/help/markdown-cheat-sheet-fr
+YellowUrl: https://datenstrom.se/fr/yellow/
+YellowUserHelpUrl: https://developers.datenstrom.se/help/help-fr
+YellowMarkdownHelpUrl: https://developers.datenstrom.se/help/markdown-cheat-sheet-fr

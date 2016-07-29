@@ -3,7 +3,7 @@
 Language: de
 LanguageDescription: Deutsch
 LanguageAuthor: David Fehrmann
-LanguageVersion: 0.6.5
+LanguageVersion: 0.6.6
 
 BlogBy: von
 BlogFilter: Blog:
@@ -91,6 +91,6 @@ WebinterfaceUserLogout: Abmelden
 WikiFilter: Wiki:
 WikiTag: Tags:
 WikiSpecialChanges: Letzte Änderungen
-YellowUrl: http://datenstrom.se/de/yellow/
-YellowUserHelpUrl: http://developers.datenstrom.se/help/help-de
-YellowMarkdownHelpUrl: http://developers.datenstrom.se/help/markdown-cheat-sheet-de
+YellowUrl: https://datenstrom.se/de/yellow/
+YellowUserHelpUrl: https://developers.datenstrom.se/help/help-de
+YellowMarkdownHelpUrl: https://developers.datenstrom.se/help/markdown-cheat-sheet-de
