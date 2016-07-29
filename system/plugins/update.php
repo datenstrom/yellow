@@ -5,7 +5,7 @@
 // Update plugin
 class YellowUpdate
 {
-	const VERSION = "0.6.4";
+	const VERSION = "0.6.5";
 	var $yellow;					//access to API
 	
 	// Handle initialisation
@@ -16,8 +16,6 @@ class YellowUpdate
 		$this->yellow->config->setDefault("updateThemesUrl", "https://github.com/datenstrom/yellow-themes");
 		$this->yellow->config->setDefault("updateVersionFile", "version.ini");
 		$this->yellow->config->setDefault("updateInformationFile", "update.ini");
-		$this->yellow->config->setDefault("updateDocumentationFile", "README.md");
-		$this->yellow->config->setDefault("updateDownloadExtension", ".download");
 	}
 	
 	// Handle request
@@ -91,13 +89,13 @@ class YellowUpdate
 	{
 		$statusCode = 0;
 		$path = $this->yellow->config->get("pluginDir");
-		$extension = $this->yellow->config->get("updateDownloadExtension");
+		$fileExtension = $this->yellow->config->get("downloadExtension");
 		foreach($data as $key=>$value)
 		{
 			$fileName = strtoloweru("$path$key.zip");
 			list($version, $url) = explode(',', $value);
 			list($statusCode, $fileData) = $this->getSoftwareFile($url);
-			if(empty($fileData) || !$this->yellow->toolbox->createFile($fileName.$extension, $fileData))
+			if(empty($fileData) || !$this->yellow->toolbox->createFile($fileName.$fileExtension, $fileData))
 			{
 				$statusCode = 500;
 				$this->yellow->page->error($statusCode, "Can't download file '$fileName'!");
@@ -109,7 +107,7 @@ class YellowUpdate
 			foreach($data as $key=>$value)
 			{
 				$fileName = strtoloweru("$path$key.zip");
-				if(!$this->yellow->toolbox->renameFile($fileName.$extension, $fileName))
+				if(!$this->yellow->toolbox->renameFile($fileName.$fileExtension, $fileName))
 				{
 					$statusCode = 500;
 					$this->yellow->page->error($statusCode, "Can't create file '$fileName'!");
@@ -240,6 +238,24 @@ class YellowUpdate
 		return $statusCode;
 	}
 	
+	// Update installation files
+	function updateInstallation($feature)
+	{
+		$ok = true;
+		$path = $this->yellow->config->get("pluginDir");
+		$regex = "/^.*\\".$this->yellow->config->get("downloadExtension")."$/";
+		foreach($this->yellow->toolbox->getDirectoryEntries($path, $regex, true, false) as $entry)
+		{
+			if(preg_match("/$feature/i", basename($entry)))
+			{
+				if($this->updateSoftwareArchive($entry)!=200) $ok = false;
+			} else {
+				if(!$this->yellow->toolbox->deleteFile($entry)) $ok = false;
+			}
+		}
+		return $ok;
+	}
+	
 	// Process request to update software
 	function processRequestUpdate($serverScheme, $serverName, $base, $location, $fileName)
 	{
@@ -275,6 +291,7 @@ class YellowUpdate
 			$email = trim($_REQUEST["email"]);
 			$password = trim($_REQUEST["password"]);
 			$language = trim($_REQUEST["language"]);
+			$feature = trim($_REQUEST["feature"]);
 			$status = trim($_REQUEST["status"]);
 			if($status=="install")
 			{
@@ -294,6 +311,14 @@ class YellowUpdate
 					$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
 					$status = $this->yellow->plugins->get("webinterface")->users->update($fileNameUser, $email, $password, $name, $language) ? "ok" : "error";
 					if($status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
+				}
+			}
+			if($status=="ok")
+			{
+				if(!empty($feature))
+				{
+					$status = $this->updateInstallation($feature) ? "ok" : "error";
+					if($status=="error") $this->yellow->page->error(500, "Can't install feature '$feature'!");
 				}
 			}
 			if($status=="ok")
@@ -337,6 +362,16 @@ class YellowUpdate
 				}
 				$rawData .= "</p>\n";
 			}
+			if(count($this->getFeatures())>1)
+			{
+				$rawData .= "<p>".$this->yellow->text->get("webinterfaceInstallationFeature")."<p>";
+				foreach($this->getFeatures() as $feature)
+				{
+					$checked = $feature=="website" ? " checked=\"checked\"" : "";
+					$rawData .= "<label for=\"$feature\"><input type=\"radio\" name=\"feature\" id=\"$feature\" value=\"$feature\"$checked> ".ucfirst($feature)."</label><br />";
+				}
+				$rawData .= "</p>\n";
+			}
 			$rawData .= "<input class=\"btn\" type=\"submit\" value=\"".$this->yellow->text->get("webinterfaceOkButton")."\" />\n";
 			$rawData .= "<input type=\"hidden\" name=\"status\" value=\"install\" />\n";
 			$rawData .= "</form>\n";
@@ -351,7 +386,7 @@ class YellowUpdate
 		return $rawData;
 	}
 	
-	// Return configuration data
+	// Return configuration data for installation
 	function getConfigData()
 	{
 		$data = array();
@@ -368,6 +403,22 @@ class YellowUpdate
 		return $data;
 	}
 
+	// Return installation features
+	function getFeatures()
+	{
+		$data = array("website");
+		$path = $this->yellow->config->get("pluginDir");
+		$regex = "/^.*\\".$this->yellow->config->get("downloadExtension")."$/";
+		foreach($this->yellow->toolbox->getDirectoryEntries($path, $regex, true, false, false) as $entry)
+		{
+			if(preg_match("/^installation-(.*?)\\./", $entry, $matches))
+			{
+				array_push($data, $matches[1]);
+			}
+		}
+		return $data;
+	}
+	
 	// Return software update
 	function getSoftwareUpdate($feature)
 	{

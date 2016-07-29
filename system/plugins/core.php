@@ -60,6 +60,7 @@ class YellowCore
 		$this->config->setDefault("contentDefaultFile", "page.txt");
 		$this->config->setDefault("contentExtension", ".txt");
 		$this->config->setDefault("configExtension", ".ini");
+		$this->config->setDefault("downloadExtension", ".download");
 		$this->config->setDefault("configFile", "config.ini");
 		$this->config->setDefault("textFile", "language-(.*).txt");
 		$this->config->setDefault("errorFile", "page-error-(.*).txt");
