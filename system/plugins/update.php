@@ -249,8 +249,13 @@ class YellowUpdate
 			if(preg_match("/$feature/i", basename($entry)))
 			{
 				if($this->updateSoftwareArchive($entry)!=200) $ok = false;
-			} else {
-				if(!$this->yellow->toolbox->deleteFile($entry)) $ok = false;
+			}
+		}
+		if($ok)
+		{
+			foreach($this->yellow->toolbox->getDirectoryEntries($path, $regex, true, false) as $entry)
+			{
+				$this->yellow->toolbox->deleteFile($entry);
 			}
 		}
 		return $ok;
@@ -411,9 +416,9 @@ class YellowUpdate
 		$regex = "/^.*\\".$this->yellow->config->get("downloadExtension")."$/";
 		foreach($this->yellow->toolbox->getDirectoryEntries($path, $regex, true, false, false) as $entry)
 		{
-			if(preg_match("/^installation-(.*?)\\./", $entry, $matches))
+			if(preg_match("/^(.*?)-(.*?)\./", $entry, $matches))
 			{
-				array_push($data, $matches[1]);
+				array_push($data, $matches[2]);
 			}
 		}
 		return $data;
