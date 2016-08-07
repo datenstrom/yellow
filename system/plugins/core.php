@@ -2742,26 +2742,6 @@ class YellowToolbox
 		return $entries;
 	}
 	
-	// Delete directory
-	function deleteDirectory($path, $recursive = false)
-	{
-		if($recursive)
-		{
-			$iterator = new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::SKIP_DOTS);
-			$files = new RecursiveIteratorIterator($iterator, RecursiveIteratorIterator::CHILD_FIRST);
-			foreach($files as $file)
-			{
-				if($file->isDir())
-				{
-					@rmdir($file->getRealPath());
-				} else {
-					@unlink($file->getRealPath());
-				}
-			}
-		}
-		return @rmdir($path);
-	}
-	
 	// Return file extension
 	function getFileExtension($fileName)
 	{
@@ -2852,11 +2832,39 @@ class YellowToolbox
 		{
 			$ok = @unlink($fileName);
 		} else {
+			if(!is_dir($pathTrash)) @mkdir($pathTrash, 0777, true);
 			$fileNameDest = $pathTrash;
 			$fileNameDest .= pathinfo($fileName, PATHINFO_FILENAME);
 			$fileNameDest .= "-".str_replace(array(" ", ":"), "-", date("Y-m-d H:i:s", filemtime($fileName)));
 			$fileNameDest .= ".".pathinfo($fileName, PATHINFO_EXTENSION);
-			$ok = $this->renameFile($fileName, $fileNameDest, true);
+			$ok = @rename($fileName, $fileNameDest);
+		}
+		return $ok;
+	}
+	
+	// Delete directory
+	function deleteDirectory($path, $pathTrash = "")
+	{
+		if(empty($pathTrash))
+		{
+			$iterator = new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::SKIP_DOTS);
+			$files = new RecursiveIteratorIterator($iterator, RecursiveIteratorIterator::CHILD_FIRST);
+			foreach($files as $file)
+			{
+				if($file->isDir())
+				{
+					@rmdir($file->getRealPath());
+				} else {
+					@unlink($file->getRealPath());
+				}
+			}
+			$ok = @rmdir($path);
+		} else {
+			if(!is_dir($pathTrash)) @mkdir($pathTrash, 0777, true);
+			$pathDest = $pathTrash;
+			$pathDest .= basename($path);
+			$pathDest .= "-".str_replace(array(" ", ":"), "-", date("Y-m-d H:i:s", filemtime($path)));
+			$ok = @rename($path, $pathDest);
 		}
 		return $ok;
 	}

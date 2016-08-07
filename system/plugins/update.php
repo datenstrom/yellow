@@ -5,7 +5,7 @@
 // Update plugin
 class YellowUpdate
 {
-	const VERSION = "0.6.5";
+	const VERSION = "0.6.6";
 	var $yellow;					//access to API
 	
 	// Handle initialisation
@@ -246,7 +246,7 @@ class YellowUpdate
 		$regex = "/^.*\\".$this->yellow->config->get("downloadExtension")."$/";
 		foreach($this->yellow->toolbox->getDirectoryEntries($path, $regex, true, false) as $entry)
 		{
-			if(preg_match("/$feature/i", basename($entry)))
+			if(stristr(basename($entry), $feature))
 			{
 				if($this->updateSoftwareArchive($entry)!=200) $ok = false;
 			}
@@ -437,7 +437,7 @@ class YellowUpdate
 			{
 				if(strnatcasecmp($dataCurrent[$key], $version)<0) $data[$key] = $dataLatest[$key];
 			} else {
-				if(preg_match("/$feature/i", $key) && $version) $data[$key] = $dataLatest[$key];
+				if(stristr($key, $feature) && $version) $data[$key] = $dataLatest[$key];
 			}
 		}
 		return array($statusCode, $data);

@@ -5,7 +5,7 @@
 // Web interface plugin
 class YellowWebinterface
 {
-	const VERSION = "0.6.9";
+	const VERSION = "0.6.10";
 	var $yellow;				//access to API
 	var $active;				//web interface is active? (boolean)
 	var $userEmail;				//web interface user
@@ -381,7 +381,7 @@ class YellowWebinterface
 	function processRequestSettings($serverScheme, $serverName, $base, $location, $fileName)
 	{
 		$this->action = "settings";
-		$this->status = $this->getUserAccount($this->userEmail, "", $this->action);
+		$this->status = "ok";
 		if($this->status=="ok")
 		{
 			$name = trim(preg_replace("/[^\pL\d\-\. ]/u", "-", $_REQUEST["name"]));

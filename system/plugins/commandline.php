@@ -263,7 +263,7 @@ class YellowCommandline
 		$statusCode = 200;
 		if(is_dir($path) && $this->checkStaticDirectory($path))
 		{
-			if(!$this->yellow->toolbox->deleteDirectory($path, true))
+			if(!$this->yellow->toolbox->deleteDirectory($path))
 			{
 				$statusCode = 500;
 				echo "ERROR cleaning files: Can't delete directory '$path'!\n";
