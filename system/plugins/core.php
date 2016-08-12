@@ -2262,17 +2262,23 @@ class YellowLookup
 		return $name;
 	}
 	
-	// Return file path for new page
-	function findFileNew($fileName, $fileNew, $pathBase, $nameDefault)
+	// Return file path from config
+	function findFileFromConfig($fileName, $fileNameBase, $nameDefault)
 	{
+		$pathBase = $this->yellow->config->get("configDir");
 		if(preg_match("/^.*\/(.+?)$/", dirname($fileName), $matches)) $name = $this->normaliseName($matches[1]);
-		$fileName = strreplaceu("(.*)", $name, $pathBase.$fileNew);
+		$fileName = strreplaceu("(.*)", $name, $pathBase.$fileNameBase);
 		if(!is_file($fileName))
 		{
 			$name = $this->normaliseName($nameDefault);
-			$fileName = strreplaceu("(.*)", $name, $pathBase.$fileNew);
+			$fileName = strreplaceu("(.*)", $name, $pathBase.$fileNameBase);
 		}
 		return $fileName;
+	}
+	
+	function findFileNew($fileName, $fileNew, $pathBase, $nameDefault)
+	{
+		return $this->findFileFromConfig($fileName, $fileNew, $nameDefault); //TODO: Remove later
 	}
 	
 	// Return file path from title
@@ -2285,6 +2291,28 @@ class YellowLookup
 		$fileNamePrefix = $matches[1];
 		$fileNameText = empty($matches[2]) ? $fileDefault : $matches[2].$fileExtension;
 		return dirname($fileName)."/".$fileNamePrefix.$fileNameText;
+	}
+	
+	// Return file path for new page
+	function findFilePageNew($fileName, $prefix = "")
+	{
+		$tokens = explode('/', $fileName);
+		for($i=0; $i<count($tokens)-1; ++$i)
+		{
+			if(!is_dir($path.$tokens[$i]) && !preg_match("/^[\d\-\_\.]+(.*)$/", $tokens[$i]))
+			{
+				$number = 1;
+				foreach($this->yellow->toolbox->getDirectoryEntries($path, "/^[\d\-\_\.]+(.*)$/", true, true, false) as $entry)
+				{
+					if($number!=1 && $number!=intval($entry)) break;
+					$number = intval($entry)+1;
+				}
+				$tokens[$i] = (empty($prefix) ? "$number-" : $prefix).$tokens[$i];
+			}
+			$path .= $tokens[$i]."/";
+		}
+		$path .= $tokens[$i];
+		return $path;
 	}
 	
 	// Normalise file/directory/other name
