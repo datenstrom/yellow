@@ -1,4 +1,4 @@
-/* Yellow web interface 0.6.10 */
+/* Yellow web interface 0.6.11 */
 
 .yellow-bar { position:relative; overflow:hidden; height:2em; margin-bottom:10px; }
 .yellow-bar-left { display:block; float:left; }
@@ -20,7 +20,7 @@
 .yellow-pane p { margin:0.5em; }
 .yellow-pane ul { list-style:none; margin:0 0.5em; padding:0; }
 .yellow-pane div { overflow:hidden; }
-.yellow-close { display:block; float:right; padding:0 0.5em; color:#bbb; }
+.yellow-close { display:block; float:right; padding:0 0.5em; color:#bbb; font-size:1.1em; }
 .yellow-close:hover { text-decoration:none; color:#000; }
 .yellow-arrow { position:absolute; top:0; left:0; }
 .yellow-arrow:after, .yellow-arrow:before {
@@ -70,18 +70,6 @@
 	text-decoration:none;
 }
 .yellow-btn:active { box-shadow:inset 0 2px 4px rgba(0, 0, 0, 0.1); }
-.yellow-btn-create {
-	background-color:#3cc335; color:#ffffff;
-	background-image:linear-gradient(to bottom, #5fee5b, #36bd2f); 
-	border-color:#31b121 #31b121 #20b020; 
-}
-.yellow-btn-create:hover, .yellow-btn-create:focus, .yellow-btn-create:active { color:#ffffff; }
-.yellow-btn-edit {
-	background-color:#3cc335; color:#ffffff;
-	background-image:linear-gradient(to bottom, #5fee5b, #36bd2f);
-	border-color:#31b121 #31b121 #20b020;
-}
-.yellow-btn-edit:hover, .yellow-btn-edit:focus, .yellow-btn-edit:active { color:#ffffff; }
 .yellow-btn-delete {
 	background-color:#c33c35; color:#ffffff;
 	background-image:linear-gradient(to bottom, #ee5f5b, #bd362f);

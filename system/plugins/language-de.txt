@@ -3,7 +3,7 @@
 Language: de
 LanguageDescription: Deutsch
 LanguageAuthor: David Fehrmann
-LanguageVersion: 0.6.6
+LanguageVersion: 0.6.7
 
 BlogBy: von
 BlogFilter: Blog:
@@ -51,28 +51,45 @@ WebinterfaceSignupStatusNext: Benutzerkonto wird erstellt, bitte überprüfe dei
 WebinterfaceRecoverTitle: Kennwort vergessen
 WebinterfaceRecoverEmail: E-Mail:
 WebinterfaceRecoverPassword: Kennwort:
-WebinterfaceRecoverButton: Absenden
 WebinterfaceRecoverStatusNone: Kein Problem, du kannst ein neues Kennwort erstellen.
 WebinterfaceRecoverStatusInvalid: Bitte eine gültige E-Mail angeben.
 WebinterfaceRecoverStatusPassword: Bitte ein neues Kennwort angeben.
 WebinterfaceRecoverStatusWeak: Bitte eine anderes Kennwort angeben.
 WebinterfaceRecoverStatusNext: Benutzerkonto wird wiederhergestellt, bitte überprüfe deine E-Mails.
+WebinterfaceSettingsTitle: Einstellungen
+WebinterfaceSettingsStatusInvalid: Bitte eine gültige E-Mail angeben.
+WebinterfaceSettingsStatusExists: Bitte eine andere E-Mail angeben.
+WebinterfaceSettingsStatusWeak: Bitte eine anderes Kennwort angeben.
+WebinterfaceSettingsStatusNext: Benutzerkonto wird geändert, bitte überprüfe deine E-Mails.
 WebinterfaceConfirmSubject: Benutzerkonto bestätigen
 WebinterfaceConfirmMessage: Hallo @usershort, bitte bestätige dein Benutzerkonto. Klicke auf den folgenden Link.
-WebinterfaceConfirmStatusDone: Benutzerkonto wurde bestätigt. Vielen Dank!
-WebinterfaceConfirmStatusExpire: Benutzerkonto kann nicht bestätigt werden. Link ist abgelaufen!
+WebinterfaceConfirmStatusDone: Benutzerkonto wurde bestätigt und wartet auf Genehmigung. Vielen Dank!
+WebinterfaceConfirmStatusExpired: Benutzerkonto kann nicht bestätigt werden. Link ist abgelaufen!
 WebinterfaceApproveSubject: Benutzerkonto genehmigen
 WebinterfaceApproveMessage: Hallo @usershort, bitte genehmige ein neues Benutzerkonto für @useraccount. Klicke auf den folgenden Link.
 WebinterfaceApproveStatusDone: Benutzerkonto wurde genehmigt. Vielen Dank!
-WebinterfaceApproveStatusExpire: Benutzerkonto kann nicht genehmigt werden. Link ist abgelaufen!
+WebinterfaceApproveStatusExpired: Benutzerkonto kann nicht genehmigt werden. Link ist abgelaufen!
 WebinterfaceRecoverSubject: Benutzerkonto wiederherstellen
 WebinterfaceRecoverMessage: Hallo @usershort, bitte bestätige dass du dein Kennwort vergessen hast. Klicke auf den folgenden Link.
 WebinterfaceRecoverStatusDone: Benutzerkonto wurde wiederhergestellt. Vielen Dank!
-WebinterfaceRecoverStatusExpire: Benutzerkonto kann nicht wiederhergestellt werden. Link ist abgelaufen!
+WebinterfaceRecoverStatusExpired: Benutzerkonto kann nicht wiederhergestellt werden. Link ist abgelaufen!
+WebinterfaceReconfirmSubject: Benutzerkonto ändern
+WebinterfaceReconfirmMessage: Hallo @usershort, bitte bestätige eine neue E-Mail für dein Benutzerkonto. Klicke auf den folgenden Link.
+WebinterfaceReconfirmStatusDone: Benutzerkonto wurde bestätigt. Vielen Dank!
+WebinterfaceReconfirmStatusExpired: Benutzerkonto kann nicht bestätigt werden. Link ist abgelaufen!
+WebinterfaceChangeSubject: Benutzerkonto ändern
+WebinterfaceChangeMessage: Hallo @usershort, bitte bestätige dass du dein Benutzerkonto ändern möchtest. Klicke auf den folgenden Link.
+WebinterfaceChangeStatusDone: Benutzerkonto wurde geändert. Vielen Dank!
+WebinterfaceChangeStatusExpired: Benutzerkonto kann nicht geändert werden. Link ist abgelaufen!
 WebinterfaceWelcomeSubject: Willkommen
 WebinterfaceWelcomeMessage: Hallo @usershort, dein Benutzerkonto wurde erstellt. Viel Spass beim Bearbeiten der Webseite.
 WebinterfaceInformationSubject: Willkommen zurück
-WebinterfaceInformationMessage: Hallo @usershort, dein Benutzerkonto wurde geändert. Viel Spass beim Bearbeiten der Webseite.
+WebinterfaceInformationMessage: Hallo @usershort, dein Benutzerkonto wurde geändert. Du kannst dich jetzt anmelden.
+WebinterfaceUpdateTitle: Aktualisierung
+WebinterfaceUpdateCheck: Nach Aktualisierung suchen
+WebinterfaceUpdateStatusNone: Nach Aktualisierung suchen…
+WebinterfaceUpdateStatusEmpty: Keine Aktualisierung verfügbar.
+WebinterfaceUpdateButton: Aktualisieren
 WebinterfaceOkButton: Ok
 WebinterfaceCancelButton: Abbruch
 WebinterfaceCreateButton: Erzeugen
@@ -81,12 +98,9 @@ WebinterfaceDeleteButton: Löschen
 WebinterfaceEdit: Seite ändern
 WebinterfaceCreate: +
 WebinterfaceDelete: -
-WebinterfaceCreateTitle: Neue Seite
+WebinterfaceCreateTitle: Seite erzeugen
 WebinterfaceDeleteTitle: Seite löschen
 WebinterfaceMarkdownHelp: Markdown
-WebinterfaceSettingsTitle: Einstellungen
-WebinterfaceSettingsChangeEmail: Email ändern
-WebinterfaceSettingsChangePassword: Kennwort ändern
 WebinterfaceUserHelp: Hilfe
 WebinterfaceUserLogout: Abmelden
 WikiFilter: Wiki:

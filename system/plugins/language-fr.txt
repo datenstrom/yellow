@@ -3,7 +3,7 @@
 Language: fr
 LanguageDescription: Français
 LanguageAuthor: Juh Nibreh
-LanguageVersion: 0.6.6
+LanguageVersion: 0.6.7
 
 BlogBy: par
 BlogFilter: Blog:
@@ -51,28 +51,45 @@ WebinterfaceSignupStatusNext: Votre compte a été créé, vérifiez vos emails.
 WebinterfaceRecoverTitle: Mot de passe oublié
 WebinterfaceRecoverEmail: Email:
 WebinterfaceRecoverPassword: Mot de passe:
-WebinterfaceRecoverButton: Envoyer
 WebinterfaceRecoverStatusNone: Pas de problème, vous pouvez créer un nouveau mot de passe.
 WebinterfaceRecoverStatusInvalid: S'il vous plaît, veuillez entrer une adresse email valide.
 WebinterfaceRecoverStatusPassword: S'il vous plaît, choisissez un nouveau mot de passe.
 WebinterfaceRecoverStatusWeak: S'il vous plaît, choisissez un mot de passe différent.
 WebinterfaceRecoverStatusNext: Votre compte est à nouveau disponible, vérifiez vos emails.
-WebinterfaceConfirmSubject: Création d'un compte utilisateur.
-WebinterfaceConfirmMessage: Bonjour @usershort, veuillez confirmer la création de votre compte utilisateur. Cliquez sur le lien suivant.
-WebinterfaceConfirmStatusDone: Votre compte utilisateur est confirmé. Merci!
-WebinterfaceConfirmStatusExpire: Votre compte utilisateur ne peut pas être créé. Le lien de confirmation a expiré!
-WebinterfaceApproveSubject: Approuver un nouvel utilisateur.
+WebinterfaceSettingsTitle: Paramètres
+WebinterfaceSettingsStatusInvalid: S'il vous plaît, veuillez entrer une adresse email valide.
+WebinterfaceSettingsStatusExists: S'il vous plaît, veuillez entrer une adresse email différent.
+WebinterfaceSettingsStatusWeak: S'il vous plaît, choisissez un mot de passe différent.
+WebinterfaceSettingsStatusNext: Votre compte a été changé, vérifiez vos emails.
+WebinterfaceConfirmSubject: Confirmation d'un compte utilisateur
+WebinterfaceConfirmMessage: Bonjour @usershort, veuillez confirmer votre compte utilisateur. Cliquez sur le lien suivant.
+WebinterfaceConfirmStatusDone: Votre compte utilisateur est confirmé et en attente d'approbation. Merci!
+WebinterfaceConfirmStatusExpired: Le compte ne peut pas être créé. Le lien de confirmation a expiré!
+WebinterfaceApproveSubject: Approuver un nouvel utilisateur
 WebinterfaceApproveMessage: Bonjour @usershort, veuillez approuver la création d'un nouveau compte utilisateur pour @useraccount. Cliquez sur le lien suivant.
 WebinterfaceApproveStatusDone: Compte utilisateur approuvé. Merci!
-WebinterfaceApproveStatusExpire: Le compte ne peut pas être approuvé. Le lien de confirmation a expiré!
-WebinterfaceRecoverSubject: Restauration d'un compte utilisateur.
+WebinterfaceApproveStatusExpired: Le compte ne peut pas être approuvé. Le lien de confirmation a expiré!
+WebinterfaceRecoverSubject: Restauration d'un compte utilisateur
 WebinterfaceRecoverMessage: Bonjour @usershort, veuillez confirmer que vous avez oublié votre mot de passe. Cliquez sur le lien suivant.
 WebinterfaceRecoverStatusDone: Compte utilisateur restauré. Merci!
-WebinterfaceRecoverStatusExpire: Le compte ne peut pas être restauré. Le lien de confirmation a expiré!
+WebinterfaceRecoverStatusExpired: Le compte ne peut pas être restauré. Le lien de confirmation a expiré!
+WebinterfaceReconfirmSubject: Changement d'un compte utilisateur
+WebinterfaceReconfirmMessage: Bonjour @usershort, veuillez confirmer une nouvelle adresse email pour votre compte utilisateur. Cliquez sur le lien suivant.
+WebinterfaceReconfirmStatusDone: Votre compte utilisateur est confirmé. Merci!
+WebinterfaceReconfirmStatusExpired: Le compte ne peut pas être créé. Le lien de confirmation a expiré!
+WebinterfaceChangeSubject: Changement d'un compte utilisateur
+WebinterfaceChangeMessage: Bonjour @usershort, veuillez confirmer que vous souhaitez modifier votre compte utilisateur. Cliquez sur le lien suivant.
+WebinterfaceChangeStatusDone: Compte utilisateur changé. Merci!
+WebinterfaceChangeStatusExpired: Le compte ne peut pas être changé. Le lien de confirmation a expiré!
 WebinterfaceWelcomeSubject: Bienvenue
 WebinterfaceWelcomeMessage: Bonjour @usershort, votre compte utilisateur a bien été créé. Amusez-vous bien en éditant le site web.
 WebinterfaceInformationSubject: Bienvenue à nouveau
-WebinterfaceInformationMessage: Bonjour @usershort, votre compte utilisateur a bien été changé. Amusez-vous bien en éditant le site web.
+WebinterfaceInformationMessage: Bonjour @usershort, votre compte utilisateur a bien été changé. Vous pouvez maintenant vous connecter.
+WebinterfaceUpdateTitle: Mises à jour
+WebinterfaceUpdateCheck: Vérifier les mises à jour
+WebinterfaceUpdateStatusNone: Vérification des mises à jour…
+WebinterfaceUpdateStatusEmpty: Aucune mise à jour disponible.
+WebinterfaceUpdateButton: Mettre à jour
 WebinterfaceOkButton: Ok
 WebinterfaceCancelButton: Annuler
 WebinterfaceCreateButton: Créer
@@ -81,12 +98,9 @@ WebinterfaceDeleteButton: Supprimer
 WebinterfaceEdit: Éditer page
 WebinterfaceCreate: +
 WebinterfaceDelete: -
-WebinterfaceCreateTitle: Nouvelle page
+WebinterfaceCreateTitle: Créer page
 WebinterfaceDeleteTitle: Supprimer page
 WebinterfaceMarkdownHelp: Markdown
-WebinterfaceSettingsTitle: Paramètres
-WebinterfaceSettingsChangeEmail: Changez email
-WebinterfaceSettingsChangePassword: Changez mot de passe
 WebinterfaceUserHelp: Aide
 WebinterfaceUserLogout: Déconnexion
 WikiFilter: Wiki:

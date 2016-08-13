@@ -5,7 +5,7 @@
 // Update plugin
 class YellowUpdate
 {
-	const VERSION = "0.6.6";
+	const VERSION = "0.6.7";
 	var $yellow;					//access to API
 	
 	// Handle initialisation
@@ -284,12 +284,10 @@ class YellowUpdate
 		$statusCode = 0;
 		if($this->isContentFile($fileName))
 		{
-			$fileName = $this->yellow->lookup->findFileNew($fileName,
-				$this->yellow->config->get("webinterfaceNewFile"), $this->yellow->config->get("configDir"), "installation");
 			$this->yellow->pages->pages["root/"] = array();
 			$this->yellow->page = new YellowPage($this->yellow);
 			$this->yellow->page->setRequestInformation($serverScheme, $serverName, $base, $location, $fileName);
-			$this->yellow->page->parseData($this->getRawDataInstallation($fileName, $this->yellow->getRequestLanguage()), false, 404);
+			$this->yellow->page->parseData($this->getRawDataInstallation($this->yellow->getRequestLanguage()), false, 404);
 			$this->yellow->page->parserSafeMode = false;
 			$this->yellow->page->parseContent();
 			$name = trim(preg_replace("/[^\pL\d\-\. ]/u", "-", $_REQUEST["name"]));
@@ -346,8 +344,9 @@ class YellowUpdate
 	}
 	
 	// Return raw data for installation page
-	function getRawDataInstallation($fileName, $language)
+	function getRawDataInstallation($language)
 	{
+		$fileName = strreplaceu("(.*)", "installation", $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceNewFile"));
 		$rawData = $this->yellow->toolbox->readFile($fileName);
 		if(empty($rawData))
 		{

@@ -3,7 +3,7 @@
 Language: en
 LanguageDescription: English
 LanguageAuthor: Mark Seuffert
-LanguageVersion: 0.6.6
+LanguageVersion: 0.6.7
 
 BlogBy: by
 BlogFilter: Blog:
@@ -51,28 +51,45 @@ WebinterfaceSignupStatusNext: User account will be created, please check your em
 WebinterfaceRecoverTitle: Forgot your password
 WebinterfaceRecoverEmail: Email:
 WebinterfaceRecoverPassword: Password:
-WebinterfaceRecoverButton: Send
 WebinterfaceRecoverStatusNone: No problem, you can create a new password.
 WebinterfaceRecoverStatusInvalid: Please enter a valid email.
 WebinterfaceRecoverStatusPassword: Please enter a new password.
 WebinterfaceRecoverStatusWeak: Please enter a different password.
 WebinterfaceRecoverStatusNext: User account will be recovered, please check your emails.
+WebinterfaceSettingsTitle: Settings
+WebinterfaceSettingsStatusInvalid: Please enter a valid email.
+WebinterfaceSettingsStatusExists: Please enter a different email.
+WebinterfaceSettingsStatusWeak: Please enter a different password.
+WebinterfaceSettingsStatusNext: User account will be changed, please check your emails.
 WebinterfaceConfirmSubject: Confirm user account
 WebinterfaceConfirmMessage: Hi @usershort, please confirm your user account. Click the following link.
-WebinterfaceConfirmStatusDone: User account confirmed. Thank you!
-WebinterfaceConfirmStatusExpire: User account can not be confirmed. Link has expired!
+WebinterfaceConfirmStatusDone: User account confirmed and waiting for approval. Thank you!
+WebinterfaceConfirmStatusExpired: User account can not be confirmed. Link has expired!
 WebinterfaceApproveSubject: Approve user account
 WebinterfaceApproveMessage: Hi @usershort, please approve a new user account for @useraccount. Click the following link.
 WebinterfaceApproveStatusDone: User account approved. Thank you!
-WebinterfaceApproveStatusExpire: User account can not be approved. Link has expired!
+WebinterfaceApproveStatusExpired: User account can not be approved. Link has expired!
 WebinterfaceRecoverSubject: Recover user account
 WebinterfaceRecoverMessage: Hi @usershort, please confirm that you forgot your password. Click the following link.
 WebinterfaceRecoverStatusDone: User account recovered. Thank you!
-WebinterfaceRecoverStatusExpire: User account can not be recovered. Link has expired!
+WebinterfaceRecoverStatusExpired: User account can not be recovered. Link has expired!
+WebinterfaceReconfirmSubject: Change user account
+WebinterfaceReconfirmMessage: Hi @usershort, please confirm a new email for your user account. Click the following link.
+WebinterfaceReconfirmStatusDone: User account confirmed. Thank you!
+WebinterfaceReconfirmStatusExpired: User account can not be confirmed. Link has expired!
+WebinterfaceChangeSubject: Change user account
+WebinterfaceChangeMessage: Hi @usershort, please confirm that you want to change your user account. Click the following link.
+WebinterfaceChangeStatusDone: User account changed. Thank you!
+WebinterfaceChangeStatusExpired: User account can not be changed. Link has expired!
 WebinterfaceWelcomeSubject: Welcome
 WebinterfaceWelcomeMessage: Hi @usershort, your user account has been created. Have fun editing the website.
 WebinterfaceInformationSubject: Welcome back
-WebinterfaceInformationMessage: Hi @usershort, your user account has been changed. Have fun editing the website.
+WebinterfaceInformationMessage: Hi @usershort, your user account has been changed. You can now log in.
+WebinterfaceUpdateTitle: Updates
+WebinterfaceUpdateCheck: Check for updates
+WebinterfaceUpdateStatusNone: Checking for updates…
+WebinterfaceUpdateStatusEmpty: No updates available.
+WebinterfaceUpdateButton: Update
 WebinterfaceOkButton: Ok
 WebinterfaceCancelButton: Cancel
 WebinterfaceCreateButton: Create
@@ -81,12 +98,9 @@ WebinterfaceDeleteButton: Delete
 WebinterfaceEdit: Edit page
 WebinterfaceCreate: +
 WebinterfaceDelete: -
-WebinterfaceCreateTitle: New page
+WebinterfaceCreateTitle: Create page
 WebinterfaceDeleteTitle: Delete page
 WebinterfaceMarkdownHelp: Markdown
-WebinterfaceSettingsTitle: Settings
-WebinterfaceSettingsChangeEmail: Change your email
-WebinterfaceSettingsChangePassword: Change your password
 WebinterfaceUserHelp: Help
 WebinterfaceUserLogout: Logout
 WikiFilter: Wiki:
