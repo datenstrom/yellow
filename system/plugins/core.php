@@ -2795,6 +2795,7 @@ class YellowToolbox
 		$fileHandle = @fopen($fileName, "rb");
 		if($fileHandle)
 		{
+			clearstatcache(true, $fileName);
 			$fileData = fread($fileHandle, $sizeMax ? $sizeMax : filesize($fileName));
 			fclose($fileHandle);
 		}
@@ -2813,6 +2814,7 @@ class YellowToolbox
 		$fileHandle = @fopen($fileName, "wb");
 		if($fileHandle)
 		{
+			clearstatcache(true, $fileName);
 			if(flock($fileHandle, LOCK_EX))
 			{
 				ftruncate($fileHandle, 0);
@@ -2825,9 +2827,17 @@ class YellowToolbox
 		return $ok;
 	}
 	
+	// Set file modification date, Unix time
+	function modifyFile($fileName, $modified)
+	{
+		clearstatcache(true, $fileName);
+		return @touch($fileName, $modified);
+	}
+	
 	// Copy file
 	function copyFile($fileNameSource, $fileNameDest, $mkdir = false)
 	{
+		clearstatcache();
 		if($mkdir)
 		{
 			$path = dirname($fileNameDest);
@@ -2839,6 +2849,7 @@ class YellowToolbox
 	// Rename file
 	function renameFile($fileNameSource, $fileNameDest, $mkdir = false)
 	{
+		clearstatcache();
 		if($mkdir)
 		{
 			$path = dirname($fileNameDest);
@@ -2847,15 +2858,10 @@ class YellowToolbox
 		return @rename($fileNameSource, $fileNameDest);
 	}
 	
-	// Set file modification date, Unix time
-	function modifyFile($fileName, $modified)
-	{
-		return @touch($fileName, $modified);
-	}
-
 	// Delete file
 	function deleteFile($fileName, $pathTrash = "")
 	{
+		clearstatcache();
 		if(empty($pathTrash))
 		{
 			$ok = @unlink($fileName);
@@ -2873,6 +2879,7 @@ class YellowToolbox
 	// Delete directory
 	function deleteDirectory($path, $pathTrash = "")
 	{
+		clearstatcache();
 		if(empty($pathTrash))
 		{
 			$iterator = new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::SKIP_DOTS);
