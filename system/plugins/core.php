@@ -2299,15 +2299,19 @@ class YellowLookup
 		$tokens = explode('/', $fileName);
 		for($i=0; $i<count($tokens)-1; ++$i)
 		{
-			if(!is_dir($path.$tokens[$i]) && !preg_match("/^[\d\-\_\.]+(.*)$/", $tokens[$i]))
+			if(!is_dir($path.$tokens[$i]))
 			{
-				$number = 1;
-				foreach($this->yellow->toolbox->getDirectoryEntries($path, "/^[\d\-\_\.]+(.*)$/", true, true, false) as $entry)
+				if(!preg_match("/^[\d\-\_\.]+(.*)$/", $tokens[$i]))
 				{
-					if($number!=1 && $number!=intval($entry)) break;
-					$number = intval($entry)+1;
+					$number = 1;
+					foreach($this->yellow->toolbox->getDirectoryEntries($path, "/^[\d\-\_\.]+(.*)$/", true, true, false) as $entry)
+					{
+						if($number!=1 && $number!=intval($entry)) break;
+						$number = intval($entry)+1;
+					}
+					$tokens[$i] = (empty($prefix) ? "$number-" : $prefix).$tokens[$i];
 				}
-				$tokens[$i] = (empty($prefix) ? "$number-" : $prefix).$tokens[$i];
+				$tokens[$i] = $this->normaliseName($tokens[$i], false, false, true);
 			}
 			$path .= $tokens[$i]."/";
 		}
