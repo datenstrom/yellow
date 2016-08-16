@@ -4,7 +4,7 @@
 // Yellow API
 var yellow =
 {
-	version: "0.6.11",
+	version: "0.6.12",
 	action: function(action) { yellow.webinterface.action(action, "none"); },
 	onLoad: function() { yellow.webinterface.loadInterface(); },
 	onClick: function(e) { yellow.webinterface.hidePanesOnClick(yellow.toolbox.getEventElement(e)); },
@@ -36,6 +36,8 @@ yellow.webinterface =
 			case "settings":	this.showPane("yellow-pane-settings", action, status); break;
 			case "reconfirm":	this.showPane("yellow-pane-settings", action, status); break;
 			case "change":		this.showPane("yellow-pane-settings", action, status); break;
+			case "version":		this.showPane("yellow-pane-version", action, status); break;
+			case "update":		this.sendPane("yellow-pane-version", action); break;
 			case "create":		this.showPane("yellow-pane-edit", action, status, true); break;
 			case "edit":		this.showPane("yellow-pane-edit", action, status, true); break;
 			case "delete":		this.showPane("yellow-pane-edit", action, status, true); break;
@@ -134,7 +136,7 @@ yellow.webinterface =
 				"<form method=\"post\">"+
 				"<a href=\"#\" onclick=\"yellow.action('close'); return false;\" class=\"yellow-close\">x</a>"+
 				"<h1>"+this.getText("SignupTitle")+"</h1>"+
-				"<div id=\"yellow-pane-signup-status\" class=\""+paneStatus+"\">"+this.getText(paneAction+"Status", "webinterface", paneStatus)+"</div>"+
+				"<div id=\"yellow-pane-signup-status\" class=\""+paneStatus+"\">"+this.getText(paneAction+"Status", "", paneStatus)+"</div>"+
 				"<div id=\"yellow-pane-signup-fields\">"+
 				"<input type=\"hidden\" name=\"action\" value=\"signup\" />"+
 				"<p><label for=\"yellow-pane-signup-name\">"+this.getText("SignupName")+"</label><br /><input class=\"yellow-form-control\" name=\"name\" id=\"yellow-pane-signup-name\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("name"))+"\" /></p>"+
@@ -152,7 +154,7 @@ yellow.webinterface =
 				"<form method=\"post\">"+
 				"<a href=\"#\" onclick=\"yellow.action('close'); return false;\" class=\"yellow-close\">x</a>"+
 				"<h1>"+this.getText("RecoverTitle")+"</h1>"+
-				"<div id=\"yellow-pane-recover-status\" class=\""+paneStatus+"\">"+this.getText("RecoverStatus", "", paneStatus)+"</div>"+
+				"<div id=\"yellow-pane-recover-status\" class=\""+paneStatus+"\">"+this.getText(paneAction+"Status", "", paneStatus)+"</div>"+
 				"<div id=\"yellow-pane-recover-fields-first\">"+
 				"<input type=\"hidden\" name=\"action\" value=\"recover\" />"+
 				"<p><label for=\"yellow-pane-recover-email\">"+this.getText("RecoverEmail")+"</label><br /><input class=\"yellow-form-control\" name=\"email\" id=\"yellow-pane-recover-email\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("email"))+"\" /></p>"+
@@ -172,7 +174,7 @@ yellow.webinterface =
 				"<form method=\"post\">"+
 				"<a href=\"#\" onclick=\"yellow.action('close'); return false;\" class=\"yellow-close\">x</a>"+
 				"<h1 id=\"yellow-pane-settings-title\">"+this.getText("SettingsTitle")+"</h1>"+
-				"<div id=\"yellow-pane-settings-status\" class=\""+paneStatus+"\">"+this.getText(paneAction+"Status", "webinterface", paneStatus)+"</div>"+
+				"<div id=\"yellow-pane-settings-status\" class=\""+paneStatus+"\">"+this.getText(paneAction+"Status", "", paneStatus)+"</div>"+
 				"<div id=\"yellow-pane-settings-fields\">"+
 				"<input type=\"hidden\" name=\"action\" value=\"settings\" />"+
 				"<p><label for=\"yellow-pane-settings-name\">"+this.getText("SignupName")+"</label><br /><input class=\"yellow-form-control\" name=\"name\" id=\"yellow-pane-settings-name\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("name"))+"\" /></p>"+
@@ -181,6 +183,24 @@ yellow.webinterface =
 				"<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("OkButton")+"\" /></p>"+
 				"</div>"+
 				"<div id=\"yellow-pane-settings-buttons\">"+
+				"<p><input class=\"yellow-btn\" type=\"button\" onclick=\"yellow.action('close'); return false;\" value=\""+this.getText("OkButton")+"\" /></p>"+
+				"</div>"+
+				"</form>";
+				break;
+			case "yellow-pane-version":
+				elementDiv.innerHTML =
+				"<form method=\"post\">"+
+				"<a href=\"#\" onclick=\"yellow.action('close'); return false;\" class=\"yellow-close\">x</a>"+
+				"<h1 id=\"yellow-pane-version-title\">"+yellow.toolbox.encodeHtml(yellow.config.serverVersion)+"</h1>"+
+				"<div id=\"yellow-pane-version-status\" class=\""+paneStatus+"\">"+this.getText("VersionStatus", "", paneStatus)+"</div>"+
+				"<div id=\"yellow-pane-version-fields\">"+
+				"<p>"+yellow.page.rawDataOutput+"</p><hr />"+
+				"<p>ServerScheme: "+yellow.toolbox.encodeHtml(yellow.config.serverScheme)+"<br />"+
+				"ServerName: "+yellow.toolbox.encodeHtml(yellow.config.serverName)+"<br />"+
+				"ServerBase: "+yellow.toolbox.encodeHtml(yellow.config.serverBase)+"<br />"+
+				"ServerTime: "+yellow.toolbox.encodeHtml(yellow.config.serverTime)+"</p>"+
+				"</div>"+
+				"<div id=\"yellow-pane-version-buttons\">"+
 				"<p><input class=\"yellow-btn\" type=\"button\" onclick=\"yellow.action('close'); return false;\" value=\""+this.getText("OkButton")+"\" /></p>"+
 				"</div>"+
 				"</form>";
@@ -246,10 +266,22 @@ yellow.webinterface =
 				yellow.toolbox.setVisible(document.getElementById("yellow-pane-settings-buttons"), !showFields);
 				if(paneStatus=="none")
 				{
-					document.getElementById("yellow-pane-settings-status").innerHTML = yellow.toolbox.encodeHtml(yellow.config.serverVersion);
+					document.getElementById("yellow-pane-settings-status").innerHTML = "<a href=\"#\" onclick=\"yellow.action('version'); return false;\">"+yellow.toolbox.encodeHtml(yellow.config.serverVersion)+"</a>";
 					document.getElementById("yellow-pane-settings-name").value = yellow.config.userName;
 					document.getElementById("yellow-pane-settings-email").value = yellow.config.userEmail;
 					document.getElementById("yellow-pane-settings-"+yellow.config.userLanguage).checked = true;
+				}
+				break;
+			case "yellow-pane-version":
+				if(paneStatus=="none")
+				{
+					document.getElementById("yellow-pane-version-status").innerHTML = this.getText("VersionStatus", "", paneStatus);
+					document.getElementById("yellow-pane-version-fields").innerHTML = "";
+					setTimeout("yellow.action('send');", 100);
+				}
+				if(paneStatus=="updates" && yellow.config.userWebmaster)
+				{
+					document.getElementById("yellow-pane-version-status").innerHTML = "<a href=\"#\" onclick=\"yellow.action('update'); return false;\">"+this.getText("VersionUpdate")+"</a>";
 				}
 				break;
 			case "yellow-pane-edit":
@@ -295,6 +327,7 @@ yellow.webinterface =
 			case "yellow-pane-signup":
 			case "yellow-pane-recover":
 			case "yellow-pane-settings":
+			case "yellow-pane-version":
 				yellow.toolbox.setOuterTop(document.getElementById(paneId), paneTop);
 				yellow.toolbox.setOuterWidth(document.getElementById(paneId), paneWidth);
 				break;

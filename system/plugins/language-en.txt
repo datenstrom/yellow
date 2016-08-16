@@ -3,7 +3,7 @@
 Language: en
 LanguageDescription: English
 LanguageAuthor: Mark Seuffert
-LanguageVersion: 0.6.7
+LanguageVersion: 0.6.8
 
 BlogBy: by
 BlogFilter: Blog:
@@ -58,7 +58,7 @@ WebinterfaceRecoverStatusWeak: Please enter a different password.
 WebinterfaceRecoverStatusNext: User account will be recovered, please check your emails.
 WebinterfaceSettingsTitle: Settings
 WebinterfaceSettingsStatusInvalid: Please enter a valid email.
-WebinterfaceSettingsStatusExists: Please enter a different email.
+WebinterfaceSettingsStatusTaken: Please enter a different email.
 WebinterfaceSettingsStatusWeak: Please enter a different password.
 WebinterfaceSettingsStatusNext: User account will be changed, please check your emails.
 WebinterfaceConfirmSubject: Confirm user account
@@ -85,11 +85,11 @@ WebinterfaceWelcomeSubject: Welcome
 WebinterfaceWelcomeMessage: Hi @usershort, your user account has been created. Have fun editing the website.
 WebinterfaceInformationSubject: Welcome back
 WebinterfaceInformationMessage: Hi @usershort, your user account has been changed. You can now log in.
-WebinterfaceUpdateTitle: Updates
-WebinterfaceUpdateCheck: Check for updates
-WebinterfaceUpdateStatusNone: Checking for updates…
-WebinterfaceUpdateStatusEmpty: No updates available.
-WebinterfaceUpdateButton: Update
+WebinterfaceVersionTitle: About this website
+WebinterfaceVersionStatusNone: Checking for updates…
+WebinterfaceVersionStatusLatest: No updates available.
+WebinterfaceVersionStatusUpdates: Updates available, please contact the webmaster.
+WebinterfaceVersionUpdate: Update
 WebinterfaceOkButton: Ok
 WebinterfaceCancelButton: Cancel
 WebinterfaceCreateButton: Create

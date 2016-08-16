@@ -5,7 +5,7 @@
 // Command line plugin
 class YellowCommandline
 {
-	const VERSION = "0.6.14";
+	const VERSION = "0.6.15";
 	var $yellow;					//access to API
 	var $files;						//number of files
 	var $errors;					//number of errors
@@ -66,7 +66,7 @@ class YellowCommandline
 				$this->files = 0; $this->errors = 1;
 				$fileName = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
 				echo "ERROR building files: Please configure ServerScheme, ServerName, ServerBase, ServerTime in file '$fileName'!\n";
-				echo "ERROR building files: To see your web server configuration, open your website in a web browser!\n";
+				echo "ERROR building files: Open your website in a web browser, if you want to see your server settings!\n";
 			}
 			echo "Yellow $command: $this->files file".($this->files!=1 ? 's' : '');
 			echo ", $this->errors error".($this->errors!=1 ? 's' : '');
@@ -319,7 +319,7 @@ class YellowCommandline
 			{
 				echo "$key $value\n";
 			} else {
-				echo "$key $value - Update available\n";
+				echo "$key $dataLatest[$key] - Update available\n";
 				++$updates;
 			}
 		}

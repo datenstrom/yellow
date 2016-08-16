@@ -3,7 +3,7 @@
 Language: fr
 LanguageDescription: Français
 LanguageAuthor: Juh Nibreh
-LanguageVersion: 0.6.7
+LanguageVersion: 0.6.8
 
 BlogBy: par
 BlogFilter: Blog:
@@ -58,7 +58,7 @@ WebinterfaceRecoverStatusWeak: S'il vous plaît, choisissez un mot de passe diff
 WebinterfaceRecoverStatusNext: Votre compte est à nouveau disponible, vérifiez vos emails.
 WebinterfaceSettingsTitle: Paramètres
 WebinterfaceSettingsStatusInvalid: S'il vous plaît, veuillez entrer une adresse email valide.
-WebinterfaceSettingsStatusExists: S'il vous plaît, veuillez entrer une adresse email différent.
+WebinterfaceSettingsStatusTaken: S'il vous plaît, veuillez entrer une adresse email différent.
 WebinterfaceSettingsStatusWeak: S'il vous plaît, choisissez un mot de passe différent.
 WebinterfaceSettingsStatusNext: Votre compte a été changé, vérifiez vos emails.
 WebinterfaceConfirmSubject: Confirmation d'un compte utilisateur
@@ -85,11 +85,11 @@ WebinterfaceWelcomeSubject: Bienvenue
 WebinterfaceWelcomeMessage: Bonjour @usershort, votre compte utilisateur a bien été créé. Amusez-vous bien en éditant le site web.
 WebinterfaceInformationSubject: Bienvenue à nouveau
 WebinterfaceInformationMessage: Bonjour @usershort, votre compte utilisateur a bien été changé. Vous pouvez maintenant vous connecter.
-WebinterfaceUpdateTitle: Mises à jour
-WebinterfaceUpdateCheck: Vérifier les mises à jour
-WebinterfaceUpdateStatusNone: Vérification des mises à jour…
-WebinterfaceUpdateStatusEmpty: Aucune mise à jour disponible.
-WebinterfaceUpdateButton: Mettre à jour
+WebinterfaceVersionTitle: A propos de ce site
+WebinterfaceVersionStatusNone: Vérification des mises à jour…
+WebinterfaceVersionStatusLatest: Aucune mise à jour disponible.
+WebinterfaceVersionStatusUpdates: Mises à jour disponibles, s'il vous plaît contacter le webmestre.
+WebinterfaceVersionUpdate: Mettre à jour
 WebinterfaceOkButton: Ok
 WebinterfaceCancelButton: Annuler
 WebinterfaceCreateButton: Créer

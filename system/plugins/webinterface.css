@@ -1,4 +1,4 @@
-/* Yellow web interface 0.6.11 */
+/* Yellow web interface 0.6.12 */
 
 .yellow-bar { position:relative; overflow:hidden; height:2em; margin-bottom:10px; }
 .yellow-bar-left { display:block; float:left; }
@@ -108,6 +108,13 @@
 #yellow-pane-settings-status { margin:0.5em 0; display:inline-block; }
 #yellow-pane-settings-fields { width:15em; text-align:left; margin:0 auto; }
 #yellow-pane-settings-buttons { margin-top:-0.5em; }
+
+#yellow-pane-version { text-align:center; white-space:nowrap; }
+#yellow-pane-version h1 { margin:0 1em; font-size:2em; }
+#yellow-pane-version .yellow-btn { width:15em; margin:1em 1em 0.5em 0; }
+#yellow-pane-version-status { margin:0.5em 0; display:inline-block; }
+#yellow-pane-version-fields { width:20em; text-align:left; margin:0 auto; }
+#yellow-pane-version-buttons { margin-top:-0.5em; }
 
 #yellow-pane-edit { }
 #yellow-pane-edit h1 { margin:0 0 10px 0; font-size:1.5em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
