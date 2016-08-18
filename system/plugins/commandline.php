@@ -5,7 +5,7 @@
 // Command line plugin
 class YellowCommandline
 {
-	const VERSION = "0.6.15";
+	const VERSION = "0.6.16";
 	var $yellow;					//access to API
 	var $files;						//number of files
 	var $errors;					//number of errors
@@ -137,7 +137,7 @@ class YellowCommandline
 			{
 				$fileData = ob_get_contents();
 				$modified = strtotime($this->yellow->page->getHeader("Last-Modified"));
-				if($modified==0) $modified = filemtime($this->yellow->page->fileName);
+				if($modified==0) $modified = $this->yellow->toolbox->getFileModified($this->yellow->page->fileName);
 				if($statusCode>=301 && $statusCode<=303)
 				{
 					$fileData = $this->getStaticRedirect($this->yellow->page->getHeader("Location"));
@@ -155,9 +155,10 @@ class YellowCommandline
 			ob_end_clean();
 		} else {
 			$statusCode = 200;
+			$modified = $this->yellow->toolbox->getFileModified($this->yellow->page->fileName);
 			$fileName = $this->getStaticFile($path, $location, $statusCode);
 			if(!$this->yellow->toolbox->copyFile($this->yellow->page->fileName, $fileName, true) ||
-			   !$this->yellow->toolbox->modifyFile($fileName, filemtime($this->yellow->page->fileName)))
+			   !$this->yellow->toolbox->modifyFile($fileName, $modified))
 			{
 				$statusCode = 500;
 				$this->yellow->page->statusCode = $statusCode;
@@ -398,8 +399,7 @@ class YellowCommandline
 	function getMediaLocations()
 	{
 		$locations = array();
-		$fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive(
-			$this->yellow->config->get("mediaDir"), "/.*/", false, false);
+		$fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($this->yellow->config->get("mediaDir"), "/.*/", false, false);
 		foreach($fileNames as $fileName)
 		{
 			array_push($locations, "/".$fileName);
@@ -411,17 +411,22 @@ class YellowCommandline
 	function getSystemLocations()
 	{
 		$locations = array();
-		$fileNames = $this->yellow->toolbox->getDirectoryEntries(
-			$this->yellow->config->get("pluginDir"), "/\.(css|ico|js|jpg|png|txt|woff)/", false, false);
+		$regex = "/\.(css|ico|js|jpg|png|svg|txt|woff)/";
+		$fileNames = $this->yellow->toolbox->getDirectoryEntries($this->yellow->config->get("pluginDir"), $regex, false, false);
 		foreach($fileNames as $fileName)
 		{
 			array_push($locations, $this->yellow->config->get("pluginLocation").basename($fileName));
 		}
-		$fileNames = $this->yellow->toolbox->getDirectoryEntries(
-			$this->yellow->config->get("themeDir"), "/\.(css|ico|js|jpg|png|txt|woff)/", false, false);
+		$fileNames = $this->yellow->toolbox->getDirectoryEntries($this->yellow->config->get("themeDir"), $regex, false, false);
 		foreach($fileNames as $fileName)
 		{
 			array_push($locations, $this->yellow->config->get("themeLocation").basename($fileName));
+		}
+		$assetDirLength = strlenu($this->yellow->config->get("assetDir"));
+		$fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($this->yellow->config->get("assetDir"), $regex, false, false);
+		foreach($fileNames as $fileName)
+		{
+			array_push($locations, $this->yellow->config->get("assetLocation").substru($fileName, $assetDirLength));
 		}
 		array_push($locations, "/".$this->yellow->config->get("robotsFile"));
 		return $locations;

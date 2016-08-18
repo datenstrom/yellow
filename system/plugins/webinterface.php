@@ -33,6 +33,12 @@ class YellowWebinterface
 		$this->users->load($this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile"));
 	}
 
+	// Handle update
+	function onUpdate($name)
+	{
+		return $this->cleanCommand(array("clean", "all"));
+	}
+	
 	// Handle request
 	function onRequest($serverScheme, $serverName, $base, $location, $fileName)
 	{
@@ -500,7 +506,7 @@ class YellowWebinterface
 		return $statusCode;
 	}
 	
-	// Process request to show version
+	// Process request to show software version
 	function processRequestVersion($serverScheme, $serverName, $base, $location, $fileName)
 	{
 		$this->response->action = "version";
@@ -531,7 +537,7 @@ class YellowWebinterface
 		return $statusCode;
 	}
 	
-	// Process request to update software
+	// Process request to update website
 	function processRequestUpdate($serverScheme, $serverName, $base, $location, $fileName)
 	{
 		$statusCode = 0;

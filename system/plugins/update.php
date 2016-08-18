@@ -5,7 +5,7 @@
 // Update plugin
 class YellowUpdate
 {
-	const VERSION = "0.6.7";
+	const VERSION = "0.6.8";
 	var $yellow;					//access to API
 	
 	// Handle initialisation
@@ -26,7 +26,7 @@ class YellowUpdate
 		{
 			$statusCode = $this->processRequestInstallation($serverScheme, $serverName, $base, $location, $fileName);
 		} else {
-			$statusCode = $this->processRequestUpdate($serverScheme, $serverName, $base, $location, $fileName);
+			$statusCode = $this->processRequestPending($serverScheme, $serverName, $base, $location, $fileName);
 		}
 		return $statusCode;
 	}
@@ -49,7 +49,7 @@ class YellowUpdate
 		return "update [FEATURE]";
 	}
 	
-	// Update software
+	// Update website
 	function updateCommand($args)
 	{
 		list($command, $feature) = $args;
@@ -64,7 +64,7 @@ class YellowUpdate
 			if($statusCode==200) $statusCode = $this->download($data);
 			if($statusCode==200) $statusCode = $this->update();
 			if($statusCode!=200) echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
-			echo "Yellow $command: Software ".($statusCode!=200 ? "not " : "")."updated\n";
+			echo "Yellow $command: Website ".($statusCode!=200 ? "not " : "")."updated\n";
 		} else {
 			if($statusCode!=200) echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
 			echo "Yellow $command: No updates available\n";
@@ -84,7 +84,7 @@ class YellowUpdate
 		return $statusCode;
 	}
 	
-	// Download available updates
+	// Download available software
 	function download($data)
 	{
 		$statusCode = 0;
@@ -261,8 +261,8 @@ class YellowUpdate
 		return $ok;
 	}
 	
-	// Process request to update software
-	function processRequestUpdate($serverScheme, $serverName, $base, $location, $fileName)
+	// Process request to install pending software
+	function processRequestPending($serverScheme, $serverName, $base, $location, $fileName)
 	{
 		$statusCode = 0;
 		if($this->isContentFile($fileName))
