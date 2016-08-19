@@ -5,7 +5,7 @@
 // Update plugin
 class YellowUpdate
 {
-	const VERSION = "0.6.8";
+	const VERSION = "0.6.9";
 	var $yellow;					//access to API
 	
 	// Handle initialisation
@@ -98,7 +98,7 @@ class YellowUpdate
 			if(empty($fileData) || !$this->yellow->toolbox->createFile($fileName.$fileExtension, $fileData))
 			{
 				$statusCode = 500;
-				$this->yellow->page->error($statusCode, "Can't download file '$fileName'!");
+				$this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
 				break;
 			}
 		}
@@ -110,7 +110,7 @@ class YellowUpdate
 				if(!$this->yellow->toolbox->renameFile($fileName.$fileExtension, $fileName))
 				{
 					$statusCode = 500;
-					$this->yellow->page->error($statusCode, "Can't create file '$fileName'!");
+					$this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
 				}
 			}
 		}
@@ -212,7 +212,7 @@ class YellowUpdate
 				   !$this->yellow->toolbox->modifyFile($fileName, $modified))
 				{
 					$statusCode = 500;
-					$this->yellow->page->error($statusCode, "Can't create file '$fileName'!");
+					$this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
 				}
 			}
 			if($update)

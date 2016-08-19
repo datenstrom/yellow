@@ -1694,7 +1694,7 @@ class YellowThemes
 				preg_match("/^\/\*\s*(.*?)\s*:\s*(.*?)\s*\*\/$/", $line, $matches);
 				if(lcfirst($matches[1])=="theme" && !strempty($matches[2])) $theme = $matches[2];
 				if(lcfirst($matches[1])=="version" && !strempty($matches[2])) $version = $matches[2];
-				if(!empty($line) && $line[0]!= '/') break;
+				if(!empty($line) && $line[0]!='/') break;
 			}
 			if(!empty($theme) && !empty($version))
 			{
