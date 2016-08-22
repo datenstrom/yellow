@@ -2281,11 +2281,6 @@ class YellowLookup
 		return $fileName;
 	}
 	
-	function findFileNew($fileName, $fileNew, $pathBase, $nameDefault)
-	{
-		return $this->findFileFromConfig($fileName, $fileNew, $nameDefault); //TODO: Remove later
-	}
-	
 	// Return file path from title
 	function findFileFromTitle($titlePrefix, $titleText, $fileName, $fileDefault, $fileExtension)
 	{
@@ -2819,13 +2814,6 @@ class YellowToolbox
 		return $ok;
 	}
 	
-	// Set file modification date, Unix time
-	function modifyFile($fileName, $modified)
-	{
-		clearstatcache(true, $fileName);
-		return @touch($fileName, $modified);
-	}
-	
 	// Copy file
 	function copyFile($fileNameSource, $fileNameDest, $mkdir = false)
 	{
@@ -2896,16 +2884,23 @@ class YellowToolbox
 		return $ok;
 	}
 	
-	// Return file extension
-	function getFileExtension($fileName)
+	// Set file modification date, Unix time
+	function modifyFile($fileName, $modified)
 	{
-		return strtoloweru(($pos = strrposu($fileName, '.')) ? substru($fileName, $pos+1) : "");
+		clearstatcache(true, $fileName);
+		return @touch($fileName, $modified);
 	}
 	
 	// Return file modification date, Unix time
 	function getFileModified($fileName)
 	{
 		return is_file($fileName) ? filemtime($fileName) : 0;
+	}
+	
+	// Return file extension
+	function getFileExtension($fileName)
+	{
+		return strtoloweru(($pos = strrposu($fileName, '.')) ? substru($fileName, $pos+1) : "");
 	}
 	
 	// Return lines from text string

@@ -5,7 +5,7 @@
 // Update plugin
 class YellowUpdate
 {
-	const VERSION = "0.6.9";
+	const VERSION = "0.6.10";
 	var $yellow;					//access to API
 	
 	// Handle initialisation
@@ -75,11 +75,15 @@ class YellowUpdate
 	// Update pending software
 	function updateCommandPending($args)
 	{
-		$statusCode = $this->update();
-		if($statusCode!=0)
+		$statusCode = 0;
+		if($this->isSoftwarePending())
 		{
-			if($statusCode!=200) echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
-			echo "Yellow has ".($statusCode!=200 ? "not " : "")."been updated: Please run command again\n";
+			$statusCode = $this->update();
+			if($statusCode!=0)
+			{
+				if($statusCode!=200) echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
+				echo "Yellow has ".($statusCode!=200 ? "not " : "")."been updated: Please run command again\n";
+			}
 		}
 		return $statusCode;
 	}
@@ -265,7 +269,7 @@ class YellowUpdate
 	function processRequestPending($serverScheme, $serverName, $base, $location, $fileName)
 	{
 		$statusCode = 0;
-		if($this->isContentFile($fileName))
+		if($this->isContentFile($fileName) && $this->isSoftwarePending())
 		{
 			$statusCode = $this->update();
 			if($statusCode==200)
@@ -282,7 +286,7 @@ class YellowUpdate
 	function processRequestInstallation($serverScheme, $serverName, $base, $location, $fileName)
 	{
 		$statusCode = 0;
-		if($this->isContentFile($fileName))
+		if($this->isContentFile($fileName) && $this->isInstallation())
 		{
 			$this->yellow->pages->pages["root/"] = array();
 			$this->yellow->page = new YellowPage($this->yellow);
@@ -514,6 +518,16 @@ class YellowUpdate
 	{
 		$data = $this->yellow->plugins->getData();
 		return !is_null($data[$software]);
+	}
+	
+	// Check if pending software exists
+	function isSoftwarePending()
+	{
+		$path = $this->yellow->config->get("pluginDir");
+		$foundPlugins = count($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.zip$/", true, false))>0;
+		$path = $this->yellow->config->get("themeDir");
+		$foundThemes = count($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.zip$/", true, false))>0;
+		return $foundPlugins || $foundThemes;
 	}
 	
 	// Check if installation requested
