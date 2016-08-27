@@ -2,7 +2,7 @@
 
 Language: fr
 LanguageDescription: Français
-LanguageAuthor: Juh Nibreh
+LanguageTranslator: Juh Nibreh
 LanguageVersion: 0.6.8
 
 BlogBy: par

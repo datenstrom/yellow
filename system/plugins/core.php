@@ -2486,7 +2486,7 @@ class YellowToolbox
 	function getServerBase()
 	{
 		$serverBase = "";
-		if(preg_match("/^(.*)\//", $_SERVER["SCRIPT_NAME"], $matches)) $serverBase = $matches[1];
+		if(preg_match("/^(.*)\//", $_SERVER["SCRIPT_NAME"], $matches)) $serverBase = rtrim($matches[1], '/');
 		return $serverBase;
 	}
 	

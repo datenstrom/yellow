@@ -2,7 +2,7 @@
 
 Language: en
 LanguageDescription: English
-LanguageAuthor: Mark Seuffert
+LanguageTranslator: Mark Seuffert
 LanguageVersion: 0.6.8
 
 BlogBy: by

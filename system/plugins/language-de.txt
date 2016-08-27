@@ -2,7 +2,7 @@
 
 Language: de
 LanguageDescription: Deutsch
-LanguageAuthor: David Fehrmann
+LanguageTranslator: David Fehrmann
 LanguageVersion: 0.6.8
 
 BlogBy: von

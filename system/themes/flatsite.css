@@ -1,5 +1,5 @@
 /* Theme: Flatsite theme */
-/* Version: 0.6.6 */
+/* Version: 0.6.8 */
 /* Designer: Mark Mayberg */
 
 @import url(https://fonts.googleapis.com/css?family=Open+Sans:300,400,700);
@@ -35,6 +35,9 @@ a, img { border:none; text-decoration:none; }
 .content td { text-align:left; padding:0.3em; border-top:1px solid #ddd;}
 .content .flexible { position:relative; padding-top:0; padding-bottom:56.25%; }
 .content .flexible iframe { position:absolute; top:0; left:0; width:100%; height:100%; }
+.content .stretchable ul { margin:0 -0.5em; padding:0; list-style:none; text-align:center; }
+.content .stretchable li { margin:0; padding:1em 0; display:inline-block; text-align:center; vertical-align:top; }
+.content .stretchable a { color:#717171; text-decoration:none; }
 .content .toc { margin:0; padding:0; list-style:none; }
 .content .pagination { margin:1em 0; }
 .content blockquote { margin-left:0; padding-left:1em; border-left:.5em solid #0a0; }
@@ -44,8 +47,6 @@ a, img { border:none; text-decoration:none; }
 .content code { padding:0.15em 0.4em; margin:0; background-color:#f7f7f7; border-radius:3px; }
 .content pre>code { padding:0; margin:0; white-space:pre; background:transparent; border:0; font-size:inherit; }
 .content pre { padding:1em; overflow:auto; line-height:1.45; background-color:#f7f7f7; border-radius:3px; }
-.content .threepages { margin:0; padding:0; list-style:none; width:100%; }
-.content .threepages li { padding-bottom:1em; text-align:center; vertical-align:top; display:inline-block; width:32%; }
 .footer { margin-top:2em; clear:both; }
 .footer a { color:#07d; }
 .footer a:hover { color:#07d; text-decoration:underline; }
@@ -67,6 +68,7 @@ a, img { border:none; text-decoration:none; }
 .left { float:left; margin:0 1em 0 0; }
 .center { display:block; margin:0 auto; }
 .right { float:right; margin:0 0 0 1em; }
+.rounded { border-radius: 4px; }
 
 /* Navigation */
 
