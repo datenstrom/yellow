@@ -704,6 +704,12 @@ class YellowPage
 		}
 		return $this->yellow->text->getDateFormatted(strtotime($this->get($key)), $format);
 	}
+
+	// Return page meta data as language specific date, HTML encoded
+	function getDateHtml($key, $dateFormat = "")
+	{
+		return htmlspecialchars($this->getDate($key, $dateFormat));
+	}
 	
 	// Return page content, HTML encoded or raw format
 	function getContent($rawFormat = false)
@@ -781,7 +787,7 @@ class YellowPage
 	}
 	
 	// Return page location
-	function getLocation($absoluteLocation = true)
+	function getLocation($absoluteLocation = false)
 	{
 		return $absoluteLocation ? $this->base.$this->location : $this->location;
 	}
@@ -1905,18 +1911,6 @@ class YellowText
 		$this->text[$language][$key] = $value;
 	}
 	
-	// Return text string for specific language
-	function getText($key, $language)
-	{
-		return $this->isExisting($key, $language) ? $this->text[$language][$key] : "[$key]";
-	}
-	
-	// Return text string for specific language, HTML encoded
-	function getTextHtml($key, $language)
-	{
-		return htmlspecialchars($this->getText($key, $language));
-	}
-	
 	// Return text string
 	function get($key)
 	{
@@ -1927,6 +1921,18 @@ class YellowText
 	function getHtml($key)
 	{
 		return htmlspecialchars($this->getText($key, $this->language));
+	}
+	
+	// Return text string for specific language
+	function getText($key, $language)
+	{
+		return $this->isExisting($key, $language) ? $this->text[$language][$key] : "[$key]";
+	}
+	
+	// Return text string for specific language, HTML encoded
+	function getTextHtml($key, $language)
+	{
+		return htmlspecialchars($this->getText($key, $language));
 	}
 	
 	// Return text strings
