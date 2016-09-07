@@ -1514,7 +1514,10 @@ class YellowFiles
 		if($absoluteLocation) $location = substru($location, strlenu($this->yellow->page->base));
 		foreach($this->scanLocation($this->getParentLocation($location)) as $file)
 		{
-			if($file->location==$location) { $found = true; break; }
+			if($file->location==$location)
+			{
+				if($this->yellow->lookup->isFileLocation($file->location)) { $found = true; break; }
+			}
 		}
 		return $found ? $file : null;
 	}
@@ -1539,7 +1542,7 @@ class YellowFiles
 		{
 			if($file->isAvailable() && ($file->isVisible() || $showInvisible))
 			{
-				$files->append($file);
+				if($this->yellow->lookup->isFileLocation($file->location)) $files->append($file);
 			}
 		}
 		return $files;
@@ -1554,7 +1557,7 @@ class YellowFiles
 		{
 			if($file->isAvailable() && ($file->isVisible() || $showInvisible))
 			{
-				$files->append($file);
+				if($this->yellow->lookup->isFileLocation($file->location)) $files->append($file);
 				if(!$this->yellow->lookup->isFileLocation($file->location) && $levelMax!=0)
 				{
 					$files->merge($this->getChildrenRecursive($file->location, $showInvisible, $levelMax));
