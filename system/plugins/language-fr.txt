@@ -3,7 +3,7 @@
 Language: fr
 LanguageDescription: Français
 LanguageTranslator: Juh Nibreh
-LanguageVersion: 0.6.8
+LanguageVersion: 0.6.9
 
 BlogBy: par
 BlogFilter: Blog:
@@ -20,9 +20,11 @@ ContactStatusDone: Votre message a bien été envoyé. Merci!
 ContactStatusError: Votre message n'a pas pu être envoyé, réessayez plus tard s'il vous plaît!
 DateMonths: janvier, février, mars, avril, mai, juin, juillet, août, septembre, octobre, novembre, décembre
 DateWeekdays: lundi, mardi, mercredi, jeudi, vendredi, samedi, dimanche
+DateWeekstart: lundi
 DateFormatShort: F Y
 DateFormatMedium: d/m/Y
 DateFormatLong: d/m/Y H:i
+DateFormatTime: H:i
 PaginationPrevious: ← Précédent
 PaginationNext: Suivant →
 SearchQuery: Rechercher:

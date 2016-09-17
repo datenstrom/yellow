@@ -3,7 +3,7 @@
 Language: de
 LanguageDescription: Deutsch
 LanguageTranslator: David Fehrmann
-LanguageVersion: 0.6.8
+LanguageVersion: 0.6.9
 
 BlogBy: von
 BlogFilter: Blog:
@@ -20,9 +20,11 @@ ContactStatusDone: Nachricht wurde versandt. Vielen Dank!
 ContactStatusError: Nachricht konnte nicht versandt werden, versuche es später erneut!
 DateMonths: Januar, Februar, März, April, Mai, Juni, Juli, August, September, Oktober, November, Dezember
 DateWeekdays: Montag, Dienstag, Mittwoch, Donnerstag, Freitag, Samstag, Sonntag
+DateWeekstart: Montag
 DateFormatShort: F Y
 DateFormatMedium: d.m.Y
 DateFormatLong: d.m.Y H:i
+DateFormatTime: H:i
 PaginationPrevious: ← Zurück
 PaginationNext: Vor →
 SearchQuery: Suche:

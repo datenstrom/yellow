@@ -3,7 +3,7 @@
 Language: en
 LanguageDescription: English
 LanguageTranslator: Mark Seuffert
-LanguageVersion: 0.6.8
+LanguageVersion: 0.6.9
 
 BlogBy: by
 BlogFilter: Blog:
@@ -20,9 +20,11 @@ ContactStatusDone: You have sent an email. Thank you!
 ContactStatusError: Email could not be sent, please try again later!
 DateMonths: January, February, March, April, May, June, July, August, September, October, November, December
 DateWeekdays: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
+DateWeekstart: Monday
 DateFormatShort: F Y
 DateFormatMedium: Y-m-d
 DateFormatLong: Y-m-d H:i
+DateFormatTime: H:i
 PaginationPrevious: ← Previous
 PaginationNext: Next →
 SearchQuery: Search:
