@@ -3,7 +3,7 @@
 Language: de
 LanguageDescription: Deutsch
 LanguageTranslator: David Fehrmann
-LanguageVersion: 0.6.9
+LanguageVersion: 0.6.10
 
 BlogBy: von
 BlogFilter: Blog:
@@ -107,6 +107,7 @@ WebinterfaceUserHelp: Hilfe
 WebinterfaceUserLogout: Abmelden
 WikiFilter: Wiki:
 WikiTag: Tags:
+WikiSpecialPages: Alle Seiten
 WikiSpecialChanges: Letzte Änderungen
 YellowUrl: https://datenstrom.se/de/yellow/
 YellowUserHelpUrl: https://developers.datenstrom.se/help/help-de

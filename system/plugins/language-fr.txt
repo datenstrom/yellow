@@ -3,7 +3,7 @@
 Language: fr
 LanguageDescription: Français
 LanguageTranslator: Juh Nibreh
-LanguageVersion: 0.6.9
+LanguageVersion: 0.6.10
 
 BlogBy: par
 BlogFilter: Blog:
@@ -107,6 +107,7 @@ WebinterfaceUserHelp: Aide
 WebinterfaceUserLogout: Déconnexion
 WikiFilter: Wiki:
 WikiTag: Tags:
+WikiSpecialPages: Toutes les pages
 WikiSpecialChanges: Changements récents
 YellowUrl: https://datenstrom.se/fr/yellow/
 YellowUserHelpUrl: https://developers.datenstrom.se/help/help-fr

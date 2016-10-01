@@ -70,6 +70,7 @@ class YellowCore
 		$this->config->setDefault("navigation", "navigation");
 		$this->config->setDefault("sidebar", "sidebar");
 		$this->config->setDefault("siteicon", "icon");
+		$this->config->setDefault("tagline", "");
 		$this->config->setDefault("parser", "markdown");
 		$this->config->setDefault("parserSafeMode", "0");
 		$this->config->setDefault("multiLanguageMode", "0");
@@ -453,9 +454,6 @@ class YellowPage
 		if(!is_null($this->rawData))
 		{
 			$this->set("title", $this->yellow->toolbox->createTextTitle($this->location));
-			$this->set("sitename", $this->yellow->config->get("sitename"));
-			$this->set("siteicon", $this->yellow->config->get("siteicon"));
-			$this->set("author", $this->yellow->config->get("author"));
 			$this->set("language", $this->yellow->lookup->findLanguageFromFile($this->fileName,
 				$this->yellow->config->get("language")));
 			$this->set("theme", $this->yellow->lookup->findNameFromFile($this->fileName,
@@ -463,29 +461,12 @@ class YellowPage
 			$this->set("template", $this->yellow->lookup->findNameFromFile($this->fileName,
 				$this->yellow->config->get("templateDir"), $this->yellow->config->get("template"), ".html"));
 			$this->set("modified", date("Y-m-d H:i:s", $this->yellow->toolbox->getFileModified($this->fileName)));
-			$this->set("navigation", $this->yellow->config->get("navigation"));
-			$this->set("sidebar", $this->yellow->config->get("sidebar"));
-			$this->set("parser", $this->yellow->config->get("parser"));
-			
-			if(preg_match("/^(\xEF\xBB\xBF)?\-\-\-[\r\n]+(.+?)[\r\n]+\-\-\-[\r\n]+/s", $this->rawData, $parts))
-			{
-				$this->metaDataOffsetBytes = strlenb($parts[0]);
-				foreach(preg_split("/[\r\n]+/", $parts[2]) as $line)
-				{
-					preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
-					if(!empty($matches[1]) && !strempty($matches[2])) $this->set($matches[1], $matches[2]);
-				}
-			} else if(preg_match("/^(\xEF\xBB\xBF)?([^\r\n]+)[\r\n]+=+[\r\n]+/", $this->rawData, $parts)) {
-				$this->metaDataOffsetBytes = strlenb($parts[0]);
-				$this->set("title", $parts[2]);
-			}
-			
+			$this->parseMetaData(array("sitename", "siteicon", "tagline", "author", "navigation", "sidebar", "parser"));
 			$titleHeader = ($this->location==$this->yellow->pages->getHomeLocation($this->location)) ?
 				$this->get("sitename") : $this->get("title")." - ".$this->get("sitename");
 			if(!$this->isExisting("titleContent")) $this->set("titleContent", $this->get("title"));
 			if(!$this->isExisting("titleHeader")) $this->set("titleHeader", $titleHeader);
 			if(!$this->isExisting("titleNavigation")) $this->set("titleNavigation", $this->get("title"));
-			if($this->get("titleContent")=="-") $this->set("titleContent", "");
 			if($this->get("status")=="hidden") $this->available = false;
 			$this->set("pageRead", $this->yellow->lookup->normaliseUrl(
 				$this->yellow->config->get("serverScheme"),
@@ -509,8 +490,30 @@ class YellowPage
 		}
 	}
 	
+	// Parse page meta data from configuration and raw data
+	function parseMetaData($defaultKeys)
+	{
+		foreach($defaultKeys as $key)
+		{
+			$value = $this->yellow->config->get($key);
+			if(!empty($key) && !strempty($value)) $this->set($key, $value);
+		}
+		if(preg_match("/^(\xEF\xBB\xBF)?\-\-\-[\r\n]+(.+?)[\r\n]+\-\-\-[\r\n]+/s", $this->rawData, $parts))
+		{
+			$this->metaDataOffsetBytes = strlenb($parts[0]);
+			foreach(preg_split("/[\r\n]+/", $parts[2]) as $line)
+			{
+				preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
+				if(!empty($matches[1]) && !strempty($matches[2])) $this->set($matches[1], $matches[2]);
+			}
+		} else if(preg_match("/^(\xEF\xBB\xBF)?([^\r\n]+)[\r\n]+=+[\r\n]+/", $this->rawData, $parts)) {
+			$this->metaDataOffsetBytes = strlenb($parts[0]);
+			$this->set("title", $parts[2]);
+		}
+	}
+	
 	// Parse page content on demand
-	function parseContent()
+	function parseContent($sizeMax = 0)
 	{
 		if(!is_object($this->parser))
 		{
@@ -520,7 +523,7 @@ class YellowPage
 				if(method_exists($plugin["obj"], "onParseContentRaw"))
 				{
 					$this->parser = $plugin["obj"];
-					$this->parserData = $this->getContent(true);
+					$this->parserData = $this->getContent(true, $sizeMax);
 					$this->parserData = preg_replace("/@pageRead/i", $this->get("pageRead"), $this->parserData);
 					$this->parserData = preg_replace("/@pageEdit/i", $this->get("pageEdit"), $this->parserData);
 					$this->parserData = preg_replace("/@pageError/i", $this->get("pageError"), $this->parserData);
@@ -535,7 +538,7 @@ class YellowPage
 					}
 				}
 			} else {
-				$this->parserData = $this->getContent(true);
+				$this->parserData = $this->getContent(true, $sizeMax);
 				$this->parserData = preg_replace("/@pageError/i", $this->get("pageError"), $this->parserData);
 			}
 			if(!$this->isExisting("description"))
@@ -712,20 +715,20 @@ class YellowPage
 	}
 	
 	// Return page content, HTML encoded or raw format
-	function getContent($rawFormat = false)
+	function getContent($rawFormat = false, $sizeMax = 0)
 	{
 		if($rawFormat)
 		{
 			$this->parseDataUpdate();
 			$text = substrb($this->rawData, $this->metaDataOffsetBytes);
 		} else {
-			$this->parseContent();
+			$this->parseContent($sizeMax);
 			$text = $this->parserData;
 		}
-		return $text;
+		return $sizeMax ? substrb($text, 0, $sizeMax) : $text;
 	}
 	
-	// Return parent page relative to current page, null if none
+	// Return parent page of current page, null if none
 	function getParent()
 	{
 		$parentLocation = $this->yellow->pages->getParentLocation($this->location);
@@ -750,7 +753,7 @@ class YellowPage
 		return $this->yellow->pages->getChildren($parentLocation, $showInvisible);
 	}
 	
-	// Return page collection with child pages relative to current page
+	// Return page collection with child pages of current page
 	function getChildren($showInvisible = false)
 	{
 		return $this->yellow->pages->getChildren($this->location, $showInvisible);
@@ -1958,7 +1961,7 @@ class YellowText
 		return $text;
 	}
 	
-	// Return text string with human readable date, custom date format
+	// Return human readable date, custom date format
 	function getDateFormatted($timestamp, $format)
 	{
 		$dateMonths = preg_split("/,\s*/", $this->get("dateMonths"));

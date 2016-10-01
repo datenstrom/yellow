@@ -3,7 +3,7 @@
 Language: en
 LanguageDescription: English
 LanguageTranslator: Mark Seuffert
-LanguageVersion: 0.6.9
+LanguageVersion: 0.6.10
 
 BlogBy: by
 BlogFilter: Blog:
@@ -107,6 +107,7 @@ WebinterfaceUserHelp: Help
 WebinterfaceUserLogout: Logout
 WikiFilter: Wiki:
 WikiTag: Tags:
+WikiSpecialPages: All pages
 WikiSpecialChanges: Recent changes
 YellowUrl: https://datenstrom.se/yellow
 YellowUserHelpUrl: https://developers.datenstrom.se/help/

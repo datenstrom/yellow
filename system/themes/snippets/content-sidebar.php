@@ -2,7 +2,7 @@
 <div class="content sidebar">
 <?php if($yellow->page->get("navigation")=="navigation-sidebar"): ?>
 <?php $page = $yellow->page->getParentTop(false) ?>
-<?php $pages = $page ? $page->getChildren(!$page->isVisible()): $yellow->pages->clean() ?>
+<?php $pages = $page ? $page->getChildren(!$page->isVisible()) : $yellow->pages->clean() ?>
 <?php $yellow->snippet("navigation-sidebar", $pages, true) ?>
 <?php else: ?>
 <?php $page = $yellow->page->getPage("sidebar") ?>
