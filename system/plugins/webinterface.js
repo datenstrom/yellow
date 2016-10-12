@@ -4,7 +4,7 @@
 // Yellow API
 var yellow =
 {
-	version: "0.6.12",
+	version: "0.6.13",
 	action: function(action) { yellow.webinterface.action(action, "none"); },
 	onLoad: function() { yellow.webinterface.loadInterface(); },
 	onClick: function(e) { yellow.webinterface.hidePanesOnClick(yellow.toolbox.getEventElement(e)); },
@@ -193,13 +193,7 @@ yellow.webinterface =
 				"<a href=\"#\" onclick=\"yellow.action('close'); return false;\" class=\"yellow-close\">x</a>"+
 				"<h1 id=\"yellow-pane-version-title\">"+yellow.toolbox.encodeHtml(yellow.config.serverVersion)+"</h1>"+
 				"<div id=\"yellow-pane-version-status\" class=\""+paneStatus+"\">"+this.getText("VersionStatus", "", paneStatus)+"</div>"+
-				"<div id=\"yellow-pane-version-fields\">"+
-				"<p>"+yellow.page.rawDataOutput+"</p><hr />"+
-				"<p>ServerScheme: "+yellow.toolbox.encodeHtml(yellow.config.serverScheme)+"<br />"+
-				"ServerName: "+yellow.toolbox.encodeHtml(yellow.config.serverName)+"<br />"+
-				"ServerBase: "+yellow.toolbox.encodeHtml(yellow.config.serverBase)+"<br />"+
-				"ServerTime: "+yellow.toolbox.encodeHtml(yellow.config.serverTime)+"</p>"+
-				"</div>"+
+				"<div id=\"yellow-pane-version-fields\">"+yellow.page.rawDataOutput+"</div>"+
 				"<div id=\"yellow-pane-version-buttons\">"+
 				"<p><input class=\"yellow-btn\" type=\"button\" onclick=\"yellow.action('close'); return false;\" value=\""+this.getText("OkButton")+"\" /></p>"+
 				"</div>"+
@@ -318,8 +312,9 @@ yellow.webinterface =
 	resizePane: function(paneId, paneAction, paneStatus)
 	{
 		var elementBar = document.getElementById("yellow-bar");
+		var paneLeft = yellow.toolbox.getOuterLeft(elementBar);
 		var paneTop = yellow.toolbox.getOuterTop(elementBar) + yellow.toolbox.getOuterHeight(elementBar);
-		var paneWidth = yellow.toolbox.getOuterWidth(elementBar, true);
+		var paneWidth = yellow.toolbox.getOuterWidth(elementBar);
 		var paneHeight = yellow.toolbox.getWindowHeight() - paneTop - yellow.toolbox.getOuterHeight(elementBar);
 		switch(paneId)
 		{
@@ -328,10 +323,12 @@ yellow.webinterface =
 			case "yellow-pane-recover":
 			case "yellow-pane-settings":
 			case "yellow-pane-version":
+				yellow.toolbox.setOuterLeft(document.getElementById(paneId), paneLeft);
 				yellow.toolbox.setOuterTop(document.getElementById(paneId), paneTop);
 				yellow.toolbox.setOuterWidth(document.getElementById(paneId), paneWidth);
 				break;
 			case "yellow-pane-edit":
+				yellow.toolbox.setOuterLeft(document.getElementById("yellow-pane-edit"), paneLeft);
 				yellow.toolbox.setOuterTop(document.getElementById("yellow-pane-edit"), paneTop);
 				yellow.toolbox.setOuterHeight(document.getElementById("yellow-pane-edit"), paneHeight);
 				yellow.toolbox.setOuterWidth(document.getElementById("yellow-pane-edit"), paneWidth);
@@ -346,9 +343,9 @@ yellow.webinterface =
 				yellow.toolbox.setOuterLeft(document.getElementById("yellow-pane-edit-arrow"), position);
 				break;
 			case "yellow-pane-user":
+				yellow.toolbox.setOuterLeft(document.getElementById("yellow-pane-user"), paneLeft + paneWidth - yellow.toolbox.getOuterWidth(document.getElementById("yellow-pane-user")));
 				yellow.toolbox.setOuterTop(document.getElementById("yellow-pane-user"), paneTop);
 				yellow.toolbox.setOuterHeight(document.getElementById("yellow-pane-user"), paneHeight, true);
-				yellow.toolbox.setOuterLeft(document.getElementById("yellow-pane-user"), paneWidth - yellow.toolbox.getOuterWidth(document.getElementById("yellow-pane-user")), true);
 				var elementLink = document.getElementById("yellow-pane-user-link");
 				var position = yellow.toolbox.getOuterLeft(elementLink) + yellow.toolbox.getOuterWidth(elementLink)/2;
 				position -= yellow.toolbox.getOuterLeft(document.getElementById("yellow-pane-user"));
@@ -585,11 +582,23 @@ yellow.toolbox =
 		return Object.keys ? Object.keys(element).length : 0;
 	},
 	
+	// Return element width in pixel
+	getWidth: function(element)
+	{
+		return element.offsetWidth - this.getBoxSize(element).width;
+	},
+	
+	// Return element height in pixel
+	getHeight: function(element)
+	{
+		return element.offsetHeight - this.getBoxSize(element).height;
+	},
+	
 	// Set element width in pixel, including padding and border
-	setOuterWidth: function(element, width, maxWidth)
+	setOuterWidth: function(element, width, setMax)
 	{
 		width -= this.getBoxSize(element).width;
-		if(maxWidth)
+		if(setMax)
 		{
 			element.style.maxWidth = Math.max(0, width) + "px";
 		} else {
@@ -598,10 +607,10 @@ yellow.toolbox =
 	},
 	
 	// Set element height in pixel, including padding and border
-	setOuterHeight: function(element, height, maxHeight)
+	setOuterHeight: function(element, height, setMax)
 	{
 		height -= this.getBoxSize(element).height;
-		if(maxHeight)
+		if(setMax)
 		{
 			element.style.maxHeight = Math.max(0, height) + "px";
 		} else {
@@ -625,45 +634,16 @@ yellow.toolbox =
 		return height;
 	},
 	
-	// Return element width in pixel
-	getWidth: function(element)
+	// Set element left position in pixel
+	setOuterLeft: function(element, left)
 	{
-		return element.offsetWidth - this.getBoxSize(element).width;
-	},
-	
-	// Return element height in pixel
-	getHeight: function(element)
-	{
-		return element.offsetHeight - this.getBoxSize(element).height;
+		element.style.left = Math.max(0, left) + "px";
 	},
 	
 	// Set element top position in pixel
-	setOuterTop: function(element, top, marginTop)
+	setOuterTop: function(element, top)
 	{
-		if(marginTop)
-		{
-			element.style.marginTop = Math.max(0, top) + "px";
-		} else {
-			element.style.top = Math.max(0, top) + "px";
-		}
-	},
-	
-	// Set element left position in pixel
-	setOuterLeft: function(element, left, marginLeft)
-	{
-		if(marginLeft)
-		{
-			element.style.marginLeft = Math.max(0, left) + "px";
-		} else {
-			element.style.left = Math.max(0, left) + "px";
-		}
-	},
-	
-	// Return element top position in pixel
-	getOuterTop: function(element)
-	{
-		var top = element.getBoundingClientRect().top;
-		return top + (window.pageYOffset || document.documentElement.scrollTop);
+		element.style.top = Math.max(0, top) + "px";
 	},
 	
 	// Return element left position in pixel
@@ -671,6 +651,13 @@ yellow.toolbox =
 	{
 		var left = element.getBoundingClientRect().left;
 		return left + (window.pageXOffset || document.documentElement.scrollLeft);
+	},
+	
+	// Return element top position in pixel
+	getOuterTop: function(element)
+	{
+		var top = element.getBoundingClientRect().top;
+		return top + (window.pageYOffset || document.documentElement.scrollTop);
 	},
 	
 	// Return window width in pixel

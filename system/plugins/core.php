@@ -465,8 +465,8 @@ class YellowPage
 			$titleHeader = ($this->location==$this->yellow->pages->getHomeLocation($this->location)) ?
 				$this->get("sitename") : $this->get("title")." - ".$this->get("sitename");
 			if(!$this->isExisting("titleContent")) $this->set("titleContent", $this->get("title"));
-			if(!$this->isExisting("titleHeader")) $this->set("titleHeader", $titleHeader);
 			if(!$this->isExisting("titleNavigation")) $this->set("titleNavigation", $this->get("title"));
+			if(!$this->isExisting("titleHeader")) $this->set("titleHeader", $titleHeader);
 			if($this->get("status")=="hidden") $this->available = false;
 			$this->set("pageRead", $this->yellow->lookup->normaliseUrl(
 				$this->yellow->config->get("serverScheme"),

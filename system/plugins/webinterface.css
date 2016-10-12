@@ -1,4 +1,4 @@
-/* Yellow web interface 0.6.12 */
+/* Yellow web interface 0.6.13 */
 
 .yellow-bar { position:relative; overflow:hidden; height:2em; margin-bottom:10px; }
 .yellow-bar-left { display:block; float:left; }
@@ -20,8 +20,8 @@
 .yellow-pane p { margin:0.5em; }
 .yellow-pane ul { list-style:none; margin:0 0.5em; padding:0; }
 .yellow-pane div { overflow:hidden; }
-.yellow-close { display:block; float:right; padding:0 0.5em; color:#bbb; font-size:1.1em; }
-.yellow-close:hover { text-decoration:none; color:#000; }
+.yellow-close { display:block; float:right; padding:0 0.5em; font-size:1.1em; color:#bbb; text-decoration:none; }
+.yellow-close:hover { color:#000; text-decoration:none; }
 .yellow-arrow { position:absolute; top:0; left:0; }
 .yellow-arrow:after, .yellow-arrow:before {
 	position:absolute;

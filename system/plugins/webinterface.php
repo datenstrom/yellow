@@ -5,7 +5,7 @@
 // Web interface plugin
 class YellowWebinterface
 {
-	const VERSION = "0.6.12";
+	const VERSION = "0.6.13";
 	var $yellow;			//access to API
 	var $response;			//web interface response
 	var $users;				//web interface users
