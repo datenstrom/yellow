@@ -5,7 +5,7 @@
 // Web interface plugin
 class YellowWebinterface
 {
-	const VERSION = "0.6.13";
+	const VERSION = "0.6.14";
 	var $yellow;			//access to API
 	var $response;			//web interface response
 	var $users;				//web interface users
@@ -213,8 +213,9 @@ class YellowWebinterface
 		}
 		if($statusCode==0)
 		{
-			$statusCode = $this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
 			if($this->response->action=="fail") $this->yellow->page->error(500, "Login failed, [please log in](javascript:yellow.action('login');)!");
+			$this->yellow->pages->requestHandler = "core";
+			$statusCode = $this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
 		}
 		return $statusCode;
 	}
