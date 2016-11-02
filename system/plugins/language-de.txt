@@ -3,7 +3,7 @@
 Language: de
 LanguageDescription: Deutsch
 LanguageTranslator: David Fehrmann
-LanguageVersion: 0.6.10
+LanguageVersion: 0.6.11
 
 BlogBy: von
 BlogFilter: Blog:
@@ -91,7 +91,7 @@ WebinterfaceVersionTitle: Über diese Webseite
 WebinterfaceVersionStatusNone: Nach Aktualiserung suchen…
 WebinterfaceVersionStatusLatest: Keine Aktualisierung verfügbar.
 WebinterfaceVersionStatusUpdates: Aktualiserung verfügbar, bitte an den Webmaster wenden.
-WebinterfaceVersionUpdate: Aktualisieren
+WebinterfaceVersionStatusRequest: Aktualiserung verfügbar, jetzt aktualisieren.
 WebinterfaceOkButton: Ok
 WebinterfaceCancelButton: Abbruch
 WebinterfaceCreateButton: Erzeugen

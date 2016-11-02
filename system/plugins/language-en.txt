@@ -3,7 +3,7 @@
 Language: en
 LanguageDescription: English
 LanguageTranslator: Mark Seuffert
-LanguageVersion: 0.6.10
+LanguageVersion: 0.6.11
 
 BlogBy: by
 BlogFilter: Blog:
@@ -91,7 +91,7 @@ WebinterfaceVersionTitle: About this website
 WebinterfaceVersionStatusNone: Checking for updates…
 WebinterfaceVersionStatusLatest: No updates available.
 WebinterfaceVersionStatusUpdates: Updates available, please contact the webmaster.
-WebinterfaceVersionUpdate: Update
+WebinterfaceVersionStatusRequest: Updates available, update now.
 WebinterfaceOkButton: Ok
 WebinterfaceCancelButton: Cancel
 WebinterfaceCreateButton: Create

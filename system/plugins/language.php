@@ -5,7 +5,7 @@
 // Language plugin
 class YellowLanguage
 {
-	const VERSION = "0.6.10";
+	const VERSION = "0.6.11";
 	var $yellow;			//access to API
 	
 	// Handle initialisation

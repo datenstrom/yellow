@@ -4,7 +4,7 @@
 // Yellow API
 var yellow =
 {
-	version: "0.6.14",
+	version: "0.6.15",
 	action: function(action) { yellow.webinterface.action(action, "none"); },
 	onLoad: function() { yellow.webinterface.loadInterface(); },
 	onClick: function(e) { yellow.webinterface.hidePanesOnClick(yellow.toolbox.getEventElement(e)); },
@@ -260,7 +260,7 @@ yellow.webinterface =
 				yellow.toolbox.setVisible(document.getElementById("yellow-pane-settings-buttons"), !showFields);
 				if(paneStatus=="none")
 				{
-					document.getElementById("yellow-pane-settings-status").innerHTML = "<a href=\"#\" onclick=\"yellow.action('version'); return false;\">"+yellow.toolbox.encodeHtml(yellow.config.serverVersion)+"</a>";
+					document.getElementById("yellow-pane-settings-status").innerHTML = "<a href=\"#\" onclick=\"yellow.action('version'); return false;\">"+this.getText("VersionTitle")+"</a>";
 					document.getElementById("yellow-pane-settings-name").value = yellow.config.userName;
 					document.getElementById("yellow-pane-settings-email").value = yellow.config.userEmail;
 					document.getElementById("yellow-pane-settings-"+yellow.config.userLanguage).checked = true;
@@ -275,7 +275,7 @@ yellow.webinterface =
 				}
 				if(paneStatus=="updates" && yellow.config.userWebmaster)
 				{
-					document.getElementById("yellow-pane-version-status").innerHTML = "<a href=\"#\" onclick=\"yellow.action('update'); return false;\">"+this.getText("VersionUpdate")+"</a>";
+					document.getElementById("yellow-pane-version-status").innerHTML = "<a href=\"#\" onclick=\"yellow.action('update'); return false;\">"+this.getText("VersionStatusRequest")+"</a>";
 				}
 				break;
 			case "yellow-pane-edit":
