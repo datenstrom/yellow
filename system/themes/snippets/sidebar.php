@@ -1,5 +1,5 @@
 <?php if($yellow->page->isPage("sidebar")): ?>
-<?php if($yellow->page->get("navigation")=="navigation-sidebar"): ?>
+<?php if($yellow->page->get("navigation")=="navigation-sidebar" && $yellow->page->getPage("sidebar")==$yellow->page): ?>
 <?php $page = $yellow->page->getParentTop(false) ?>
 <?php $pages = $page ? $page->getChildren(!$page->isVisible()) : $yellow->pages->clean() ?>
 <?php $yellow->page->setLastModified($pages->getModified()) ?>
