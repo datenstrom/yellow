@@ -3,7 +3,7 @@
 Language: fr
 LanguageDescription: Français
 LanguageTranslator: Juh Nibreh
-LanguageVersion: 0.6.11
+LanguageVersion: 0.6.12
 
 BlogBy: par
 BlogFilter: Blog:
@@ -27,6 +27,8 @@ DateFormatLong: d/m/Y H:i
 DateFormatTime: H:i
 PaginationPrevious: ← Précédent
 PaginationNext: Suivant →
+PagePrevious: ← @title
+PageNext: @title →
 SearchQuery: Rechercher:
 SearchResultsNone: Entrez un mot dans le champ de recherche.
 SearchResultsEmpty: Pas de résultats.

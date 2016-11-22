@@ -3,7 +3,7 @@
 Language: de
 LanguageDescription: Deutsch
 LanguageTranslator: David Fehrmann
-LanguageVersion: 0.6.11
+LanguageVersion: 0.6.12
 
 BlogBy: von
 BlogFilter: Blog:
@@ -27,6 +27,8 @@ DateFormatLong: d.m.Y H:i
 DateFormatTime: H:i
 PaginationPrevious: ← Zurück
 PaginationNext: Vor →
+PagePrevious: ← @title
+PageNext: @title →
 SearchQuery: Suche:
 SearchResultsNone: Bitte einen Suchbegriff eingeben.
 SearchResultsEmpty: Keine Treffer für diese Suchanfrage.

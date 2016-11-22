@@ -1204,33 +1204,62 @@ class YellowPageCollection extends ArrayObject
 		return $this->paginationCount;
 	}
 	
-	// Return absolute location for a page in pagination
-	function getPaginationLocation($pageNumber)
+	// Return location for a page in pagination
+	function getPaginationLocation($absoluteLocation = true, $pageNumber = 1)
 	{
 		if($pageNumber>=1 && $pageNumber<=$this->paginationCount)
 		{
 			$pagination = $this->yellow->config->get("contentPagination");
-			$location = $this->yellow->page->getLocation(true);
+			$location = $this->yellow->page->getLocation($absoluteLocation);
 			$locationArgs = $this->yellow->toolbox->getLocationArgsNew(
 				$pageNumber>1 ? "$pagination:$pageNumber" : "$pagination:", $pagination);
 		}
 		return $location.$locationArgs;
 	}
 	
-	// Return absolute location for previous page in pagination
-	function getPaginationPrevious()
+	// Return location for previous page in pagination
+	function getPaginationPrevious($absoluteLocation = true)
 	{
-		$pageNumber = $this->paginationNumber;
-		$pageNumber = ($pageNumber>1 && $pageNumber<=$this->paginationCount) ? $pageNumber-1 : 0;
-		return $this->getPaginationLocation($pageNumber);
+		$pageNumber = $this->paginationNumber-1;
+		return $this->getPaginationLocation($absoluteLocation, $pageNumber);
 	}
 	
-	// Return absolute location for next page in pagination
-	function getPaginationNext()
+	// Return location for next page in pagination
+	function getPaginationNext($absoluteLocation = true)
 	{
-		$pageNumber = $this->paginationNumber;
-		$pageNumber = ($pageNumber>=1 && $pageNumber<$this->paginationCount) ? $pageNumber+1 : 0;
-		return $this->getPaginationLocation($pageNumber);
+		$pageNumber = $this->paginationNumber+1;
+		return $this->getPaginationLocation($absoluteLocation, $pageNumber);
+	}
+	
+	// Return current page number in collection
+	function getPageNumber($page)
+	{
+		$pageNumber = 0;
+		foreach($this->getIterator() as $key=>$value)
+		{
+			if($page->getLocation()==$value->getLocation()) { $pageNumber = $key+1; break; }
+		}
+		return $pageNumber;
+	}
+	
+	// Return page in collection, null if none
+	function getPage($pageNumber = 1)
+	{
+		return ($pageNumber>=1 && $pageNumber<=$this->count()) ? $this->offsetGet($pageNumber-1) : null;
+	}
+	
+	// Return previous page in collection, null if none
+	function getPagePrevious($page)
+	{
+		$pageNumber = $this->getPageNumber($page)-1;
+		return $this->getPage($pageNumber);
+	}
+	
+	// Return next page in collection, null if none
+	function getPageNext($page)
+	{
+		$pageNumber = $this->getPageNumber($page)+1;
+		return $this->getPage($pageNumber);
 	}
 	
 	// Return current page filter

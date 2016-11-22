@@ -3,7 +3,7 @@
 Language: en
 LanguageDescription: English
 LanguageTranslator: Mark Seuffert
-LanguageVersion: 0.6.11
+LanguageVersion: 0.6.12
 
 BlogBy: by
 BlogFilter: Blog:
@@ -27,6 +27,8 @@ DateFormatLong: Y-m-d H:i
 DateFormatTime: H:i
 PaginationPrevious: ← Previous
 PaginationNext: Next →
+PagePrevious: ← @title
+PageNext: @title →
 SearchQuery: Search:
 SearchResultsNone: Enter a search term.
 SearchResultsEmpty: No results found.
