@@ -115,7 +115,7 @@ class YellowCore
 			$this->pages->requestHandler = "core";
 			$statusCode = $this->processRequest($serverScheme, $serverName, $base, $location, $fileName, true);
 		}
-		if($this->page->isError()) $statusCode = $this->processRequestError();
+		if($this->page->isExisting("pageError")) $statusCode = $this->processRequestError();
 		$this->toolbox->timerStop($time);
 		ob_end_flush();
 		if(defined("DEBUG") && DEBUG>=1)
@@ -970,7 +970,7 @@ class YellowPage
 	// Check if page with error
 	function isError()
 	{
-		return $this->isExisting("pageError");
+		return $this->statusCode>=400;
 	}
 	
 	// Check if response header exists

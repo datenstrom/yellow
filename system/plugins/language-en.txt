@@ -25,10 +25,10 @@ DateFormatShort: F Y
 DateFormatMedium: Y-m-d
 DateFormatLong: Y-m-d H:i
 DateFormatTime: H:i
+PagePrevious: ← Previous: @title
+PageNext: Next: @title →
 PaginationPrevious: ← Previous
 PaginationNext: Next →
-PagePrevious: ← @title
-PageNext: @title →
 SearchQuery: Search:
 SearchResultsNone: Enter a search term.
 SearchResultsEmpty: No results found.

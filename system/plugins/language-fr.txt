@@ -25,10 +25,10 @@ DateFormatShort: F Y
 DateFormatMedium: d/m/Y
 DateFormatLong: d/m/Y H:i
 DateFormatTime: H:i
+PagePrevious: ← Précédent: @title
+PageNext: Suivant: @title →
 PaginationPrevious: ← Précédent
 PaginationNext: Suivant →
-PagePrevious: ← @title
-PageNext: @title →
 SearchQuery: Rechercher:
 SearchResultsNone: Entrez un mot dans le champ de recherche.
 SearchResultsEmpty: Pas de résultats.

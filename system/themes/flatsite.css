@@ -1,5 +1,5 @@
 /* Theme: Flatsite theme */
-/* Version: 0.6.10 */
+/* Version: 0.6.11 */
 /* Designer: Mark Mayberg */
 
 @import url(https://fonts.googleapis.com/css?family=Open+Sans:300,400,700);
@@ -39,6 +39,7 @@ a:hover { color:#07d; text-decoration:underline; }
 .content .stretchable li { margin:0; padding:1em 0; display:inline-block; text-align:center; vertical-align:top; }
 .content .stretchable a { color:#717171; text-decoration:none; }
 .content .toc { margin:0; padding:0; list-style:none; }
+.content .links { margin:1em 0; }
 .content .pagination { margin:1em 0; }
 .content .left { float:left; margin:0 1em 0 0; }
 .content .center { display:block; margin:0 auto; }
