@@ -5,7 +5,7 @@
 // Web interface plugin
 class YellowWebinterface
 {
-	const VERSION = "0.6.15";
+	const VERSION = "0.6.16";
 	var $yellow;			//access to API
 	var $response;			//web interface response
 	var $users;				//web interface users
@@ -530,7 +530,6 @@ class YellowWebinterface
 			if($statusCode!=200)
 			{
 				$this->yellow->page->statusCode = 500;
-				$this->yellow->page->set("pageError", "Can't check for updates on this server!");
 				$this->response->status = "error";
 			}
 		}
