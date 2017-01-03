@@ -1,11 +1,11 @@
 <?php
-// Copyright (c) 2013-2016 Datenstrom, http://datenstrom.se
+// Copyright (c) 2013-2017 Datenstrom, http://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 // Command line plugin
 class YellowCommandline
 {
-	const VERSION = "0.6.16";
+	const VERSION = "0.6.17";
 	var $yellow;					//access to API
 	var $files;						//number of files
 	var $errors;					//number of errors
@@ -412,21 +412,17 @@ class YellowCommandline
 	{
 		$locations = array();
 		$regex = "/\.(css|ico|js|jpg|png|svg|txt|woff)/";
-		$fileNames = $this->yellow->toolbox->getDirectoryEntries($this->yellow->config->get("pluginDir"), $regex, false, false);
+		$pluginDirLength = strlenu($this->yellow->config->get("pluginDir"));
+		$fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($this->yellow->config->get("pluginDir"), $regex, false, false);
 		foreach($fileNames as $fileName)
 		{
-			array_push($locations, $this->yellow->config->get("pluginLocation").basename($fileName));
+			array_push($locations, $this->yellow->config->get("pluginLocation").substru($fileName, $pluginDirLength));
 		}
-		$fileNames = $this->yellow->toolbox->getDirectoryEntries($this->yellow->config->get("themeDir"), $regex, false, false);
+		$themeDirLength = strlenu($this->yellow->config->get("themeDir"));
+		$fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($this->yellow->config->get("themeDir"), $regex, false, false);
 		foreach($fileNames as $fileName)
 		{
-			array_push($locations, $this->yellow->config->get("themeLocation").basename($fileName));
-		}
-		$assetDirLength = strlenu($this->yellow->config->get("assetDir"));
-		$fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($this->yellow->config->get("assetDir"), $regex, false, false);
-		foreach($fileNames as $fileName)
-		{
-			array_push($locations, $this->yellow->config->get("assetLocation").substru($fileName, $assetDirLength));
+			array_push($locations, $this->yellow->config->get("themeLocation").substru($fileName, $themeDirLength));
 		}
 		array_push($locations, "/".$this->yellow->config->get("robotsFile"));
 		return $locations;
@@ -460,8 +456,7 @@ class YellowCommandline
 			list($statusCode, $data) = $this->yellow->plugins->get("update")->getSoftwareVersion($latest);
 		} else {
 			$statusCode = 200;
-			foreach($this->yellow->plugins->getData() as $key=>$value) $data[$key] = $value;
-			foreach($this->yellow->themes->getData() as $key=>$value) $data[$key] = $value;
+			$data = array_merge($this->yellow->plugins->getData(), $this->yellow->themes->getData());
 		}
 		return array($statusCode, $data);
 	}

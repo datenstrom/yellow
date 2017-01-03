@@ -3,7 +3,7 @@
 Language: de
 LanguageDescription: Deutsch
 LanguageTranslator: David Fehrmann
-LanguageVersion: 0.6.12
+LanguageVersion: 0.6.13
 
 BlogBy: von
 BlogFilter: Blog:
@@ -90,10 +90,12 @@ WebinterfaceWelcomeMessage: Hallo @usershort, dein Benutzerkonto wurde erstellt.
 WebinterfaceInformationSubject: Willkommen zurück
 WebinterfaceInformationMessage: Hallo @usershort, dein Benutzerkonto wurde geändert. Du kannst dich jetzt anmelden.
 WebinterfaceVersionTitle: Über diese Webseite
-WebinterfaceVersionStatusNone: Nach Aktualiserung suchen…
-WebinterfaceVersionStatusLatest: Keine Aktualisierung verfügbar.
+WebinterfaceVersionStatusNone: Yellow ist für Menschen die Webseiten machen.
+WebinterfaceVersionStatusCheck: Nach Aktualiserung suchen…
+WebinterfaceVersionStatusDone: Deine Webseite ist auf dem neusten Stand.
 WebinterfaceVersionStatusUpdates: Aktualiserung verfügbar, bitte an den Webmaster wenden.
-WebinterfaceVersionStatusRequest: Aktualiserung verfügbar, jetzt aktualisieren.
+WebinterfaceVersionUpdateNormal: Aktualiserung verfügbar, jetzt aktualisieren.
+WebinterfaceVersionUpdateForce: Update erzwingen
 WebinterfaceOkButton: Ok
 WebinterfaceCancelButton: Abbruch
 WebinterfaceCreateButton: Erzeugen

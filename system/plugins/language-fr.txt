@@ -3,7 +3,7 @@
 Language: fr
 LanguageDescription: Français
 LanguageTranslator: Juh Nibreh
-LanguageVersion: 0.6.12
+LanguageVersion: 0.6.13
 
 BlogBy: par
 BlogFilter: Blog:
@@ -90,10 +90,12 @@ WebinterfaceWelcomeMessage: Bonjour @usershort, votre compte utilisateur a bien 
 WebinterfaceInformationSubject: Bienvenue à nouveau
 WebinterfaceInformationMessage: Bonjour @usershort, votre compte utilisateur a bien été changé. Vous pouvez maintenant vous connecter.
 WebinterfaceVersionTitle: A propos de ce site
-WebinterfaceVersionStatusNone: Vérification des mises à jour…
-WebinterfaceVersionStatusLatest: Aucune mise à jour disponible.
+WebinterfaceVersionStatusNone: Yellow est fait pour les gens qui font des sites web.
+WebinterfaceVersionStatusCheck: Vérification des mises à jour…
+WebinterfaceVersionStatusDone: Votre site est à jour.
 WebinterfaceVersionStatusUpdates: Mises à jour disponibles, s'il vous plaît contacter le webmestre.
-WebinterfaceVersionStatusRequest: Mises à jour disponibles, mettre à jour maintenant.
+WebinterfaceVersionUpdateNormal: Mises à jour disponibles, mettre à jour maintenant.
+WebinterfaceVersionUpdateForce: Forcer mise à jour
 WebinterfaceOkButton: Ok
 WebinterfaceCancelButton: Annuler
 WebinterfaceCreateButton: Créer

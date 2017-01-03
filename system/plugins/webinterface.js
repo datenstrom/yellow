@@ -1,10 +1,10 @@
-// Copyright (c) 2013-2016 Datenstrom, http://datenstrom.se
+// Copyright (c) 2013-2017 Datenstrom, http://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 // Yellow API
 var yellow =
 {
-	version: "0.6.16",
+	version: "0.6.17",
 	action: function(action) { yellow.webinterface.action(action, "none"); },
 	onLoad: function() { yellow.webinterface.loadInterface(); },
 	onClick: function(e) { yellow.webinterface.hidePanesOnClick(yellow.toolbox.getEventElement(e)); },
@@ -267,15 +267,15 @@ yellow.webinterface =
 				}
 				break;
 			case "yellow-pane-version":
-				if(paneStatus=="none")
+				if(paneStatus=="none" && yellow.config.pluginUpdate)
 				{
-					document.getElementById("yellow-pane-version-status").innerHTML = this.getText("VersionStatus", "", paneStatus);
+					document.getElementById("yellow-pane-version-status").innerHTML = this.getText("VersionStatusCheck");
 					document.getElementById("yellow-pane-version-fields").innerHTML = "";
-					setTimeout("yellow.action('send');", 100);
+					setTimeout("yellow.action('send');", 500);
 				}
 				if(paneStatus=="updates" && yellow.config.userWebmaster)
 				{
-					document.getElementById("yellow-pane-version-status").innerHTML = "<a href=\"#\" onclick=\"yellow.action('update'); return false;\">"+this.getText("VersionStatusRequest")+"</a>";
+					document.getElementById("yellow-pane-version-status").innerHTML = "<a href=\"#\" onclick=\"yellow.action('update'); return false;\">"+this.getText("VersionUpdateNormal")+"</a>";
 				}
 				break;
 			case "yellow-pane-edit":

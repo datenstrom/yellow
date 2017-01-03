@@ -3,7 +3,7 @@
 Language: en
 LanguageDescription: English
 LanguageTranslator: Mark Seuffert
-LanguageVersion: 0.6.12
+LanguageVersion: 0.6.13
 
 BlogBy: by
 BlogFilter: Blog:
@@ -90,10 +90,12 @@ WebinterfaceWelcomeMessage: Hi @usershort, your user account has been created. H
 WebinterfaceInformationSubject: Welcome back
 WebinterfaceInformationMessage: Hi @usershort, your user account has been changed. You can now log in.
 WebinterfaceVersionTitle: About this website
-WebinterfaceVersionStatusNone: Checking for updates…
-WebinterfaceVersionStatusLatest: No updates available.
+WebinterfaceVersionStatusNone: Yellow is for people who make websites.
+WebinterfaceVersionStatusCheck: Checking for updates…
+WebinterfaceVersionStatusDone: Your website is up to date.
 WebinterfaceVersionStatusUpdates: Updates available, please contact the webmaster.
-WebinterfaceVersionStatusRequest: Updates available, update now.
+WebinterfaceVersionUpdateNormal: Updates available, update now.
+WebinterfaceVersionUpdateForce: Force update
 WebinterfaceOkButton: Ok
 WebinterfaceCancelButton: Cancel
 WebinterfaceCreateButton: Create

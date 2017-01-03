@@ -1,11 +1,11 @@
 <?php
-// Copyright (c) 2013-2016 Datenstrom, http://datenstrom.se
+// Copyright (c) 2013-2017 Datenstrom, http://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 // Web interface plugin
 class YellowWebinterface
 {
-	const VERSION = "0.6.16";
+	const VERSION = "0.6.17";
 	var $yellow;			//access to API
 	var $response;			//web interface response
 	var $users;				//web interface users
@@ -28,7 +28,6 @@ class YellowWebinterface
 		$this->yellow->config->setDefault("webinterfaceUserHashAlgorithm", "bcrypt");
 		$this->yellow->config->setDefault("webinterfaceUserHashCost", "10");
 		$this->yellow->config->setDefault("webinterfaceUserStatus", "active");
-		$this->yellow->config->setDefault("webinterfaceUserPending", "none");
 		$this->yellow->config->setDefault("webinterfaceUserHome", "/");
 		$this->users->load($this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile"));
 	}
@@ -36,7 +35,7 @@ class YellowWebinterface
 	// Handle update
 	function onUpdate($name)
 	{
-		return $this->cleanCommand(array("clean", "all"));
+		if($name=="webinterface") $this->cleanCommand(array("clean", "all"));
 	}
 	
 	// Handle request
@@ -228,10 +227,10 @@ class YellowWebinterface
 		{
 			$statusCode = $this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
 		} else {
-			if($this->yellow->isRequestContentDirectory($location))
+			if($this->yellow->lookup->isRedirectLocation($location))
 			{
 				$statusCode = 301;
-				$location = $this->yellow->lookup->isFileLocation($location) ? "$location/" : "/".$this->yellow->getRequestLanguage(true)."/";
+				$location = $this->yellow->lookup->isFileLocation($location) ? "$location/" : "/".$this->yellow->getRequestLanguage()."/";
 				$location = $this->yellow->lookup->normaliseUrl($serverScheme, $serverName, $base, $location);
 				$this->yellow->sendStatus($statusCode, $location);
 			} else {
@@ -484,14 +483,14 @@ class YellowWebinterface
 		if($this->response->status=="ok" && $email!=$emailSource)
 		{
 			$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
-			$this->users->users[$emailSource]["pending"] = $this->yellow->config->get("webinterfaceUserPending");
+			$this->users->users[$emailSource]["pending"] = "none";
 			$this->response->status = $this->users->update($fileNameUser, $emailSource, "", "", "", "inactive") ? "ok" : "error";
 			if($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
 		}
 		if($this->response->status=="ok")
 		{
 			$this->users->users[$email]["hash"] = $hash;
-			$this->users->users[$email]["pending"] = $this->yellow->config->get("webinterfaceUserPending");
+			$this->users->users[$email]["pending"] = "none";
 			$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
 			$this->response->status = $this->users->update($fileNameUser, $email, "", "", "", "active") ? "ok" : "error";
 			if($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
@@ -526,12 +525,8 @@ class YellowWebinterface
 					++$count; if($count>=4) { $this->response->rawDataOutput .= "…"; break; }
 				}
 			}
-			$this->response->status = $updates ? "updates" : "latest";
-			if($statusCode!=200)
-			{
-				$this->yellow->page->statusCode = 500;
-				$this->response->status = "error";
-			}
+			$this->response->status = $updates ? "updates" : "done";
+			if($statusCode!=200) $this->response->status = "error";
 		}
 		$statusCode = $this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
 		return $statusCode;
@@ -541,7 +536,7 @@ class YellowWebinterface
 	function processRequestUpdate($serverScheme, $serverName, $base, $location, $fileName)
 	{
 		$statusCode = 0;
-		if($this->response->isUserWebmaster())
+		if($this->yellow->plugins->isExisting("update") && $this->response->isUserWebmaster())
 		{
 			$statusCode = $this->yellow->command("update");
 			if($statusCode==200)
@@ -549,11 +544,6 @@ class YellowWebinterface
 				$statusCode = 303;
 				$location = $this->yellow->lookup->normaliseUrl($serverScheme, $serverName, $base, $location);
 				$this->yellow->sendStatus($statusCode, $location);
-			} else {
-				$statusCode = 500;
-				$this->yellow->page->statusCode = 500;
-				$this->yellow->page->set("pageError", "Can't install updates on this server!");
-				$this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
 			}
 		}
 		return $statusCode;
@@ -876,6 +866,7 @@ class YellowResponse
 			$data["userHome"] = $this->webinterface->users->getHome($this->userEmail);
 			$data["userRestrictions"] = intval($this->isUserRestrictions());
 			$data["userWebmaster"] = intval($this->isUserWebmaster());
+			$data["pluginUpdate"] = intval($this->yellow->plugins->isExisting("update"));
 			$data["serverScheme"] = $this->yellow->config->get("serverScheme");
 			$data["serverName"] = $this->yellow->config->get("serverName");
 			$data["serverBase"] = $this->yellow->config->get("serverBase");
@@ -1096,7 +1087,7 @@ class YellowUsers
 				{
 					if(!is_numeric($modified)) { $home = $pending; $pending = $modified; $modified = 946684800; } //TODO: remove later, converts old file format
 					$home = empty($home) ? $pending : $home; //TODO: remove later, converts old file format
-					$pending = $this->yellow->config->get("webinterfaceUserPending");
+					$pending = "none";
 					$fileDataNew .= "$matches[1]: $hash,$name,$language,$status,$modified,$pending,$home\n";
 				}
 			} else {
@@ -1127,7 +1118,7 @@ class YellowUsers
 			$language = strreplaceu(',', '-', empty($language) ? $this->yellow->config->get("language") : $language);
 			$status = strreplaceu(',', '-', empty($status) ? $this->yellow->config->get("webinterfaceUserStatus") : $status);
 			$modified = strreplaceu(',', '-', empty($modified) ? time() : $modified);
-			$pending = strreplaceu(',', '-', empty($pending) ? $this->yellow->config->get("webinterfaceUserPending") : $pending);
+			$pending = strreplaceu(',', '-', empty($pending) ? "none" : $pending);
 			$home = strreplaceu(',', '-', empty($home) ? $this->yellow->config->get("webinterfaceUserHome") : $home);
 		}
 		$this->set($email, $hash, $name, $language, $status, $modified, $pending, $home);
