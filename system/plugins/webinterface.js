@@ -4,7 +4,7 @@
 // Yellow API
 var yellow =
 {
-	version: "0.6.17",
+	version: "0.6.18",
 	action: function(action) { yellow.webinterface.action(action, "none"); },
 	onLoad: function() { yellow.webinterface.loadInterface(); },
 	onClick: function(e) { yellow.webinterface.hidePanesOnClick(yellow.toolbox.getEventElement(e)); },

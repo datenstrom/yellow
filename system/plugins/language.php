@@ -6,13 +6,6 @@
 class YellowLanguage
 {
 	const VERSION = "0.6.13";
-	var $yellow;			//access to API
-	
-	// Handle initialisation
-	function onLoad($yellow)
-	{
-		$this->yellow = $yellow;
-	}
 }
 
 $yellow->plugins->register("language", "YellowLanguage", YellowLanguage::VERSION);

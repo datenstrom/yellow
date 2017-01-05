@@ -5,7 +5,7 @@
 // Web interface plugin
 class YellowWebinterface
 {
-	const VERSION = "0.6.17";
+	const VERSION = "0.6.18";
 	var $yellow;			//access to API
 	var $response;			//web interface response
 	var $users;				//web interface users
@@ -179,7 +179,7 @@ class YellowWebinterface
 	function processRequest($serverScheme, $serverName, $base, $location, $fileName)
 	{
 		$statusCode = 0;
-		if($this->checkUser($location, $fileName))
+		if($this->checkUser($serverScheme, $serverName, $base, $location, $fileName))
 		{
 			switch($_REQUEST["action"])
 			{
@@ -200,8 +200,10 @@ class YellowWebinterface
 				case "delete":		$statusCode = $this->processRequestDelete($serverScheme, $serverName, $base, $location, $fileName); break;
 			}
 		} else {
+			$this->yellow->pages->requestHandler = "core";
 			switch($_REQUEST["action"])
 			{
+				case "":			$statusCode = $this->processRequestShow($serverScheme, $serverName, $base, $location, $fileName); break;
 				case "signup":		$statusCode = $this->processRequestSignup($serverScheme, $serverName, $base, $location, $fileName); break;
 				case "confirm":		$statusCode = $this->processRequestConfirm($serverScheme, $serverName, $base, $location, $fileName); break;
 				case "approve":		$statusCode = $this->processRequestApprove($serverScheme, $serverName, $base, $location, $fileName); break;
@@ -209,17 +211,12 @@ class YellowWebinterface
 				case "reconfirm":	$statusCode = $this->processRequestReconfirm($serverScheme, $serverName, $base, $location, $fileName); break;
 				case "change":		$statusCode = $this->processRequestChange($serverScheme, $serverName, $base, $location, $fileName); break;
 			}
-		}
-		if($statusCode==0)
-		{
 			if($this->response->action=="fail") $this->yellow->page->error(500, "Login failed, [please log in](javascript:yellow.action('login');)!");
-			$this->yellow->pages->requestHandler = "core";
-			$statusCode = $this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
 		}
 		return $statusCode;
 	}
 	
-	// Process request to show page
+	// Process request to show file
 	function processRequestShow($serverScheme, $serverName, $base, $location, $fileName)
 	{
 		$statusCode = 0;
@@ -265,7 +262,7 @@ class YellowWebinterface
 	{
 		$statusCode = 302;
 		$this->response->userEmail = "";
-		$this->users->destroyCookie("login");
+		$this->response->destroyCookie($serverScheme, $serverName, $base);
 		$location = $this->yellow->lookup->normaliseUrl(
 			$this->yellow->config->get("serverScheme"),
 			$this->yellow->config->get("serverName"),
@@ -377,7 +374,7 @@ class YellowWebinterface
 				if($this->response->status=="ok")
 				{
 					$this->response->userEmail = "";
-					$this->users->destroyCookie("login");
+					$this->response->destroyCookie($serverScheme, $serverName, $base);
 					$this->response->status = $this->response->sendMail($serverScheme, $serverName, $base, $email, "information") ? "done" : "error";
 					if($this->response->status=="error") $this->yellow->page->error(500, "Can't send email on this server!");
 				}
@@ -498,7 +495,7 @@ class YellowWebinterface
 		if($this->response->status=="ok")
 		{
 			$this->response->userEmail = "";
-			$this->users->destroyCookie("login");
+			$this->response->destroyCookie($serverScheme, $serverName, $base);
 			$this->response->status = $this->response->sendMail($serverScheme, $serverName, $base, $email, "information") ? "done" : "error";
 			if($this->response->status=="error") $this->yellow->page->error(500, "Can't send email on this server!");
 		}
@@ -659,7 +656,7 @@ class YellowWebinterface
 	}
 	
 	// Check web interface user
-	function checkUser($location, $fileName)
+	function checkUser($serverScheme, $serverName, $base, $location, $fileName)
 	{
 		if($_POST["action"]=="login")
 		{
@@ -667,7 +664,7 @@ class YellowWebinterface
 			$password = $_POST["password"];
 			if($this->users->checkUser($email, $password))
 			{
-				$this->users->createCookie("login", $email);
+				$this->response->createCookie($serverScheme, $serverName, $base, $email);
 				$this->response->userEmail = $email;
 				$this->response->userRestrictions = $this->getUserRestrictions($email, $location, $fileName);
 				$this->response->language = $this->response->getLanguage($email);
@@ -969,6 +966,19 @@ class YellowResponse
 		}
 		return $text;
 	}
+
+	// Create browser cookie
+	function createCookie($serverScheme, $serverName, $base, $email)
+	{
+		$session = $this->webinterface->users->createSession($email);
+		setcookie("login", "$email,$session", time()+60*60*24*365, "$base/", "", $serverScheme=="https");
+	}
+	
+	// Destroy browser cookie
+	function destroyCookie($serverScheme, $serverName, $base)
+	{
+		setcookie("login", "", time()-60*60, "$base/", "", $serverScheme=="https");
+	}
 	
 	// Send mail to user
 	function sendMail($serverScheme, $serverName, $base, $email, $action)
@@ -1065,8 +1075,6 @@ class YellowUsers
 			if(!empty($matches[1]) && !empty($matches[2]))
 			{
 				list($hash, $name, $language, $status, $modified, $pending, $home) = explode(',', $matches[2]);
-				if(!is_numeric($modified)) { $home = $pending; $pending = $modified; $modified = 946684800; } //TODO: remove later, converts old file format
-				$home = empty($home) ? $pending : $home; //TODO: remove later, converts old file format
 				$this->set($matches[1], $hash, $name, $language, $status, $modified, $pending, $home);
 				if(defined("DEBUG") && DEBUG>=3) echo "YellowUsers::load email:$matches[1]<br/>\n";
 			}
@@ -1085,8 +1093,6 @@ class YellowUsers
 				list($hash, $name, $language, $status, $modified, $pending, $home) = explode(',', $matches[2]);
 				if($status=="active" || $status=="inactive")
 				{
-					if(!is_numeric($modified)) { $home = $pending; $pending = $modified; $modified = 946684800; } //TODO: remove later, converts old file format
-					$home = empty($home) ? $pending : $home; //TODO: remove later, converts old file format
 					$pending = "none";
 					$fileDataNew .= "$matches[1]: $hash,$name,$language,$status,$modified,$pending,$home\n";
 				}
@@ -1152,7 +1158,7 @@ class YellowUsers
 		$this->users[$email]["home"] = $home;
 	}
 	
-	// Check user login
+	// Check user login from email and password
 	function checkUser($email, $password)
 	{
 		$algorithm = $this->yellow->config->get("webinterfaceUserHashAlgorithm");
@@ -1160,32 +1166,22 @@ class YellowUsers
 			$this->yellow->toolbox->verifyHash($password, $algorithm, $this->users[$email]["hash"]);
 	}
 
-	// Check user login from browser cookie
+	// Check user login from email and session
 	function checkCookie($email, $session)
 	{
 		return $this->isExisting($email) && $this->users[$email]["status"]=="active" &&
 			$this->yellow->toolbox->verifyHash($this->users[$email]["hash"], "sha256", $session);
 	}
 	
-	// Create browser cookie
-	function createCookie($cookieName, $email)
+	// Create session
+	function createSession($email)
 	{
 		if($this->isExisting($email))
 		{
-			$serverScheme = $this->yellow->config->get("webinterfaceServerScheme");
-			$location = $this->yellow->config->get("serverBase").$this->yellow->config->get("webinterfaceLocation");
 			$session = $this->yellow->toolbox->createHash($this->users[$email]["hash"], "sha256");
 			if(empty($session)) $session = "error-hash-algorithm-sha256";
-			setcookie($cookieName, "$email,$session", time()+60*60*24*365, $location, "", $serverScheme=="https");
 		}
-	}
-	
-	// Destroy browser cookie
-	function destroyCookie($cookieName)
-	{
-		$serverScheme = $this->yellow->config->get("webinterfaceServerScheme");
-		$location = $this->yellow->config->get("serverBase").$this->yellow->config->get("webinterfaceLocation");
-		setcookie($cookieName, "", time()-60*60, $location, "", $serverScheme=="https");
+		return $session;
 	}
 	
 	// Create password hash
