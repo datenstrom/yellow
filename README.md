@@ -8,4 +8,4 @@ Yellow is for people who make websites. [Get support](https://developers.datenst
 2. Copy all files to your web hosting.
 3. Open your website in a web browser.
 
-All files are licensed under [GPLv2](https://opensource.org/licenses/GPL-2.0) unless stated otherwise.
+Licensed under [GPLv2](https://github.com/datenstrom/yellow/blob/master/LICENSE.md) unless stated otherwise.
