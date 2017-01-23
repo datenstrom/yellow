@@ -5,7 +5,7 @@
 // Web interface plugin
 class YellowWebinterface
 {
-	const VERSION = "0.6.18";
+	const VERSION = "0.6.19";
 	var $yellow;			//access to API
 	var $response;			//web interface response
 	var $users;				//web interface users
@@ -1009,9 +1009,9 @@ class YellowResponse
 		$message = preg_replace("/@usershort/i", strtok($name, " "), $message);
 		$message = preg_replace("/@username/i", $name, $message);
 		$message = preg_replace("/@userlanguage/i", $language, $message);
-		$mailTo = mb_encode_mimeheader("$name <$email>");
+		$mailTo = mb_encode_mimeheader("$name")." <$email>";
 		$mailSubject = mb_encode_mimeheader($this->yellow->text->getText("{$prefix}Subject", $language));
-		$mailHeaders = mb_encode_mimeheader("From: $sitename <noreply>")."\r\n";
+		$mailHeaders = mb_encode_mimeheader("From: $sitename")." <noreply>\r\n";
 		$mailHeaders .= mb_encode_mimeheader("X-Request-Url: $serverScheme://$serverName$base")."\r\n";
 		$mailHeaders .= mb_encode_mimeheader("X-Remote-Addr: $_SERVER[REMOTE_ADDR]")."\r\n";
 		$mailHeaders .= "Mime-Version: 1.0\r\n";
