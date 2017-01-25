@@ -3020,9 +3020,10 @@ class YellowToolbox
 	}
 	
 	// Create description from text string
-	function createTextDescription($text, $lengthMax, $removeHtml = true, $endMarker = "", $endMarkerText = "")
+	function createTextDescription($text, $lengthMax = 0, $removeHtml = true, $endMarker = "", $endMarkerText = "")
 	{
 		if(preg_match("/^<h1>.*?<\/h1>(.*)$/si", $text, $matches)) $text = $matches[1];
+		if($lengthMax==0) $lengthMax = strlenu($text);
 		if($removeHtml)
 		{
 			while(true)
