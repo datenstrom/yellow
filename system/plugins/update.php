@@ -5,7 +5,7 @@
 // Update plugin
 class YellowUpdate
 {
-	const VERSION = "0.6.11";
+	const VERSION = "0.6.12";
 	var $yellow;					//access to API
 	
 	// Handle initialisation
@@ -14,8 +14,8 @@ class YellowUpdate
 		$this->yellow = $yellow;
 		$this->yellow->config->setDefault("updatePluginsUrl", "https://github.com/datenstrom/yellow-plugins");
 		$this->yellow->config->setDefault("updateThemesUrl", "https://github.com/datenstrom/yellow-themes");
-		$this->yellow->config->setDefault("updateVersionFile", "version.ini");
 		$this->yellow->config->setDefault("updateInformationFile", "update.ini");
+		$this->yellow->config->setDefault("updateVersionFile", "version.ini");
 		$this->yellow->config->setDefault("updateNotification", "none");
 	}
 	
@@ -164,7 +164,10 @@ class YellowUpdate
 				preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
 				if(!empty($matches[1]) && !empty($matches[2]))
 				{
-					if(is_file($matches[1])) { $lastPublished = filemtime($matches[1]); break; }
+					list($dummy, $entry) = explode('/', $matches[1], 2);
+					list($fileName, $flags) = explode(',', $matches[2], 2);
+					if($dummy[0]!='Y') $fileName = $matches[1]; //TODO: remove later, converts old file format
+					if(is_file($fileName)) { $lastPublished = filemtime($fileName); break; }
 				}
 			}
 			foreach($this->yellow->toolbox->getTextLines($fileData) as $line)
@@ -172,10 +175,15 @@ class YellowUpdate
 				preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
 				if(lcfirst($matches[1])=="plugin" || lcfirst($matches[1])=="theme") $software = $matches[2];
 				if(lcfirst($matches[1])=="published") $modified = strtotime($matches[2]);
-				if(!empty($software) && !empty($matches[1]) && !empty($matches[2]))
+				if(!empty($matches[1]) && !empty($matches[2]) && strposu($matches[1], '/'))
 				{
-					list($entry, $flags) = explode(',', $matches[2], 2);
-					$fileName = $matches[1];
+					list($dummy, $entry) = explode('/', $matches[1], 2);
+					list($fileName, $flags) = explode(',', $matches[2], 2);
+					if($dummy[0]!='Y') //TODO: remove later, converts old file format
+					{
+						list($entry, $flags) = explode(',', $matches[2], 2);
+						$fileName = $matches[1];
+					}
 					$fileData = $zip->getFromName($pathBase.$entry);
 					$lastModified = $this->yellow->toolbox->getFileModified($fileName);
 					$statusCode = $this->updateSoftwareFile($fileName, $fileData, $modified, $lastModified, $lastPublished, $flags, $force, $software);
@@ -183,19 +191,7 @@ class YellowUpdate
 				}
 			}
 			$zip->close();
-			if($statusCode==200)
-			{
-				$updateNotification = $this->yellow->config->get("updateNotification");
-				if($updateNotification=="none") $updateNotification = "";
-				if(!empty($updateNotification)) $updateNotification .= ",";
-				$updateNotification .= $software;
-				$fileNameConfig = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
-				if(!$this->yellow->config->update($fileNameConfig, array("updateNotification" => $updateNotification)))
-				{
-					$statusCode = 500;
-					$this->yellow->page->error(500, "Can't write file '$fileNameConfig'!");
-				}
-			}
+			if($statusCode==200) $statusCode = $this->updateStartupNotification($software);
 		}
 		if(!$this->yellow->toolbox->deleteFile($path))
 		{
@@ -210,7 +206,7 @@ class YellowUpdate
 	{
 		$statusCode = 200;
 		$fileName = $this->yellow->toolbox->normaliseTokens($fileName);
-		if($this->yellow->lookup->isValidFile($fileName) && !empty($flags))
+		if($this->yellow->lookup->isValidFile($fileName) && !empty($software))
 		{
 			$create = $update = $delete = false;
 			if(preg_match("/create/i", $flags) && !is_file($fileName) && !empty($fileData)) $create = true;
@@ -251,6 +247,23 @@ class YellowUpdate
 				if(!$create && !$update && !$delete) $debug = "action:none";
 				echo "YellowUpdate::updateSoftwareFile file:$fileName $debug<br/>\n";
 			}
+		}
+		return $statusCode;
+	}
+	
+	// Update startup notification
+	function updateStartupNotification($software)
+	{
+		$statusCode = 200;
+		$updateNotification = $this->yellow->config->get("updateNotification");
+		if($updateNotification=="none") $updateNotification = "";
+		if(!empty($updateNotification)) $updateNotification .= ",";
+		$updateNotification .= $software;
+		$fileNameConfig = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
+		if(!$this->yellow->config->update($fileNameConfig, array("updateNotification" => $updateNotification)))
+		{
+			$statusCode = 500;
+			$this->yellow->page->error(500, "Can't write file '$fileNameConfig'!");
 		}
 		return $statusCode;
 	}
@@ -499,8 +512,8 @@ class YellowUpdate
 		{
 			$urlPlugins = $this->yellow->config->get("updatePluginsUrl")."/raw/master/".$this->yellow->config->get("updateVersionFile");
 			$urlThemes = $this->yellow->config->get("updateThemesUrl")."/raw/master/".$this->yellow->config->get("updateVersionFile");
-			list($statusCodePlugins, $fileDataPlugins) = $this->getSoftwareFile($urlPlugins, $rawFormat);
-			list($statusCodeThemes, $fileDataThemes) = $this->getSoftwareFile($urlThemes, $rawFormat);
+			list($statusCodePlugins, $fileDataPlugins) = $this->getSoftwareFile($urlPlugins);
+			list($statusCodeThemes, $fileDataThemes) = $this->getSoftwareFile($urlThemes);
 			$statusCode = max($statusCodePlugins, $statusCodeThemes);
 			if($statusCode==200)
 			{
@@ -550,7 +563,7 @@ class YellowUpdate
 				$statusCode = 500;
 				$this->yellow->page->error($statusCode, "Can't download file '$url'!");
 			}
-			if(defined("DEBUG") && DEBUG>=3) echo "YellowUpdate::getSoftwareFile status:$statusCode url:$url<br/>\n";
+			if(defined("DEBUG") && DEBUG>=2) echo "YellowUpdate::getSoftwareFile status:$statusCode url:$url<br/>\n";
 		} else {
 			$statusCode = 500;
 			$this->yellow->page->error($statusCode, "Plugin 'update' requires cURL library!");
@@ -558,7 +571,7 @@ class YellowUpdate
 		return array($statusCode, $fileData);
 	}
 	
-	// Check if software installation is pending
+	// Check if software pending
 	function isSoftwarePending()
 	{
 		$path = $this->yellow->config->get("pluginDir");
