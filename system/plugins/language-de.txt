@@ -3,7 +3,7 @@
 Language: de
 LanguageDescription: Deutsch
 LanguageTranslator: David Fehrmann
-LanguageVersion: 0.6.13
+LanguageVersion: 0.6.14
 
 BlogBy: von
 BlogFilter: Blog:
@@ -95,7 +95,8 @@ WebinterfaceVersionStatusCheck: Nach Aktualiserung suchen…
 WebinterfaceVersionStatusDone: Deine Webseite ist auf dem neusten Stand.
 WebinterfaceVersionStatusUpdates: Aktualiserung verfügbar, bitte an den Webmaster wenden.
 WebinterfaceVersionUpdateNormal: Aktualiserung verfügbar, jetzt aktualisieren.
-WebinterfaceVersionUpdateForce: Update erzwingen
+WebinterfaceVersionUpdateForce: Aktualiserung erzwingen
+WebinterfaceVersionUpdateModified: @software wurde modifiziert
 WebinterfaceOkButton: Ok
 WebinterfaceCancelButton: Abbruch
 WebinterfaceCreateButton: Erzeugen
