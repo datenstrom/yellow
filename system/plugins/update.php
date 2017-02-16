@@ -5,7 +5,7 @@
 // Update plugin
 class YellowUpdate
 {
-	const VERSION = "0.6.12";
+	const VERSION = "0.6.13";
 	var $yellow;					//access to API
 	
 	// Handle initialisation
@@ -191,7 +191,8 @@ class YellowUpdate
 				}
 			}
 			$zip->close();
-			if($statusCode==200) $statusCode = $this->updateStartupNotification($software);
+			if($statusCode==200) $statusCode = $this->updateSoftwareNew($software);
+			if($statusCode==200) $statusCode = $this->updateSoftwareNotification($software);
 		}
 		if(!$this->yellow->toolbox->deleteFile($path))
 		{
@@ -250,9 +251,64 @@ class YellowUpdate
 		}
 		return $statusCode;
 	}
+
+	// Update new software
+	function updateSoftwareNew($software)
+	{
+		$statusCode = 200;
+		if(!$this->isSoftwareExisting($software) && $this->yellow->config->get("multiLanguageMode"))
+		{
+			$pathsSource = $pathsTarget = array();
+			$pathBase = $this->yellow->config->get("contentDir");
+			$pathRoot = $this->yellow->config->get("contentRootDir");
+			$fileExtension = $this->yellow->config->get("contentExtension");
+			$fileRegex = "/^.*\\".$fileExtension."$/";
+			foreach($this->yellow->toolbox->getDirectoryEntries($pathBase, "/.*/", true, true, false) as $entry)
+			{
+				if($this->yellow->lookup->normaliseName($entry)."/"==$pathRoot) continue;
+				if(count($this->yellow->toolbox->getDirectoryEntries($pathBase.$entry, $fileRegex, true, false)))
+				{
+					array_push($pathsSource, $pathBase.$entry."/");
+				} else {
+					array_push($pathsTarget, $pathBase.$entry."/");
+				}
+			}
+			if(count($pathsSource) && count($pathsTarget))
+			{
+				foreach($pathsSource as $pathSource)
+				{
+					foreach($pathsTarget as $pathTarget)
+					{
+						$fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($pathSource, "/.*/", false, false);
+						foreach($fileNames as $fileName)
+						{
+							$modified = $this->yellow->toolbox->getFileModified($fileName);
+							$fileNameTarget = $pathTarget.substru($fileName, strlenu($pathBase));
+							if(!is_file($fileNameTarget))
+							{
+								if(!$this->yellow->toolbox->copyFile($fileName, $fileNameTarget, true) ||
+								   !$this->yellow->toolbox->modifyFile($fileNameTarget, $modified))
+								{
+									$statusCode = 500;
+									$this->yellow->page->error(500, "Can't write file '$fileNameTarget'!");
+								}
+							}
+							if(defined("DEBUG") && DEBUG>=2) echo "YellowUpdate::updateSoftwareNew file:$fileNameTarget<br/>\n";
+						}
+					}
+					if(!$this->yellow->toolbox->deleteDirectory($pathSource))
+					{
+						$statusCode = 500;
+						$this->yellow->page->error(500, "Can't delete path '$pathSource'!");
+					}
+				}
+			}
+		}
+		return $statusCode;
+	}
 	
-	// Update startup notification
-	function updateStartupNotification($software)
+	// Update software notification for next startup
+	function updateSoftwareNotification($software)
 	{
 		$statusCode = 200;
 		$updateNotification = $this->yellow->config->get("updateNotification");
