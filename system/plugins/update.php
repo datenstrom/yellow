@@ -260,17 +260,15 @@ class YellowUpdate
 		{
 			$pathsSource = $pathsTarget = array();
 			$pathBase = $this->yellow->config->get("contentDir");
-			$pathRoot = $this->yellow->config->get("contentRootDir");
 			$fileExtension = $this->yellow->config->get("contentExtension");
 			$fileRegex = "/^.*\\".$fileExtension."$/";
-			foreach($this->yellow->toolbox->getDirectoryEntries($pathBase, "/.*/", true, true, false) as $entry)
+			foreach($this->yellow->toolbox->getDirectoryEntries($pathBase, "/.*/", true, true) as $entry)
 			{
-				if($this->yellow->lookup->normaliseName($entry)."/"==$pathRoot) continue;
-				if(count($this->yellow->toolbox->getDirectoryEntries($pathBase.$entry, $fileRegex, true, false)))
+				if(count($this->yellow->toolbox->getDirectoryEntries($entry, $fileRegex, false, false)))
 				{
-					array_push($pathsSource, $pathBase.$entry."/");
-				} else {
-					array_push($pathsTarget, $pathBase.$entry."/");
+					array_push($pathsSource, $entry."/");
+				} else if(count($this->yellow->toolbox->getDirectoryEntries($entry, "/.*/", false, true))) {
+					array_push($pathsTarget, $entry."/");
 				}
 			}
 			if(count($pathsSource) && count($pathsTarget))
