@@ -5,7 +5,7 @@
 // Command line plugin
 class YellowCommandline
 {
-	const VERSION = "0.6.17";
+	const VERSION = "0.6.18";
 	var $yellow;					//access to API
 	var $files;						//number of files
 	var $errors;					//number of errors
@@ -65,8 +65,7 @@ class YellowCommandline
 				$statusCode = 500;
 				$this->files = 0; $this->errors = 1;
 				$fileName = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
-				echo "ERROR building files: Please configure ServerScheme, ServerName, ServerBase, ServerTime in file '$fileName'!\n";
-				echo "ERROR building files: Open your website in a web browser, if you want to see your server settings!\n";
+				echo "ERROR building files: Please configure StaticUrl in file '$fileName'!\n";
 			}
 			echo "Yellow $command: $this->files file".($this->files!=1 ? 's' : '');
 			echo ", $this->errors error".($this->errors!=1 ? 's' : '');
@@ -132,7 +131,9 @@ class YellowCommandline
 		if(!is_readable($this->yellow->page->fileName))
 		{
 			ob_start();
-			$statusCode = $this->requestStaticFile($location);
+			$staticUrl = $this->yellow->config->get("staticUrl");
+			list($scheme, $address, $base) = $this->yellow->lookup->getUrlInformation($staticUrl);
+			$statusCode = $this->requestStaticFile($scheme, $address, $base, $location);
 			if($statusCode<400 || $error)
 			{
 				$fileData = ob_get_contents();
@@ -165,9 +166,9 @@ class YellowCommandline
 				$this->yellow->page->set("pageError", "Can't write file '$fileName'!");
 			}
 		}
-		if($statusCode==200 && $analyse) $this->analyseStaticFile($fileData);
-		if($statusCode==404 && $error) $statusCode = 200;
+		if($statusCode==200 && $analyse) $this->analyseStaticFile($scheme, $address, $base, $fileData);
 		if($statusCode==404 && $probe) $statusCode = 100;
+		if($statusCode==404 && $error) $statusCode = 200;
 		if($statusCode>=200) ++$this->files;
 		if($statusCode>=400)
 		{
@@ -179,35 +180,39 @@ class YellowCommandline
 	}
 	
 	// Request static file
-	function requestStaticFile($location)
+	function requestStaticFile($scheme, $address, $base, $location)
 	{
+		list($serverName, $serverPort) = explode(':', $address);
+		if(is_null($serverPort)) $serverPort = $scheme=="https" ? 443 : 80;
+		$_SERVER["HTTPS"] = $scheme=="https" ? "on" : "off";
 		$_SERVER["SERVER_PROTOCOL"] = "HTTP/1.1";
-		$_SERVER["SERVER_NAME"] = $this->yellow->config->get("serverName");
-		$_SERVER["REQUEST_URI"] = $this->yellow->config->get("serverBase").$location;
-		$_SERVER["SCRIPT_NAME"] = $this->yellow->config->get("serverBase")."/yellow.php";
+		$_SERVER["SERVER_NAME"] = $serverName;
+		$_SERVER["SERVER_PORT"] = $serverPort;
+		$_SERVER["REQUEST_URI"] = $base.$location;
+		$_SERVER["SCRIPT_NAME"] = $base."/yellow.php";
 		$_SERVER["REMOTE_ADDR"] = "127.0.0.1";
 		$_REQUEST = array();
 		return $this->yellow->request();
 	}
 	
 	// Analyse static file, detect locations with arguments
-	function analyseStaticFile($rawData)
+	function analyseStaticFile($scheme, $address, $base, $rawData)
 	{
-		$serverName = $this->yellow->config->get("serverName");
-		$serverBase = $this->yellow->config->get("serverBase");
 		$pagination = $this->yellow->config->get("contentPagination");
 		preg_match_all("/<(.*?)href=\"([^\"]+)\"(.*?)>/i", $rawData, $matches);
 		foreach($matches[2] as $match)
 		{
-			if(preg_match("/^(.*?)#(.*)$/", $match, $tokens)) $match = $tokens[1];
-			if(preg_match("/^\w+:\/+(.*?)(\/.*)$/", $match, $tokens))
+			$location = rawurldecode($match);
+			if(preg_match("/^(.*?)#(.*)$/", $location, $tokens)) $location = $tokens[1];
+			if(preg_match("/^(\w+):\/\/([^\/]+)(.*)$/", $location, $tokens))
 			{
-				if($tokens[1]!=$serverName) continue;
-				$match = $tokens[2];
+				if($tokens[1]!=$scheme) continue;
+				if($tokens[2]!=$address) continue;
+				$location = $tokens[3];
 			}
-			if(!$this->yellow->toolbox->isLocationArgs($match)) continue;
-			if(substru($match, 0, strlenu($serverBase))!=$serverBase) continue;
-			$location = rawurldecode(substru($match, strlenu($serverBase)));
+			if(substru($location, 0, strlenu($base))!=$base) continue;
+			$location = substru($location, strlenu($base));
+			if(!$this->yellow->toolbox->isLocationArgs($location)) continue;
 			if(!$this->yellow->toolbox->isLocationArgsPagination($location, $pagination))
 			{
 				$location = rtrim($location, '/').'/';
@@ -308,9 +313,8 @@ class YellowCommandline
 	// Show software version and updates
 	function versionCommand($args)
 	{
-		$statusCode = 0;
-		$serverSoftware = $this->yellow->toolbox->getServerSoftware();
-		echo "Yellow ".YellowCore::VERSION.", PHP ".PHP_VERSION.", $serverSoftware\n";
+		$serverVersion = $this->yellow->toolbox->getServerVersion();
+		echo "Yellow ".YellowCore::VERSION.", PHP ".PHP_VERSION.", $serverVersion\n";
 		list($command) = $args;
 		list($statusCode, $dataCurrent) = $this->getSoftwareVersion();
 		list($statusCode, $dataLatest) = $this->getSoftwareVersion(true);
@@ -321,22 +325,17 @@ class YellowCommandline
 				echo "$key $value\n";
 			} else {
 				echo "$key $dataLatest[$key] - Update available\n";
-				++$updates;
 			}
 		}
 		if($statusCode!=200) echo "ERROR checking updates: ".$this->yellow->page->get("pageError")."\n";
-		if($updates) echo "Yellow $command: $updates update".($updates==1 ? "":"s")." available\n";
 		return $statusCode;
 	}
 	
 	// Check static configuration
 	function checkStaticConfig()
 	{
-		$serverScheme = $this->yellow->config->get("serverScheme");
-		$serverName = $this->yellow->config->get("serverName");
-		$serverBase = $this->yellow->config->get("serverBase");
-		return !empty($serverScheme) && !empty($serverName) &&
-			$this->yellow->lookup->isValidLocation($serverBase) && $serverBase!="/";
+		$staticUrl = $this->yellow->config->get("staticUrl");
+		return !empty($staticUrl);
 	}
 	
 	// Check static directory
@@ -380,10 +379,9 @@ class YellowCommandline
 	function getContentLocations()
 	{
 		$locations = array();
-		$serverScheme = $this->yellow->config->get("serverScheme");
-		$serverName = $this->yellow->config->get("serverName");
-		$serverBase = $this->yellow->config->get("serverBase");
-		$this->yellow->page->setRequestInformation($serverScheme, $serverName, $serverBase, "", "");
+		$staticUrl = $this->yellow->config->get("staticUrl");
+		list($scheme, $address, $base) = $this->yellow->lookup->getUrlInformation($staticUrl);
+		$this->yellow->page->setRequestInformation($scheme, $address, $base, "", "");
 		foreach($this->yellow->pages->index(true, true) as $page)
 		{
 			if($page->get("status")!="ignore" && $page->get("status")!="draft")

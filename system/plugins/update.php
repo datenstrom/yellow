@@ -5,8 +5,9 @@
 // Update plugin
 class YellowUpdate
 {
-	const VERSION = "0.6.13";
+	const VERSION = "0.6.14";
 	var $yellow;					//access to API
+	var $updates;					//number of updates
 	
 	// Handle initialisation
 	function onLoad($yellow)
@@ -16,24 +17,67 @@ class YellowUpdate
 		$this->yellow->config->setDefault("updateThemesUrl", "https://github.com/datenstrom/yellow-themes");
 		$this->yellow->config->setDefault("updateInformationFile", "update.ini");
 		$this->yellow->config->setDefault("updateVersionFile", "version.ini");
-		$this->yellow->config->setDefault("updateNotification", "none");
+		$this->yellow->config->setDefault("updateResourceFile", "resource.ini");
 	}
 	
-	// Handle update
-	function onUpdate($name)
+	// Handle startup
+	function onStartup($update)
 	{
-		if(empty($name)) $this->processUpdateNotification();
+		if($this->yellow->config->isExisting("updateNotification")) //TODO: remove later, cleans old config
+		{
+			$update = true;
+			$fileNameConfig = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
+			$fileData = $this->yellow->toolbox->readFile($fileNameConfig);
+			foreach($this->yellow->toolbox->getTextLines($fileData) as $line)
+			{
+				preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
+				if(!empty($matches[1]) && is_null($this->yellow->config->configDefaults[$matches[1]]) &&
+				   $line[0]!='#' && substru($line, 0, 5)!="Login")
+				{
+					$fileDataNew .= "# $line";
+				} else {
+					$fileDataNew .= $line;
+				}
+			}
+			$this->yellow->toolbox->createFile($fileNameConfig, $fileDataNew);
+		}
+		if($update)	//TODO: remove later, converts old Yellow version
+		{
+			$fileNameScript = "yellow.php";
+			if(filesize($fileNameScript)==591)
+			{
+				$fileData = $this->yellow->toolbox->readFile($fileNameScript);
+				$fileData = preg_replace("#yellow->plugins->load\(\)#", "yellow->load()", $fileData);
+				$this->yellow->toolbox->createFile($fileNameScript, $fileData);
+			}
+		}
+		if($update)	//TODO: remove later, imports old file format
+		{
+			$path = $this->yellow->config->get("themeDir");
+			foreach($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.css$/", true, false) as $entry)
+			{
+				$fileNameAsset = $this->yellow->config->get("assetDir").basename($entry);
+				if(!is_file($fileNameAsset))
+				{
+					$fileData = $this->yellow->toolbox->readFile($entry);
+					$fileData = preg_replace("#url\(assets/(.*?)\)#", "url($1)", $fileData);
+					$this->yellow->toolbox->createFile($fileNameAsset, $fileData);
+				}
+				$this->yellow->toolbox->deleteFile($entry, $this->yellow->config->get("trashDir"));
+				$_GET["clean-url"] = "software-has-been-updated";
+			}
+		}
 	}
 	
 	// Handle request
-	function onRequest($serverScheme, $serverName, $base, $location, $fileName)
+	function onRequest($scheme, $address, $base, $location, $fileName)
 	{
 		$statusCode = 0;
-		if($this->isInstallationMode())
+		if($this->yellow->config->get("installationMode"))
 		{
-			$statusCode = $this->processRequestInstallationMode($serverScheme, $serverName, $base, $location, $fileName);
+			$statusCode = $this->processRequestInstallationMode($scheme, $address, $base, $location, $fileName);
 		} else {
-			$statusCode = $this->processRequestInstallationPending($serverScheme, $serverName, $base, $location, $fileName);
+			$statusCode = $this->processRequestInstallationPending($scheme, $address, $base, $location, $fileName);
 		}
 		return $statusCode;
 	}
@@ -54,7 +98,7 @@ class YellowUpdate
 	// Handle command help
 	function onCommandHelp()
 	{
-		return "update [FEATURE]";
+		return "update [OPTION FEATURE]";
 	}
 	
 	// Clean downloads
@@ -78,30 +122,82 @@ class YellowUpdate
 	// Update website
 	function updateCommand($args)
 	{
-		list($command, $feature, $option) = $args;
-		list($statusCode, $data) = $this->getSoftwareUpdates($feature);
-		if(!empty($data))
+		list($command, $option, $feature) = $args;
+		if(empty($option) || $option=="normal" || $option=="force")
 		{
-			foreach($data as $key=>$value)
+			$force = $option=="force";
+			list($statusCode, $data) = $this->detectSoftware($force, $feature);
+			if($statusCode!=200 || !empty($data))
 			{
-				list($version) = explode(',', $value);
-				echo "$key $version\n";
+				$this->updates = 0;
+				if($statusCode==200) $statusCode = $this->downloadSoftware($data);
+				if($statusCode==200) $statusCode = $this->updateSoftware($force);
+				if($statusCode>=400) echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
+				echo "Yellow $command: Website ".($statusCode!=200 ? "not " : "")."updated";
+				echo ", $this->updates update".($this->updates!=1 ? 's' : '')." installed\n";
+			} else {
+				echo "Your website is up to date\n";
 			}
-			if($statusCode==200) $statusCode = $this->downloadSoftware($data);
-			if($statusCode==200) $statusCode = $this->updateSoftware($option);
-			if($statusCode!=200) echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
-			echo "Yellow $command: Website ".($statusCode!=200 ? "not " : "")."updated\n";
 		} else {
-			if($statusCode!=200) echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
-			echo "Yellow $command: No updates available\n";
+			$statusCode = 400;
+			echo "Yellow $command: Invalid arguments\n";
 		}
 		return $statusCode;
+	}
+	
+	// Detect software
+	function detectSoftware($force, $feature)
+	{
+		$data = array();
+		list($statusCodeCurrent, $dataCurrent) = $this->getSoftwareVersion();
+		list($statusCodeLatest, $dataLatest) = $this->getSoftwareVersion(true, true);
+		list($statusCodeModified, $dataModified) = $this->getSoftwareModified();
+		$statusCode = max($statusCodeCurrent, $statusCodeLatest, $statusCodeModified);
+		if(empty($feature))
+		{
+			foreach($dataCurrent as $key=>$value)
+			{
+				list($version) = explode(',', $dataLatest[$key]);
+				if(strnatcasecmp($dataCurrent[$key], $version)<0) $data[$key] = $dataLatest[$key];
+				if(!is_null($dataModified[$key]) && !empty($version) && $force) $data[$key] = $dataLatest[$key];
+			}
+		} else {
+			foreach($dataCurrent as $key=>$value)
+			{
+				list($version) = explode(',', $dataLatest[$key]);
+				if(strtoloweru($key)==strtoloweru($feature) && !empty($version))
+				{
+					$data[$key] = $dataLatest[$key];
+					$dataModified = array_intersect_key($dataModified, $data);
+					break;
+				}
+			}
+			if(empty($data))
+			{
+				$statusCode = 500;
+				$this->yellow->page->error($statusCode, "Can't find feature '$feature'!");
+			}
+		}
+		if($statusCode==200)
+		{
+			foreach(array_merge($dataModified, $data) as $key=>$value)
+			{
+				list($version) = explode(',', $value);
+				if(is_null($dataModified[$key]) || $force)
+				{
+					echo "$key $version\n";
+				} else {
+					echo "$key $version has been modified - Force update\n";
+				}
+			}
+		}
+		return array($statusCode, $data);
 	}
 	
 	// Download software
 	function downloadSoftware($data)
 	{
-		$statusCode = 0;
+		$statusCode = 200;
 		$path = $this->yellow->config->get("pluginDir");
 		$fileExtension = $this->yellow->config->get("downloadExtension");
 		foreach($data as $key=>$value)
@@ -132,31 +228,40 @@ class YellowUpdate
 	}
 
 	// Update software
-	function updateSoftware($option = "")
+	function updateSoftware($force = false)
 	{
-		$statusCode = 0;
+		$statusCode = 200;
 		$path = $this->yellow->config->get("pluginDir");
 		foreach($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.zip$/", true, false) as $entry)
 		{
-			$statusCode = max($statusCode, $this->updateSoftwareArchive($entry, $option));
+			$statusCode = max($statusCode, $this->updateSoftwareArchive($entry, $force));
+			if(!$this->yellow->toolbox->deleteFile($entry))
+			{
+				$statusCode = 500;
+				$this->yellow->page->error($statusCode, "Can't delete file '$entry'!");
+			}
 		}
 		$path = $this->yellow->config->get("themeDir");
 		foreach($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.zip$/", true, false) as $entry)
 		{
-			$statusCode = max($statusCode, $this->updateSoftwareArchive($entry, $option));
+			$statusCode = max($statusCode, $this->updateSoftwareArchive($entry, $force));
+			if(!$this->yellow->toolbox->deleteFile($entry))
+			{
+				$statusCode = 500;
+				$this->yellow->page->error($statusCode, "Can't delete file '$entry'!");
+			}
 		}
 		return $statusCode;
 	}
 
 	// Update software from archive
-	function updateSoftwareArchive($path, $option = "")
+	function updateSoftwareArchive($path, $force = false)
 	{
-		$statusCode = 0;
+		$statusCode = 200;
 		$zip = new ZipArchive();
 		if($zip->open($path)===true)
 		{
 			if(defined("DEBUG") && DEBUG>=2) echo "YellowUpdate::updateSoftwareArchive file:$path<br/>\n";
-			if(strtoloweru($option)=="force") $force = true;
 			if(preg_match("#^(.*\/).*?$#", $zip->getNameIndex(0), $matches)) $pathBase = $matches[1];
 			$fileData = $zip->getFromName($pathBase.$this->yellow->config->get("updateInformationFile"));
 			foreach($this->yellow->toolbox->getTextLines($fileData) as $line)
@@ -193,11 +298,10 @@ class YellowUpdate
 			$zip->close();
 			if($statusCode==200) $statusCode = $this->updateSoftwareNew($software);
 			if($statusCode==200) $statusCode = $this->updateSoftwareNotification($software);
-		}
-		if(!$this->yellow->toolbox->deleteFile($path))
-		{
+			++$this->updates;
+		} else {
 			$statusCode = 500;
-			$this->yellow->page->error($statusCode, "Can't delete file '$path'!");
+			$this->yellow->page->error(500, "Can't open file '$path'!");
 		}
 		return $statusCode;
 	}
@@ -309,12 +413,12 @@ class YellowUpdate
 	function updateSoftwareNotification($software)
 	{
 		$statusCode = 200;
-		$updateNotification = $this->yellow->config->get("updateNotification");
-		if($updateNotification=="none") $updateNotification = "";
-		if(!empty($updateNotification)) $updateNotification .= ",";
-		$updateNotification .= $software;
+		$startupUpdateNotification = $this->yellow->config->get("startupUpdateNotification");
+		if($startupUpdateNotification=="none") $startupUpdateNotification = "";
+		if(!empty($startupUpdateNotification)) $startupUpdateNotification .= ",";
+		$startupUpdateNotification .= $software;
 		$fileNameConfig = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
-		if(!$this->yellow->config->update($fileNameConfig, array("updateNotification" => $updateNotification)))
+		if(!$this->yellow->config->update($fileNameConfig, array("startupUpdateNotification" => $startupUpdateNotification)))
 		{
 			$statusCode = 500;
 			$this->yellow->page->error(500, "Can't write file '$fileNameConfig'!");
@@ -322,17 +426,21 @@ class YellowUpdate
 		return $statusCode;
 	}
 	
-	// Update software features
-	function updateSoftwareFeatures($feature)
+	// Update installation features
+	function updateInstallationFeatures($feature)
 	{
 		$statusCode = 200;
 		$path = $this->yellow->config->get("pluginDir");
 		$regex = "/^.*\\".$this->yellow->config->get("installationExtension")."$/";
 		foreach($this->yellow->toolbox->getDirectoryEntries($path, $regex, true, false) as $entry)
 		{
-			if(stristr(basename($entry), $feature))
+			if(preg_match("/^(.*?)-(.*?)\./", basename($entry), $matches))
 			{
-				$statusCode = max($statusCode, $this->updateSoftwareArchive($entry));
+				if(strtoloweru($matches[2])==strtoloweru($feature))
+				{
+					$statusCode = max($statusCode, $this->updateSoftwareArchive($entry));
+					break;
+				}
 			}
 		}
 		if($statusCode==200)
@@ -345,21 +453,6 @@ class YellowUpdate
 		return $statusCode;
 	}
 	
-	// Process update notification for recently installed software
-	function processUpdateNotification()
-	{
-		if($this->yellow->config->get("updateNotification")!="none")
-		{
-			$tokens = explode(',', $this->yellow->config->get("updateNotification"));
-			foreach($this->yellow->plugins->plugins as $key=>$value)
-			{
-				if(in_array($value["plugin"], $tokens) && method_exists($value["obj"], "onUpdate")) $value["obj"]->onUpdate($key);
-			}
-			$fileNameConfig = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
-			$this->yellow->config->update($fileNameConfig, array("updateNotification" => "none"));
-		}
-	}
-	
 	// Process command to install pending software
 	function processCommandInstallationPending($args)
 	{
@@ -367,26 +460,23 @@ class YellowUpdate
 		if($this->isSoftwarePending())
 		{
 			$statusCode = $this->updateSoftware();
-			if($statusCode!=0)
-			{
-				if($statusCode!=200) echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
-				echo "Yellow has ".($statusCode!=200 ? "not " : "")."been updated: Please run command again\n";
-			}
+			if($statusCode!=200) echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
+			echo "Yellow has ".($statusCode!=200 ? "not " : "")."been updated: Please run command again\n";
 		}
 		return $statusCode;
 	}
 	
 	// Process request to install pending software
-	function processRequestInstallationPending($serverScheme, $serverName, $base, $location, $fileName)
+	function processRequestInstallationPending($scheme, $address, $base, $location, $fileName)
 	{
 		$statusCode = 0;
-		if($this->yellow->lookup->isContentFile($fileName) && $this->isSoftwarePending())
+		if($this->yellow->lookup->isContentFile($fileName) && !$this->yellow->isCommandLine() && $this->isSoftwarePending())
 		{
 			$statusCode = $this->updateSoftware();
 			if($statusCode==200)
 			{
 				$statusCode = 303;
-				$location = $this->yellow->lookup->normaliseUrl($serverScheme, $serverName, $base, $location);
+				$location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
 				$this->yellow->sendStatus($statusCode, $location);
 			}
 		}
@@ -394,14 +484,14 @@ class YellowUpdate
 	}
 	
 	// Process request to install website
-	function processRequestInstallationMode($serverScheme, $serverName, $base, $location, $fileName)
+	function processRequestInstallationMode($scheme, $address, $base, $location, $fileName)
 	{
 		$statusCode = 0;
-		if($this->yellow->lookup->isContentFile($fileName) && $this->isInstallationMode())
+		if($this->yellow->lookup->isContentFile($fileName) && !$this->yellow->isCommandLine())
 		{
 			$this->yellow->pages->pages["root/"] = array();
 			$this->yellow->page = new YellowPage($this->yellow);
-			$this->yellow->page->setRequestInformation($serverScheme, $serverName, $base, $location, $fileName);
+			$this->yellow->page->setRequestInformation($scheme, $address, $base, $location, $fileName);
 			$this->yellow->page->parseData($this->getRawDataInstallation(), false, 404);
 			$this->yellow->page->parserSafeMode = false;
 			$this->yellow->page->parseContent();
@@ -435,7 +525,7 @@ class YellowUpdate
 			{
 				if(!empty($feature))
 				{
-					$status = $this->updateSoftwareFeatures($feature)==200 ? "ok" : "error";
+					$status = $this->updateInstallationFeatures($feature)==200 ? "ok" : "error";
 					if($status=="error") $this->yellow->page->error(500, "Can't install feature '$feature'!");
 				}
 			}
@@ -449,7 +539,7 @@ class YellowUpdate
 			if($status=="done")
 			{
 				$statusCode = 303;
-				$location = $this->yellow->lookup->normaliseUrl($serverScheme, $serverName, $base, $location);
+				$location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
 				$this->yellow->sendStatus($statusCode, $location);
 			} else {
 				$statusCode = $this->yellow->sendPage();
@@ -482,10 +572,10 @@ class YellowUpdate
 				}
 				$rawData .= "</p>\n";
 			}
-			if(count($this->getSoftwareFeatures())>1)
+			if(count($this->getInstallationFeatures())>1)
 			{
 				$rawData .= "<p>".$this->yellow->text->get("webinterfaceInstallationFeature")."<p>";
-				foreach($this->getSoftwareFeatures() as $feature)
+				foreach($this->getInstallationFeatures() as $feature)
 				{
 					$checked = $feature=="website" ? " checked=\"checked\"" : "";
 					$rawData .= "<label for=\"$feature\"><input type=\"radio\" name=\"feature\" id=\"$feature\" value=\"$feature\"$checked> ".ucfirst($feature)."</label><br />";
@@ -515,16 +605,14 @@ class YellowUpdate
 			if(!$this->yellow->config->isExisting($key)) continue;
 			$data[$key] = trim($value);
 		}
-		$data["# serverScheme"] = $this->yellow->toolbox->getServerScheme();
-		$data["# serverName"] = $this->yellow->toolbox->getServerName();
-		$data["# serverBase"] = $this->yellow->toolbox->getServerBase();
-		$data["# serverTime"] = $this->yellow->toolbox->getServerTime();
+		$data["timezone"] = $this->yellow->toolbox->getTimezone();
+		$data["staticUrl"] = $this->yellow->toolbox->getServerUrl();
 		$data["installationMode"] = "0";
 		return $data;
 	}
 
-	// Return software features
-	function getSoftwareFeatures()
+	// Return installation features
+	function getInstallationFeatures()
 	{
 		$data = array("website");
 		$path = $this->yellow->config->get("pluginDir");
@@ -539,25 +627,6 @@ class YellowUpdate
 		return $data;
 	}
 	
-	// Return software updates
-	function getSoftwareUpdates($feature)
-	{
-		$data = array();
-		list($statusCode, $dataCurrent) = $this->getSoftwareVersion();
-		list($statusCode, $dataLatest) = $this->getSoftwareVersion(true, true);
-		foreach($dataCurrent as $key=>$value)
-		{
-			list($version) = explode(',', $dataLatest[$key]);
-			if(empty($feature))
-			{
-				if(strnatcasecmp($dataCurrent[$key], $version)<0) $data[$key] = $dataLatest[$key];
-			} else {
-				if(stristr($key, $feature) && $version) $data[$key] = $dataLatest[$key];
-			}
-		}
-		return array($statusCode, $data);
-	}
-
 	// Return software version
 	function getSoftwareVersion($latest = false, $rawFormat = false)
 	{
@@ -584,6 +653,46 @@ class YellowUpdate
 		} else {
 			$statusCode = 200;
 			$data = array_merge($this->yellow->plugins->getData(), $this->yellow->themes->getData());
+		}
+		return array($statusCode, $data);
+	}
+
+	// Return software modification
+	function getSoftwareModified()
+	{
+		$data = array();
+		$dataCurrent = array_merge($this->yellow->plugins->getData(), $this->yellow->themes->getData());
+		$urlPlugins = $this->yellow->config->get("updatePluginsUrl")."/raw/master/".$this->yellow->config->get("updateResourceFile");
+		$urlThemes = $this->yellow->config->get("updateThemesUrl")."/raw/master/".$this->yellow->config->get("updateResourceFile");
+		list($statusCodePlugins, $fileDataPlugins) = $this->getSoftwareFile($urlPlugins);
+		list($statusCodeThemes, $fileDataThemes) = $this->getSoftwareFile($urlThemes);
+		$statusCode = max($statusCodePlugins, $statusCodeThemes);
+		if($statusCode==200)
+		{
+			foreach($this->yellow->toolbox->getTextLines($fileDataPlugins."\n".$fileDataThemes) as $line)
+			{
+				preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
+				if(!empty($matches[1]) && !empty($matches[2]))
+				{
+					list($softwareNew) = explode('/', $matches[1]);
+					list($fileName, $flags) = explode(',', $matches[2], 2);
+					if($software!=$softwareNew)
+					{
+						$software = $softwareNew;
+						list($fileName, $flags) = explode(',', $matches[2], 2);
+						$lastPublished = $this->yellow->toolbox->getFileModified($fileName);
+					}
+					if($this->yellow->lookup->isValidFile($fileName) && !is_null($dataCurrent[$software]))
+					{
+						$lastModified = $this->yellow->toolbox->getFileModified($fileName);
+						if(preg_match("/update/i", $flags) && preg_match("/careful/i", $flags) && $lastModified!=$lastPublished)
+						{
+							$data[$software] = $dataCurrent[$software];
+							if(defined("DEBUG") && DEBUG>=2) echo "YellowUpdate::getSoftwareModified detected file:$fileName<br/>\n";
+						}
+					}
+				}
+			}
 		}
 		return array($statusCode, $data);
 	}
@@ -640,12 +749,6 @@ class YellowUpdate
 	{
 		$data = array_merge($this->yellow->plugins->getData(), $this->yellow->themes->getData());
 		return !is_null($data[$software]);
-	}
-
-	// Check if installation mode
-	function isInstallationMode()
-	{
-		return $this->yellow->config->get("installationMode") && PHP_SAPI!="cli";
 	}
 }
 	

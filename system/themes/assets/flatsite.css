@@ -1,9 +1,26 @@
-/* Theme: Flatsite theme */
-/* Version: 0.6.11 */
-/* Designer: Mark Mayberg */
+/* Flatsite theme, https://github.com/datenstrom/yellow-themes/tree/master/flatsite */
+/* Copyright (c) 2013-2017 Datenstrom, http://datenstrom.se */
+/* This file may be used and distributed under the terms of the public license. */
 
-@import url(https://fonts.googleapis.com/css?family=Open+Sans:300,400,700);
 html, body, div, form, pre, span, tr, th, td, img { margin:0; padding:0; border:0; vertical-align:baseline; }
+@font-face {
+	font-family:'Open Sans';
+	font-style:normal;
+	font-weight:300;
+	src:url(opensans-light.woff) format('woff');
+}
+@font-face {
+	font-family:'Open Sans';
+	font-style:normal;
+	font-weight:400;
+	src:url(opensans-regular.woff) format('woff');
+}
+@font-face {
+	font-family:'Open Sans';
+	font-style:normal;
+	font-weight:700;
+	src:url(opensans-bold.woff) format('woff');
+}
 body {
 	margin:1em;
 	background-color:#fff; color:#717171;

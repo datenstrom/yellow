@@ -5,7 +5,7 @@
 // Web interface plugin
 class YellowWebinterface
 {
-	const VERSION = "0.6.19";
+	const VERSION = "0.6.20";
 	var $yellow;			//access to API
 	var $response;			//web interface response
 	var $users;				//web interface users
@@ -18,8 +18,6 @@ class YellowWebinterface
 		$this->response = new YellowResponse($yellow);
 		$this->users = new YellowUsers($yellow);
 		$this->merge = new YellowMerge($yellow);
-		$this->yellow->config->setDefault("webinterfaceServerScheme", $this->yellow->config->get("serverScheme"));
-		$this->yellow->config->setDefault("webinterfaceServerName", $this->yellow->config->get("serverName"));
 		$this->yellow->config->setDefault("webinterfaceLocation", "/edit/");
 		$this->yellow->config->setDefault("webinterfaceNewFile", "page-new-(.*).txt");
 		$this->yellow->config->setDefault("webinterfaceMetaFilePrefix", "published");
@@ -32,24 +30,24 @@ class YellowWebinterface
 		$this->users->load($this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile"));
 	}
 
-	// Handle update
-	function onUpdate($name)
+	// Handle startup
+	function onStartup($update)
 	{
-		if($name=="webinterface") $this->cleanCommand(array("clean", "all"));
+		if($update) $this->cleanCommand(array("clean", "all"));
 	}
 	
 	// Handle request
-	function onRequest($serverScheme, $serverName, $base, $location, $fileName)
+	function onRequest($scheme, $address, $base, $location, $fileName)
 	{
 		$statusCode = 0;
 		if($this->checkRequest($location))
 		{
-			$serverScheme = $this->yellow->config->get("webinterfaceServerScheme");
-			$serverName = $this->yellow->config->get("webinterfaceServerName");
+			$scheme = $this->yellow->config->get("serverScheme");
+			$address = $this->yellow->config->get("serverAddress");
 			$base = rtrim($this->yellow->config->get("serverBase").$this->yellow->config->get("webinterfaceLocation"), '/');
-			list($serverScheme, $serverName, $base, $location, $fileName) = $this->yellow->getRequestInformation($serverScheme, $serverName, $base);
-			$this->yellow->page->setRequestInformation($serverScheme, $serverName, $base, $location, $fileName);
-			$statusCode = $this->processRequest($serverScheme, $serverName, $base, $location, $fileName);
+			list($scheme, $address, $base, $location, $fileName) = $this->yellow->getRequestInformation($scheme, $address, $base);
+			$this->yellow->page->setRequestInformation($scheme, $address, $base, $location, $fileName);
+			$statusCode = $this->processRequest($scheme, $address, $base, $location, $fileName);
 		}
 		return $statusCode;
 	}
@@ -91,9 +89,9 @@ class YellowWebinterface
 		$output = null;
 		if($name=="header" && $this->response->isActive())
 		{
-			$location = $this->yellow->config->get("serverBase").$this->yellow->config->get("pluginLocation")."webinterface";
-			$output = "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"".htmlspecialchars($location).".css\" />\n";
-			$output .= "<script type=\"text/javascript\" src=\"".htmlspecialchars($location).".js\"></script>\n";
+			$pluginLocation = $this->yellow->config->get("serverBase").$this->yellow->config->get("pluginLocation");
+			$output = "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"{$pluginLocation}webinterface.css\" />\n";
+			$output .= "<script type=\"text/javascript\" src=\"{$pluginLocation}webinterface.js\"></script>\n";
 			$output .= "<script type=\"text/javascript\">\n";
 			$output .= "// <![CDATA[\n";
 			$output .= "yellow.page = ".json_encode($this->response->getPageData()).";\n";
@@ -176,40 +174,40 @@ class YellowWebinterface
 	}
 	
 	// Process request
-	function processRequest($serverScheme, $serverName, $base, $location, $fileName)
+	function processRequest($scheme, $address, $base, $location, $fileName)
 	{
 		$statusCode = 0;
-		if($this->checkUser($serverScheme, $serverName, $base, $location, $fileName))
+		if($this->checkUser($scheme, $address, $base, $location, $fileName))
 		{
 			switch($_REQUEST["action"])
 			{
-				case "":			$statusCode = $this->processRequestShow($serverScheme, $serverName, $base, $location, $fileName); break;
-				case "login":		$statusCode = $this->processRequestLogin($serverScheme, $serverName, $base, $location, $fileName); break;
-				case "logout":		$statusCode = $this->processRequestLogout($serverScheme, $serverName, $base, $location, $fileName); break;
-				case "signup":		$statusCode = $this->processRequestSignup($serverScheme, $serverName, $base, $location, $fileName); break;
-				case "confirm":		$statusCode = $this->processRequestConfirm($serverScheme, $serverName, $base, $location, $fileName); break;
-				case "approve":		$statusCode = $this->processRequestApprove($serverScheme, $serverName, $base, $location, $fileName); break;
-				case "recover":		$statusCode = $this->processRequestRecover($serverScheme, $serverName, $base, $location, $fileName); break;
-				case "settings":	$statusCode = $this->processRequestSettings($serverScheme, $serverName, $base, $location, $fileName); break;
-				case "reconfirm":	$statusCode = $this->processRequestReconfirm($serverScheme, $serverName, $base, $location, $fileName); break;
-				case "change":		$statusCode = $this->processRequestChange($serverScheme, $serverName, $base, $location, $fileName); break;
-				case "version":		$statusCode = $this->processRequestVersion($serverScheme, $serverName, $base, $location, $fileName); break;
-				case "update":		$statusCode = $this->processRequestUpdate($serverScheme, $serverName, $base, $location, $fileName); break;
-				case "create":		$statusCode = $this->processRequestCreate($serverScheme, $serverName, $base, $location, $fileName); break;
-				case "edit":		$statusCode = $this->processRequestEdit($serverScheme, $serverName, $base, $location, $fileName); break;
-				case "delete":		$statusCode = $this->processRequestDelete($serverScheme, $serverName, $base, $location, $fileName); break;
+				case "":			$statusCode = $this->processRequestShow($scheme, $address, $base, $location, $fileName); break;
+				case "login":		$statusCode = $this->processRequestLogin($scheme, $address, $base, $location, $fileName); break;
+				case "logout":		$statusCode = $this->processRequestLogout($scheme, $address, $base, $location, $fileName); break;
+				case "signup":		$statusCode = $this->processRequestSignup($scheme, $address, $base, $location, $fileName); break;
+				case "confirm":		$statusCode = $this->processRequestConfirm($scheme, $address, $base, $location, $fileName); break;
+				case "approve":		$statusCode = $this->processRequestApprove($scheme, $address, $base, $location, $fileName); break;
+				case "recover":		$statusCode = $this->processRequestRecover($scheme, $address, $base, $location, $fileName); break;
+				case "settings":	$statusCode = $this->processRequestSettings($scheme, $address, $base, $location, $fileName); break;
+				case "reconfirm":	$statusCode = $this->processRequestReconfirm($scheme, $address, $base, $location, $fileName); break;
+				case "change":		$statusCode = $this->processRequestChange($scheme, $address, $base, $location, $fileName); break;
+				case "version":		$statusCode = $this->processRequestVersion($scheme, $address, $base, $location, $fileName); break;
+				case "update":		$statusCode = $this->processRequestUpdate($scheme, $address, $base, $location, $fileName); break;
+				case "create":		$statusCode = $this->processRequestCreate($scheme, $address, $base, $location, $fileName); break;
+				case "edit":		$statusCode = $this->processRequestEdit($scheme, $address, $base, $location, $fileName); break;
+				case "delete":		$statusCode = $this->processRequestDelete($scheme, $address, $base, $location, $fileName); break;
 			}
 		} else {
-			$this->yellow->pages->requestHandler = "core";
+			$this->yellow->lookup->requestHandler = "core";
 			switch($_REQUEST["action"])
 			{
-				case "":			$statusCode = $this->processRequestShow($serverScheme, $serverName, $base, $location, $fileName); break;
-				case "signup":		$statusCode = $this->processRequestSignup($serverScheme, $serverName, $base, $location, $fileName); break;
-				case "confirm":		$statusCode = $this->processRequestConfirm($serverScheme, $serverName, $base, $location, $fileName); break;
-				case "approve":		$statusCode = $this->processRequestApprove($serverScheme, $serverName, $base, $location, $fileName); break;
-				case "recover":		$statusCode = $this->processRequestRecover($serverScheme, $serverName, $base, $location, $fileName); break;
-				case "reconfirm":	$statusCode = $this->processRequestReconfirm($serverScheme, $serverName, $base, $location, $fileName); break;
-				case "change":		$statusCode = $this->processRequestChange($serverScheme, $serverName, $base, $location, $fileName); break;
+				case "":			$statusCode = $this->processRequestShow($scheme, $address, $base, $location, $fileName); break;
+				case "signup":		$statusCode = $this->processRequestSignup($scheme, $address, $base, $location, $fileName); break;
+				case "confirm":		$statusCode = $this->processRequestConfirm($scheme, $address, $base, $location, $fileName); break;
+				case "approve":		$statusCode = $this->processRequestApprove($scheme, $address, $base, $location, $fileName); break;
+				case "recover":		$statusCode = $this->processRequestRecover($scheme, $address, $base, $location, $fileName); break;
+				case "reconfirm":	$statusCode = $this->processRequestReconfirm($scheme, $address, $base, $location, $fileName); break;
+				case "change":		$statusCode = $this->processRequestChange($scheme, $address, $base, $location, $fileName); break;
 			}
 			if($this->response->action=="fail") $this->yellow->page->error(500, "Login failed, [please log in](javascript:yellow.action('login');)!");
 		}
@@ -217,22 +215,22 @@ class YellowWebinterface
 	}
 	
 	// Process request to show file
-	function processRequestShow($serverScheme, $serverName, $base, $location, $fileName)
+	function processRequestShow($scheme, $address, $base, $location, $fileName)
 	{
 		$statusCode = 0;
 		if(is_readable($fileName))
 		{
-			$statusCode = $this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
+			$statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
 		} else {
 			if($this->yellow->lookup->isRedirectLocation($location))
 			{
 				$statusCode = 301;
 				$location = $this->yellow->lookup->isFileLocation($location) ? "$location/" : "/".$this->yellow->getRequestLanguage()."/";
-				$location = $this->yellow->lookup->normaliseUrl($serverScheme, $serverName, $base, $location);
+				$location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
 				$this->yellow->sendStatus($statusCode, $location);
 			} else {
 				$statusCode = $this->response->isUserRestrictions() ? 404 : 424;
-				$this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
+				$this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
 				$this->yellow->page->error($statusCode);
 			}
 		}
@@ -240,39 +238,39 @@ class YellowWebinterface
 	}
 
 	// Process request for user login
-	function processRequestLogin($serverScheme, $serverName, $base, $location, $fileName)
+	function processRequestLogin($scheme, $address, $base, $location, $fileName)
 	{
 		$statusCode = 0;
 		$home = $this->users->getHome($this->response->userEmail);
 		if(substru($location, 0, strlenu($home))==$home)
 		{
 			$statusCode = 303;
-			$location = $this->yellow->lookup->normaliseUrl($serverScheme, $serverName, $base, $location);
+			$location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
 			$this->yellow->sendStatus($statusCode, $location);
 		} else {
 			$statusCode = 302;
-			$location = $this->yellow->lookup->normaliseUrl($serverScheme, $serverName, $base, $home);
+			$location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $home);
 			$this->yellow->sendStatus($statusCode, $location);
 		}
 		return $statusCode;
 	}
 	
 	// Process request for user logout
-	function processRequestLogout($serverScheme, $serverName, $base, $location, $fileName)
+	function processRequestLogout($scheme, $address, $base, $location, $fileName)
 	{
 		$statusCode = 302;
 		$this->response->userEmail = "";
-		$this->response->destroyCookie($serverScheme, $serverName, $base);
+		$this->response->destroyCookie($scheme, $address, $base);
 		$location = $this->yellow->lookup->normaliseUrl(
 			$this->yellow->config->get("serverScheme"),
-			$this->yellow->config->get("serverName"),
+			$this->yellow->config->get("serverAddress"),
 			$this->yellow->config->get("serverBase"), $location);
 		$this->yellow->sendStatus($statusCode, $location);
 		return $statusCode;
 	}
 
 	// Process request for user signup
-	function processRequestSignup($serverScheme, $serverName, $base, $location, $fileName)
+	function processRequestSignup($scheme, $address, $base, $location, $fileName)
 	{
 		$this->response->action = "signup";
 		$this->response->status = "ok";
@@ -291,15 +289,15 @@ class YellowWebinterface
 		}
 		if($this->response->status=="ok")
 		{
-			$this->response->status = $this->response->sendMail($serverScheme, $serverName, $base, $email, "confirm") ? "next" : "error";
+			$this->response->status = $this->response->sendMail($scheme, $address, $base, $email, "confirm") ? "next" : "error";
 			if($this->response->status=="error") $this->yellow->page->error(500, "Can't send email on this server!");
 		}
-		$statusCode = $this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
+		$statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
 		return $statusCode;
 	}
 	
 	// Process request to confirm user signup
-	function processRequestConfirm($serverScheme, $serverName, $base, $location, $fileName)
+	function processRequestConfirm($scheme, $address, $base, $location, $fileName)
 	{
 		$this->response->action = "confirm";
 		$this->response->status = "ok";
@@ -313,15 +311,15 @@ class YellowWebinterface
 		}
 		if($this->response->status=="ok")
 		{
-			$this->response->status = $this->response->sendMail($serverScheme, $serverName, $base, $email, "approve") ? "done" : "error";
+			$this->response->status = $this->response->sendMail($scheme, $address, $base, $email, "approve") ? "done" : "error";
 			if($this->response->status=="error") $this->yellow->page->error(500, "Can't send email on this server!");
 		}
-		$statusCode = $this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
+		$statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
 		return $statusCode;
 	}
 	
 	// Process request to approve user signup
-	function processRequestApprove($serverScheme, $serverName, $base, $location, $fileName)
+	function processRequestApprove($scheme, $address, $base, $location, $fileName)
 	{
 		$this->response->action = "approve";
 		$this->response->status = "ok";
@@ -335,15 +333,15 @@ class YellowWebinterface
 		}
 		if($this->response->status=="ok")
 		{
-			$this->response->status = $this->response->sendMail($serverScheme, $serverName, $base, $email, "welcome") ? "done" : "error";
+			$this->response->status = $this->response->sendMail($scheme, $address, $base, $email, "welcome") ? "done" : "error";
 			if($this->response->status=="error") $this->yellow->page->error(500, "Can't send email on this server!");
 		}
-		$statusCode = $this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
+		$statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
 		return $statusCode;
 	}
 	
 	// Process request to recover password
-	function processRequestRecover($serverScheme, $serverName, $base, $location, $fileName)
+	function processRequestRecover($scheme, $address, $base, $location, $fileName)
 	{
 		$this->response->action = "recover";
 		$this->response->status = "ok";
@@ -356,7 +354,7 @@ class YellowWebinterface
 			if($this->response->status=="ok" && !$this->users->isExisting($email)) $this->response->status = "next";
 			if($this->response->status=="ok")
 			{
-				$this->response->status = $this->response->sendMail($serverScheme, $serverName, $base, $email, "recover") ? "next" : "error";
+				$this->response->status = $this->response->sendMail($scheme, $address, $base, $email, "recover") ? "next" : "error";
 				if($this->response->status=="error") $this->yellow->page->error(500, "Can't send email on this server!");
 			}
 		} else {
@@ -374,18 +372,18 @@ class YellowWebinterface
 				if($this->response->status=="ok")
 				{
 					$this->response->userEmail = "";
-					$this->response->destroyCookie($serverScheme, $serverName, $base);
-					$this->response->status = $this->response->sendMail($serverScheme, $serverName, $base, $email, "information") ? "done" : "error";
+					$this->response->destroyCookie($scheme, $address, $base);
+					$this->response->status = $this->response->sendMail($scheme, $address, $base, $email, "information") ? "done" : "error";
 					if($this->response->status=="error") $this->yellow->page->error(500, "Can't send email on this server!");
 				}
 			}
 		}
-		$statusCode = $this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
+		$statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
 		return $statusCode;
 	}
 	
 	// Process request to change settings
-	function processRequestSettings($serverScheme, $serverName, $base, $location, $fileName)
+	function processRequestSettings($scheme, $address, $base, $location, $fileName)
 	{
 		$this->response->action = "settings";
 		$this->response->status = "ok";
@@ -416,7 +414,7 @@ class YellowWebinterface
 			if($this->response->status=="ok")
 			{
 				$action = $email!=$emailSource ? "reconfirm" : "change";
-				$this->response->status = $this->response->sendMail($serverScheme, $serverName, $base, $email, $action) ? "next" : "error";
+				$this->response->status = $this->response->sendMail($scheme, $address, $base, $email, $action) ? "next" : "error";
 				if($this->response->status=="error") $this->yellow->page->error(500, "Can't send email on this server!");
 			}
 		} else {
@@ -430,16 +428,16 @@ class YellowWebinterface
 		if($this->response->status=="done")
 		{
 			$statusCode = 303;
-			$location = $this->yellow->lookup->normaliseUrl($serverScheme, $serverName, $base, $location);
+			$location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
 			$this->yellow->sendStatus($statusCode, $location);
 		} else {
-			$statusCode = $this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
+			$statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
 		}
 		return $statusCode;
 	}
 
 	// Process request to reconfirm email
-	function processRequestReconfirm($serverScheme, $serverName, $base, $location, $fileName)
+	function processRequestReconfirm($scheme, $address, $base, $location, $fileName)
 	{
 		$this->response->action = "reconfirm";
 		$this->response->status = "ok";
@@ -458,15 +456,15 @@ class YellowWebinterface
 		}
 		if($this->response->status=="ok")
 		{
-			$this->response->status = $this->response->sendMail($serverScheme, $serverName, $base, $emailSource, "change") ? "done" : "error";
+			$this->response->status = $this->response->sendMail($scheme, $address, $base, $emailSource, "change") ? "done" : "error";
 			if($this->response->status=="error") $this->yellow->page->error(500, "Can't send email on this server!");
 		}
-		$statusCode = $this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
+		$statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
 		return $statusCode;
 	}
 	
 	// Process request to change settings
-	function processRequestChange($serverScheme, $serverName, $base, $location, $fileName)
+	function processRequestChange($scheme, $address, $base, $location, $fileName)
 	{
 		$this->response->action = "change";
 		$this->response->status = "ok";
@@ -495,51 +493,75 @@ class YellowWebinterface
 		if($this->response->status=="ok")
 		{
 			$this->response->userEmail = "";
-			$this->response->destroyCookie($serverScheme, $serverName, $base);
-			$this->response->status = $this->response->sendMail($serverScheme, $serverName, $base, $email, "information") ? "done" : "error";
+			$this->response->destroyCookie($scheme, $address, $base);
+			$this->response->status = $this->response->sendMail($scheme, $address, $base, $email, "information") ? "done" : "error";
 			if($this->response->status=="error") $this->yellow->page->error(500, "Can't send email on this server!");
 		}
-		$statusCode = $this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
+		$statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
 		return $statusCode;
 	}
 	
 	// Process request to show software version
-	function processRequestVersion($serverScheme, $serverName, $base, $location, $fileName)
+	function processRequestVersion($scheme, $address, $base, $location, $fileName)
 	{
 		$this->response->action = "version";
 		$this->response->status = "ok";
 		if($this->yellow->plugins->isExisting("update"))
 		{
-			list($statusCode, $dataCurrent) = $this->yellow->plugins->get("update")->getSoftwareVersion();
-			list($statusCode, $dataLatest) = $this->yellow->plugins->get("update")->getSoftwareVersion(true);
-			foreach($dataCurrent as $key=>$value)
+			list($statusCodeCurrent, $dataCurrent) = $this->yellow->plugins->get("update")->getSoftwareVersion();
+			list($statusCodeLatest, $dataLatest) = $this->yellow->plugins->get("update")->getSoftwareVersion(true);
+			list($statusCodeModified, $dataModified) = $this->yellow->plugins->get("update")->getSoftwareModified();
+			$statusCode = max($statusCodeCurrent, $statusCodeLatest, $statusCodeModified);
+			if($this->response->isUserWebmaster())
 			{
-				if(strnatcasecmp($dataCurrent[$key], $dataLatest[$key])<0)
+				foreach($dataCurrent as $key=>$value)
 				{
-					if(!empty($this->response->rawDataOutput)) $this->response->rawDataOutput .= "<br />\n";
-					$this->response->rawDataOutput .= "$key $dataLatest[$key]";
-					++$updates;
-					++$count; if($count>=4) { $this->response->rawDataOutput .= "…"; break; }
+					if(strnatcasecmp($dataCurrent[$key], $dataLatest[$key])<0)
+					{
+						++$updates;
+						if(!empty($this->response->rawDataOutput)) $this->response->rawDataOutput .= "<br />\n";
+						$this->response->rawDataOutput .= htmlspecialchars("$key $dataLatest[$key]");
+					}
+				}
+				if($updates==0)
+				{
+					foreach($dataCurrent as $key=>$value)
+					{
+						if(!is_null($dataModified[$key]) && !is_null($dataLatest[$key]))
+						{
+							$rawData = $this->yellow->text->getTextHtml("webinterfaceVersionUpdateModified", $this->response->language)." - <a href=\"#\" onclick=\"yellow.action('update','update','".$this->yellow->toolbox->normaliseArgs("option:force/feature:$key")."'); return false;\">".$this->yellow->text->getTextHtml("webinterfaceVersionUpdateForce", $this->response->language)."</a>";
+							$rawData = preg_replace("/@software/i", htmlspecialchars("$key $dataLatest[$key]"), $rawData);
+							if(!empty($this->response->rawDataOutput)) $this->response->rawDataOutput .= "<br />\n";
+							$this->response->rawDataOutput .= $rawData;
+						}
+					}
+				}
+			} else {
+				foreach($dataCurrent as $key=>$value)
+				{
+					if(strnatcasecmp($dataCurrent[$key], $dataLatest[$key])<0) ++$updates;
 				}
 			}
 			$this->response->status = $updates ? "updates" : "done";
 			if($statusCode!=200) $this->response->status = "error";
 		}
-		$statusCode = $this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
+		$statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
 		return $statusCode;
 	}
 	
 	// Process request to update website
-	function processRequestUpdate($serverScheme, $serverName, $base, $location, $fileName)
+	function processRequestUpdate($scheme, $address, $base, $location, $fileName)
 	{
 		$statusCode = 0;
 		if($this->yellow->plugins->isExisting("update") && $this->response->isUserWebmaster())
 		{
-			$statusCode = $this->yellow->command("update");
+			$option = trim($_REQUEST["option"]);
+			$feature = trim($_REQUEST["feature"]);
+			$statusCode = $this->yellow->command("update", $option, $feature);
 			if($statusCode==200)
 			{
 				$statusCode = 303;
-				$location = $this->yellow->lookup->normaliseUrl($serverScheme, $serverName, $base, $location);
+				$location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
 				$this->yellow->sendStatus($statusCode, $location);
 			}
 		}
@@ -547,29 +569,29 @@ class YellowWebinterface
 	}
 	
 	// Process request to create page
-	function processRequestCreate($serverScheme, $serverName, $base, $location, $fileName)
+	function processRequestCreate($scheme, $address, $base, $location, $fileName)
 	{
 		$statusCode = 0;
 		if(!$this->response->isUserRestrictions() && !empty($_POST["rawdataedit"]))
 		{
 			$this->response->rawDataSource = $this->response->rawDataEdit = rawurldecode($_POST["rawdatasource"]);
 			$rawData = $this->response->normaliseText(rawurldecode($_POST["rawdataedit"]));
-			$page = $this->response->getPageNew($serverScheme, $serverName, $base, $location, $fileName, $rawData);
+			$page = $this->response->getPageNew($scheme, $address, $base, $location, $fileName, $rawData);
 			if(!$page->isError())
 			{
 				if($this->yellow->toolbox->createFile($page->fileName, $page->rawData, true))
 				{
 					$statusCode = 303;
-					$location = $this->yellow->lookup->normaliseUrl($serverScheme, $serverName, $base, $page->location);
+					$location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $page->location);
 					$this->yellow->sendStatus($statusCode, $location);
 				} else {
 					$statusCode = 500;
-					$this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
+					$this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
 					$this->yellow->page->error($statusCode, "Can't write file '$page->fileName'!");
 				}
 			} else {
 				$statusCode = 500;
-				$this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
+				$this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
 				$this->yellow->page->error($statusCode, $page->get("pageError"));
 			}
 		}
@@ -577,14 +599,14 @@ class YellowWebinterface
 	}
 	
 	// Process request to edit page
-	function processRequestEdit($serverScheme, $serverName, $base, $location, $fileName)
+	function processRequestEdit($scheme, $address, $base, $location, $fileName)
 	{
 		$statusCode = 0;
 		if(!$this->response->isUserRestrictions() && !empty($_POST["rawdataedit"]))
 		{
 			$this->response->rawDataSource = rawurldecode($_POST["rawdatasource"]);
 			$this->response->rawDataEdit = $this->response->normaliseText(rawurldecode($_POST["rawdataedit"]));
-			$page = $this->response->getPageUpdate($serverScheme, $serverName, $base, $location, $fileName,
+			$page = $this->response->getPageUpdate($scheme, $address, $base, $location, $fileName,
 				$this->response->rawDataSource, $this->response->rawDataEdit, $this->yellow->toolbox->readFile($fileName));
 			if(!$page->isError())
 			{
@@ -592,16 +614,16 @@ class YellowWebinterface
 				   $this->yellow->toolbox->createFile($page->fileName, $page->rawData))
 				{
 					$statusCode = 303;
-					$location = $this->yellow->lookup->normaliseUrl($serverScheme, $serverName, $base, $page->location);
+					$location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $page->location);
 					$this->yellow->sendStatus($statusCode, $location);
 				} else {
 					$statusCode = 500;
-					$this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
+					$this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
 					$this->yellow->page->error($statusCode, "Can't write file '$page->fileName'!");
 				}
 			} else {
 				$statusCode = 500;
-				$this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
+				$this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
 				$this->yellow->page->error($statusCode, $page->get("pageError"));
 			}
 		}
@@ -609,7 +631,7 @@ class YellowWebinterface
 	}
 
 	// Process request to delete page
-	function processRequestDelete($serverScheme, $serverName, $base, $location, $fileName)
+	function processRequestDelete($scheme, $address, $base, $location, $fileName)
 	{
 		$statusCode = 0;
 		if(!$this->response->isUserRestrictions() && is_file($fileName))
@@ -620,22 +642,22 @@ class YellowWebinterface
 				if($this->yellow->toolbox->deleteFile($fileName, $this->yellow->config->get("trashDir")))
 				{
 					$statusCode = 303;
-					$location = $this->yellow->lookup->normaliseUrl($serverScheme, $serverName, $base, $location);
+					$location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
 					$this->yellow->sendStatus($statusCode, $location);
 				} else {
 					$statusCode = 500;
-					$this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
+					$this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
 					$this->yellow->page->error($statusCode, "Can't delete file '$fileName'!");
 				}
 			} else {
 				if($this->yellow->toolbox->deleteDirectory(dirname($fileName), $this->yellow->config->get("trashDir")))
 				{
 					$statusCode = 303;
-					$location = $this->yellow->lookup->normaliseUrl($serverScheme, $serverName, $base, $location);
+					$location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
 					$this->yellow->sendStatus($statusCode, $location);
 				} else {
 					$statusCode = 500;
-					$this->yellow->processRequest($serverScheme, $serverName, $base, $location, $fileName, false);
+					$this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
 					$this->yellow->page->error($statusCode, "Can't delete file '$fileName'!");
 				}
 			}
@@ -646,17 +668,13 @@ class YellowWebinterface
 	// Check web interface request
 	function checkRequest($location)
 	{
-		if($this->yellow->toolbox->getServerScheme()==$this->yellow->config->get("webinterfaceServerScheme") &&
-		   $this->yellow->toolbox->getServerName()==$this->yellow->config->get("webinterfaceServerName"))
-		{
-			$locationLength = strlenu($this->yellow->config->get("webinterfaceLocation"));
-			$this->response->active = substru($location, 0, $locationLength)==$this->yellow->config->get("webinterfaceLocation");
-		}
+		$locationLength = strlenu($this->yellow->config->get("webinterfaceLocation"));
+		$this->response->active = substru($location, 0, $locationLength)==$this->yellow->config->get("webinterfaceLocation");
 		return $this->response->isActive();
 	}
 	
 	// Check web interface user
-	function checkUser($serverScheme, $serverName, $base, $location, $fileName)
+	function checkUser($scheme, $address, $base, $location, $fileName)
 	{
 		if($_POST["action"]=="login")
 		{
@@ -664,7 +682,7 @@ class YellowWebinterface
 			$password = $_POST["password"];
 			if($this->users->checkUser($email, $password))
 			{
-				$this->response->createCookie($serverScheme, $serverName, $base, $email);
+				$this->response->createCookie($scheme, $address, $base, $email);
 				$this->response->userEmail = $email;
 				$this->response->userRestrictions = $this->getUserRestrictions($email, $location, $fileName);
 				$this->response->language = $this->response->getLanguage($email);
@@ -749,10 +767,10 @@ class YellowResponse
 	}
 	
 	// Return new page
-	function getPageNew($serverScheme, $serverName, $base, $location, $fileName, $rawData)
+	function getPageNew($scheme, $address, $base, $location, $fileName, $rawData)
 	{
 		$page = new YellowPage($this->yellow);
-		$page->setRequestInformation($serverScheme, $serverName, $base, $location, $fileName);
+		$page->setRequestInformation($scheme, $address, $base, $location, $fileName);
 		$page->parseData($rawData, false, 0);
 		if($this->yellow->lookup->isFileLocation($location) || is_file($fileName))
 		{
@@ -793,16 +811,16 @@ class YellowResponse
 	}
 	
 	// Return modified page
-	function getPageUpdate($serverScheme, $serverName, $base, $location, $fileName, $rawDataSource, $rawDataEdit, $rawDataFile)
+	function getPageUpdate($scheme, $address, $base, $location, $fileName, $rawDataSource, $rawDataEdit, $rawDataFile)
 	{
 		$page = new YellowPage($this->yellow);
-		$page->setRequestInformation($serverScheme, $serverName, $base, $location, $fileName);
+		$page->setRequestInformation($scheme, $address, $base, $location, $fileName);
 		$page->parseData($this->webinterface->merge->merge($rawDataSource, $rawDataEdit, $rawDataFile), false, 0);
 		if(empty($page->rawData)) $page->error(500, "Page has been modified by someone else!");
 		if($this->yellow->lookup->isFileLocation($location) && !$page->isError())
 		{
 			$pageSource = new YellowPage($this->yellow);
-			$pageSource->setRequestInformation($serverScheme, $serverName, $base, $location, $fileName);
+			$pageSource->setRequestInformation($scheme, $address, $base, $location, $fileName);
 			$pageSource->parseData($rawDataSource, false, 0);
 			$prefix = $this->yellow->config->get("webinterfaceMetaFilePrefix");
 			if($pageSource->get($prefix)!=$page->get($prefix) || $pageSource->get("title")!=$page->get("title"))
@@ -840,7 +858,10 @@ class YellowResponse
 			$data["rawDataEdit"] = $this->rawDataEdit;
 			$data["rawDataNew"] = $this->getRawDataNew();
 			$data["rawDataOutput"] = strval($this->rawDataOutput);
-			$data["pageFile"] = $this->yellow->page->get("pageFile");
+			$data["scheme"] = $this->yellow->page->scheme;
+			$data["address"] = $this->yellow->page->address;
+			$data["base"] = $this->yellow->page->base;
+			$data["location"] = $this->yellow->page->location;
 			$data["parserSafeMode"] = $this->yellow->page->parserSafeMode;
 		}
 		if($this->action!="none") $data = array_merge($data, $this->getRequestData());
@@ -864,15 +885,14 @@ class YellowResponse
 			$data["userRestrictions"] = intval($this->isUserRestrictions());
 			$data["userWebmaster"] = intval($this->isUserWebmaster());
 			$data["pluginUpdate"] = intval($this->yellow->plugins->isExisting("update"));
-			$data["serverScheme"] = $this->yellow->config->get("serverScheme");
-			$data["serverName"] = $this->yellow->config->get("serverName");
-			$data["serverBase"] = $this->yellow->config->get("serverBase");
-			$data["serverTime"] = $this->yellow->config->get("serverTime");
 			$data["serverLanguages"] = array();
 			foreach($this->yellow->text->getLanguages() as $language)
 			{
 				$data["serverLanguages"][$language] = $this->yellow->text->getTextHtml("languageDescription", $language);
 			}
+			$data["serverScheme"] = $this->yellow->config->get("serverScheme");
+			$data["serverAddress"] = $this->yellow->config->get("serverAddress");
+			$data["serverBase"] = $this->yellow->config->get("serverBase");
 			$data["serverVersion"] = "Yellow ".YellowCore::VERSION;
 		} else {
 			$data["loginEmail"] = $this->yellow->config->get("loginEmail");
@@ -898,9 +918,9 @@ class YellowResponse
 	// Return text strings
 	function getTextData()
 	{
-		$textLanguage = array_merge($this->yellow->text->getData("language", $this->language));
-		$textWebinterface = array_merge($this->yellow->text->getData("webinterface", $this->language));
-		$textYellow = array_merge($this->yellow->text->getData("yellow", $this->language));
+		$textLanguage = $this->yellow->text->getData("language", $this->language);
+		$textWebinterface = $this->yellow->text->getData("webinterface", $this->language);
+		$textYellow = $this->yellow->text->getData("yellow", $this->language);
 		return array_merge($textLanguage, $textWebinterface, $textYellow);
 	}
 	
@@ -968,28 +988,28 @@ class YellowResponse
 	}
 
 	// Create browser cookie
-	function createCookie($serverScheme, $serverName, $base, $email)
+	function createCookie($scheme, $address, $base, $email)
 	{
 		$session = $this->webinterface->users->createSession($email);
-		setcookie("login", "$email,$session", time()+60*60*24*365, "$base/", "", $serverScheme=="https");
+		setcookie("login", "$email,$session", time()+60*60*24*365, "$base/", "", $scheme=="https");
 	}
 	
 	// Destroy browser cookie
-	function destroyCookie($serverScheme, $serverName, $base)
+	function destroyCookie($scheme, $address, $base)
 	{
-		setcookie("login", "", time()-60*60, "$base/", "", $serverScheme=="https");
+		setcookie("login", "", time()-60*60, "$base/", "", $scheme=="https");
 	}
 	
 	// Send mail to user
-	function sendMail($serverScheme, $serverName, $base, $email, $action)
+	function sendMail($scheme, $address, $base, $email, $action)
 	{
 		if($action=="welcome" || $action=="information")
 		{
-			$url = "$serverScheme://$serverName$base/";
+			$url = "$scheme://$address$base/";
 		} else {
 			$expire = time()+60*60*24;
 			$id = $this->webinterface->users->createRequestId($email, $action, $expire);
-			$url = "$serverScheme://$serverName$base"."/action:$action/email:$email/expire:$expire/id:$id/";
+			$url = "$scheme://$address$base"."/action:$action/email:$email/expire:$expire/id:$id/";
 		}
 		if($action=="approve")
 		{
@@ -1012,7 +1032,7 @@ class YellowResponse
 		$mailTo = mb_encode_mimeheader("$name")." <$email>";
 		$mailSubject = mb_encode_mimeheader($this->yellow->text->getText("{$prefix}Subject", $language));
 		$mailHeaders = mb_encode_mimeheader("From: $sitename")." <noreply>\r\n";
-		$mailHeaders .= mb_encode_mimeheader("X-Request-Url: $serverScheme://$serverName$base")."\r\n";
+		$mailHeaders .= mb_encode_mimeheader("X-Request-Url: $scheme://$address$base")."\r\n";
 		$mailHeaders .= mb_encode_mimeheader("X-Remote-Addr: $_SERVER[REMOTE_ADDR]")."\r\n";
 		$mailHeaders .= "Mime-Version: 1.0\r\n";
 		$mailHeaders .= "Content-Type: text/plain; charset=utf-8\r\n";
@@ -1274,7 +1294,10 @@ class YellowUsers
 		$data = array();
 		foreach($this->users as $key=>$value)
 		{
-			$data[$key] = "$value[email] password $value[name] $value[language] $value[status]";
+			$name = $value["name"]; if(preg_match("/\s/", $name)) $name = "\"$name\"";
+			$language = $value["language"]; if(preg_match("/\s/", $language)) $language = "\"$language\"";
+			$status = $value["status"]; if(preg_match("/\s/", $status)) $status = "\"$status\"";
+			$data[$key] = "$value[email] - $name $language $status";
 			if($value["home"]!="/") $data[$key] .= " restrictions";
 		}
 		usort($data, strnatcasecmp);

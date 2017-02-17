@@ -1,11 +1,11 @@
 <?php
-// Copyright (c) 2013-2016 Datenstrom, http://datenstrom.se
+// Copyright (c) 2013-2017 Datenstrom, http://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 // Image plugin
 class YellowImage
 {
-	const VERSION = "0.6.7";
+	const VERSION = "0.6.8";
 	var $yellow;			//access to API
 	var $graphicsLibrary;	//graphics library support? (boolean)
 
@@ -39,7 +39,8 @@ class YellowImage
 				if(empty($height)) $height = $width;
 				list($src, $width, $height) = $this->getImageInfo($this->yellow->config->get("imageDir").$name, $width, $height);
 			} else {
-				$src = $this->yellow->lookup->normaliseLocation($name, $page->base, $page->location);
+				if(empty($alt)) $alt = $this->yellow->config->get("imageAlt");
+				$src = $this->yellow->lookup->normaliseUrl("", "", "", $name);
 				$width = $height = 0;
 			}
 			$output = "<img src=\"".htmlspecialchars($src)."\"";

@@ -4,8 +4,8 @@
 // Yellow API
 var yellow =
 {
-	version: "0.6.19",
-	action: function(action) { yellow.webinterface.action(action, "none"); },
+	version: "0.6.20",
+	action: function(action, status, args) { yellow.webinterface.action(action, status, args); },
 	onLoad: function() { yellow.webinterface.loadInterface(); },
 	onClick: function(e) { yellow.webinterface.hidePanesOnClick(yellow.toolbox.getEventElement(e)); },
 	onKeydown: function(e) { yellow.webinterface.hidePanesOnKeydown(yellow.toolbox.getEventKeycode(e)); },
@@ -22,9 +22,10 @@ yellow.webinterface =
 	intervalId: 0,		//timer interval ID
 
 	// Handle action
-	action: function(action, status)
+	action: function(action, status, args)
 	{
-		if(yellow.config.debug) console.log("yellow.webinterface.action action:"+action+" status:"+status);
+		status = status ? status : "none";
+		args = args ? args : "none";
 		switch(action)
 		{
 			case "login":		this.showPane("yellow-pane-login", action, status); break;
@@ -37,7 +38,7 @@ yellow.webinterface =
 			case "reconfirm":	this.showPane("yellow-pane-settings", action, status); break;
 			case "change":		this.showPane("yellow-pane-settings", action, status); break;
 			case "version":		this.showPane("yellow-pane-version", action, status); break;
-			case "update":		this.sendPane("yellow-pane-version", action); break;
+			case "update":		this.sendPane("yellow-pane-update", action, status, args); break;
 			case "create":		this.showPane("yellow-pane-edit", action, status, true); break;
 			case "edit":		this.showPane("yellow-pane-edit", action, status, true); break;
 			case "delete":		this.showPane("yellow-pane-edit", action, status, true); break;
@@ -430,7 +431,7 @@ yellow.webinterface =
 	},
 	
 	// Send pane
-	sendPane: function(paneId, paneAction)
+	sendPane: function(paneId, paneAction, paneStatus, paneArgs)
 	{
 		if(yellow.config.debug) console.log("yellow.webinterface.sendPane id:"+paneId);
 		if(paneId=="yellow-pane-edit")
@@ -438,16 +439,27 @@ yellow.webinterface =
 			paneAction = this.getPaneAction(paneId, paneAction);
 			if(paneAction)
 			{
-				var params = {};
-				params.action = paneAction;
-				params.rawdatasource = yellow.page.rawDataSource;
-				params.rawdataedit = document.getElementById("yellow-pane-edit-page").value;
-				yellow.toolbox.submitForm(params, true);
+				var args = {};
+				args.action = paneAction;
+				args.rawdatasource = yellow.page.rawDataSource;
+				args.rawdataedit = document.getElementById("yellow-pane-edit-page").value;
+				yellow.toolbox.submitForm(args, true);
 			} else {
 				this.hidePane(paneId);
 			}
 		} else {
-			yellow.toolbox.submitForm({"action":paneAction});
+			var args = {"action":paneAction};
+			if(paneArgs)
+			{
+				var tokens = paneArgs.split('/');
+				for(var i=0; i<tokens.length; i++)
+				{
+					var pair = tokens[i].split(/[:=]/);
+					if(!pair[0] || !pair[1]) continue;
+					args[pair[0]] = pair[1];
+				}
+			}
+			yellow.toolbox.submitForm(args);
 		}
 	},
 	
@@ -777,14 +789,14 @@ yellow.toolbox =
 	},
 	
 	// Submit form with post method
-	submitForm: function(params, encodeNewline)
+	submitForm: function(args, encodeNewline)
 	{
 		var elementForm = document.createElement("form");
 		elementForm.setAttribute("method", "post");
-		for(var key in params)
+		for(var key in args)
 		{
-			if(!params.hasOwnProperty(key)) continue;
-			var value = encodeNewline ? this.encodeNewline(params[key]) : params[key];
+			if(!args.hasOwnProperty(key)) continue;
+			var value = encodeNewline ? this.encodeNewline(args[key]) : args[key];
 			var elementInput = document.createElement("input");
 			elementInput.setAttribute("type", "hidden");
 			elementInput.setAttribute("name", key);
