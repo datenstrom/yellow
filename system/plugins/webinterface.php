@@ -1,8 +1,8 @@
 <?php
-// Copyright (c) 2013-2017 Datenstrom, http://datenstrom.se
+// Webinterface plugin, https://github.com/datenstrom/yellow-plugins/tree/master/webinterface
+// Copyright (c) 2013-2017 Datenstrom, https://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
-// Web interface plugin
 class YellowWebinterface
 {
 	const VERSION = "0.6.20";
@@ -745,7 +745,6 @@ class YellowWebinterface
 	}
 }
 	
-// Yellow response
 class YellowResponse
 {
 	var $yellow;			//access to API
@@ -1071,7 +1070,6 @@ class YellowResponse
 	}
 }
 
-// Yellow users
 class YellowUsers
 {
 	var $yellow;	//access to API
@@ -1324,7 +1322,6 @@ class YellowUsers
 	}
 }
 	
-// Yellow merge
 class YellowMerge
 {
 	var $yellow;		//access to API

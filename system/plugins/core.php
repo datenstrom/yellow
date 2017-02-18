@@ -1,8 +1,8 @@
 <?php
-// Copyright (c) 2013-2017 Datenstrom, http://datenstrom.se
+// Core plugin, https://github.com/datenstrom/yellow-plugins/tree/master/core
+// Copyright (c) 2013-2017 Datenstrom, https://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
-// Yellow core
 class YellowCore
 {
 	const VERSION = "0.6.8";
@@ -384,7 +384,6 @@ class YellowCore
 	}
 }
 	
-// Yellow page
 class YellowPage
 {
 	var $yellow;				//access to API
@@ -996,7 +995,6 @@ class YellowPage
 	}
 }
 
-// Yellow data collection as array
 class YellowDataCollection extends ArrayObject
 {
 	function __construct()
@@ -1033,7 +1031,6 @@ class YellowDataCollection extends ArrayObject
 	}
 }
 
-// Yellow page collection as array
 class YellowPageCollection extends ArrayObject
 {
 	var $yellow;				//access to API
@@ -1287,7 +1284,6 @@ class YellowPageCollection extends ArrayObject
 	}
 }
 
-// Yellow pages
 class YellowPages
 {
 	var $yellow;			//access to API
@@ -1494,7 +1490,6 @@ class YellowPages
 	}
 }
 	
-// Yellow files
 class YellowFiles
 {
 	var $yellow;		//access to API
@@ -1629,7 +1624,6 @@ class YellowFiles
 	}
 }
 
-// Yellow plugins
 class YellowPlugins
 {
 	var $yellow;		//access to API
@@ -1717,7 +1711,6 @@ class YellowPlugins
 	}
 }
 
-// Yellow themes
 class YellowThemes
 {
 	var $yellow;		//access to API
@@ -1800,7 +1793,6 @@ class YellowThemes
 	}
 }
 	
-// Yellow configuration
 class YellowConfig
 {
 	var $yellow;			//access to API
@@ -1924,7 +1916,6 @@ class YellowConfig
 	}
 }
 
-// Yellow text strings
 class YellowText
 {
 	var $yellow;		//access to API
@@ -2079,7 +2070,6 @@ class YellowText
 	}
 }
 
-// Yellow location and file lookup
 class YellowLookup
 {
 	var $yellow;		//access to API
@@ -2634,7 +2624,6 @@ class YellowLookup
 	}
 }
 
-// Yellow toolbox with helpers
 class YellowToolbox
 {
 	// Return server version from current HTTP request

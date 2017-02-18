@@ -1,8 +1,8 @@
 <?php
-// Copyright (c) 2013-2017 Datenstrom, http://datenstrom.se
+// Update plugin, https://github.com/datenstrom/yellow-plugins/tree/master/update
+// Copyright (c) 2013-2017 Datenstrom, https://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
-// Update plugin
 class YellowUpdate
 {
 	const VERSION = "0.6.14";

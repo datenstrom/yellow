@@ -1,8 +1,8 @@
 <?php
-// Copyright (c) 2013-2017 Datenstrom, http://datenstrom.se
+// Commandline plugin, https://github.com/datenstrom/yellow-plugins/tree/master/commandline
+// Copyright (c) 2013-2017 Datenstrom, https://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
-// Command line plugin
 class YellowCommandline
 {
 	const VERSION = "0.6.18";

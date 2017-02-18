@@ -1,10 +1,9 @@
-// Copyright (c) 2013-2017 Datenstrom, http://datenstrom.se
+// Webinterface plugin, https://github.com/datenstrom/yellow-plugins/tree/master/webinterface
+// Copyright (c) 2013-2017 Datenstrom, https://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
-// Yellow API
 var yellow =
 {
-	version: "0.6.20",
 	action: function(action, status, args) { yellow.webinterface.action(action, status, args); },
 	onLoad: function() { yellow.webinterface.loadInterface(); },
 	onClick: function(e) { yellow.webinterface.hidePanesOnClick(yellow.toolbox.getEventElement(e)); },
@@ -13,7 +12,6 @@ var yellow =
 	onResize: function() { yellow.webinterface.resizePane(yellow.webinterface.paneId, yellow.webinterface.paneAction, yellow.webinterface.paneStatus); }
 };
 
-// Yellow web interface
 yellow.webinterface =
 {
 	paneId: 0,			//visible pane ID
@@ -517,7 +515,6 @@ yellow.webinterface =
 	}
 };
 
-// Yellow toolbox with helpers
 yellow.toolbox =
 {
 	// Insert element before reference element
