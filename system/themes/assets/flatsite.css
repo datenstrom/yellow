@@ -56,7 +56,8 @@ a:hover { color:#07d; text-decoration:underline; }
 .content .stretchable li { margin:0; padding:1em 0; display:inline-block; text-align:center; vertical-align:top; }
 .content .stretchable a { color:#717171; text-decoration:none; }
 .content .toc { margin:0; padding:0; list-style:none; }
-.content .links { margin:1em 0; }
+.content .entry-links .previous { margin-right:1em; }
+.content .pagination .previous { margin-right:1em; }
 .content .pagination { margin:1em 0; }
 .content .left { float:left; margin:0 1em 0 0; }
 .content .center { display:block; margin:0 auto; }
