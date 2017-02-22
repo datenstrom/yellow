@@ -1047,28 +1047,27 @@ class YellowPageCollection extends ArrayObject
 	// Filter page collection by meta data
 	function filter($key, $value, $exactMatch = true)
 	{
-		if(!empty($key))
+		$array = array();
+		$value = strreplaceu(' ', '-', strtoloweru($value));
+		$valueLength = strlenu($value);
+		$this->filterValue = "";
+		foreach($this->getArrayCopy() as $page)
 		{
-			$array = array();
-			$value = strreplaceu(' ', '-', strtoloweru($value));
-			$valueLength = strlenu($value);
-			foreach($this->getArrayCopy() as $page)
+			if($page->isExisting($key))
 			{
-				if($page->isExisting($key))
+				foreach(preg_split("/\s*,\s*/", $page->get($key)) as $pageValue)
 				{
-					foreach(preg_split("/,\s*/", $page->get($key)) as $pageValue)
+					$pageValueLength = $exactMatch ? strlenu($pageValue) : $valueLength;
+					if($value==substru(strreplaceu(' ', '-', strtoloweru($pageValue)), 0, $pageValueLength))
 					{
-						$pageValueLength = $exactMatch ? strlenu($pageValue) : $valueLength;
-						if($value==substru(strreplaceu(' ', '-', strtoloweru($pageValue)), 0, $pageValueLength))
-						{
-							$this->filterValue = substru($pageValue, 0, $pageValueLength);
-							array_push($array, $page);
-						}
+						if(empty($this->filterValue)) $this->filterValue = substru($pageValue, 0, $pageValueLength);
+						array_push($array, $page);
+						break;
 					}
 				}
 			}
-			$this->exchangeArray($array);
 		}
+		$this->exchangeArray($array);
 		return $this;
 	}
 	
@@ -1105,7 +1104,7 @@ class YellowPageCollection extends ArrayObject
 		$location = $page->location;
 		$keywords = $this->yellow->toolbox->createTextKeywords($page->get("title"));
 		$keywords .= ",".$page->get("tag").",".$page->get("author");
-		$tokens = array_unique(array_filter(preg_split("/,\s*/", $keywords), "strlen"));
+		$tokens = array_unique(array_filter(preg_split("/\s*,\s*/", $keywords), "strlen"));
 		if(!empty($tokens))
 		{
 			$array = array();
@@ -1125,7 +1124,7 @@ class YellowPageCollection extends ArrayObject
 				}
 			}
 			$this->exchangeArray($array);
-			$this->sort("searchscore", $ascendingOrder);
+			$this->sort("modified", false)->sort("searchscore", $ascendingOrder);
 		}
 		return $this;
 	}
@@ -2015,8 +2014,8 @@ class YellowText
 	// Return human readable date, custom date format
 	function getDateFormatted($timestamp, $format)
 	{
-		$dateMonths = preg_split("/,\s*/", $this->get("dateMonths"));
-		$dateWeekdays = preg_split("/,\s*/", $this->get("dateWeekdays"));
+		$dateMonths = preg_split("/\s*,\s*/", $this->get("dateMonths"));
+		$dateWeekdays = preg_split("/\s*,\s*/", $this->get("dateWeekdays"));
 		$month = $dateMonths[date('n', $timestamp) - 1];
 		$weekday = $dateWeekdays[date('N', $timestamp) - 1];
 		$format = preg_replace("/(?<!\\\)F/", addcslashes($month, 'A..Za..z'), $format);
@@ -3272,7 +3271,7 @@ class YellowToolbox
 		$language = $languageDefault;
 		if(isset($_SERVER["HTTP_ACCEPT_LANGUAGE"]))
 		{
-			foreach(preg_split("/,\s*/", $_SERVER["HTTP_ACCEPT_LANGUAGE"]) as $string)
+			foreach(preg_split("/\s*,\s*/", $_SERVER["HTTP_ACCEPT_LANGUAGE"]) as $string)
 			{
 				$tokens = explode(';', $string);
 				if(in_array($tokens[0], $languages)) { $language = $tokens[0]; break; }
