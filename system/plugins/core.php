@@ -2763,7 +2763,7 @@ class YellowToolbox
 		return (strtoupperu(substru(PHP_OS, 0, 3))!="WIN") ? ':' : '=';
 	}
 	
-	// Check if location contains location arguments
+	// Check if there are location arguments in current HTTP request
 	function isLocationArgs($location = "")
 	{
 		$location = empty($location) ? $_SERVER["LOCATION"].$_SERVER["LOCATION_ARGS"] : $location;
@@ -2771,7 +2771,7 @@ class YellowToolbox
 		return preg_match("/[^\/]+$separator.*$/", $location);
 	}
 	
-	// Check if location contains pagination arguments
+	// Check if there are pagination arguments in current HTTP request
 	function isLocationArgsPagination($location, $pagination)
 	{
 		$separator = $this->getLocationArgsSeparator();
