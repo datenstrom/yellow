@@ -2373,7 +2373,7 @@ class YellowLookup
 	// Return file path for system location
 	function findFileFromSystem($location)
 	{
-		if(preg_match("/\.(css|ico|js|jpg|png|svg|txt|woff)$/", $location))
+		if(preg_match("/\.(css|ico|js|jpg|png|svg|txt|woff|woff2)$/", $location))
 		{
 			$pluginLocationLength = strlenu($this->yellow->config->get("pluginLocation"));
 			$themeLocationLength = strlenu($this->yellow->config->get("themeLocation"));
@@ -2906,6 +2906,7 @@ class YellowToolbox
 			"svg" => "image/svg+xml",
 			"txt" => "text/plain",
 			"woff" => "application/font-woff",
+			"woff2" => "application/font-woff2",
 			"xml" => "text/xml; charset=utf-8");
 		$contentType = "";
 		$extension = $this->getFileExtension($fileName);
