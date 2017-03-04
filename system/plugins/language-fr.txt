@@ -3,7 +3,7 @@
 Language: fr
 LanguageDescription: Français
 LanguageTranslator: Juh Nibreh
-LanguageVersion: 0.6.14
+LanguageVersion: 0.6.15
 
 BlogBy: par
 BlogFilter: Blog:
@@ -36,7 +36,7 @@ SearchButton: Rechercher
 WebinterfaceInstallationTitle: Bonjour
 WebinterfaceInstallationFeature: Que voulez-vous faire?
 WebinterfaceInstallationHomePage: Votre site web fonctionne!\n\nVous pouvez [edit - modifier cette page] ou utiliser un éditeur de texte.
-WebinterfaceLoginTitle: Yellow
+WebinterfaceLoginTitle: Bienvenue
 WebinterfaceLoginEmail: Email:
 WebinterfaceLoginPassword: Mot de passe:
 WebinterfaceLoginRecover: Mot de passe oublié?
