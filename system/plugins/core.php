@@ -345,6 +345,7 @@ class YellowCore
 			$this->config->set("serverScheme", $scheme);
 			$this->config->set("serverAddress", $address);
 			$this->config->set("serverBase", $base);
+			if(defined("DEBUG") && DEBUG>=3) echo "YellowCore::getRequestInformation $scheme://$address$base<br/>\n";
 		}
 		$location = substru($this->toolbox->getLocation(), strlenu($base));
 		if(empty($fileName)) $fileName = $this->lookup->findFileFromSystem($location);
@@ -2667,7 +2668,7 @@ class YellowToolbox
 	function getBase()
 	{
 		$base = "";
-		if(preg_match("/^(.*)\//", $_SERVER["SCRIPT_NAME"], $matches)) $base = rtrim($matches[1], '/');
+		if(preg_match("/^(.*)\/.*\.php$/", $_SERVER["SCRIPT_NAME"], $matches)) $base = $matches[1];
 		return $base;
 	}
 	
@@ -2781,7 +2782,7 @@ class YellowToolbox
 	// Check if script location is requested
 	function isRequestSelf()
 	{
-		return $_SERVER["REQUEST_URI"]==$_SERVER["SCRIPT_NAME"];
+		return substru($_SERVER["REQUEST_URI"], -10, 10)=="yellow.php";
 	}
 
 	// Check if clean URL is requested
