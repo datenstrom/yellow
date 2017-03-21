@@ -1087,13 +1087,15 @@ class YellowPageCollection extends ArrayObject
 	// Sort page collection by meta data
 	function sort($key, $ascendingOrder = true)
 	{
+		$array = $this->getArrayCopy();
+		foreach($array as $page) $page->set("sortindex", ++$i);
 		$callback = function($a, $b) use ($key, $ascendingOrder)
 		{
-			return $ascendingOrder ?
+			$result = $ascendingOrder ?
 				strnatcasecmp($a->get($key), $b->get($key)) :
 				strnatcasecmp($b->get($key), $a->get($key));
+			return $result==0 ? $a->get("sortindex") - $b->get("sortindex") : $result;
 		};
-		$array = $this->getArrayCopy();
 		usort($array, $callback);
 		$this->exchangeArray($array);
 		return $this;
@@ -1125,7 +1127,7 @@ class YellowPageCollection extends ArrayObject
 				}
 			}
 			$this->exchangeArray($array);
-			$this->sort("modified", false)->sort("searchscore", $ascendingOrder);
+			$this->sort("modified", $ascendingOrder)->sort("searchscore", $ascendingOrder);
 		}
 		return $this;
 	}
