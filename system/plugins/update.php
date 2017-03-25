@@ -5,7 +5,7 @@
 
 class YellowUpdate
 {
-	const VERSION = "0.6.14";
+	const VERSION = "0.6.15";
 	var $yellow;					//access to API
 	var $updates;					//number of updates
 	
@@ -721,7 +721,8 @@ class YellowUpdate
 				$fileData = $rawData;
 			} else if($statusCode==0) {
 				$statusCode = 500;
-				$this->yellow->page->error($statusCode, "Can't connect to server!");
+				list($scheme, $address) = $this->yellow->lookup->getUrlInformation($url);
+				$this->yellow->page->error($statusCode, "Can't connect to server '$scheme://$address'!");
 			} else {
 				$statusCode = 500;
 				$this->yellow->page->error($statusCode, "Can't download file '$url'!");
