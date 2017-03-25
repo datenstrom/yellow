@@ -453,6 +453,24 @@ class YellowUpdate
 		return $statusCode;
 	}
 	
+	// Update installation page
+	function updateInstallationPage($fileName, $name, $language)
+	{
+		$statusCode = 200;
+		if($language!="en")
+		{
+			$fileData = strreplaceu("\r\n", "\n", $this->yellow->toolbox->readFile($fileName));
+			$rawDataOld = strreplaceu("\\n", "\n", $this->yellow->text->getText("webinterfaceInstallation{$name}Page", "en"));
+			$rawDataNew = strreplaceu("\\n", "\n", $this->yellow->text->getText("webinterfaceInstallation{$name}Page", $language));
+			if(!$this->yellow->toolbox->createFile($fileName, strreplaceu($rawDataOld, $rawDataNew, $fileData)))
+			{
+				$statusCode = 500;
+				$this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
+			}
+		}
+		return $statusCode;
+	}
+	
 	// Process command to install pending software
 	function processCommandInstallationPending($args)
 	{
@@ -504,16 +522,6 @@ class YellowUpdate
 			if($status=="install")
 			{
 				$status = "ok";
-				$fileNameHome = $this->yellow->lookup->findFileFromLocation("/");
-				$fileData = strreplaceu("\r\n", "\n", $this->yellow->toolbox->readFile($fileNameHome));
-				if($fileData==$this->getRawDataHome("en") && $language!="en")
-				{
-					$status = $this->yellow->toolbox->createFile($fileNameHome, $this->getRawDataHome($language)) ? "ok" : "error";
-					if($status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameHome'!");
-				}
-			}
-			if($status=="ok")
-			{
 				if(!empty($email) && !empty($password) && $this->yellow->plugins->isExisting("webinterface"))
 				{
 					$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
@@ -528,6 +536,18 @@ class YellowUpdate
 					$status = $this->updateInstallationFeatures($feature)==200 ? "ok" : "error";
 					if($status=="error") $this->yellow->page->error(500, "Can't install feature '$feature'!");
 				}
+			}
+			if($status=="ok")
+			{
+				$fileNameHome = $this->yellow->lookup->findFileFromLocation("/");
+				$status = $this->updateInstallationPage($fileNameHome, "Home", $language)==200 ? "ok" : "error";
+				if($status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameHome'!");
+			}
+			if($status=="ok")
+			{
+				$fileNameAbout = $this->yellow->lookup->findFileFromLocation("/about/");
+				$status = $this->updateInstallationPage($fileNameAbout, "About", $language)==200 ? "ok" : "error";
+				if($status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameAbout'!");
 			}
 			if($status=="ok")
 			{
@@ -586,13 +606,6 @@ class YellowUpdate
 			$rawData .= "<input type=\"hidden\" name=\"status\" value=\"install\" />\n";
 			$rawData .= "</form>\n";
 		}
-		return $rawData;
-	}
-	
-	// Return raw data for home page
-	function getRawDataHome($language)
-	{
-		$rawData = "---\nTitle: Home\n---\n".strreplaceu("\\n", "\n", $this->yellow->text->getText("webinterfaceInstallationHomePage", $language));
 		return $rawData;
 	}
 	

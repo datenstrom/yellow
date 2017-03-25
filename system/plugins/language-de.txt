@@ -3,7 +3,7 @@
 Language: de
 LanguageDescription: Deutsch
 LanguageTranslator: David Fehrmann
-LanguageVersion: 0.6.15
+LanguageVersion: 0.6.16
 
 BlogBy: von
 BlogFilter: Blog:
@@ -32,10 +32,12 @@ PaginationNext: Weiter →
 SearchQuery: Suche:
 SearchResultsNone: Bitte einen Suchbegriff eingeben.
 SearchResultsEmpty: Keine Treffer für diese Suchanfrage.
+SearchSpecialChanges: Letzte Änderungen
 SearchButton: Suchen
 WebinterfaceInstallationTitle: Hallo
 WebinterfaceInstallationFeature: Was willst du machen?
 WebinterfaceInstallationHomePage: Deine Webseite funktioniert!\n\nDu kannst [edit - diese Seite bearbeiten] oder einen Texteditor benutzen.
+WebinterfaceInstallationAboutPage: Diese Webseite ist erstellt mit [yellow]. [Weitere Informationen](https://developers.datenstrom.se/help/help-de).
 WebinterfaceLoginTitle: Willkommen
 WebinterfaceLoginEmail: E-Mail:
 WebinterfaceLoginPassword: Kennwort:

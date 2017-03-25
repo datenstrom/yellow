@@ -3,7 +3,7 @@
 Language: fr
 LanguageDescription: Français
 LanguageTranslator: Juh Nibreh
-LanguageVersion: 0.6.15
+LanguageVersion: 0.6.16
 
 BlogBy: par
 BlogFilter: Blog:
@@ -32,10 +32,12 @@ PaginationNext: Suivant →
 SearchQuery: Rechercher:
 SearchResultsNone: Entrez un mot dans le champ de recherche.
 SearchResultsEmpty: Pas de résultats.
+SearchSpecialChanges: Changements récents
 SearchButton: Rechercher
 WebinterfaceInstallationTitle: Bonjour
 WebinterfaceInstallationFeature: Que voulez-vous faire?
 WebinterfaceInstallationHomePage: Votre site web fonctionne!\n\nVous pouvez [edit - modifier cette page] ou utiliser un éditeur de texte.
+WebinterfaceInstallationAboutPage: Ce site web est fait avec [yellow]. [Apprenez-en plus](https://developers.datenstrom.se/help/help-fr).
 WebinterfaceLoginTitle: Bienvenue
 WebinterfaceLoginEmail: Email:
 WebinterfaceLoginPassword: Mot de passe:

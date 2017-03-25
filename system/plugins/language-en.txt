@@ -3,7 +3,7 @@
 Language: en
 LanguageDescription: English
 LanguageTranslator: Mark Seuffert
-LanguageVersion: 0.6.15
+LanguageVersion: 0.6.16
 
 BlogBy: by
 BlogFilter: Blog:
@@ -32,10 +32,12 @@ PaginationNext: Next →
 SearchQuery: Search:
 SearchResultsNone: Enter a search term.
 SearchResultsEmpty: No results found.
+SearchSpecialChanges: Recent changes
 SearchButton: Search
 WebinterfaceInstallationTitle: Hello
 WebinterfaceInstallationFeature: What do you want to make?
 WebinterfaceInstallationHomePage: Your website works!\n\nYou can [edit this page] or use your text editor.
+WebinterfaceInstallationAboutPage: This website is made with [yellow]. [Learn more](https://developers.datenstrom.se/help/).
 WebinterfaceLoginTitle: Welcome
 WebinterfaceLoginEmail: Email:
 WebinterfaceLoginPassword: Password:
