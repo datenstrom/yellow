@@ -338,6 +338,4 @@ Public License instead of this License.
 
 ## How to Apply These Terms to This Software
 
-Please note that the only valid version of the GPL for Datenstrom Yellow 
-is this particular version of the GPL (ie v2, not v2.2 or v3.x or whatever), 
-unless stated otherwise.
+For Datenstrom Yellow the only valid version of the GPL is this particular version of the GPL (ie GPLv2), unless stated otherwise.
