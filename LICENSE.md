@@ -335,3 +335,9 @@ proprietary programs.  If your program is a subroutine library, you may
 consider it more useful to permit linking proprietary applications with the
 library.  If this is what you want to do, use the GNU Lesser General
 Public License instead of this License.
+
+## How to Apply These Terms to This Software
+
+Please note that the only valid version of the GPL for Datenstrom Yellow 
+is this particular version of the GPL (ie v2, not v2.2 or v3.x or whatever), 
+unless stated otherwise.
