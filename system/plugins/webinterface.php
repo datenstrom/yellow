@@ -5,7 +5,7 @@
 
 class YellowWebinterface
 {
-	const VERSION = "0.6.20";
+	const VERSION = "0.6.21";
 	var $yellow;			//access to API
 	var $response;			//web interface response
 	var $users;				//web interface users
@@ -947,11 +947,12 @@ class YellowResponse
 	function getPageTitle($rawData)
 	{
 		$title = $this->yellow->page->get("title");
-		if(preg_match("/^(\xEF\xBB\xBF)?\-\-\-[\r\n]+(.+?)[\r\n]+\-\-\-[\r\n]+/s", $rawData))
+		if(preg_match("/^(\xEF\xBB\xBF)?\-\-\-[\r\n]+(.+?)\-\-\-[\r\n]+/s", $rawData, $parts))
 		{
-			foreach($this->yellow->toolbox->getTextLines($rawData) as $line)
+			foreach($this->yellow->toolbox->getTextLines($parts[2]) as $line)
 			{
-				if(preg_match("/^(\s*Title\s*:\s*)(.*?)(\s*)$/i", $line, $matches)) { $title = $matches[2]; break; }
+				preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
+				if(lcfirst($matches[1])=="title" && !strempty($matches[2])) { $title = $matches[2]; break; }
 			}
 		}
 		return $title;
@@ -970,7 +971,8 @@ class YellowResponse
 	{
 		foreach($this->yellow->toolbox->getTextLines($rawData) as $line)
 		{
-			if(preg_match("/^(\s*Title\s*:\s*)(.*?)(\s*)$/i", $line, $matches)) $line = $matches[1].$title.$matches[3];
+			preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
+			if(lcfirst($matches[1])=="title") $line = "Title: $title\n";
 			$rawDataNew .= $line;
 		}
 		return $rawDataNew;
