@@ -1,7 +1,7 @@
 <?php if($yellow->page->isPage("sidebar")): ?>
 <?php if($yellow->page->get("navigation")=="navigation-sidebar" && $yellow->page->getPage("sidebar")==$yellow->page): ?>
-<?php $page = $yellow->page->getParentTop(false) ?>
-<?php $pages = $page ? $page->getChildren(!$page->isVisible()) : $yellow->pages->clean() ?>
+<?php $page = $yellow->page->getParentTop(true) ?>
+<?php $pages = $page->getChildren(!$page->isVisible()) ?>
 <?php $yellow->page->setLastModified($pages->getModified()) ?>
 <div class="sidebar">
 <div class="navigation-sidebar">
