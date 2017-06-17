@@ -5,7 +5,6 @@
 
 version_compare(PHP_VERSION, "5.4", ">=") || die("Datenstrom Yellow requires PHP 5.4 or higher!");
 extension_loaded("mbstring") || die("Datenstrom Yellow requires PHP mbstring extension!");
-
 require_once("system/plugins/core.php");
 if(PHP_SAPI!="cli")
 {
