@@ -78,7 +78,8 @@ class YellowUpdate
 				preg_match("/^.*\/(.+?)$/", dirname($page->fileName), $matches);
 				$value = $this->yellow->lookup->normaliseName($matches[1], true, false, true);
 				if(!is_file($this->yellow->config->get("templateDir").$value.".html")) $value = $valueDefault;
-				if(empty($this->yellow->toolbox->getMetaData($page->rawData, "template")) && $value!=$valueDefault)
+				$pageTemplate = $this->yellow->toolbox->getMetaData($page->rawData, "template");
+				if(empty($pageTemplate) && $value!=$valueDefault)
 				{
 					$rawDataNew = $this->yellow->toolbox->setMetaData($page->rawData, "template", $value);
 					if($page->rawData!=$rawDataNew) $this->yellow->toolbox->createFile($page->fileName, $rawDataNew);
