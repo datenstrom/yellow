@@ -3,7 +3,7 @@
 Language: en
 LanguageDescription: English
 LanguageTranslator: Mark Seuffert
-LanguageVersion: 0.6.16
+LanguageVersion: 0.7.1
 
 BlogBy: by
 BlogFilter: Blog:
@@ -25,6 +25,84 @@ DateFormatShort: F Y
 DateFormatMedium: Y-m-d
 DateFormatLong: Y-m-d H:i
 DateFormatTime: H:i
+EditInstallationTitle: Hello
+EditInstallationFeature: What do you want to make?
+EditInstallationHomePage: Your website works!\n\nYou can [edit this page] or use your text editor.
+EditInstallationAboutPage: This website is made with [yellow]. [Learn more](https://developers.datenstrom.se/help/).
+EditLoginTitle: Welcome
+EditLoginEmail: Email:
+EditLoginPassword: Password:
+EditLoginRecover: Forgot your password?
+EditLoginSignup: Create user account?
+EditLoginButton: Log in
+EditSignupTitle: Create user account
+EditSignupName: Name:
+EditSignupEmail: Email:
+EditSignupPassword: Password:
+EditSignupButton: Create
+EditSignupStatusNone: Here you can create a new user account.
+EditSignupStatusIncomplete: Please fill out all fields.
+EditSignupStatusInvalid: Please enter a valid email.
+EditSignupStatusWeak: Please enter a different password.
+EditSignupStatusNext: User account will be created, please check your emails.
+EditRecoverTitle: Forgot your password
+EditRecoverEmail: Email:
+EditRecoverPassword: Password:
+EditRecoverStatusNone: No problem, you can create a new password.
+EditRecoverStatusInvalid: Please enter a valid email.
+EditRecoverStatusPassword: Please enter a new password.
+EditRecoverStatusWeak: Please enter a different password.
+EditRecoverStatusNext: User account will be recovered, please check your emails.
+EditSettingsTitle: Settings
+EditSettingsStatusInvalid: Please enter a valid email.
+EditSettingsStatusTaken: Please enter a different email.
+EditSettingsStatusWeak: Please enter a different password.
+EditSettingsStatusNext: User account will be changed, please check your emails.
+EditConfirmSubject: Confirm user account
+EditConfirmMessage: Hi @usershort, please confirm your user account. Click the following link.
+EditConfirmStatusDone: User account confirmed and waiting for approval. Thank you!
+EditConfirmStatusExpired: User account can not be confirmed. Link has expired!
+EditApproveSubject: Approve user account
+EditApproveMessage: Hi @usershort, please approve a new user account for @useraccount. Click the following link.
+EditApproveStatusDone: User account approved. Thank you!
+EditApproveStatusExpired: User account can not be approved. Link has expired!
+EditRecoverSubject: Recover user account
+EditRecoverMessage: Hi @usershort, please confirm that you forgot your password. Click the following link.
+EditRecoverStatusDone: User account recovered. Thank you!
+EditRecoverStatusExpired: User account can not be recovered. Link has expired!
+EditReconfirmSubject: Change user account
+EditReconfirmMessage: Hi @usershort, please confirm a new email for your user account. Click the following link.
+EditReconfirmStatusDone: User account confirmed. Thank you!
+EditReconfirmStatusExpired: User account can not be confirmed. Link has expired!
+EditChangeSubject: Change user account
+EditChangeMessage: Hi @usershort, please confirm that you want to change your user account. Click the following link.
+EditChangeStatusDone: User account changed. Thank you!
+EditChangeStatusExpired: User account can not be changed. Link has expired!
+EditWelcomeSubject: Welcome
+EditWelcomeMessage: Hi @usershort, your user account has been created. Have fun editing the website.
+EditInformationSubject: Welcome back
+EditInformationMessage: Hi @usershort, your user account has been changed. You can now log in.
+EditVersionTitle: About this website
+EditVersionStatusNone: Yellow is for people who make websites.
+EditVersionStatusCheck: Checking for updates…
+EditVersionStatusDone: Your website is up to date.
+EditVersionStatusUpdates: Updates available, please contact the webmaster.
+EditVersionUpdateNormal: Updates available, update now.
+EditVersionUpdateForce: Force update
+EditVersionUpdateModified: @software has been modified
+EditOkButton: Ok
+EditCancelButton: Cancel
+EditCreateButton: Create
+EditEditButton: Save
+EditDeleteButton: Delete
+EditEdit: Edit page
+EditCreate: +
+EditDelete: -
+EditCreateTitle: Create page
+EditDeleteTitle: Delete page
+EditMarkdownHelp: Markdown
+EditUserHelp: Help
+EditUserLogout: Logout
 PagePrevious: ← Previous: @title
 PageNext: Next: @title →
 PaginationPrevious: ← Previous
@@ -34,84 +112,6 @@ SearchResultsNone: Enter a search term.
 SearchResultsEmpty: No results found.
 SearchSpecialChanges: Recent changes
 SearchButton: Search
-WebinterfaceInstallationTitle: Hello
-WebinterfaceInstallationFeature: What do you want to make?
-WebinterfaceInstallationHomePage: Your website works!\n\nYou can [edit this page] or use your text editor.
-WebinterfaceInstallationAboutPage: This website is made with [yellow]. [Learn more](https://developers.datenstrom.se/help/).
-WebinterfaceLoginTitle: Welcome
-WebinterfaceLoginEmail: Email:
-WebinterfaceLoginPassword: Password:
-WebinterfaceLoginRecover: Forgot your password?
-WebinterfaceLoginSignup: Create user account?
-WebinterfaceLoginButton: Log in
-WebinterfaceSignupTitle: Create user account
-WebinterfaceSignupName: Name:
-WebinterfaceSignupEmail: Email:
-WebinterfaceSignupPassword: Password:
-WebinterfaceSignupButton: Create
-WebinterfaceSignupStatusNone: Here you can create a new user account.
-WebinterfaceSignupStatusIncomplete: Please fill out all fields.
-WebinterfaceSignupStatusInvalid: Please enter a valid email.
-WebinterfaceSignupStatusWeak: Please enter a different password.
-WebinterfaceSignupStatusNext: User account will be created, please check your emails.
-WebinterfaceRecoverTitle: Forgot your password
-WebinterfaceRecoverEmail: Email:
-WebinterfaceRecoverPassword: Password:
-WebinterfaceRecoverStatusNone: No problem, you can create a new password.
-WebinterfaceRecoverStatusInvalid: Please enter a valid email.
-WebinterfaceRecoverStatusPassword: Please enter a new password.
-WebinterfaceRecoverStatusWeak: Please enter a different password.
-WebinterfaceRecoverStatusNext: User account will be recovered, please check your emails.
-WebinterfaceSettingsTitle: Settings
-WebinterfaceSettingsStatusInvalid: Please enter a valid email.
-WebinterfaceSettingsStatusTaken: Please enter a different email.
-WebinterfaceSettingsStatusWeak: Please enter a different password.
-WebinterfaceSettingsStatusNext: User account will be changed, please check your emails.
-WebinterfaceConfirmSubject: Confirm user account
-WebinterfaceConfirmMessage: Hi @usershort, please confirm your user account. Click the following link.
-WebinterfaceConfirmStatusDone: User account confirmed and waiting for approval. Thank you!
-WebinterfaceConfirmStatusExpired: User account can not be confirmed. Link has expired!
-WebinterfaceApproveSubject: Approve user account
-WebinterfaceApproveMessage: Hi @usershort, please approve a new user account for @useraccount. Click the following link.
-WebinterfaceApproveStatusDone: User account approved. Thank you!
-WebinterfaceApproveStatusExpired: User account can not be approved. Link has expired!
-WebinterfaceRecoverSubject: Recover user account
-WebinterfaceRecoverMessage: Hi @usershort, please confirm that you forgot your password. Click the following link.
-WebinterfaceRecoverStatusDone: User account recovered. Thank you!
-WebinterfaceRecoverStatusExpired: User account can not be recovered. Link has expired!
-WebinterfaceReconfirmSubject: Change user account
-WebinterfaceReconfirmMessage: Hi @usershort, please confirm a new email for your user account. Click the following link.
-WebinterfaceReconfirmStatusDone: User account confirmed. Thank you!
-WebinterfaceReconfirmStatusExpired: User account can not be confirmed. Link has expired!
-WebinterfaceChangeSubject: Change user account
-WebinterfaceChangeMessage: Hi @usershort, please confirm that you want to change your user account. Click the following link.
-WebinterfaceChangeStatusDone: User account changed. Thank you!
-WebinterfaceChangeStatusExpired: User account can not be changed. Link has expired!
-WebinterfaceWelcomeSubject: Welcome
-WebinterfaceWelcomeMessage: Hi @usershort, your user account has been created. Have fun editing the website.
-WebinterfaceInformationSubject: Welcome back
-WebinterfaceInformationMessage: Hi @usershort, your user account has been changed. You can now log in.
-WebinterfaceVersionTitle: About this website
-WebinterfaceVersionStatusNone: Yellow is for people who make websites.
-WebinterfaceVersionStatusCheck: Checking for updates…
-WebinterfaceVersionStatusDone: Your website is up to date.
-WebinterfaceVersionStatusUpdates: Updates available, please contact the webmaster.
-WebinterfaceVersionUpdateNormal: Updates available, update now.
-WebinterfaceVersionUpdateForce: Force update
-WebinterfaceVersionUpdateModified: @software has been modified
-WebinterfaceOkButton: Ok
-WebinterfaceCancelButton: Cancel
-WebinterfaceCreateButton: Create
-WebinterfaceEditButton: Save
-WebinterfaceDeleteButton: Delete
-WebinterfaceEdit: Edit page
-WebinterfaceCreate: +
-WebinterfaceDelete: -
-WebinterfaceCreateTitle: Create page
-WebinterfaceDeleteTitle: Delete page
-WebinterfaceMarkdownHelp: Markdown
-WebinterfaceUserHelp: Help
-WebinterfaceUserLogout: Logout
 WikiFilter: Wiki:
 WikiTag: Tags:
 WikiSpecialPages: All pages

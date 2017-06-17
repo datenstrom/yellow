@@ -3,7 +3,7 @@
 Language: fr
 LanguageDescription: Français
 LanguageTranslator: Juh Nibreh
-LanguageVersion: 0.6.16
+LanguageVersion: 0.7.1
 
 BlogBy: par
 BlogFilter: Blog:
@@ -25,6 +25,84 @@ DateFormatShort: F Y
 DateFormatMedium: d/m/Y
 DateFormatLong: d/m/Y H:i
 DateFormatTime: H:i
+EditInstallationTitle: Bonjour
+EditInstallationFeature: Que voulez-vous faire?
+EditInstallationHomePage: Votre site web fonctionne!\n\nVous pouvez [edit - modifier cette page] ou utiliser un éditeur de texte.
+EditInstallationAboutPage: Ce site web est fait avec [yellow]. [Apprenez-en plus](https://developers.datenstrom.se/help/help-fr).
+EditLoginTitle: Bienvenue
+EditLoginEmail: Email:
+EditLoginPassword: Mot de passe:
+EditLoginRecover: Mot de passe oublié?
+EditLoginSignup: Créer un compte utilisateur?
+EditLoginButton: Se connecter
+EditSignupTitle: Créer un compte utilisateur
+EditSignupName: Nom:
+EditSignupEmail: Email:
+EditSignupPassword: Mot de passe:
+EditSignupButton: Créer
+EditSignupStatusNone: Ici, vous pouvez créer un nouveau compte utilisateur.
+EditSignupStatusIncomplete: Veuillez remplir tous les champs.
+EditSignupStatusInvalid: S'il vous plaît, veuillez entrer une adresse email valide.
+EditSignupStatusWeak: S'il vous plaît, choisissez un mot de passe différent.
+EditSignupStatusNext: Votre compte a été créé, vérifiez vos emails.
+EditRecoverTitle: Mot de passe oublié
+EditRecoverEmail: Email:
+EditRecoverPassword: Mot de passe:
+EditRecoverStatusNone: Pas de problème, vous pouvez créer un nouveau mot de passe.
+EditRecoverStatusInvalid: S'il vous plaît, veuillez entrer une adresse email valide.
+EditRecoverStatusPassword: S'il vous plaît, choisissez un nouveau mot de passe.
+EditRecoverStatusWeak: S'il vous plaît, choisissez un mot de passe différent.
+EditRecoverStatusNext: Votre compte est à nouveau disponible, vérifiez vos emails.
+EditSettingsTitle: Paramètres
+EditSettingsStatusInvalid: S'il vous plaît, veuillez entrer une adresse email valide.
+EditSettingsStatusTaken: S'il vous plaît, veuillez entrer une adresse email différent.
+EditSettingsStatusWeak: S'il vous plaît, choisissez un mot de passe différent.
+EditSettingsStatusNext: Votre compte a été changé, vérifiez vos emails.
+EditConfirmSubject: Confirmation d'un compte utilisateur
+EditConfirmMessage: Bonjour @usershort, veuillez confirmer votre compte utilisateur. Cliquez sur le lien suivant.
+EditConfirmStatusDone: Votre compte utilisateur est confirmé et en attente d'approbation. Merci!
+EditConfirmStatusExpired: Le compte ne peut pas être créé. Le lien de confirmation a expiré!
+EditApproveSubject: Approuver un nouvel utilisateur
+EditApproveMessage: Bonjour @usershort, veuillez approuver la création d'un nouveau compte utilisateur pour @useraccount. Cliquez sur le lien suivant.
+EditApproveStatusDone: Compte utilisateur approuvé. Merci!
+EditApproveStatusExpired: Le compte ne peut pas être approuvé. Le lien de confirmation a expiré!
+EditRecoverSubject: Restauration d'un compte utilisateur
+EditRecoverMessage: Bonjour @usershort, veuillez confirmer que vous avez oublié votre mot de passe. Cliquez sur le lien suivant.
+EditRecoverStatusDone: Compte utilisateur restauré. Merci!
+EditRecoverStatusExpired: Le compte ne peut pas être restauré. Le lien de confirmation a expiré!
+EditReconfirmSubject: Changement d'un compte utilisateur
+EditReconfirmMessage: Bonjour @usershort, veuillez confirmer une nouvelle adresse email pour votre compte utilisateur. Cliquez sur le lien suivant.
+EditReconfirmStatusDone: Votre compte utilisateur est confirmé. Merci!
+EditReconfirmStatusExpired: Le compte ne peut pas être créé. Le lien de confirmation a expiré!
+EditChangeSubject: Changement d'un compte utilisateur
+EditChangeMessage: Bonjour @usershort, veuillez confirmer que vous souhaitez modifier votre compte utilisateur. Cliquez sur le lien suivant.
+EditChangeStatusDone: Compte utilisateur changé. Merci!
+EditChangeStatusExpired: Le compte ne peut pas être changé. Le lien de confirmation a expiré!
+EditWelcomeSubject: Bienvenue
+EditWelcomeMessage: Bonjour @usershort, votre compte utilisateur a bien été créé. Amusez-vous bien en éditant le site web.
+EditInformationSubject: Bienvenue à nouveau
+EditInformationMessage: Bonjour @usershort, votre compte utilisateur a bien été changé. Vous pouvez maintenant vous connecter.
+EditVersionTitle: A propos de ce site
+EditVersionStatusNone: Yellow est fait pour les gens qui font des sites web.
+EditVersionStatusCheck: Vérification des mises à jour…
+EditVersionStatusDone: Votre site est à jour.
+EditVersionStatusUpdates: Mises à jour disponibles, s'il vous plaît contacter le webmestre.
+EditVersionUpdateNormal: Mises à jour disponibles, mettre à jour maintenant.
+EditVersionUpdateForce: Forcer mise à jour
+EditVersionUpdateModified: @software a été modifié
+EditOkButton: Ok
+EditCancelButton: Annuler
+EditCreateButton: Créer
+EditEditButton: Sauvegarder
+EditDeleteButton: Supprimer
+EditEdit: Éditer page
+EditCreate: +
+EditDelete: -
+EditCreateTitle: Créer page
+EditDeleteTitle: Supprimer page
+EditMarkdownHelp: Markdown
+EditUserHelp: Aide
+EditUserLogout: Déconnexion
 PagePrevious: ← Précédent: @title
 PageNext: Suivant: @title →
 PaginationPrevious: ← Précédent
@@ -34,84 +112,6 @@ SearchResultsNone: Entrez un mot dans le champ de recherche.
 SearchResultsEmpty: Pas de résultats.
 SearchSpecialChanges: Changements récents
 SearchButton: Rechercher
-WebinterfaceInstallationTitle: Bonjour
-WebinterfaceInstallationFeature: Que voulez-vous faire?
-WebinterfaceInstallationHomePage: Votre site web fonctionne!\n\nVous pouvez [edit - modifier cette page] ou utiliser un éditeur de texte.
-WebinterfaceInstallationAboutPage: Ce site web est fait avec [yellow]. [Apprenez-en plus](https://developers.datenstrom.se/help/help-fr).
-WebinterfaceLoginTitle: Bienvenue
-WebinterfaceLoginEmail: Email:
-WebinterfaceLoginPassword: Mot de passe:
-WebinterfaceLoginRecover: Mot de passe oublié?
-WebinterfaceLoginSignup: Créer un compte utilisateur?
-WebinterfaceLoginButton: Se connecter
-WebinterfaceSignupTitle: Créer un compte utilisateur
-WebinterfaceSignupName: Nom:
-WebinterfaceSignupEmail: Email:
-WebinterfaceSignupPassword: Mot de passe:
-WebinterfaceSignupButton: Créer
-WebinterfaceSignupStatusNone: Ici, vous pouvez créer un nouveau compte utilisateur.
-WebinterfaceSignupStatusIncomplete: Veuillez remplir tous les champs.
-WebinterfaceSignupStatusInvalid: S'il vous plaît, veuillez entrer une adresse email valide.
-WebinterfaceSignupStatusWeak: S'il vous plaît, choisissez un mot de passe différent.
-WebinterfaceSignupStatusNext: Votre compte a été créé, vérifiez vos emails.
-WebinterfaceRecoverTitle: Mot de passe oublié
-WebinterfaceRecoverEmail: Email:
-WebinterfaceRecoverPassword: Mot de passe:
-WebinterfaceRecoverStatusNone: Pas de problème, vous pouvez créer un nouveau mot de passe.
-WebinterfaceRecoverStatusInvalid: S'il vous plaît, veuillez entrer une adresse email valide.
-WebinterfaceRecoverStatusPassword: S'il vous plaît, choisissez un nouveau mot de passe.
-WebinterfaceRecoverStatusWeak: S'il vous plaît, choisissez un mot de passe différent.
-WebinterfaceRecoverStatusNext: Votre compte est à nouveau disponible, vérifiez vos emails.
-WebinterfaceSettingsTitle: Paramètres
-WebinterfaceSettingsStatusInvalid: S'il vous plaît, veuillez entrer une adresse email valide.
-WebinterfaceSettingsStatusTaken: S'il vous plaît, veuillez entrer une adresse email différent.
-WebinterfaceSettingsStatusWeak: S'il vous plaît, choisissez un mot de passe différent.
-WebinterfaceSettingsStatusNext: Votre compte a été changé, vérifiez vos emails.
-WebinterfaceConfirmSubject: Confirmation d'un compte utilisateur
-WebinterfaceConfirmMessage: Bonjour @usershort, veuillez confirmer votre compte utilisateur. Cliquez sur le lien suivant.
-WebinterfaceConfirmStatusDone: Votre compte utilisateur est confirmé et en attente d'approbation. Merci!
-WebinterfaceConfirmStatusExpired: Le compte ne peut pas être créé. Le lien de confirmation a expiré!
-WebinterfaceApproveSubject: Approuver un nouvel utilisateur
-WebinterfaceApproveMessage: Bonjour @usershort, veuillez approuver la création d'un nouveau compte utilisateur pour @useraccount. Cliquez sur le lien suivant.
-WebinterfaceApproveStatusDone: Compte utilisateur approuvé. Merci!
-WebinterfaceApproveStatusExpired: Le compte ne peut pas être approuvé. Le lien de confirmation a expiré!
-WebinterfaceRecoverSubject: Restauration d'un compte utilisateur
-WebinterfaceRecoverMessage: Bonjour @usershort, veuillez confirmer que vous avez oublié votre mot de passe. Cliquez sur le lien suivant.
-WebinterfaceRecoverStatusDone: Compte utilisateur restauré. Merci!
-WebinterfaceRecoverStatusExpired: Le compte ne peut pas être restauré. Le lien de confirmation a expiré!
-WebinterfaceReconfirmSubject: Changement d'un compte utilisateur
-WebinterfaceReconfirmMessage: Bonjour @usershort, veuillez confirmer une nouvelle adresse email pour votre compte utilisateur. Cliquez sur le lien suivant.
-WebinterfaceReconfirmStatusDone: Votre compte utilisateur est confirmé. Merci!
-WebinterfaceReconfirmStatusExpired: Le compte ne peut pas être créé. Le lien de confirmation a expiré!
-WebinterfaceChangeSubject: Changement d'un compte utilisateur
-WebinterfaceChangeMessage: Bonjour @usershort, veuillez confirmer que vous souhaitez modifier votre compte utilisateur. Cliquez sur le lien suivant.
-WebinterfaceChangeStatusDone: Compte utilisateur changé. Merci!
-WebinterfaceChangeStatusExpired: Le compte ne peut pas être changé. Le lien de confirmation a expiré!
-WebinterfaceWelcomeSubject: Bienvenue
-WebinterfaceWelcomeMessage: Bonjour @usershort, votre compte utilisateur a bien été créé. Amusez-vous bien en éditant le site web.
-WebinterfaceInformationSubject: Bienvenue à nouveau
-WebinterfaceInformationMessage: Bonjour @usershort, votre compte utilisateur a bien été changé. Vous pouvez maintenant vous connecter.
-WebinterfaceVersionTitle: A propos de ce site
-WebinterfaceVersionStatusNone: Yellow est fait pour les gens qui font des sites web.
-WebinterfaceVersionStatusCheck: Vérification des mises à jour…
-WebinterfaceVersionStatusDone: Votre site est à jour.
-WebinterfaceVersionStatusUpdates: Mises à jour disponibles, s'il vous plaît contacter le webmestre.
-WebinterfaceVersionUpdateNormal: Mises à jour disponibles, mettre à jour maintenant.
-WebinterfaceVersionUpdateForce: Forcer mise à jour
-WebinterfaceVersionUpdateModified: @software a été modifié
-WebinterfaceOkButton: Ok
-WebinterfaceCancelButton: Annuler
-WebinterfaceCreateButton: Créer
-WebinterfaceEditButton: Sauvegarder
-WebinterfaceDeleteButton: Supprimer
-WebinterfaceEdit: Éditer page
-WebinterfaceCreate: +
-WebinterfaceDelete: -
-WebinterfaceCreateTitle: Créer page
-WebinterfaceDeleteTitle: Supprimer page
-WebinterfaceMarkdownHelp: Markdown
-WebinterfaceUserHelp: Aide
-WebinterfaceUserLogout: Déconnexion
 WikiFilter: Wiki:
 WikiTag: Tags:
 WikiSpecialPages: Toutes les pages

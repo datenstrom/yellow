@@ -1,4 +1,4 @@
 ---
 Title: Server error
 ---
-Something went wrong. @pageerror
+Something went wrong. [yellow error]

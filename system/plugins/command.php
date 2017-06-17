@@ -1,11 +1,11 @@
 <?php
-// Commandline plugin, https://github.com/datenstrom/yellow-plugins/tree/master/commandline
+// Command plugin, https://github.com/datenstrom/yellow-plugins/tree/master/command
 // Copyright (c) 2013-2017 Datenstrom, https://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
-class YellowCommandline
+class YellowCommand
 {
-	const VERSION = "0.6.19";
+	const VERSION = "0.7.1";
 	var $yellow;					//access to API
 	var $files;						//number of files
 	var $errors;					//number of errors
@@ -45,7 +45,7 @@ class YellowCommandline
 	// Show available commands
 	function helpCommand()
 	{
-		echo "Yellow ".YellowCore::VERSION."\n";
+		echo "Datenstrom Yellow ".YellowCore::VERSION."\n";
 		$lineCounter = 0;
 		foreach($this->getCommandHelp() as $line) echo (++$lineCounter>1 ? "        " : "Syntax: ")."yellow.php $line\n";
 		return 200;
@@ -175,7 +175,7 @@ class YellowCommandline
 			++$this->errors;
 			echo "ERROR building location '$location', ".$this->yellow->page->getStatusCode(true)."\n";
 		}
-		if(defined("DEBUG") && DEBUG>=1) echo "YellowCommandline::buildStaticFile status:$statusCode location:$location<br/>\n";
+		if(defined("DEBUG") && DEBUG>=1) echo "YellowCommand::buildStaticFile status:$statusCode location:$location<br/>\n";
 		return $statusCode;
 	}
 	
@@ -188,6 +188,7 @@ class YellowCommandline
 		$_SERVER["SERVER_PROTOCOL"] = "HTTP/1.1";
 		$_SERVER["SERVER_NAME"] = $serverName;
 		$_SERVER["SERVER_PORT"] = $serverPort;
+		$_SERVER["REQUEST_METHOD"] = "GET";
 		$_SERVER["REQUEST_URI"] = $base.$location;
 		$_SERVER["SCRIPT_NAME"] = $base."/yellow.php";
 		$_SERVER["REMOTE_ADDR"] = "127.0.0.1";
@@ -219,14 +220,14 @@ class YellowCommandline
 				if(is_null($this->locationsArgs[$location]))
 				{
 					$this->locationsArgs[$location] = $location;
-					if(defined("DEBUG") && DEBUG>=2) echo "YellowCommandline::analyseStaticFile detected location:$location<br/>\n";
+					if(defined("DEBUG") && DEBUG>=2) echo "YellowCommand::analyseStaticFile detected location:$location<br/>\n";
 				}
 			} else {
 				$location = rtrim($location, "0..9");
 				if(is_null($this->locationsArgsPagination[$location]))
 				{
 					$this->locationsArgsPagination[$location] = $location;
-					if(defined("DEBUG") && DEBUG>=2) echo "YellowCommandline::analyseStaticFile detected location:$location<br/>\n";
+					if(defined("DEBUG") && DEBUG>=2) echo "YellowCommand::analyseStaticFile detected location:$location<br/>\n";
 				}
 			}
 		}
@@ -300,7 +301,7 @@ class YellowCommandline
 		$statusCode = 0;
 		foreach($this->yellow->plugins->plugins as $key=>$value)
 		{
-			if($key=="commandline") continue;
+			if($key=="command") continue;
 			if(method_exists($value["obj"], "onCommand"))
 			{
 				$statusCode = $value["obj"]->onCommand(func_get_args());
@@ -314,7 +315,7 @@ class YellowCommandline
 	function versionCommand($args)
 	{
 		$serverVersion = $this->yellow->toolbox->getServerVersion();
-		echo "Yellow ".YellowCore::VERSION.", PHP ".PHP_VERSION.", $serverVersion\n";
+		echo "Datenstrom Yellow ".YellowCore::VERSION.", PHP ".PHP_VERSION.", $serverVersion\n";
 		list($command) = $args;
 		list($statusCode, $dataCurrent) = $this->getSoftwareVersion();
 		list($statusCode, $dataLatest) = $this->getSoftwareVersion(true);
@@ -460,5 +461,5 @@ class YellowCommandline
 	}
 }
 	
-$yellow->plugins->register("commandline", "YellowCommandline", YellowCommandline::VERSION);
+$yellow->plugins->register("command", "YellowCommand", YellowCommand::VERSION);
 ?>

@@ -1,15 +1,15 @@
 <?php
-// Webinterface plugin, https://github.com/datenstrom/yellow-plugins/tree/master/webinterface
+// Edit plugin, https://github.com/datenstrom/yellow-plugins/tree/master/edit
 // Copyright (c) 2013-2017 Datenstrom, https://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
-class YellowWebinterface
+class YellowEdit
 {
-	const VERSION = "0.6.21";
+	const VERSION = "0.7.1";
 	var $yellow;			//access to API
-	var $response;			//web interface response
-	var $users;				//web interface users
-	var $merge;				//web interface merge
+	var $response;			//web response
+	var $users;				//user accounts
+	var $merge;				//text merge
 
 	// Handle initialisation
 	function onLoad($yellow)
@@ -18,16 +18,18 @@ class YellowWebinterface
 		$this->response = new YellowResponse($yellow);
 		$this->users = new YellowUsers($yellow);
 		$this->merge = new YellowMerge($yellow);
-		$this->yellow->config->setDefault("webinterfaceLocation", "/edit/");
-		$this->yellow->config->setDefault("webinterfaceNewFile", "page-new-(.*).txt");
-		$this->yellow->config->setDefault("webinterfaceMetaFilePrefix", "published");
-		$this->yellow->config->setDefault("webinterfaceUserFile", "user.ini");
-		$this->yellow->config->setDefault("webinterfaceUserPasswordMinLength", "4");
-		$this->yellow->config->setDefault("webinterfaceUserHashAlgorithm", "bcrypt");
-		$this->yellow->config->setDefault("webinterfaceUserHashCost", "10");
-		$this->yellow->config->setDefault("webinterfaceUserStatus", "active");
-		$this->yellow->config->setDefault("webinterfaceUserHome", "/");
-		$this->users->load($this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile"));
+		$this->yellow->config->setDefault("editLocation", "/edit/");
+		$this->yellow->config->setDefault("editNewFile", "page-new-(.*).txt");
+		$this->yellow->config->setDefault("editUserFile", "user.ini");
+		$this->yellow->config->setDefault("editUserPasswordMinLength", "4");
+		$this->yellow->config->setDefault("editUserHashAlgorithm", "bcrypt");
+		$this->yellow->config->setDefault("editUserHashCost", "10");
+		$this->yellow->config->setDefault("editUserStatus", "active");
+		$this->yellow->config->setDefault("editUserHome", "/");
+		$this->yellow->config->setDefault("editLoginEmail", "");
+		$this->yellow->config->setDefault("editLoginPassword", "");
+		$this->yellow->config->setDefault("editLoginRestrictions", "0");
+		$this->users->load($this->yellow->config->get("configDir").$this->yellow->config->get("editUserFile"));
 	}
 
 	// Handle startup
@@ -44,7 +46,7 @@ class YellowWebinterface
 		{
 			$scheme = $this->yellow->config->get("serverScheme");
 			$address = $this->yellow->config->get("serverAddress");
-			$base = rtrim($this->yellow->config->get("serverBase").$this->yellow->config->get("webinterfaceLocation"), '/');
+			$base = rtrim($this->yellow->config->get("serverBase").$this->yellow->config->get("editLocation"), '/');
 			list($scheme, $address, $base, $location, $fileName) = $this->yellow->getRequestInformation($scheme, $address, $base);
 			$this->yellow->page->setRequestInformation($scheme, $address, $base, $location, $fileName);
 			$statusCode = $this->processRequest($scheme, $address, $base, $location, $fileName);
@@ -90,8 +92,8 @@ class YellowWebinterface
 		if($name=="header" && $this->response->isActive())
 		{
 			$pluginLocation = $this->yellow->config->get("serverBase").$this->yellow->config->get("pluginLocation");
-			$output = "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"{$pluginLocation}webinterface.css\" />\n";
-			$output .= "<script type=\"text/javascript\" src=\"{$pluginLocation}webinterface.js\"></script>\n";
+			$output = "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"{$pluginLocation}edit.css\" />\n";
+			$output .= "<script type=\"text/javascript\" src=\"{$pluginLocation}edit.js\"></script>\n";
 			$output .= "<script type=\"text/javascript\">\n";
 			$output .= "// <![CDATA[\n";
 			$output .= "yellow.page = ".json_encode($this->response->getPageData()).";\n";
@@ -129,7 +131,7 @@ class YellowWebinterface
 		list($command, $path) = $args;
 		if($path=="all")
 		{
-			$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
+			$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("editUserFile");
 			if(!$this->users->clean($fileNameUser)) $statusCode = 500;
 			if($statusCode==500) echo "ERROR cleaning configuration: Can't write file '$fileNameUser'!\n";
 		}
@@ -152,13 +154,13 @@ class YellowWebinterface
 			}
 			if($status=="ok")
 			{
-				$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
+				$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("editUserFile");
 				$status = $this->users->update($fileNameUser, $email, $password, $name, $language, "active") ? "ok" : "error";
 				if($status=="error") echo "ERROR updating configuration: Can't write file '$fileNameUser'!\n";
 			}
 			if($status=="ok")
 			{
-				$algorithm = $this->yellow->config->get("webinterfaceUserHashAlgorithm");
+				$algorithm = $this->yellow->config->get("editUserHashAlgorithm");
 				$status = substru($this->users->getHash($email), 0, 5)!="error-hash" ? "ok" : "error";
 				if($status=="error") echo "ERROR updating configuration: Hash algorithm '$algorithm' not supported!\n";
 			}
@@ -209,7 +211,7 @@ class YellowWebinterface
 				case "reconfirm":	$statusCode = $this->processRequestReconfirm($scheme, $address, $base, $location, $fileName); break;
 				case "change":		$statusCode = $this->processRequestChange($scheme, $address, $base, $location, $fileName); break;
 			}
-			if($this->response->action=="fail") $this->yellow->page->error(500, "Login failed, [please log in](javascript:yellow.action('login');)!");
+			if($this->response->action=="fail") $this->yellow->page->error(500, "Login failed, <a href=\"javascript:yellow.action('login');\">please log in</a>!");
 		}
 		return $statusCode;
 	}
@@ -283,7 +285,7 @@ class YellowWebinterface
 		if($this->response->status=="ok" && $this->users->isTaken($email)) $this->response->status = "next";
 		if($this->response->status=="ok")
 		{
-			$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
+			$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("editUserFile");
 			$this->response->status = $this->users->update($fileNameUser, $email, $password, $name, "", "unconfirmed") ? "ok" : "error";
 			if($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
 		}
@@ -305,7 +307,7 @@ class YellowWebinterface
 		$this->response->status = $this->users->getResponseStatus($email, $_REQUEST["action"], $_REQUEST["expire"], $_REQUEST["id"]);
 		if($this->response->status=="ok")
 		{
-			$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
+			$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("editUserFile");
 			$this->response->status = $this->users->update($fileNameUser, $email, "", "", "", "unapproved") ? "ok" : "error";
 			if($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
 		}
@@ -327,7 +329,7 @@ class YellowWebinterface
 		$this->response->status = $this->users->getResponseStatus($email, $_REQUEST["action"], $_REQUEST["expire"], $_REQUEST["id"]);
 		if($this->response->status=="ok")
 		{
-			$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
+			$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("editUserFile");
 			$this->response->status = $this->users->update($fileNameUser, $email, "", "", "", "active") ? "ok" : "error";
 			if($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
 		}
@@ -350,7 +352,6 @@ class YellowWebinterface
 		if(empty($_REQUEST["id"]))
 		{
 			if(!filter_var($email, FILTER_VALIDATE_EMAIL)) $this->response->status = "invalid";
-			if($this->response->status=="ok" && $this->response->isLoginRestrictions()) $this->response->status = "next";
 			if($this->response->status=="ok" && !$this->users->isExisting($email)) $this->response->status = "next";
 			if($this->response->status=="ok")
 			{
@@ -365,7 +366,7 @@ class YellowWebinterface
 				if($this->response->status=="ok") $this->response->status = $this->getUserAccount($email, $password, $this->response->action);
 				if($this->response->status=="ok")
 				{
-					$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
+					$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("editUserFile");
 					$this->response->status = $this->users->update($fileNameUser, $email, $password) ? "ok" : "error";
 					if($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
 				}
@@ -400,14 +401,14 @@ class YellowWebinterface
 			if($this->response->status=="ok" && $email!=$emailSource)
 			{
 				$pending = $emailSource;
-				$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
+				$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("editUserFile");
 				$this->response->status = $this->users->update($fileNameUser, $email, "no", $name, $language, "unconfirmed", "", $pending) ? "ok" : "error";
 				if($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
 			}
 			if($this->response->status=="ok")
 			{
 				$pending = $email.':'.(empty($password) ? $this->users->getHash($emailSource) : $this->users->createHash($password));
-				$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
+				$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("editUserFile");
 				$this->response->status = $this->users->update($fileNameUser, $emailSource, "", $name, $language, "", "", $pending) ? "ok" : "error";
 				if($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
 			}
@@ -420,7 +421,7 @@ class YellowWebinterface
 		} else {
 			if($this->response->status=="ok")
 			{
-				$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
+				$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("editUserFile");
 				$this->response->status = $this->users->update($fileNameUser, $email, "", $name, $language) ? "done" : "error";
 				if($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
 			}
@@ -450,7 +451,7 @@ class YellowWebinterface
 		}
 		if($this->response->status=="ok")
 		{
-			$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
+			$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("editUserFile");
 			$this->response->status = $this->users->update($fileNameUser, $email, "", "", "", "unchanged") ? "ok" : "error";
 			if($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
 		}
@@ -477,7 +478,7 @@ class YellowWebinterface
 		}
 		if($this->response->status=="ok" && $email!=$emailSource)
 		{
-			$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
+			$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("editUserFile");
 			$this->users->users[$emailSource]["pending"] = "none";
 			$this->response->status = $this->users->update($fileNameUser, $emailSource, "", "", "", "inactive") ? "ok" : "error";
 			if($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
@@ -486,7 +487,7 @@ class YellowWebinterface
 		{
 			$this->users->users[$email]["hash"] = $hash;
 			$this->users->users[$email]["pending"] = "none";
-			$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("webinterfaceUserFile");
+			$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("editUserFile");
 			$this->response->status = $this->users->update($fileNameUser, $email, "", "", "", "active") ? "ok" : "error";
 			if($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
 		}
@@ -529,7 +530,7 @@ class YellowWebinterface
 					{
 						if(!is_null($dataModified[$key]) && !is_null($dataLatest[$key]))
 						{
-							$rawData = $this->yellow->text->getTextHtml("webinterfaceVersionUpdateModified", $this->response->language)." - <a href=\"#\" onclick=\"yellow.action('update','update','".$this->yellow->toolbox->normaliseArgs("option:force/feature:$key")."'); return false;\">".$this->yellow->text->getTextHtml("webinterfaceVersionUpdateForce", $this->response->language)."</a>";
+							$rawData = $this->yellow->text->getTextHtml("editVersionUpdateModified", $this->response->language)." - <a href=\"#\" onclick=\"yellow.action('update','update','".$this->yellow->toolbox->normaliseArgs("option:force/feature:$key")."'); return false;\">".$this->yellow->text->getTextHtml("editVersionUpdateForce", $this->response->language)."</a>";
 							$rawData = preg_replace("/@software/i", htmlspecialchars("$key $dataLatest[$key]"), $rawData);
 							if(!empty($this->response->rawDataOutput)) $this->response->rawDataOutput .= "<br />\n";
 							$this->response->rawDataOutput .= $rawData;
@@ -575,7 +576,7 @@ class YellowWebinterface
 		if(!$this->response->isUserRestrictions() && !empty($_POST["rawdataedit"]))
 		{
 			$this->response->rawDataSource = $this->response->rawDataEdit = rawurldecode($_POST["rawdatasource"]);
-			$rawData = $this->response->normaliseText(rawurldecode($_POST["rawdataedit"]));
+			$rawData = rawurldecode($_POST["rawdataedit"]);
 			$page = $this->response->getPageNew($scheme, $address, $base, $location, $fileName, $rawData);
 			if(!$page->isError())
 			{
@@ -605,12 +606,12 @@ class YellowWebinterface
 		if(!$this->response->isUserRestrictions() && !empty($_POST["rawdataedit"]))
 		{
 			$this->response->rawDataSource = rawurldecode($_POST["rawdatasource"]);
-			$this->response->rawDataEdit = $this->response->normaliseText(rawurldecode($_POST["rawdataedit"]));
-			$page = $this->response->getPageUpdate($scheme, $address, $base, $location, $fileName,
+			$this->response->rawDataEdit = rawurldecode($_POST["rawdataedit"]);
+			$page = $this->response->getPageEdit($scheme, $address, $base, $location, $fileName,
 				$this->response->rawDataSource, $this->response->rawDataEdit, $this->yellow->toolbox->readFile($fileName));
 			if(!$page->isError())
 			{
-				if($this->yellow->toolbox->renameFile($fileName, $page->fileName) &&
+				if($this->yellow->toolbox->renameFile($fileName, $page->fileName, true) &&
 				   $this->yellow->toolbox->createFile($page->fileName, $page->rawData))
 				{
 					$statusCode = 303;
@@ -637,43 +638,51 @@ class YellowWebinterface
 		if(!$this->response->isUserRestrictions() && is_file($fileName))
 		{
 			$this->response->rawDataSource = $this->response->rawDataEdit = rawurldecode($_POST["rawdatasource"]);
-			if($this->yellow->lookup->isFileLocation($location))
+			$page = $this->response->getPageDelete($scheme, $address, $base, $location, $fileName, $this->response->rawDataSource);
+			if(!$page->isError())
 			{
-				if($this->yellow->toolbox->deleteFile($fileName, $this->yellow->config->get("trashDir")))
+				if($this->yellow->lookup->isFileLocation($location))
 				{
-					$statusCode = 303;
-					$location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
-					$this->yellow->sendStatus($statusCode, $location);
+					if($this->yellow->toolbox->deleteFile($fileName, $this->yellow->config->get("trashDir")))
+					{
+						$statusCode = 303;
+						$location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
+						$this->yellow->sendStatus($statusCode, $location);
+					} else {
+						$statusCode = 500;
+						$this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
+						$this->yellow->page->error($statusCode, "Can't delete file '$fileName'!");
+					}
 				} else {
-					$statusCode = 500;
-					$this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
-					$this->yellow->page->error($statusCode, "Can't delete file '$fileName'!");
+					if($this->yellow->toolbox->deleteDirectory(dirname($fileName), $this->yellow->config->get("trashDir")))
+					{
+						$statusCode = 303;
+						$location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
+						$this->yellow->sendStatus($statusCode, $location);
+					} else {
+						$statusCode = 500;
+						$this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
+						$this->yellow->page->error($statusCode, "Can't delete file '$fileName'!");
+					}
 				}
 			} else {
-				if($this->yellow->toolbox->deleteDirectory(dirname($fileName), $this->yellow->config->get("trashDir")))
-				{
-					$statusCode = 303;
-					$location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
-					$this->yellow->sendStatus($statusCode, $location);
-				} else {
-					$statusCode = 500;
-					$this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
-					$this->yellow->page->error($statusCode, "Can't delete file '$fileName'!");
-				}
+				$statusCode = 500;
+				$this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
+				$this->yellow->page->error($statusCode, $page->get("pageError"));
 			}
 		}
 		return $statusCode;
 	}
 
-	// Check web interface request
+	// Check request
 	function checkRequest($location)
 	{
-		$locationLength = strlenu($this->yellow->config->get("webinterfaceLocation"));
-		$this->response->active = substru($location, 0, $locationLength)==$this->yellow->config->get("webinterfaceLocation");
+		$locationLength = strlenu($this->yellow->config->get("editLocation"));
+		$this->response->active = substru($location, 0, $locationLength)==$this->yellow->config->get("editLocation");
 		return $this->response->isActive();
 	}
 	
-	// Check web interface user
+	// Check user
 	function checkUser($scheme, $address, $base, $location, $fileName)
 	{
 		if($_POST["action"]=="login")
@@ -685,7 +694,7 @@ class YellowWebinterface
 				$this->response->createCookie($scheme, $address, $base, $email);
 				$this->response->userEmail = $email;
 				$this->response->userRestrictions = $this->getUserRestrictions($email, $location, $fileName);
-				$this->response->language = $this->response->getLanguage($email);
+				$this->response->language = $this->getUserLanguage($email);
 			} else {
 				$this->response->action = "fail";
 			}
@@ -695,7 +704,7 @@ class YellowWebinterface
 			{
 				$this->response->userEmail = $email;
 				$this->response->userRestrictions = $this->getUserRestrictions($email, $location, $fileName);
-				$this->response->language = $this->response->getLanguage($email);
+				$this->response->language = $this->getUserLanguage($email);
 			} else {
 				$this->response->action = "fail";
 			}
@@ -709,30 +718,30 @@ class YellowWebinterface
 		$status = null;
 		foreach($this->yellow->plugins->plugins as $key=>$value)
 		{
-			if(method_exists($value["obj"], "onUserAccount"))
+			if(method_exists($value["obj"], "onEditUserAccount"))
 			{
-				$status = $value["obj"]->onUserAccount($email, $password, $action, $status, $this->users);
+				$status = $value["obj"]->onEditUserAccount($email, $password, $action, $this->users);
 				if(!is_null($status)) break;
 			}
 		}
 		if(is_null($status))
 		{
 			$status = "ok";
-			if(!empty($password) && strlenu($password)<$this->yellow->config->get("webinterfaceUserPasswordMinLength")) $status = "weak";
+			if(!empty($password) && strlenu($password)<$this->yellow->config->get("editUserPasswordMinLength")) $status = "weak";
 			if(!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)) $status = "invalid";
 		}
 		return $status;
 	}
 	
-	// Return user restrictions to change page
+	// Return user restrictions
 	function getUserRestrictions($email, $location, $fileName)
 	{
 		$userRestrictions = null;
 		foreach($this->yellow->plugins->plugins as $key=>$value)
 		{
-			if(method_exists($value["obj"], "onUserRestrictions"))
+			if(method_exists($value["obj"], "onEditUserRestrictions"))
 			{
-				$userRestrictions = $value["obj"]->onUserRestrictions($email, $location, $fileName, $this->users);
+				$userRestrictions = $value["obj"]->onEditUserRestrictions($email, $location, $fileName, $this->users);
 				if(!is_null($userRestrictions)) break;
 			}
 		}
@@ -743,15 +752,23 @@ class YellowWebinterface
 		}
 		return $userRestrictions;
 	}
+	
+	// Return user language
+	function getUserLanguage($email)
+	{
+		$language = $this->users->getLanguage($email);
+		if(!$this->yellow->text->isLanguage($language)) $language = $this->yellow->config->get("language");
+		return $language;
+	}
 }
 	
 class YellowResponse
 {
 	var $yellow;			//access to API
-	var $webinterface;		//access to web interface
+	var $plugin;			//access to plugin
 	var $userEmail;			//user email
 	var $userRestrictions;	//user can change page? (boolean)
-	var $active;			//web interface is active? (boolean)
+	var $active;			//location is active? (boolean)
 	var $rawDataSource;		//raw data of page for comparison
 	var $rawDataEdit;		//raw data of page for editing
 	var $rawDataOutput;		//raw data of dynamic output
@@ -762,7 +779,7 @@ class YellowResponse
 	function __construct($yellow)
 	{
 		$this->yellow = $yellow;
-		$this->webinterface = $yellow->plugins->get("webinterface");
+		$this->plugin = $yellow->plugins->get("edit");
 	}
 	
 	// Return new page
@@ -771,77 +788,78 @@ class YellowResponse
 		$page = new YellowPage($this->yellow);
 		$page->setRequestInformation($scheme, $address, $base, $location, $fileName);
 		$page->parseData($rawData, false, 0);
-		if($this->yellow->lookup->isFileLocation($location) || is_file($fileName))
+		$this->editContentFile($page, "create");
+		if($this->yellow->lookup->isFileLocation($location) || $this->yellow->pages->find($page->location))
 		{
-			$page->fileName = $this->yellow->lookup->findFileFromTitle(
-				$page->get($this->yellow->config->get("webinterfaceMetaFilePrefix")), $page->get("title"), $fileName,
-				$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
-			$page->location = $this->yellow->lookup->findLocationFromFile($page->fileName);
-			if($this->yellow->pages->find($page->location))
+			$page->location = $this->getLocationNew($page->rawData, $page->location, $page->get("pageNewLocation"));
+			$page->fileName = $this->yellow->lookup->findFileNew($page->location, $page->get("published"));
+			while($this->yellow->pages->find($page->location) || empty($page->fileName))
 			{
-				preg_match("/^(.*?)(\d*)$/", $page->get("title"), $matches);
-				$titleText = $matches[1];
-				$titleNumber = $matches[2];
-				if(strempty($titleNumber)) { $titleNumber = 2; $titleText = $titleText.' '; }
-				for(; $titleNumber<=999; ++$titleNumber)
-				{
-					$page->rawData = $this->updateTextTitle($rawData, $titleText.$titleNumber);
-					$page->fileName = $this->yellow->lookup->findFileFromTitle(
-						$page->get($this->yellow->config->get("webinterfaceMetaFilePrefix")), $titleText.$titleNumber, $fileName,
-						$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
-					$page->location = $this->yellow->lookup->findLocationFromFile($page->fileName);
-					if(!$this->yellow->pages->find($page->location)) { $ok = true; break; }
-				}
-				if(!$ok) $page->error(500, "Page '".$page->get("title")."' can not be created!");
+				$page->rawData = $this->yellow->toolbox->setMetaData($page->rawData, "title", $this->getTitleNext($page->rawData));
+				$page->location = $this->getLocationNew($page->rawData, $page->location, $page->get("pageNewLocation"));
+				$page->fileName = $this->yellow->lookup->findFileNew($page->location, $page->get("published"));
+				if(++$pageCounter>999) break;
 			}
+			if($this->yellow->pages->find($page->location) || empty($page->fileName))
+			{
+				$page->error(500, "Page '".$page->get("title")."' is not possible!");
+			}
+		} else {
+			$page->fileName = $this->yellow->lookup->findFileNew($page->location);
 		}
-		if(!is_dir(dirname($page->fileName)))
+		if($this->plugin->getUserRestrictions($this->userEmail, $page->location, $page->fileName))
 		{
-			preg_match("/^([\d\-\_\.]*)(.*)$/", $page->get("title"), $matches);
-			if(preg_match("/\d$/", $matches[1])) $matches[1] .= '-';
-			$page->fileName = $this->yellow->lookup->findFilePageNew($fileName, $matches[1]);
-			$page->location = $this->yellow->lookup->findLocationFromFile($page->fileName);
-		}
-		if($this->webinterface->getUserRestrictions($this->userEmail, $page->location, $page->fileName))
-		{
-			$page->error(500, "Page '".$page->get("title")."' is not allowed!");
+			$page->error(500, "Page '".$page->get("title")."' is restricted!");
 		}
 		return $page;
 	}
 	
 	// Return modified page
-	function getPageUpdate($scheme, $address, $base, $location, $fileName, $rawDataSource, $rawDataEdit, $rawDataFile)
+	function getPageEdit($scheme, $address, $base, $location, $fileName, $rawDataSource, $rawDataEdit, $rawDataFile)
 	{
 		$page = new YellowPage($this->yellow);
 		$page->setRequestInformation($scheme, $address, $base, $location, $fileName);
-		$page->parseData($this->webinterface->merge->merge($rawDataSource, $rawDataEdit, $rawDataFile), false, 0);
+		$page->parseData($this->plugin->merge->merge($rawDataSource, $rawDataEdit, $rawDataFile), false, 0);
+		$this->editContentFile($page, "edit");
 		if(empty($page->rawData)) $page->error(500, "Page has been modified by someone else!");
 		if($this->yellow->lookup->isFileLocation($location) && !$page->isError())
 		{
 			$pageSource = new YellowPage($this->yellow);
 			$pageSource->setRequestInformation($scheme, $address, $base, $location, $fileName);
 			$pageSource->parseData($rawDataSource, false, 0);
-			$prefix = $this->yellow->config->get("webinterfaceMetaFilePrefix");
-			if($pageSource->get($prefix)!=$page->get($prefix) || $pageSource->get("title")!=$page->get("title"))
+			if(substrb($pageSource->rawData, 0, $pageSource->metaDataOffsetBytes) !=
+			   substrb($page->rawData, 0, $page->metaDataOffsetBytes))
 			{
-				$page->fileName = $this->yellow->lookup->findFileFromTitle(
-					$page->get($prefix), $page->get("title"), $fileName,
-					$this->yellow->config->get("contentDefaultFile"), $this->yellow->config->get("contentExtension"));
-				$page->location = $this->yellow->lookup->findLocationFromFile($page->fileName);
-				if($pageSource->location!=$page->location)
+				$page->location = $this->getLocationNew($page->rawData, $page->location, $page->get("pageNewLocation"));
+				$page->fileName = $this->yellow->lookup->findFileNew($page->location, $page->get("published"));
+				if($page->location!=$pageSource->location)
 				{
-					if(!$this->yellow->lookup->isFileLocation($page->location))
+					if(!$this->yellow->lookup->isFileLocation($page->location) || empty($page->fileName))
 					{
-						$page->error(500, "Page '".$page->get("title")."' is not allowed!");
+						$page->error(500, "Page '".$page->get("title")."' is not possible!");
 					} else if($this->yellow->pages->find($page->location)) {
 						$page->error(500, "Page '".$page->get("title")."' already exists!");
 					}
 				}
 			}
 		}
-		if($this->webinterface->getUserRestrictions($this->userEmail, $page->location, $page->fileName))
+		if($this->plugin->getUserRestrictions($this->userEmail, $page->location, $page->fileName))
 		{
-			$page->error(500, "Page '".$page->get("title")."' is not allowed!");
+			$page->error(500, "Page '".$page->get("title")."' is restricted!");
+		}
+		return $page;
+	}
+	
+	// Return deleted page
+	function getPageDelete($scheme, $address, $base, $location, $fileName, $rawDataSource)
+	{
+		$page = new YellowPage($this->yellow);
+		$page->setRequestInformation($scheme, $address, $base, $location, $fileName);
+		$page->parseData($rawDataSource, false, 0);
+		$this->editContentFile($page, "delete");
+		if($this->plugin->getUserRestrictions($this->userEmail, $page->location, $page->fileName))
+		{
+			$page->error(500, "Page '".$page->get("title")."' is restricted!");
 		}
 		return $page;
 	}
@@ -852,7 +870,7 @@ class YellowResponse
 		$data = array();
 		if($this->isUser())
 		{
-			$data["title"] = $this->getPageTitle($this->rawDataEdit);
+			$data["title"] = $this->yellow->toolbox->getMetaData($this->rawDataEdit, "title");
 			$data["rawDataSource"] = $this->rawDataSource;
 			$data["rawDataEdit"] = $this->rawDataEdit;
 			$data["rawDataNew"] = $this->getRawDataNew();
@@ -877,13 +895,13 @@ class YellowResponse
 		if($this->isUser())
 		{
 			$data["userEmail"] = $this->userEmail;
-			$data["userName"] = $this->webinterface->users->getName($this->userEmail);
-			$data["userLanguage"] = $this->webinterface->users->getLanguage($this->userEmail);
-			$data["userStatus"] = $this->webinterface->users->getStatus($this->userEmail);
-			$data["userHome"] = $this->webinterface->users->getHome($this->userEmail);
+			$data["userName"] = $this->plugin->users->getName($this->userEmail);
+			$data["userLanguage"] = $this->plugin->users->getLanguage($this->userEmail);
+			$data["userStatus"] = $this->plugin->users->getStatus($this->userEmail);
+			$data["userHome"] = $this->plugin->users->getHome($this->userEmail);
 			$data["userRestrictions"] = intval($this->isUserRestrictions());
 			$data["userWebmaster"] = intval($this->isUserWebmaster());
-			$data["pluginUpdate"] = intval($this->yellow->plugins->isExisting("update"));
+			$data["userUpdate"] = intval($this->yellow->plugins->isExisting("update"));
 			$data["serverLanguages"] = array();
 			foreach($this->yellow->text->getLanguages() as $language)
 			{
@@ -892,11 +910,11 @@ class YellowResponse
 			$data["serverScheme"] = $this->yellow->config->get("serverScheme");
 			$data["serverAddress"] = $this->yellow->config->get("serverAddress");
 			$data["serverBase"] = $this->yellow->config->get("serverBase");
-			$data["serverVersion"] = "Yellow ".YellowCore::VERSION;
+			$data["serverVersion"] = "Datenstrom Yellow ".YellowCore::VERSION;
 		} else {
-			$data["loginEmail"] = $this->yellow->config->get("loginEmail");
-			$data["loginPassword"] = $this->yellow->config->get("loginPassword");
-			$data["loginRestrictions"] = intval($this->isLoginRestrictions());
+			$data["editLoginEmail"] = $this->yellow->config->get("editLoginEmail");
+			$data["editLoginPassword"] = $this->yellow->config->get("editLoginPassword");
+			$data["editLoginRestrictions"] = intval($this->isLoginRestrictions());
 		}
 		if(defined("DEBUG") && DEBUG>=1) $data["debug"] = DEBUG;
 		return $data;
@@ -918,80 +936,85 @@ class YellowResponse
 	function getTextData()
 	{
 		$textLanguage = $this->yellow->text->getData("language", $this->language);
-		$textWebinterface = $this->yellow->text->getData("webinterface", $this->language);
+		$textEdit = $this->yellow->text->getData("edit", $this->language);
 		$textYellow = $this->yellow->text->getData("yellow", $this->language);
-		return array_merge($textLanguage, $textWebinterface, $textYellow);
+		return array_merge($textLanguage, $textEdit, $textYellow);
 	}
 	
 	// Return raw data for new page
 	function getRawDataNew($location = "")
 	{
-		$fileName = $this->yellow->lookup->findFileFromLocation($this->yellow->page->location);
-		$fileName = $this->yellow->lookup->findFileFromConfig($fileName,
-			$this->yellow->config->get("webinterfaceNewFile"), $this->yellow->config->get("template"));
+		foreach($this->yellow->pages->path($this->yellow->page->location)->reverse() as $page)
+		{
+			if($page->isExisting("templateNew"))
+			{
+				$name = $this->yellow->lookup->normaliseName($page->get("templateNew"));
+				$fileName = strreplaceu("(.*)", $name, $this->yellow->config->get("configDir").$this->yellow->config->get("editNewFile"));
+				if(is_file($fileName)) break;
+			}
+		}
+		if(!is_file($fileName))
+		{
+			$name = $this->yellow->lookup->normaliseName($this->yellow->config->get("template"));
+			$fileName = strreplaceu("(.*)", $name, $this->yellow->config->get("configDir").$this->yellow->config->get("editNewFile"));
+		}
 		$rawData = $this->yellow->toolbox->readFile($fileName);
+		$rawData = preg_replace("/@timestamp/i", time(), $rawData);
 		$rawData = preg_replace("/@datetime/i", date("Y-m-d H:i:s"), $rawData);
 		$rawData = preg_replace("/@date/i", date("Y-m-d"), $rawData);
-		$rawData = preg_replace("/@usershort/i", strtok($this->webinterface->users->getName($this->userEmail), " "), $rawData);
-		$rawData = preg_replace("/@username/i", $this->webinterface->users->getName($this->userEmail), $rawData);
-		$rawData = preg_replace("/@userlanguage/i", $this->webinterface->users->getLanguage($this->userEmail), $rawData);
+		$rawData = preg_replace("/@usershort/i", strtok($this->plugin->users->getName($this->userEmail), " "), $rawData);
+		$rawData = preg_replace("/@username/i", $this->plugin->users->getName($this->userEmail), $rawData);
+		$rawData = preg_replace("/@userlanguage/i", $this->plugin->users->getLanguage($this->userEmail), $rawData);
 		if(!empty($location))
 		{
-			$title = $this->yellow->toolbox->createTextTitle($location);
-			$rawData = $this->updateTextTitle($rawData, $title);
+			$rawData = $this->yellow->toolbox->setMetaData($rawData, "title", $this->yellow->toolbox->createTextTitle($location));
 		}
 		return $rawData;
 	}
 	
-	// Return page title
-	function getPageTitle($rawData)
+	// Return location for new/modified page
+	function getLocationNew($rawData, $pageLocation, $pageNewLocation)
 	{
-		$title = $this->yellow->page->get("title");
-		if(preg_match("/^(\xEF\xBB\xBF)?\-\-\-[\r\n]+(.+?)\-\-\-[\r\n]+/s", $rawData, $parts))
+		$location = empty($pageNewLocation) ? "@title" : $pageNewLocation;
+		$location = preg_replace("/@timestamp/i", $this->getLocationDataNew($rawData, "published", true, "U"), $location);
+		$location = preg_replace("/@date/i", $this->getLocationDataNew($rawData, "published", true, "Y-m-d"), $location);
+		$location = preg_replace("/@year/i", $this->getLocationDataNew($rawData, "published", true, "Y"), $location);
+		$location = preg_replace("/@month/i", $this->getLocationDataNew($rawData, "published", true, "m"), $location);
+		$location = preg_replace("/@day/i", $this->getLocationDataNew($rawData, "published", true, "d"), $location);
+		$location = preg_replace("/@tag/i", $this->getLocationDataNew($rawData, "tag", true), $location);
+		$location = preg_replace("/@author/i", $this->getLocationDataNew($rawData, "author", true), $location);
+		$location = preg_replace("/@title/i", $this->getLocationDataNew($rawData, "title"), $location);
+		if(!preg_match("/^\//", $location))
 		{
-			foreach($this->yellow->toolbox->getTextLines($parts[2]) as $line)
-			{
-				preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
-				if(lcfirst($matches[1])=="title" && !strempty($matches[2])) { $title = $matches[2]; break; }
-			}
+			$location = $this->yellow->lookup->getDirectoryLocation($pageLocation).$location;
 		}
-		return $title;
+		return $location;
 	}
 	
-	// Return language for user
-	function getLanguage($email)
+	// Return location data for new/modified page
+	function getLocationDataNew($rawData, $key, $filterFirst = false, $dateFormat = "")
 	{
-		$language = $this->webinterface->users->getLanguage($email);
-		if(!$this->yellow->text->isLanguage($language)) $language = $this->yellow->config->get("language");
-		return $language;
+		$value = $this->yellow->toolbox->getMetaData($rawData, $key);
+		if($filterFirst && preg_match("/^(.*?)\,(.*)$/", $value, $matches)) $value = $matches[1];
+		if(!empty($dateFormat)) $value = date($dateFormat, strtotime($value));
+		if(strempty($value)) $value = "none";
+		$value = $this->yellow->lookup->normaliseName($value, true, false, true);
+		return trim(preg_replace("/-+/", "-", $value), "-");
 	}
 	
-	// Update text title
-	function updateTextTitle($rawData, $title)
+	// Return title for next page
+	function getTitleNext($rawData)
 	{
-		foreach($this->yellow->toolbox->getTextLines($rawData) as $line)
-		{
-			preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
-			if(lcfirst($matches[1])=="title") $line = "Title: $title\n";
-			$rawDataNew .= $line;
-		}
-		return $rawDataNew;
+		preg_match("/^(.*?)(\d*)$/", $this->yellow->toolbox->getMetaData($rawData, "title"), $matches);
+		$titleText = $matches[1];
+		$titleNumber = strempty($matches[2]) ? " 2" : $matches[2]+1;
+		return $titleText.$titleNumber;
 	}
 	
-	// Normlise text with special characters
-	function normaliseText($text)
-	{
-		if($this->yellow->plugins->isExisting("emojiawesome"))
-		{
-			$text = $this->yellow->plugins->get("emojiawesome")->normaliseText($text, true, false);
-		}
-		return $text;
-	}
-
 	// Create browser cookie
 	function createCookie($scheme, $address, $base, $email)
 	{
-		$session = $this->webinterface->users->createSession($email);
+		$session = $this->plugin->users->createSession($email);
 		setcookie("login", "$email,$session", time()+60*60*24*365, "$base/", "", $scheme=="https");
 	}
 	
@@ -999,6 +1022,18 @@ class YellowResponse
 	function destroyCookie($scheme, $address, $base)
 	{
 		setcookie("login", "", time()-60*60, "$base/", "", $scheme=="https");
+	}
+	
+	// Edit content file
+	function editContentFile($page, $action)
+	{
+		if(!$page->isError())
+		{
+			foreach($this->yellow->plugins->plugins as $key=>$value)
+			{
+				if(method_exists($value["obj"], "onEditContentFile")) $value["obj"]->onEditContentFile($page, $action);
+			}
+		}
 	}
 	
 	// Send mail to user
@@ -1009,7 +1044,7 @@ class YellowResponse
 			$url = "$scheme://$address$base/";
 		} else {
 			$expire = time()+60*60*24;
-			$id = $this->webinterface->users->createRequestId($email, $action, $expire);
+			$id = $this->plugin->users->createRequestId($email, $action, $expire);
 			$url = "$scheme://$address$base"."/action:$action/email:$email/expire:$expire/id:$id/";
 		}
 		if($action=="approve")
@@ -1019,12 +1054,12 @@ class YellowResponse
 			$email = $this->yellow->config->get("email");
 		} else {
 			$account = $email;
-			$name = $this->webinterface->users->getName($email);
+			$name = $this->plugin->users->getName($email);
 		}
-		$language = $this->webinterface->users->getLanguage($email);
+		$language = $this->plugin->users->getLanguage($email);
 		if(!$this->yellow->text->isLanguage($language)) $language = $this->yellow->config->get("language");
 		$sitename = $this->yellow->config->get("sitename");
-		$prefix = "webinterface".ucfirst($action);
+		$prefix = "edit".ucfirst($action);
 		$message = $this->yellow->text->getText("{$prefix}Message", $language);
 		$message = preg_replace("/@useraccount/i", $account, $message);
 		$message = preg_replace("/@usershort/i", strtok($name, " "), $message);
@@ -1041,24 +1076,18 @@ class YellowResponse
 		return mail($mailTo, $mailSubject, $mailMessage, $mailHeaders);
 	}
 	
-	// Check if web interface active
+	// Check if active
 	function isActive()
 	{
 		return $this->active;
 	}
 	
-	// Check if web interface has login restrictions
-	function isLoginRestrictions()
-	{
-		return substru($this->yellow->config->get("email"), 0, 7)=="noreply";
-	}
-
 	// Check if user is logged in
 	function isUser()
 	{
 		return !empty($this->userEmail);
 	}
-
+	
 	// Check if user has restrictions
 	function isUserRestrictions()
 	{
@@ -1069,6 +1098,12 @@ class YellowResponse
 	function isUserWebmaster()
 	{
 		return !empty($this->userEmail) && $this->userEmail==$this->yellow->config->get("email");
+	}
+	
+	// Check if login has restrictions
+	function isLoginRestrictions()
+	{
+		return $this->yellow->config->get("editLoginRestrictions");
 	}
 }
 
@@ -1142,10 +1177,10 @@ class YellowUsers
 			$hash = strreplaceu(',', '-', empty($hash) ? "none" : $hash);
 			$name = strreplaceu(',', '-', empty($name) ? $this->yellow->config->get("sitename") : $name);
 			$language = strreplaceu(',', '-', empty($language) ? $this->yellow->config->get("language") : $language);
-			$status = strreplaceu(',', '-', empty($status) ? $this->yellow->config->get("webinterfaceUserStatus") : $status);
+			$status = strreplaceu(',', '-', empty($status) ? $this->yellow->config->get("editUserStatus") : $status);
 			$modified = strreplaceu(',', '-', empty($modified) ? time() : $modified);
 			$pending = strreplaceu(',', '-', empty($pending) ? "none" : $pending);
-			$home = strreplaceu(',', '-', empty($home) ? $this->yellow->config->get("webinterfaceUserHome") : $home);
+			$home = strreplaceu(',', '-', empty($home) ? $this->yellow->config->get("editUserHome") : $home);
 		}
 		$this->set($email, $hash, $name, $language, $status, $modified, $pending, $home);
 		$fileData = $this->yellow->toolbox->readFile($fileName);
@@ -1181,7 +1216,7 @@ class YellowUsers
 	// Check user login from email and password
 	function checkUser($email, $password)
 	{
-		$algorithm = $this->yellow->config->get("webinterfaceUserHashAlgorithm");
+		$algorithm = $this->yellow->config->get("editUserHashAlgorithm");
 		return $this->isExisting($email) && $this->users[$email]["status"]=="active" &&
 			$this->yellow->toolbox->verifyHash($password, $algorithm, $this->users[$email]["hash"]);
 	}
@@ -1207,8 +1242,8 @@ class YellowUsers
 	// Create password hash
 	function createHash($password)
 	{
-		$algorithm = $this->yellow->config->get("webinterfaceUserHashAlgorithm");
-		$cost = $this->yellow->config->get("webinterfaceUserHashCost");
+		$algorithm = $this->yellow->config->get("editUserHashAlgorithm");
+		$cost = $this->yellow->config->get("editUserHashCost");
 		$hash = $this->yellow->toolbox->createHash($password, $algorithm, $cost);
 		if(empty($hash)) $hash = "error-hash-algorithm-$algorithm";
 		return $hash;
@@ -1300,7 +1335,7 @@ class YellowUsers
 			$data[$key] = "$value[email] - $name $language $status";
 			if($value["home"]!="/") $data[$key] .= " restrictions";
 		}
-		usort($data, strnatcasecmp);
+		uksort($data, strnatcasecmp);
 		return $data;
 	}
 	
@@ -1506,5 +1541,5 @@ class YellowMerge
 	}
 }
 
-$yellow->plugins->register("webinterface", "YellowWebinterface", YellowWebinterface::VERSION);
+$yellow->plugins->register("edit", "YellowEdit", YellowEdit::VERSION);
 ?>
