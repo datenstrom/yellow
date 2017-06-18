@@ -1633,6 +1633,11 @@ class YellowPlugins
 	// Load plugins
 	function load($path = "")
 	{
+		if(count($this->yellow->config->config)==0) //TODO: remove later, backwards compability for old version
+		{
+			$this->yellow->load();
+			return;
+		}
 		$path = empty($path) ? $this->yellow->config->get("pluginDir") : $path;
 		foreach($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.php$/", true, false) as $entry)
 		{
