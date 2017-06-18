@@ -23,12 +23,13 @@ class YellowUpdate
 	// Handle startup
 	function onStartup($update)
 	{
-		if(filesize("yellow.php")==591 || filesize("yellow.php")==609) //TODO: remove later, detects old version
+		if(filesize("yellow.php")==591) //TODO: remove later, detects old version
 		{
 			$update = true;
-			$fileData = $this->yellow->toolbox->readFile($fileNameScript);
+			$fileData = $this->yellow->toolbox->readFile("yellow.php");
+			$fileData = preg_replace("#Yellow requires#", "Datenstrom Yellow requires", $fileData);
 			$fileData = preg_replace("#yellow->plugins->load\(\)#", "yellow->load()", $fileData);
-			$this->yellow->toolbox->createFile($fileNameScript, $fileData);
+			$this->yellow->toolbox->createFile("yellow.php", $fileData);
 		}
 		
 		if($update) //TODO: remove later, converts old config file
