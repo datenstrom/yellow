@@ -1,4 +1,4 @@
-Datenstrom Yellow 0.6.9
+Datenstrom Yellow 0.7.1
 =======================
 [![Yellow](https://raw.githubusercontent.com/datenstrom/yellow-developers/master/media/images/yellow-photo.jpg)](https://datenstrom.se/yellow/)
 
