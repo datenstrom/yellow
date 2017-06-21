@@ -23,14 +23,11 @@ class YellowUpdate
 	// Handle startup
 	function onStartup($update)
 	{
-		if(!$this->yellow->config->isExisting("startupUpdateNotification")) //TODO: remove later, detects old version
+		if(!$this->yellow->config->isExisting("startupUpdate")) //TODO: remove later, detects old version
 		{
 			$update = true;
 			$fileNameConfig = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
-			$this->yellow->config->update($fileNameConfig, array("startupUpdateNotification" => "none"));
-			$fileData = $this->yellow->toolbox->readFile("yellow.php");
-			$fileData = preg_replace("#yellow->plugins->load\(\)#", "yellow->load()", $fileData);
-			$this->yellow->toolbox->createFile("yellow.php", $fileData);
+			$this->yellow->config->update($fileNameConfig, array("startupUpdate" => "none"));
 		}
 		if($update) //TODO: remove later, converts old config
 		{
@@ -64,6 +61,16 @@ class YellowUpdate
 				}
 				$this->yellow->toolbox->deleteFile($entry, $this->yellow->config->get("trashDir"));
 				$_GET["clean-url"] = "theme-has-been-updated";
+			}
+		}
+		if($update) //TODO: remove later, converts old script
+		{
+			$fileName = "yellow.php";
+			if(is_file($fileName))
+			{
+				$fileData = $this->yellow->toolbox->readFile($fileName);
+				$fileDataNew = preg_replace("#yellow->plugins->load\(\)#", "yellow->load()", $fileData);
+				if($fileData!=$fileDataNew) $this->yellow->toolbox->createFile($fileName, $fileDataNew);
 			}
 		}
 		if($update)	//TODO: remove later, converts old error page
@@ -287,6 +294,7 @@ class YellowUpdate
 	function updateSoftware($force = false)
 	{
 		$statusCode = 200;
+		opcache_reset();
 		$path = $this->yellow->config->get("pluginDir");
 		foreach($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.zip$/", true, false) as $entry)
 		{
@@ -469,12 +477,12 @@ class YellowUpdate
 	function updateSoftwareNotification($software)
 	{
 		$statusCode = 200;
-		$startupUpdateNotification = $this->yellow->config->get("startupUpdateNotification");
-		if($startupUpdateNotification=="none") $startupUpdateNotification = "";
-		if(!empty($startupUpdateNotification)) $startupUpdateNotification .= ",";
-		$startupUpdateNotification .= $software;
+		$startupUpdate = $this->yellow->config->get("startupUpdate");
+		if($startupUpdate=="none") $startupUpdate = "";
+		if(!empty($startupUpdate)) $startupUpdate .= ",";
+		$startupUpdate .= $software;
 		$fileNameConfig = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
-		if(!$this->yellow->config->update($fileNameConfig, array("startupUpdateNotification" => $startupUpdateNotification)))
+		if(!$this->yellow->config->update($fileNameConfig, array("startupUpdate" => $startupUpdate)))
 		{
 			$statusCode = 500;
 			$this->yellow->page->error(500, "Can't write file '$fileNameConfig'!");

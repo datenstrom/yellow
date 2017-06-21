@@ -76,7 +76,7 @@ class YellowCore
 		$this->config->setDefault("parserSafeMode", "0");
 		$this->config->setDefault("multiLanguageMode", "0");
 		$this->config->setDefault("installationMode", "0");
-		$this->config->setDefault("startupUpdateNotification", "none");
+		$this->config->setDefault("startupUpdate", "none");
 	}
 	
 	function __destruct()
@@ -103,7 +103,7 @@ class YellowCore
 	// Handle startup
 	function startup()
 	{
-		$tokens = explode(',', $this->config->get("startupUpdateNotification"));
+		$tokens = explode(',', $this->config->get("startupUpdate"));
 		foreach($this->plugins->plugins as $key=>$value)
 		{
 			if(method_exists($value["obj"], "onStartup")) $value["obj"]->onStartup(in_array($value["plugin"], $tokens));
@@ -112,10 +112,10 @@ class YellowCore
 		{
 			if(method_exists($value["obj"], "onStartup")) $value["obj"]->onStartup(in_array($value["theme"], $tokens));
 		}
-		if($this->config->get("startupUpdateNotification")!="none")
+		if($this->config->get("startupUpdate")!="none")
 		{
 			$fileNameConfig = $this->config->get("configDir").$this->config->get("configFile");
-			$this->config->update($fileNameConfig, array("startupUpdateNotification" => "none"));
+			$this->config->update($fileNameConfig, array("startupUpdate" => "none"));
 		}
 		if(defined("DEBUG") && DEBUG>=2) echo "YellowCore::startup<br/>\n";
 	}
