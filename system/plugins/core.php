@@ -470,6 +470,7 @@ class YellowPage
 			if(!$this->isExisting("titleContent")) $this->set("titleContent", $this->get("title"));
 			if(!$this->isExisting("titleNavigation")) $this->set("titleNavigation", $this->get("title"));
 			if(!$this->isExisting("titleHeader")) $this->set("titleHeader", $titleHeader);
+			if(!$this->isExisting("status") && !is_readable($this->fileName)) $this->set("status", "ignore");
 			if($this->get("status")=="hidden") $this->available = false;
 			$this->set("pageRead", $this->yellow->lookup->normaliseUrl(
 				$this->yellow->config->get("serverScheme"),
@@ -1350,7 +1351,15 @@ class YellowPages
 	function top($showInvisible = false)
 	{
 		$rootLocation = $this->getRootLocation($this->yellow->page->location);
-		return $this->getChildren($rootLocation, $showInvisible);
+		$pages = new YellowPageCollection($this->yellow);
+		foreach($this->scanLocation($rootLocation) as $page)
+		{
+			if($page->isAvailable() && ($page->isVisible() || $showInvisible))
+			{
+				if(is_readable($page->fileName)) $pages->append($page);
+			}
+		}
+		return $pages;
 	}
 	
 	// Return page collection with path ancestry
