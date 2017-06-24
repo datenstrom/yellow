@@ -5,7 +5,7 @@
 
 class YellowUpdate
 {
-	const VERSION = "0.7.1";
+	const VERSION = "0.7.2";
 	var $yellow;					//access to API
 	var $updates;					//number of updates
 	
@@ -294,7 +294,7 @@ class YellowUpdate
 	function updateSoftware($force = false)
 	{
 		$statusCode = 200;
-		opcache_reset();
+		if(function_exists("opcache_reset")) opcache_reset();
 		$path = $this->yellow->config->get("pluginDir");
 		foreach($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.zip$/", true, false) as $entry)
 		{
