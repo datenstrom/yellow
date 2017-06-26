@@ -5,7 +5,7 @@
 
 class YellowCommand
 {
-	const VERSION = "0.7.1";
+	const VERSION = "0.7.2";
 	var $yellow;					//access to API
 	var $files;						//number of files
 	var $errors;					//number of errors
@@ -410,7 +410,7 @@ class YellowCommand
 	function getSystemLocations()
 	{
 		$locations = array();
-		$regex = "/\.(css|ico|js|jpg|png|svg|txt|woff|woff2)$/";
+		$regex = "/\.(css|gif|ico|js|jpg|png|svg|txt|woff|woff2)$/";
 		$pluginDirLength = strlenu($this->yellow->config->get("pluginDir"));
 		$fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($this->yellow->config->get("pluginDir"), $regex, false, false);
 		foreach($fileNames as $fileName)
