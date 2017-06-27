@@ -15,7 +15,7 @@ class YellowImage
 		$this->yellow = $yellow;
 		$this->yellow->config->setDefault("imageThumbnailLocation", "/media/thumbnails/");
 		$this->yellow->config->setDefault("imageThumbnailDir", "media/thumbnails/");
-		$this->yellow->config->setDefault("imageJpgQuality", 80);
+		$this->yellow->config->setDefault("imageThumbnailJpgQuality", 80);
 		$this->yellow->config->setDefault("imageAlt", "Image");
 		$this->graphicsLibrary = $this->isGraphicsLibrary();
 	}
@@ -133,7 +133,7 @@ class YellowImage
 		switch($type)
 		{
 			case "gif":	$ok = @imagegif($image, $fileName); break;
-			case "jpg":	$ok = @imagejpeg($image, $fileName, $this->yellow->config->get("imageJpgQuality")); break;
+			case "jpg":	$ok = @imagejpeg($image, $fileName, $this->yellow->config->get("imageThumbnailJpgQuality")); break;
 			case "png":	$ok = @imagepng($image, $fileName); break;
 		}
 		return $ok;
