@@ -5,7 +5,7 @@
 
 class YellowImage
 {
-	const VERSION = "0.7.1";
+	const VERSION = "0.7.2";
 	var $yellow;			//access to API
 	var $graphicsLibrary;	//graphics library support? (boolean)
 
@@ -15,8 +15,8 @@ class YellowImage
 		$this->yellow = $yellow;
 		$this->yellow->config->setDefault("imageThumbnailLocation", "/media/thumbnails/");
 		$this->yellow->config->setDefault("imageThumbnailDir", "media/thumbnails/");
+		$this->yellow->config->setDefault("imageJpgQuality", 80);
 		$this->yellow->config->setDefault("imageAlt", "Image");
-		$this->yellow->config->setDefault("imageJpegQuality", 80);
 		$this->graphicsLibrary = $this->isGraphicsLibrary();
 	}
 
@@ -133,7 +133,7 @@ class YellowImage
 		switch($type)
 		{
 			case "gif":	$ok = @imagegif($image, $fileName); break;
-			case "jpg":	$ok = @imagejpeg($image, $fileName, $this->yellow->config->get("imageJpegQuality")); break;
+			case "jpg":	$ok = @imagejpeg($image, $fileName, $this->yellow->config->get("imageJpgQuality")); break;
 			case "png":	$ok = @imagepng($image, $fileName); break;
 		}
 		return $ok;
