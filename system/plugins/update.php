@@ -5,7 +5,7 @@
 
 class YellowUpdate
 {
-	const VERSION = "0.7.2";
+	const VERSION = "0.7.3";
 	var $yellow;					//access to API
 	var $updates;					//number of updates
 	
@@ -29,21 +29,33 @@ class YellowUpdate
 			$fileNameConfig = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
 			$this->yellow->config->update($fileNameConfig, array("startupUpdate" => "none"));
 		}
-		if($update) //TODO: remove later, converts old config
+		if($update)
 		{
 			$fileNameConfig = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
 			$fileData = $this->yellow->toolbox->readFile($fileNameConfig);
+			$configDefaults = new YellowDataCollection();
+			$configDefaults->exchangeArray($this->yellow->config->configDefaults->getArrayCopy());
 			foreach($this->yellow->toolbox->getTextLines($fileData) as $line)
 			{
-				$line = preg_replace("/^Webinterface/i", "Edit", $line);
 				preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
-				if(substru($matches[1], 0, 4)=="Edit" && !strempty($matches[2])) $this->yellow->config->set($matches[1], $matches[2]);
+				if(substru($line, 0, 12)=="Webinterface")	//TODO: remove later, converts old config
+				{
+					$line = preg_replace("/^Webinterface/i", "Edit", $line);
+					preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
+					if(!empty($matches[1]) && !strempty($matches[2])) $this->yellow->config->set($matches[1], $matches[2]);
+				}
+				if(!empty($matches[1]) && !is_null($configDefaults[$matches[1]])) unset($configDefaults[$matches[1]]);
 				if(!empty($matches[1]) && $matches[1][0]!='#' && is_null($this->yellow->config->configDefaults[$matches[1]]))
 				{
 					$fileDataNew .= "# $line";
 				} else {
 					$fileDataNew .= $line;
 				}
+			}
+			unset($configDefaults["configFile"]);
+			foreach($configDefaults as $key=>$value)
+			{
+				$fileDataNew .= ucfirst($key).": $value\n";
 			}
 			if($fileData!=$fileDataNew) $this->yellow->toolbox->createFile($fileNameConfig, $fileDataNew);
 		}
@@ -315,6 +327,7 @@ class YellowUpdate
 				$this->yellow->page->error($statusCode, "Can't delete file '$entry'!");
 			}
 		}
+		$statusCode = max($statusCode, $this->updateSoftwareNotification("YellowUpdate"));
 		return $statusCode;
 	}
 
@@ -360,7 +373,7 @@ class YellowUpdate
 				}
 			}
 			$zip->close();
-			if($statusCode==200) $statusCode = $this->updateSoftwareNew($software);
+			if($statusCode==200) $statusCode = $this->updateSoftwareMultiLanguage($software);
 			if($statusCode==200) $statusCode = $this->updateSoftwareNotification($software);
 			++$this->updates;
 		} else {
@@ -420,11 +433,11 @@ class YellowUpdate
 		return $statusCode;
 	}
 
-	// Update new software
-	function updateSoftwareNew($software)
+	// Update software for multiple languages
+	function updateSoftwareMultiLanguage($software)
 	{
 		$statusCode = 200;
-		if(!$this->isSoftwareExisting($software) && $this->yellow->config->get("multiLanguageMode"))
+		if($this->yellow->config->get("multiLanguageMode") && !$this->isSoftwareExisting($software))
 		{
 			$pathsSource = $pathsTarget = array();
 			$pathBase = $this->yellow->config->get("contentDir");
