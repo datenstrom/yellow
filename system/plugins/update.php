@@ -28,6 +28,7 @@ class YellowUpdate
 			$update = true;
 			$fileNameConfig = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
 			$this->yellow->config->update($fileNameConfig, array("startupUpdate" => "none"));
+			$this->yellow->config->setDefault("startupUpdate", "none");
 		}
 		if($update)
 		{
