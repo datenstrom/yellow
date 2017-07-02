@@ -328,7 +328,6 @@ class YellowUpdate
 				$this->yellow->page->error($statusCode, "Can't delete file '$entry'!");
 			}
 		}
-		$statusCode = max($statusCode, $this->updateSoftwareNotification("YellowUpdate"));
 		return $statusCode;
 	}
 
@@ -492,9 +491,8 @@ class YellowUpdate
 	{
 		$statusCode = 200;
 		$startupUpdate = $this->yellow->config->get("startupUpdate");
-		if($startupUpdate=="none") $startupUpdate = "";
-		if(!empty($startupUpdate)) $startupUpdate .= ",";
-		$startupUpdate .= $software;
+		if($startupUpdate=="none") $startupUpdate = "YellowUpdate";
+		if($software!="YellowUpdate") $startupUpdate .= ",$software";
 		$fileNameConfig = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
 		if(!$this->yellow->config->update($fileNameConfig, array("startupUpdate" => $startupUpdate)))
 		{
