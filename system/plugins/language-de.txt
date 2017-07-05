@@ -3,7 +3,7 @@
 Language: de
 LanguageDescription: Deutsch
 LanguageTranslator: David Fehrmann
-LanguageVersion: 0.7.1
+LanguageVersion: 0.7.2
 
 BlogBy: von
 BlogFilter: Blog:
@@ -66,6 +66,10 @@ EditApproveSubject: Benutzerkonto genehmigen
 EditApproveMessage: Hallo @usershort, bitte genehmige ein neues Benutzerkonto für @useraccount. Klicke auf den folgenden Link.
 EditApproveStatusDone: Benutzerkonto wurde genehmigt. Vielen Dank!
 EditApproveStatusExpired: Benutzerkonto kann nicht genehmigt werden. Link ist abgelaufen!
+EditReactivateSubject: Benutzerkonto reaktivieren
+EditReactivateMessage: Hallo @usershort, bitte reaktiviere dein Benutzerkonto. Es gab zu viele fehlgeschlagene Anmeldeversuche. Klicke auf den folgenden Link.
+EditReactivateStatusDone: Benutzerkonto wurde reaktiviert. Vielen Dank!
+EditReactivateStatusExpired: Benutzerkonto kann nicht reaktiviert werden. Link ist abgelaufen!
 EditRecoverSubject: Benutzerkonto wiederherstellen
 EditRecoverMessage: Hallo @usershort, bitte bestätige, dass du dein Kennwort vergessen hast. Klicke auf den folgenden Link.
 EditRecoverStatusDone: Benutzerkonto wurde wiederhergestellt. Vielen Dank!

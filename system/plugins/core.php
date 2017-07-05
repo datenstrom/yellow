@@ -33,7 +33,6 @@ class YellowCore
 		$this->config->setDefault("language", "en");
 		$this->config->setDefault("timezone", "UTC");
 		$this->config->setDefault("theme", "default");
-		$this->config->setDefault("serverUrl", "");
 		$this->config->setDefault("staticUrl", "");
 		$this->config->setDefault("staticDefaultFile", "index.html");
 		$this->config->setDefault("staticErrorFile", "404.html");
@@ -67,6 +66,7 @@ class YellowCore
 		$this->config->setDefault("errorFile", "page-error-(.*).txt");
 		$this->config->setDefault("robotsFile", "robots.txt");
 		$this->config->setDefault("faviconFile", "favicon.ico");
+		$this->config->setDefault("serverUrl", "");
 		$this->config->setDefault("template", "default");
 		$this->config->setDefault("navigation", "navigation");
 		$this->config->setDefault("sidebar", "sidebar");
@@ -92,32 +92,20 @@ class YellowCore
 			$serverVersion = $this->toolbox->getServerVersion();
 			echo "Datenstrom Yellow ".YellowCore::VERSION.", PHP ".PHP_VERSION.", $serverVersion<br/>\n";
 		}
+		$this->toolbox->timerStart($time);
 		$this->config->load($this->config->get("configDir").$this->config->get("configFile"));
 		$this->text->load($this->config->get("pluginDir").$this->config->get("textFile"));
 		$this->lookup->load();
 		$this->themes->load();
 		$this->plugins->load();
+		$this->toolbox->timerStop($time);
 		$this->startup();
-	}
-	
-	// Handle startup
-	function startup()
-	{
-		$tokens = explode(',', $this->config->get("startupUpdate"));
-		foreach($this->plugins->plugins as $key=>$value)
+		if(defined("DEBUG") && DEBUG>=2)
 		{
-			if(method_exists($value["obj"], "onStartup")) $value["obj"]->onStartup(in_array($value["plugin"], $tokens));
+			$plugins = count($this->plugins->plugins);
+			$themes = count($this->themes->themes);
+			echo "YellowCore::load plugins:$plugins themes:$themes time:$time ms<br/>\n";
 		}
-		foreach($this->themes->themes as $key=>$value)
-		{
-			if(method_exists($value["obj"], "onStartup")) $value["obj"]->onStartup(in_array($value["theme"], $tokens));
-		}
-		if($this->config->get("startupUpdate")!="none")
-		{
-			$fileNameConfig = $this->config->get("configDir").$this->config->get("configFile");
-			$this->config->update($fileNameConfig, array("startupUpdate" => "none"));
-		}
-		if(defined("DEBUG") && DEBUG>=2) echo "YellowCore::startup<br/>\n";
 	}
 	
 	// Handle request
@@ -208,13 +196,17 @@ class YellowCore
 	{
 		if($statusCode>=400)
 		{
+			$cacheable = false;
 			$fileName = $this->config->get("configDir").$this->config->get("errorFile");
 			$fileName = strreplaceu("(.*)", $statusCode, $fileName);
-			$cacheable = false;
+			$rawData = $this->toolbox->readFile($fileName);
+			if(empty($rawData)) $rawData = "---\nTitle:".$this->toolbox->getHttpStatusFormatted($statusCode, true)."\n---\n";
+		} else {
+			$rawData = $this->toolbox->readFile($fileName);
 		}
 		$this->page = new YellowPage($this);
 		$this->page->setRequestInformation($scheme, $address, $base, $location, $fileName);
-		$this->page->parseData($this->toolbox->readFile($fileName), $cacheable, $statusCode, $pageError);
+		$this->page->parseData($rawData, $cacheable, $statusCode, $pageError);
 		$this->text->setLanguage($this->page->get("language"));
 		$this->page->parseContent();
 		return $fileName;
@@ -306,6 +298,25 @@ class YellowCore
 		return $statusCode;
 	}
 	
+	// Handle startup
+	function startup()
+	{
+		$tokens = explode(',', $this->config->get("startupUpdate"));
+		foreach($this->plugins->plugins as $key=>$value)
+		{
+			if(method_exists($value["obj"], "onStartup")) $value["obj"]->onStartup(in_array($value["plugin"], $tokens));
+		}
+		foreach($this->themes->themes as $key=>$value)
+		{
+			if(method_exists($value["obj"], "onStartup")) $value["obj"]->onStartup(in_array($value["theme"], $tokens));
+		}
+		if($this->config->get("startupUpdate")!="none")
+		{
+			$fileNameConfig = $this->config->get("configDir").$this->config->get("configFile");
+			$this->config->update($fileNameConfig, array("startupUpdate" => "none"));
+		}
+	}
+	
 	// Handle shutdown
 	function shutdown()
 	{
@@ -317,7 +328,6 @@ class YellowCore
 		{
 			if(method_exists($value["obj"], "onShutdown")) $value["obj"]->onShutdown();
 		}
-		if(defined("DEBUG") && DEBUG>=2) echo "YellowCore::shutdown<br/>\n";
 	}
 	
 	// Parse snippet
@@ -753,6 +763,12 @@ class YellowPage
 	function getChildren($showInvisible = false)
 	{
 		return $this->yellow->pages->getChildren($this->location, $showInvisible);
+	}
+
+	// Return page collection with sub pages of current page
+	function getChildrenRecursive($showInvisible = false, $levelMax = 0)
+	{
+		return $this->yellow->pages->getChildrenRecursive($this->location, $showInvisible, $levelMax);
 	}
 	
 	// Return page collection with media files for current page
@@ -1837,27 +1853,29 @@ class YellowConfig
 	// Update configuration in file
 	function update($fileName, $config)
 	{
+		$configNew = new YellowDataCollection();
 		foreach($config as $key=>$value)
 		{
-			if(empty($key) || strempty($value)) { unset($config[$key]); continue; }
-			$this->set($key, $value);
+			if(!empty($key) && !strempty($value))
+			{
+				$this->set($key, $value);
+				$configNew[$key] = $value;
+			}
 		}
 		$this->modified = time();
 		$fileData = $this->yellow->toolbox->readFile($fileName);
 		foreach($this->yellow->toolbox->getTextLines($fileData) as $line)
 		{
 			preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
-			$keySearch = lcfirst($matches[1]); $keyFound = "";
-			foreach($config as $key=>$value) if(lcfirst($key)==$keySearch) { $keyFound = $key; break; }
-			if(!empty($keyFound))
+			if(!empty($matches[1]) && !is_null($configNew[$matches[1]]))
 			{
-				$fileDataNew .= "$matches[1]: $config[$keyFound]\n";
-				unset($config[$keyFound]);
+				$fileDataNew .= "$matches[1]: ".$configNew[$matches[1]]."\n";
+				unset($configNew[$matches[1]]);
 			} else {
 				$fileDataNew .= $line;
 			}
 		}
-		foreach($config as $key=>$value)
+		foreach($configNew as $key=>$value)
 		{
 			$fileDataNew .= ucfirst($key).": $value\n";
 		}
@@ -2860,6 +2878,7 @@ class YellowToolbox
 			case 403:	$text = "Forbidden"; break;
 			case 404:	$text = "Not found"; break;
 			case 424:	$text = "Not existing"; break;
+			case 430:	$text = "Login failed"; break;
 			case 500:	$text = "Server error"; break;
 			case 503:	$text = "Service unavailable"; break;
 			default:	$text = "Error $statusCode";
@@ -3080,7 +3099,7 @@ class YellowToolbox
 		$lines = array();
 		$split = preg_split("/(\R)/u", $text, -1, PREG_SPLIT_DELIM_CAPTURE);
 		for($i=0; $i<count($split)-1; $i+=2) array_push($lines, $split[$i].$split[$i+1]);
-		if($split[$i]!='') array_push($lines, $split[$i]);
+		if($split[$i]!="") array_push($lines, $split[$i]."\n");
 		return $lines;
 	}
 	

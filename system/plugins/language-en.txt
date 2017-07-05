@@ -3,7 +3,7 @@
 Language: en
 LanguageDescription: English
 LanguageTranslator: Mark Seuffert
-LanguageVersion: 0.7.1
+LanguageVersion: 0.7.2
 
 BlogBy: by
 BlogFilter: Blog:
@@ -66,6 +66,10 @@ EditApproveSubject: Approve user account
 EditApproveMessage: Hi @usershort, please approve a new user account for @useraccount. Click the following link.
 EditApproveStatusDone: User account approved. Thank you!
 EditApproveStatusExpired: User account can not be approved. Link has expired!
+EditReactivateSubject: Reactivate user account
+EditReactivateMessage: Hi @usershort, please reactivate your user account. There were too many failed login attempts. Click the following link.
+EditReactivateStatusDone: User account reactivated. Thank you!
+EditReactivateStatusExpired: User account can not be reactivated. Link has expired!
 EditRecoverSubject: Recover user account
 EditRecoverMessage: Hi @usershort, please confirm that you forgot your password. Click the following link.
 EditRecoverStatusDone: User account recovered. Thank you!

@@ -32,6 +32,7 @@ yellow.edit =
 			case "signup":		this.showPane("yellow-pane-signup", action, status); break;
 			case "confirm":		this.showPane("yellow-pane-signup", action, status); break;
 			case "approve":		this.showPane("yellow-pane-signup", action, status); break;
+			case "reactivate":	this.showPane("yellow-pane-settings", action, status); break;
 			case "recover":		this.showPane("yellow-pane-recover", action, status); break;
 			case "settings":	this.showPane("yellow-pane-settings", action, status); break;
 			case "reconfirm":	this.showPane("yellow-pane-settings", action, status); break;

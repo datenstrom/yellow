@@ -3,7 +3,7 @@
 Language: fr
 LanguageDescription: Français
 LanguageTranslator: Juh Nibreh
-LanguageVersion: 0.7.1
+LanguageVersion: 0.7.2
 
 BlogBy: par
 BlogFilter: Blog:
@@ -66,6 +66,10 @@ EditApproveSubject: Approuver un nouvel utilisateur
 EditApproveMessage: Bonjour @usershort, veuillez approuver la création d'un nouveau compte utilisateur pour @useraccount. Cliquez sur le lien suivant.
 EditApproveStatusDone: Compte utilisateur approuvé. Merci!
 EditApproveStatusExpired: Le compte ne peut pas être approuvé. Le lien de confirmation a expiré!
+EditReactivateSubject: Réactivation d'un compte utilisateur
+EditReactivateMessage: Bonjour @usershort, veuillez réactivér votre compte utilisateur. Il y a eu trop de tentatives de connexion échouées. Cliquez sur le lien suivant.
+EditReactivateStatusDone: Compte d'utilisateur réactivé. Merci!
+EditReactivateStatusExpired: Le compte ne peut pas être réctivé. Le lien de confirmation a expiré!
 EditRecoverSubject: Restauration d'un compte utilisateur
 EditRecoverMessage: Bonjour @usershort, veuillez confirmer que vous avez oublié votre mot de passe. Cliquez sur le lien suivant.
 EditRecoverStatusDone: Compte utilisateur restauré. Merci!
