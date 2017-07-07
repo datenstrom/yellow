@@ -5,7 +5,7 @@
 
 class YellowImage
 {
-	const VERSION = "0.7.2";
+	const VERSION = "0.7.3";
 	var $yellow;			//access to API
 	var $graphicsLibrary;	//graphics library support? (boolean)
 
@@ -104,7 +104,7 @@ class YellowImage
 				if(!$this->saveImage($image, $fileNameOutput, $type) ||
 				   !$this->yellow->toolbox->modifyFile($fileNameOutput, $this->yellow->toolbox->getFileModified($fileName)))
 				{
-					$this->yellow->page->error(500, "Image '$fileNameOutput' can't be saved!");
+					$this->yellow->page->error(500, "Can't write file '$fileNameOutput'!");
 				}
 			}
 			$src = $this->yellow->config->get("serverBase").$this->yellow->config->get("imageThumbnailLocation").$fileNameThumb;

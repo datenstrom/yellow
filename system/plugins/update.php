@@ -5,7 +5,7 @@
 
 class YellowUpdate
 {
-	const VERSION = "0.7.3";
+	const VERSION = "0.7.4";
 	var $yellow;					//access to API
 	var $updates;					//number of updates
 	
@@ -412,7 +412,7 @@ class YellowUpdate
 				   !$this->yellow->toolbox->modifyFile($fileName, $modified))
 				{
 					$statusCode = 500;
-					$this->yellow->page->error($statusCode, "Can't update file '$fileName'!");
+					$this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
 				}
 			}
 			if($delete)
