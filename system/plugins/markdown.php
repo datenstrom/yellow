@@ -5,7 +5,7 @@
 
 class YellowMarkdown
 {
-	const VERSION = "0.6.5";
+	const VERSION = "0.6.6";
 	var $yellow;			//access to API
 	
 	// Handle initialisation
@@ -17,153 +17,8 @@ class YellowMarkdown
 	// Handle page content parsing of raw format
 	function onParseContentRaw($page, $text)
 	{
-		$markdown = new YellowMarkdownParser($this->yellow, $page);
+		$markdown = new YellowMarkdownExtraParser($this->yellow, $page);
 		return $markdown->transform($text);
-	}
-}
-
-class YellowMarkdownParser extends MarkdownExtraParser
-{
-	var $yellow;			//access to API
-	var $page;				//access to page
-	var $idAttributes;		//id attributes
-
-	function __construct($yellow, $page)
-	{
-		$this->yellow = $yellow;
-		$this->page = $page;
-		$this->idAttributes = array();
-		$this->no_markup = $page->parserSafeMode;
-		$this->url_filter_func = function($url) use ($yellow, $page)
-		{
-			return $yellow->lookup->normaliseLocation($url, $page->location,
-				$page->parserSafeMode && $page->statusCode==200);
-		};
-		parent::__construct();
-	}
-
-	// Return unique id attribute
-	function getIdAttribute($text)
-	{
-		$text = $this->yellow->lookup->normaliseName($text, true, false, true);
-		$text = trim(preg_replace("/-+/", "-", $text), "-");
-		if(is_null($this->idAttributes[$text]))
-		{
-			$this->idAttributes[$text] = $text;
-			$attr = " id=\"$text\"";
-		}
-		return $attr;
-	}
-	
-	// Handle links
-	function doAutoLinks($text)
-	{
-		$text = preg_replace_callback("/<(\w+:[^\'\">\s]+)>/", array(&$this, "_doAutoLinks_url_callback"), $text);
-		$text = preg_replace_callback("/<([\w\-\.]+@[\w\-\.]+)>/", array(&$this, "_doAutoLinks_email_callback"), $text);
-		$text = preg_replace_callback("/\[\-\-(.*?)\-\-\]/", array(&$this, "_doAutoLinks_comment_callback"), $text);
-		$text = preg_replace_callback("/\[(\w+)(.*?)\]/", array(&$this, "_doAutoLinks_shortcut_callback"), $text);
-		$text = preg_replace_callback("/\:([\w\+\-\_]+)\:/", array(&$this, "_doAutoLinks_shortcode_callback"), $text);
-		$text = preg_replace_callback("/((http|https|ftp):\/\/\S+[^\'\"\,\.\;\:\s]+)/", array(&$this, "_doAutoLinks_url_callback"), $text);
-		$text = preg_replace_callback("/([\w\-\.]+@[\w\-\.]+\.[\w]{2,4})/", array(&$this, "_doAutoLinks_email_callback"), $text);
-		return $text;
-	}
-	
-	// Handle comments
-	function _doAutoLinks_comment_callback($matches)
-	{
-		$text = $matches[1];
-		$output = "<!--".htmlspecialchars($text, ENT_NOQUOTES)."-->";
-		if($text[0]=='-') $output = "";
-		return $this->hashBlock($output);
-	}
-	
-	// Handle shortcuts
-	function _doAutoLinks_shortcut_callback($matches)
-	{
-		$output = $this->page->parseContentBlock($matches[1], trim($matches[2]), true);
-		if(is_null($output)) $output = htmlspecialchars($matches[0], ENT_NOQUOTES);
-		return substr($output, 0, 4)=="<div" ? $this->hashBlock(trim($output)) : $this->hashPart(trim($output));
-	}
-
-	// Handle shortcodes
-	function _doAutoLinks_shortcode_callback($matches)
-	{
-		$output = $this->page->parseContentBlock("", $matches[1], true);
-		if(is_null($output)) $output = htmlspecialchars($matches[0], ENT_NOQUOTES);
-		return $this->hashPart($output);
-	}
-	
-	// Handle fenced code blocks
-	function _doFencedCodeBlocks_callback($matches)
-	{
-		$text = $matches[4];
-		$name = empty($matches[2]) ? "" : "$matches[2] $matches[3]";
-		$output = $this->page->parseContentBlock($name, $text, false);
-		if(is_null($output))
-		{
-			$attr = $this->doExtraAttributes("pre", ".$matches[2] $matches[3]");
-			$output = "<pre$attr><code>".htmlspecialchars($text, ENT_NOQUOTES)."</code></pre>";
-		}
-		return "\n\n".$this->hashBlock($output)."\n\n";
-	}
-	
-	// Handle headers, text style
-	function _doHeaders_callback_setext($matches)
-	{
-		if($matches[3]=='-' && preg_match('{^- }', $matches[1])) return $matches[0];
-		$text = $matches[1];
-		$level = $matches[3]{0}=='=' ? 1 : 2;
-		$attr = $this->doExtraAttributes("h$level", $dummy =& $matches[2]);
-		if(empty($attr) && $level>=2 && $level<=3) $attr = $this->getIdAttribute($text);
-		$output = "<h$level$attr>".$this->runSpanGamut($text)."</h$level>";
-		return "\n".$this->hashBlock($output)."\n\n";
-	}
-	
-	// Handle headers, atx style
-	function _doHeaders_callback_atx($matches)
-	{
-		$text = $matches[2];
-		$level = strlen($matches[1]);
-		$attr = $this->doExtraAttributes("h$level", $dummy =& $matches[3]);
-		if(empty($attr) && $level>=2 && $level<=3) $attr = $this->getIdAttribute($text);
-		$output = "<h$level$attr>".$this->runSpanGamut($text)."</h$level>";
-		return "\n".$this->hashBlock($output)."\n\n";
-	}
-	
-	// Handle inline links
-	function _doAnchors_inline_callback($matches)
-	{
-		$url = $matches[3]=="" ? $matches[4] : $matches[3];
-		$text = $matches[2];
-		$title = $matches[7];
-		$attr = $this->doExtraAttributes("a", $dummy =& $matches[8]);
-		$output = "<a href=\"".$this->encodeURLAttribute($url)."\"";
-		if(!empty($title)) $output .= " title=\"".$this->encodeAttribute($title)."\"";
-		$output .= $attr;
-		$output .= ">".$this->runSpanGamut($text)."</a>";
-		return $this->hashPart($output);
-	}
-	
-	// Handle inline images
-	function _doImages_inline_callback($matches)
-	{
-		$width = $height = 0;
-		$src = $matches[3]=="" ? $matches[4] : $matches[3];
-		if(!preg_match("/^\w+:/", $src))
-		{
-			list($width, $height) = $this->yellow->toolbox->detectImageInfo($this->yellow->config->get("imageDir").$src);
-			$src = $this->yellow->config->get("serverBase").$this->yellow->config->get("imageLocation").$src;
-		}
-		$alt = $matches[2];
-		$title = $matches[7]=="" ? $matches[2] : $matches[7];
-		$attr = $this->doExtraAttributes("img", $dummy =& $matches[8]);
-		$output = "<img src=\"".$this->encodeURLAttribute($src)."\"";
-		if($width && $height) $output .= " width=\"$width\" height=\"$height\"";
-		if(!empty($alt)) $output .= " alt=\"".$this->encodeAttribute($alt)."\"";
-		if(!empty($title)) $output .= " title=\"".$this->encodeAttribute($title)."\"";
-		$output .= $attr;
-		$output .= $this->empty_element_suffix;
-		return $this->hashPart($output);
 	}
 }
 
@@ -3854,6 +3709,154 @@ class MarkdownExtraParser extends MarkdownParser {
 		}
 	}
 }
+									  
+// Markdown extra parser extensions
+// Copyright (c) 2013-2017 Datenstrom
+									  
+class YellowMarkdownExtraParser extends MarkdownExtraParser
+{
+	var $yellow;			//access to API
+	var $page;				//access to page
+	var $idAttributes;		//id attributes
 
+	function __construct($yellow, $page)
+	{
+		$this->yellow = $yellow;
+		$this->page = $page;
+		$this->idAttributes = array();
+		$this->no_markup = $page->parserSafeMode;
+		$this->url_filter_func = function($url) use ($yellow, $page)
+		{
+			return $yellow->lookup->normaliseLocation($url, $page->location,
+				$page->parserSafeMode && $page->statusCode==200);
+		};
+		parent::__construct();
+	}
+
+	// Return unique id attribute
+	function getIdAttribute($text)
+	{
+		$text = $this->yellow->lookup->normaliseName($text, true, false, true);
+		$text = trim(preg_replace("/-+/", "-", $text), "-");
+		if(is_null($this->idAttributes[$text]))
+		{
+			$this->idAttributes[$text] = $text;
+			$attr = " id=\"$text\"";
+		}
+		return $attr;
+	}
+	
+	// Handle links
+	function doAutoLinks($text)
+	{
+		$text = preg_replace_callback("/<(\w+:[^\'\">\s]+)>/", array(&$this, "_doAutoLinks_url_callback"), $text);
+		$text = preg_replace_callback("/<([\w\-\.]+@[\w\-\.]+)>/", array(&$this, "_doAutoLinks_email_callback"), $text);
+		$text = preg_replace_callback("/\[\-\-(.*?)\-\-\]/", array(&$this, "_doAutoLinks_comment_callback"), $text);
+		$text = preg_replace_callback("/\[(\w+)(.*?)\]/", array(&$this, "_doAutoLinks_shortcut_callback"), $text);
+		$text = preg_replace_callback("/\:([\w\+\-\_]+)\:/", array(&$this, "_doAutoLinks_shortcode_callback"), $text);
+		$text = preg_replace_callback("/((http|https|ftp):\/\/\S+[^\'\"\,\.\;\:\s]+)/", array(&$this, "_doAutoLinks_url_callback"), $text);
+		$text = preg_replace_callback("/([\w\-\.]+@[\w\-\.]+\.[\w]{2,4})/", array(&$this, "_doAutoLinks_email_callback"), $text);
+		return $text;
+	}
+	
+	// Handle comments
+	function _doAutoLinks_comment_callback($matches)
+	{
+		$text = $matches[1];
+		$output = "<!--".htmlspecialchars($text, ENT_NOQUOTES)."-->";
+		if($text[0]=='-') $output = "";
+		return $this->hashBlock($output);
+	}
+	
+	// Handle shortcuts
+	function _doAutoLinks_shortcut_callback($matches)
+	{
+		$output = $this->page->parseContentBlock($matches[1], trim($matches[2]), true);
+		if(is_null($output)) $output = htmlspecialchars($matches[0], ENT_NOQUOTES);
+		return substr($output, 0, 4)=="<div" ? $this->hashBlock(trim($output)) : $this->hashPart(trim($output));
+	}
+
+	// Handle shortcodes
+	function _doAutoLinks_shortcode_callback($matches)
+	{
+		$output = $this->page->parseContentBlock("", $matches[1], true);
+		if(is_null($output)) $output = htmlspecialchars($matches[0], ENT_NOQUOTES);
+		return $this->hashPart($output);
+	}
+	
+	// Handle fenced code blocks
+	function _doFencedCodeBlocks_callback($matches)
+	{
+		$text = $matches[4];
+		$name = empty($matches[2]) ? "" : "$matches[2] $matches[3]";
+		$output = $this->page->parseContentBlock($name, $text, false);
+		if(is_null($output))
+		{
+			$attr = $this->doExtraAttributes("pre", ".$matches[2] $matches[3]");
+			$output = "<pre$attr><code>".htmlspecialchars($text, ENT_NOQUOTES)."</code></pre>";
+		}
+		return "\n\n".$this->hashBlock($output)."\n\n";
+	}
+	
+	// Handle headers, text style
+	function _doHeaders_callback_setext($matches)
+	{
+		if($matches[3]=='-' && preg_match('{^- }', $matches[1])) return $matches[0];
+		$text = $matches[1];
+		$level = $matches[3]{0}=='=' ? 1 : 2;
+		$attr = $this->doExtraAttributes("h$level", $dummy =& $matches[2]);
+		if(empty($attr) && $level>=2 && $level<=3) $attr = $this->getIdAttribute($text);
+		$output = "<h$level$attr>".$this->runSpanGamut($text)."</h$level>";
+		return "\n".$this->hashBlock($output)."\n\n";
+	}
+	
+	// Handle headers, atx style
+	function _doHeaders_callback_atx($matches)
+	{
+		$text = $matches[2];
+		$level = strlen($matches[1]);
+		$attr = $this->doExtraAttributes("h$level", $dummy =& $matches[3]);
+		if(empty($attr) && $level>=2 && $level<=3) $attr = $this->getIdAttribute($text);
+		$output = "<h$level$attr>".$this->runSpanGamut($text)."</h$level>";
+		return "\n".$this->hashBlock($output)."\n\n";
+	}
+	
+	// Handle inline links
+	function _doAnchors_inline_callback($matches)
+	{
+		$url = $matches[3]=="" ? $matches[4] : $matches[3];
+		$text = $matches[2];
+		$title = $matches[7];
+		$attr = $this->doExtraAttributes("a", $dummy =& $matches[8]);
+		$output = "<a href=\"".$this->encodeURLAttribute($url)."\"";
+		if(!empty($title)) $output .= " title=\"".$this->encodeAttribute($title)."\"";
+		$output .= $attr;
+		$output .= ">".$this->runSpanGamut($text)."</a>";
+		return $this->hashPart($output);
+	}
+	
+	// Handle inline images
+	function _doImages_inline_callback($matches)
+	{
+		$width = $height = 0;
+		$src = $matches[3]=="" ? $matches[4] : $matches[3];
+		if(!preg_match("/^\w+:/", $src))
+		{
+			list($width, $height) = $this->yellow->toolbox->detectImageInfo($this->yellow->config->get("imageDir").$src);
+			$src = $this->yellow->config->get("serverBase").$this->yellow->config->get("imageLocation").$src;
+		}
+		$alt = $matches[2];
+		$title = $matches[7]=="" ? $matches[2] : $matches[7];
+		$attr = $this->doExtraAttributes("img", $dummy =& $matches[8]);
+		$output = "<img src=\"".$this->encodeURLAttribute($src)."\"";
+		if($width && $height) $output .= " width=\"$width\" height=\"$height\"";
+		if(!empty($alt)) $output .= " alt=\"".$this->encodeAttribute($alt)."\"";
+		if(!empty($title)) $output .= " title=\"".$this->encodeAttribute($title)."\"";
+		$output .= $attr;
+		$output .= $this->empty_element_suffix;
+		return $this->hashPart($output);
+	}
+}
+									  
 $yellow->plugins->register("markdown", "YellowMarkdown", YellowMarkdown::VERSION);
 ?>
