@@ -801,6 +801,12 @@ class YellowPage
 		return !is_null($this->pageRelations[$key]) ? $this->pageRelations[$key] : $this;
 	}
 	
+	// Return page base
+	function getBase($multiLanguage = false)
+	{
+		return $multiLanguage ? rtrim($this->base.$this->yellow->pages->getHomeLocation($this->location), '/') :  $this->base;
+	}
+	
 	// Return page location
 	function getLocation($absoluteLocation = false)
 	{
