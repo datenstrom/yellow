@@ -1,6 +1,6 @@
 Datenstrom Yellow 0.7.1
 =======================
-[![Yellow](https://raw.githubusercontent.com/datenstrom/yellow-developers/master/media/images/yellow-photo.jpg)](https://datenstrom.se/yellow/)
+[![Datenstrom Yellow](https://raw.githubusercontent.com/datenstrom/yellow-developers/master/media/images/datenstrom-yellow-en.jpg)](https://datenstrom.se/yellow/)
 
 Yellow is for people who make websites.
 
