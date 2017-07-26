@@ -24,7 +24,6 @@ DateWeekstart: Montag
 DateFormatShort: F Y
 DateFormatMedium: d.m.Y
 DateFormatLong: d.m.Y H:i
-DateFormatTime: H:i
 EditInstallationTitle: Hallo
 EditInstallationFeature: Was willst du machen?
 EditInstallationHomePage: Deine Webseite funktioniert!\n\nDu kannst [edit - diese Seite bearbeiten] oder einen Texteditor benutzen.
@@ -116,10 +115,13 @@ SearchResultsNone: Bitte einen Suchbegriff eingeben.
 SearchResultsEmpty: Keine Treffer für diese Suchanfrage.
 SearchSpecialChanges: Letzte Änderungen
 SearchButton: Suchen
+TimeFormatShort: H:i
+TimeFormatMedium: H:i:s
+TimeFormatLong: H:i:s T
 WikiFilter: Wiki:
 WikiTag: Tags:
 WikiSpecialPages: Alle Seiten
 WikiSpecialChanges: Letzte Änderungen
 YellowUrl: https://datenstrom.se/de/yellow/
-YellowUserHelpUrl: https://developers.datenstrom.se/help/help-de
-YellowMarkdownHelpUrl: https://developers.datenstrom.se/help/markdown-cheat-sheet-de
+YellowUserHelpUrl: https://developers.datenstrom.se/de/help/
+YellowMarkdownHelpUrl: https://developers.datenstrom.se/de/help/markdown-cheat-sheet

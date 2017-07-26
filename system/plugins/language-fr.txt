@@ -24,7 +24,6 @@ DateWeekstart: lundi
 DateFormatShort: F Y
 DateFormatMedium: d/m/Y
 DateFormatLong: d/m/Y H:i
-DateFormatTime: H:i
 EditInstallationTitle: Bonjour
 EditInstallationFeature: Que voulez-vous faire?
 EditInstallationHomePage: Votre site web fonctionne!\n\nVous pouvez [edit - modifier cette page] ou utiliser un éditeur de texte.
@@ -116,10 +115,13 @@ SearchResultsNone: Entrez un mot dans le champ de recherche.
 SearchResultsEmpty: Pas de résultats.
 SearchSpecialChanges: Changements récents
 SearchButton: Rechercher
+TimeFormatShort: H:i
+TimeFormatMedium: H:i:s
+TimeFormatLong: H:i:s T
 WikiFilter: Wiki:
 WikiTag: Tags:
 WikiSpecialPages: Toutes les pages
 WikiSpecialChanges: Changements récents
 YellowUrl: https://datenstrom.se/fr/yellow/
-YellowUserHelpUrl: https://developers.datenstrom.se/help/help-fr
-YellowMarkdownHelpUrl: https://developers.datenstrom.se/help/markdown-cheat-sheet-fr
+YellowUserHelpUrl: https://developers.datenstrom.se/fr/help/
+YellowMarkdownHelpUrl: https://developers.datenstrom.se/fr/help/markdown-cheat-sheet

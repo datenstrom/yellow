@@ -12,7 +12,7 @@ class YellowCore
 	var $plugins;			//plugins
 	var $themes;			//themes
 	var $config;			//configuration
-	var $text;				//text strings
+	var $text;				//text
 	var $lookup;			//location and file lookup
 	var $toolbox;			//toolbox with helpers
 
@@ -62,7 +62,8 @@ class YellowCore
 		$this->config->setDefault("downloadExtension", ".download");
 		$this->config->setDefault("installationExtension", ".installation");
 		$this->config->setDefault("configFile", "config.ini");
-		$this->config->setDefault("textFile", "language-(.*).txt");
+		$this->config->setDefault("textFile", "text.ini");
+		$this->config->setDefault("languageFile", "language-(.*).txt");
 		$this->config->setDefault("errorFile", "page-error-(.*).txt");
 		$this->config->setDefault("robotsFile", "robots.txt");
 		$this->config->setDefault("faviconFile", "favicon.ico");
@@ -94,17 +95,19 @@ class YellowCore
 		}
 		$this->toolbox->timerStart($time);
 		$this->config->load($this->config->get("configDir").$this->config->get("configFile"));
-		$this->text->load($this->config->get("pluginDir").$this->config->get("textFile"));
 		$this->lookup->load();
 		$this->themes->load();
 		$this->plugins->load();
+		$this->text->load($this->config->get("pluginDir").$this->config->get("languageFile"), "");
+		$this->text->load($this->config->get("configDir").$this->config->get("textFile"), $this->config->get("language"));
 		$this->toolbox->timerStop($time);
 		$this->startup();
 		if(defined("DEBUG") && DEBUG>=2)
 		{
 			$plugins = count($this->plugins->plugins);
 			$themes = count($this->themes->themes);
-			echo "YellowCore::load plugins:$plugins themes:$themes time:$time ms<br/>\n";
+			$languages = count($this->text->text);
+			echo "YellowCore::load plugins:$plugins themes:$themes languages:$languages time:$time ms<br/>\n";
 		}
 	}
 	
@@ -1952,7 +1955,7 @@ class YellowText
 {
 	var $yellow;		//access to API
 	var $modified;		//text modification date
-	var $text;			//text strings
+	var $text;			//text
 	var $language;		//current language
 	
 	function __construct($yellow)
@@ -1963,14 +1966,14 @@ class YellowText
 	}
 	
 	// Load text strings from file
-	function load($fileName)
+	function load($fileName, $languageDefault)
 	{
 		$path = dirname($fileName);
 		$regex = "/^".basename($fileName)."$/";
 		foreach($this->yellow->toolbox->getDirectoryEntries($path, $regex, true, false) as $entry)
 		{
 			if(defined("DEBUG") && DEBUG>=2) echo "YellowText::load file:$entry<br/>\n";
-			$language = "";
+			$language = $languageDefault;
 			$this->modified = max($this->modified, filemtime($entry));
 			$fileData = $this->yellow->toolbox->readFile($entry);
 			foreach($this->yellow->toolbox->getTextLines($fileData) as $line)
@@ -2051,10 +2054,15 @@ class YellowText
 		$dateWeekdays = preg_split("/\s*,\s*/", $this->get("dateWeekdays"));
 		$month = $dateMonths[date('n', $timestamp) - 1];
 		$weekday = $dateWeekdays[date('N', $timestamp) - 1];
+		$timeZone = $this->yellow->config->get("timezone");
+		$timeZoneHelper = new DateTime(null, new DateTimeZone($timeZone));
+		$timeZoneOffset = $timeZoneHelper->getOffset();
+		$timeZoneAbbreviation = "GMT".($timeZoneOffset<0 ? "-" : "+").abs(intval($timeZoneOffset/3600));
 		$format = preg_replace("/(?<!\\\)F/", addcslashes($month, 'A..Za..z'), $format);
 		$format = preg_replace("/(?<!\\\)M/", addcslashes(substru($month, 0, 3), 'A..Za..z'), $format);
 		$format = preg_replace("/(?<!\\\)D/", addcslashes(substru($weekday, 0, 3), 'A..Za..z'), $format);
 		$format = preg_replace("/(?<!\\\)l/", addcslashes($weekday, 'A..Za..z'), $format);
+		$format = preg_replace("/(?<!\\\)T/", addcslashes($timeZoneAbbreviation, 'A..Za..z'), $format);
 		return date($format, $timestamp);
 	}
 	
