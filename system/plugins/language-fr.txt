@@ -27,7 +27,7 @@ DateFormatLong: d/m/Y H:i
 EditInstallationTitle: Bonjour
 EditInstallationFeature: Que voulez-vous faire?
 EditInstallationHomePage: Votre site web fonctionne!\n\nVous pouvez [edit - modifier cette page] ou utiliser un éditeur de texte.
-EditInstallationAboutPage: Ce site web est fait avec [yellow]. [Apprenez-en plus](https://developers.datenstrom.se/help/help-fr).
+EditInstallationAboutPage: Ce site web est fait avec [yellow]. [Apprenez-en plus](https://developers.datenstrom.se/fr/help/).
 EditLoginTitle: Bienvenue
 EditLoginEmail: Email:
 EditLoginPassword: Mot de passe:
