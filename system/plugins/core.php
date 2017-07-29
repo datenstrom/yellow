@@ -706,11 +706,11 @@ class YellowPage
 	}
 	
 	// Return page meta data as language specific date
-	function getDate($key, $dateFormat = "")
+	function getDate($key, $format = "")
 	{
-		if(!empty($dateFormat))
+		if(!empty($format))
 		{
-			$format = $this->yellow->text->get($dateFormat);
+			$format = $this->yellow->text->get($format);
 		} else {
 			$format = $this->yellow->text->get("dateFormatMedium");
 		}
@@ -718,11 +718,23 @@ class YellowPage
 	}
 
 	// Return page meta data as language specific date, HTML encoded
-	function getDateHtml($key, $dateFormat = "")
+	function getDateHtml($key, $format = "")
 	{
-		return htmlspecialchars($this->getDate($key, $dateFormat));
+		return htmlspecialchars($this->getDate($key, $format));
+	}
+
+	// Return page meta data as custom date
+	function getDateFormatted($key, $format)
+	{
+		return $this->yellow->text->getDateFormatted(strtotime($this->get($key)), $format);
 	}
 	
+	// Return page meta data as custom date, HTML encoded
+	function getDateFormattedHtml($key, $format)
+	{
+		return htmlspecialchars($this->getDateFormatted($key, $format));
+	}
+
 	// Return page content, HTML encoded or raw format
 	function getContent($rawFormat = false, $sizeMax = 0)
 	{
@@ -2047,7 +2059,7 @@ class YellowText
 		return $text;
 	}
 	
-	// Return human readable date, custom date format
+	// Return human readable date, custom date
 	function getDateFormatted($timestamp, $format)
 	{
 		$dateMonths = preg_split("/\s*,\s*/", $this->get("dateMonths"));
