@@ -5,7 +5,7 @@
 
 class YellowEdit
 {
-	const VERSION = "0.7.2";
+	const VERSION = "0.7.3";
 	var $yellow;			//access to API
 	var $response;			//web response
 	var $users;				//user accounts

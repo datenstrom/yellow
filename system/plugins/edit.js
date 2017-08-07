@@ -6,8 +6,8 @@ var yellow =
 {
 	action: function(action, status, args) { yellow.edit.action(action, status, args); },
 	onLoad: function() { yellow.edit.load(); },
-	onClick: function(e) { yellow.edit.hidePanesOnClick(yellow.toolbox.getEventElement(e)); },
-	onKeydown: function(e) { yellow.edit.hidePanesOnKeydown(yellow.toolbox.getEventKeycode(e)); },
+	onClick: function(e) { yellow.edit.hidePanesOnClick(e.target); },
+	onKeydown: function(e) { yellow.edit.hidePanesOnKeydown(e.keyCode); },
 	onUpdate: function() { yellow.edit.updatePane(yellow.edit.paneId, yellow.edit.paneAction, yellow.edit.paneStatus); },
 	onResize: function() { yellow.edit.resizePane(yellow.edit.paneId, yellow.edit.paneAction, yellow.edit.paneStatus); }
 };
@@ -564,29 +564,13 @@ yellow.toolbox =
 	// Add event handler
 	addEvent: function(element, type, handler)
 	{
-		if(element.addEventListener) element.addEventListener(type, handler, false);
-		else element.attachEvent("on"+type, handler);
+		element.addEventListener(type, handler, false);
 	},
 	
 	// Remove event handler
 	removeEvent: function(element, type, handler)
 	{
-		if(element.removeEventListener) element.removeEventListener(type, handler, false);
-		else element.detachEvent("on"+type, handler);
-	},
-	
-	// Return element of event
-	getEventElement: function(e)
-	{
-		e = e ? e : window.event;
-		return e.target ? e.target : e.srcElement;
-	},
-	
-	// Return keycode of event
-	getEventKeycode: function(e)
-	{
-		e = e ? e : window.event;
-		return e.keyCode;
+		element.removeEventListener(type, handler, false);
 	},
 	
 	// Return element length
@@ -663,40 +647,32 @@ yellow.toolbox =
 	getOuterLeft: function(element)
 	{
 		var left = element.getBoundingClientRect().left;
-		return left + (window.pageXOffset || document.documentElement.scrollLeft);
+		return left + window.pageXOffset;
 	},
 	
 	// Return element top position in pixel
 	getOuterTop: function(element)
 	{
 		var top = element.getBoundingClientRect().top;
-		return top + (window.pageYOffset || document.documentElement.scrollTop);
+		return top + window.pageYOffset;
 	},
 	
 	// Return window width in pixel
 	getWindowWidth: function()
 	{
-		return window.innerWidth || document.documentElement.clientWidth;
+		return window.innerWidth;
 	},
 	
 	// Return window height in pixel
 	getWindowHeight: function()
 	{
-		return window.innerHeight || document.documentElement.clientHeight;
+		return window.innerHeight;
 	},
 	
 	// Return element CSS property
 	getStyle: function(element, property)
 	{
-		var string = "";
-		if(window.getComputedStyle)
-		{
-			string = window.getComputedStyle(element, null).getPropertyValue(property);
-		} else {
-			property = property.replace(/\-(\w)/g, function(match, m) { return m.toUpperCase(); });
-			string = element.currentStyle[property];
-		}
-		return string;
+		return window.getComputedStyle(element, null).getPropertyValue(property);
 	},
 	
 	// Return element CSS padding and border
@@ -730,32 +706,14 @@ yellow.toolbox =
 	// Set input cursor position
 	setCursorPosition: function(element, pos)
 	{
-		if(element.setSelectionRange)
-		{
-			element.focus();
-			element.setSelectionRange(pos, pos);
-		} else if(element.createTextRange) {
-			var range = element.createTextRange();
-			range.move("character", pos);
-			range.select();
-		}
+		element.focus();
+		element.setSelectionRange(pos, pos);
 	},
 
 	// Get input cursor position
 	getCursorPosition: function(element)
 	{
-		var pos = 0;
-		if(element.setSelectionRange)
-		{
-			pos = element.selectionStart;
-		} else if(document.selection) {
-			var range = document.selection.createRange();
-			var rangeDuplicate = range.duplicate();
-			rangeDuplicate.moveToElementText(element);
-			rangeDuplicate.setEndPoint("EndToEnd", range);
-			pos = rangeDuplicate.text.length - range.text.length;
-		}
-		return pos;
+		return element.selectionStart;
 	},
 	
 	// Set element visibility
