@@ -5,7 +5,7 @@
 
 class YellowUpdate
 {
-	const VERSION = "0.7.4";
+	const VERSION = "0.7.5";
 	var $yellow;					//access to API
 	var $updates;					//number of updates
 	
@@ -507,7 +507,7 @@ class YellowUpdate
 	{
 		$statusCode = 200;
 		$path = $this->yellow->config->get("pluginDir");
-		$regex = "/^.*\\".$this->yellow->config->get("installationExtension")."$/";
+		$regex = "/^.*\.installation$/";
 		foreach($this->yellow->toolbox->getDirectoryEntries($path, $regex, true, false) as $entry)
 		{
 			if(preg_match("/^(.*?)-(.*?)\./", basename($entry), $matches))
@@ -705,7 +705,7 @@ class YellowUpdate
 	{
 		$data = array("website");
 		$path = $this->yellow->config->get("pluginDir");
-		$regex = "/^.*\\".$this->yellow->config->get("installationExtension")."$/";
+		$regex = "/^.*\.installation$/";
 		foreach($this->yellow->toolbox->getDirectoryEntries($path, $regex, true, false, false) as $entry)
 		{
 			if(preg_match("/^(.*?)-(.*?)\./", $entry, $matches))

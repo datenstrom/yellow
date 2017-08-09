@@ -60,7 +60,6 @@ class YellowCore
 		$this->config->setDefault("contentExtension", ".txt");
 		$this->config->setDefault("configExtension", ".ini");
 		$this->config->setDefault("downloadExtension", ".download");
-		$this->config->setDefault("installationExtension", ".installation");
 		$this->config->setDefault("configFile", "config.ini");
 		$this->config->setDefault("textFile", "text.ini");
 		$this->config->setDefault("languageFile", "language-(.*).txt");
@@ -496,7 +495,7 @@ class YellowPage
 				rtrim($this->yellow->config->get("editLocation"), '/').$this->location));
 			$this->set("pageFile", $this->yellow->lookup->getPageFile($this->fileName));
 		} else {
-			$this->set("type", $this->yellow->toolbox->getFileExtension($this->fileName));
+			$this->set("type", $this->yellow->toolbox->getFileType($this->fileName));
 			$this->set("modified", date("Y-m-d H:i:s", $this->yellow->toolbox->getFileModified($this->fileName)));
 			$this->set("pageFile", $this->yellow->lookup->getPageFile($this->fileName, true));
 		}
@@ -2923,7 +2922,8 @@ class YellowToolbox
 	// Return MIME content type
 	function getMimeContentType($fileName)
 	{
-		$mimeTypes = array(
+		$contentType = "";
+		$contentTypes = array(
 			"css" => "text/css",
 			"gif" => "image/gif",
 			"html" => "text/html; charset=utf-8",
@@ -2936,13 +2936,12 @@ class YellowToolbox
 			"woff" => "application/font-woff",
 			"woff2" => "application/font-woff2",
 			"xml" => "text/xml; charset=utf-8");
-		$contentType = "";
-		$extension = $this->getFileExtension($fileName);
-		if(empty($extension))
+		$fileType = $this->getFileType($fileName);
+		if(empty($fileType))
 		{
-			$contentType = $mimeTypes["html"];
-		} else if(array_key_exists($extension, $mimeTypes)) {
-			$contentType = $mimeTypes[$extension];
+			$contentType = $contentTypes["html"];
+		} else if(array_key_exists($fileType, $contentTypes)) {
+			$contentType = $contentTypes[$fileType];
 		}
 		return $contentType;
 	}
@@ -3113,8 +3112,8 @@ class YellowToolbox
 		return is_file($fileName) ? filemtime($fileName) : 0;
 	}
 	
-	// Return file extension
-	function getFileExtension($fileName)
+	// Return file type
+	function getFileType($fileName)
 	{
 		return strtoloweru(($pos = strrposu($fileName, '.')) ? substru($fileName, $pos+1) : "");
 	}
