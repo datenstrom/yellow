@@ -482,7 +482,6 @@ class YellowPage
 			if(!$this->isExisting("titleContent")) $this->set("titleContent", $this->get("title"));
 			if(!$this->isExisting("titleNavigation")) $this->set("titleNavigation", $this->get("title"));
 			if(!$this->isExisting("titleHeader")) $this->set("titleHeader", $titleHeader);
-			if(!$this->isExisting("status") && !is_readable($this->fileName)) $this->set("status", "ignore");
 			if($this->get("status")=="hidden") $this->available = false;
 			$this->set("pageRead", $this->yellow->lookup->normaliseUrl(
 				$this->yellow->config->get("serverScheme"),
@@ -1387,15 +1386,7 @@ class YellowPages
 	function top($showInvisible = false)
 	{
 		$rootLocation = $this->getRootLocation($this->yellow->page->location);
-		$pages = new YellowPageCollection($this->yellow);
-		foreach($this->scanLocation($rootLocation) as $page)
-		{
-			if($page->isAvailable() && ($page->isVisible() || $showInvisible))
-			{
-				if(is_readable($page->fileName)) $pages->append($page);
-			}
-		}
-		return $pages;
+		return $this->getChildren($rootLocation, $showInvisible);
 	}
 	
 	// Return page collection with path ancestry
@@ -1460,7 +1451,7 @@ class YellowPages
 		{
 			if($page->isAvailable() && ($page->isVisible() || $showInvisible))
 			{
-				if(!$this->yellow->lookup->isRootLocation($page->location)) $pages->append($page);
+				if(!$this->yellow->lookup->isRootLocation($page->location) && is_readable($page->fileName)) $pages->append($page);
 			}
 		}
 		return $pages;
@@ -1475,7 +1466,7 @@ class YellowPages
 		{
 			if($page->isAvailable() && ($page->isVisible() || $showInvisible))
 			{
-				if(!$this->yellow->lookup->isRootLocation($page->location)) $pages->append($page);
+				if(!$this->yellow->lookup->isRootLocation($page->location) && is_readable($page->fileName)) $pages->append($page);
 				if(!$this->yellow->lookup->isFileLocation($page->location) && $levelMax!=0)
 				{
 					$pages->merge($this->getChildrenRecursive($page->location, $showInvisible, $levelMax));
@@ -2944,6 +2935,19 @@ class YellowToolbox
 			$contentType = $contentTypes[$fileType];
 		}
 		return $contentType;
+	}
+	
+	// Return number of bytes
+	function getNumberBytes($string)
+	{
+		$bytes = intval($string);
+		switch(strtoupperu(substru($string, -1)))
+		{
+			case 'G': $bytes *= 1024*1024*1024; break;
+			case 'M': $bytes *= 1024*1024; break;
+			case 'K': $bytes *= 1024; break;
+		}
+		return $bytes;
 	}
 	
 	// Return files and directories
