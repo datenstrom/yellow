@@ -5,7 +5,7 @@
 
 class YellowEdit
 {
-	const VERSION = "0.7.3";
+	const VERSION = "0.7.4";
 	var $yellow;			//access to API
 	var $response;			//web response
 	var $users;				//user accounts
@@ -29,6 +29,7 @@ class YellowEdit
 		$this->yellow->config->setDefault("editLoginEmail", "");
 		$this->yellow->config->setDefault("editLoginPassword", "");
 		$this->yellow->config->setDefault("editLoginRestrictions", "0");
+		$this->yellow->config->setDefault("editLoginSessionTimeout", "31536000");
 		$this->yellow->config->setDefault("editBruteForceProtection", "25");
 		$this->users->load($this->yellow->config->get("configDir").$this->yellow->config->get("editUserFile"));
 	}
@@ -1074,7 +1075,8 @@ class YellowResponse
 	function createCookie($scheme, $address, $base, $email)
 	{
 		$session = $this->plugin->users->createSession($email);
-		setcookie("login", "$email,$session", time()+60*60*24*365, "$base/", "", $scheme=="https");
+		$timeout = $this->yellow->config->get("editLoginSessionTimeout");
+		setcookie("login", "$email,$session", $timeout ? time()+$timeout : 0, "$base/", "", $scheme=="https");
 	}
 	
 	// Destroy browser cookie
