@@ -5,7 +5,7 @@
 
 class YellowUpdate
 {
-	const VERSION = "0.7.5";
+	const VERSION = "0.7.6";
 	var $yellow;					//access to API
 	var $updates;					//number of updates
 	
@@ -569,9 +569,8 @@ class YellowUpdate
 			$statusCode = $this->updateSoftware();
 			if($statusCode==200)
 			{
-				$statusCode = 303;
 				$location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
-				$this->yellow->sendStatus($statusCode, $location);
+				$statusCode = $this->yellow->sendStatus(303, $location);
 			}
 		}
 		return $statusCode;
@@ -634,9 +633,8 @@ class YellowUpdate
 			}
 			if($status=="done")
 			{
-				$statusCode = 303;
 				$location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
-				$this->yellow->sendStatus($statusCode, $location);
+				$statusCode = $this->yellow->sendStatus(303, $location);
 			} else {
 				$statusCode = $this->yellow->sendPage();
 			}

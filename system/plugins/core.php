@@ -38,11 +38,13 @@ class YellowCore
 		$this->config->setDefault("staticErrorFile", "404.html");
 		$this->config->setDefault("staticDir", "cache/");
 		$this->config->setDefault("mediaLocation", "/media/");
+		$this->config->setDefault("downloadLocation", "/media/downloads/");
 		$this->config->setDefault("imageLocation", "/media/images/");
 		$this->config->setDefault("pluginLocation", "/media/plugins/");
 		$this->config->setDefault("themeLocation", "/media/themes/");
 		$this->config->setDefault("assetLocation", "/media/themes/assets/");
 		$this->config->setDefault("mediaDir", "media/");
+		$this->config->setDefault("downloadDir", "media/downloads/");
 		$this->config->setDefault("imageDir", "media/images/");
 		$this->config->setDefault("systemDir", "system/");
 		$this->config->setDefault("configDir", "system/config/");
@@ -60,6 +62,7 @@ class YellowCore
 		$this->config->setDefault("contentExtension", ".txt");
 		$this->config->setDefault("configExtension", ".ini");
 		$this->config->setDefault("downloadExtension", ".download");
+		$this->config->setDefault("uploadExtension", ".upload");
 		$this->config->setDefault("configFile", "config.ini");
 		$this->config->setDefault("textFile", "text.ini");
 		$this->config->setDefault("languageFile", "language-(.*).txt");
@@ -151,18 +154,16 @@ class YellowCore
 		{
 			if($this->toolbox->isRequestCleanUrl($location))
 			{
-				$statusCode = 303;
 				$location = $location.$this->getRequestLocationArgsClean();
 				$location = $this->lookup->normaliseUrl($scheme, $address, $base, $location);
-				$this->sendStatus($statusCode, $location);
+				$statusCode = $this->sendStatus(303, $location);
 			}
 		} else {
 			if($this->lookup->isRedirectLocation($location))
 			{
-				$statusCode = 301;
 				$location = $this->lookup->isFileLocation($location) ? "$location/" : "/".$this->getRequestLanguage()."/";
 				$location = $this->lookup->normaliseUrl($scheme, $address, $base, $location);
-				$this->sendStatus($statusCode, $location);
+				$statusCode = $this->sendStatus(301, $location);
 			}
 		}
 		if($statusCode==0)
@@ -268,6 +269,7 @@ class YellowCore
 		{
 			foreach($this->page->headerData as $key=>$value) echo "YellowCore::sendStatus $key: $value<br/>\n";
 		}
+		return $statusCode;
 	}
 	
 	// Handle command
@@ -492,11 +494,9 @@ class YellowPage
 				$this->yellow->config->get("serverAddress"),
 				$this->yellow->config->get("serverBase"),
 				rtrim($this->yellow->config->get("editLocation"), '/').$this->location));
-			$this->set("pageFile", $this->yellow->lookup->getPageFile($this->fileName));
 		} else {
 			$this->set("type", $this->yellow->toolbox->getFileType($this->fileName));
 			$this->set("modified", date("Y-m-d H:i:s", $this->yellow->toolbox->getFileModified($this->fileName)));
-			$this->set("pageFile", $this->yellow->lookup->getPageFile($this->fileName, true));
 		}
 		if(!empty($pageError)) $this->set("pageError", $pageError);
 		foreach($this->yellow->plugins->plugins as $key=>$value)
@@ -782,12 +782,6 @@ class YellowPage
 	function getChildrenRecursive($showInvisible = false, $levelMax = 0)
 	{
 		return $this->yellow->pages->getChildrenRecursive($this->location, $showInvisible, $levelMax);
-	}
-	
-	// Return page collection with media files for current page
-	function getFiles($showInvisible = false)
-	{
-		return $this->yellow->files->index($showInvisible, true)->filter("pageFile", $this->get("pageFile"));
 	}
 	
 	// Set page collection with additional pages for current page
@@ -2526,18 +2520,6 @@ class YellowLookup
 		return array($scheme, $address, $base);
 	}
 	
-	// Return page file name
-	function getPageFile($fileName, $convertExtension = false)
-	{
-		$fileName = basename($fileName);
-		if($convertExtension)
-		{
-			$fileName = ($pos = strposu($fileName, '.')) ? substru($fileName, 0, $pos) : $fileName;
-			$fileName .= $this->yellow->config->get("contentExtension");
-		}
-		return $fileName;
-	}
-	
 	// Return directory location
 	function getDirectoryLocation($location)
 	{
@@ -3034,27 +3016,53 @@ class YellowToolbox
 	}
 	
 	// Copy file
-	function copyFile($fileNameSource, $fileNameDest, $mkdir = false)
+	function copyFile($fileNameSource, $fileNameDestination, $mkdir = false)
 	{
 		clearstatcache();
 		if($mkdir)
 		{
-			$path = dirname($fileNameDest);
+			$path = dirname($fileNameDestination);
 			if(!empty($path) && !is_dir($path)) @mkdir($path, 0777, true);
 		}
-		return @copy($fileNameSource, $fileNameDest);
+		return @copy($fileNameSource, $fileNameDestination);
 	}
 	
 	// Rename file
-	function renameFile($fileNameSource, $fileNameDest, $mkdir = false)
+	function renameFile($fileNameSource, $fileNameDestination, $mkdir = false)
 	{
 		clearstatcache();
 		if($mkdir)
 		{
-			$path = dirname($fileNameDest);
+			$path = dirname($fileNameDestination);
 			if(!empty($path) && !is_dir($path)) @mkdir($path, 0777, true);
 		}
-		return @rename($fileNameSource, $fileNameDest);
+		return @rename($fileNameSource, $fileNameDestination);
+	}
+	
+	// Merge file
+	function mergeFile($fileNameSource, $fileNameDestination)
+	{
+		$ok = false;
+		clearstatcache();
+		$fileHandleSource = @fopen($fileNameSource, "rb");
+		if($fileHandleSource)
+		{
+			$fileHandleDestination = @fopen($fileNameDestination, "ab");
+			if($fileHandleDestination)
+			{
+				while(true)
+				{
+					$dataBufferChunk = fread($fileHandleSource, 1024*64);
+					fwrite($fileHandleDestination, $dataBufferChunk);
+					if(feof($fileHandleSource) || $dataBufferChunk===false) break;
+				}
+				fclose($fileHandleDestination);
+				$ok = true;
+			}
+			fclose($fileHandleSource);
+			if($ok) @unlink($fileNameSource);
+		}
+		return $ok;
 	}
 	
 	// Delete file
@@ -3066,11 +3074,11 @@ class YellowToolbox
 			$ok = @unlink($fileName);
 		} else {
 			if(!is_dir($pathTrash)) @mkdir($pathTrash, 0777, true);
-			$fileNameDest = $pathTrash;
-			$fileNameDest .= pathinfo($fileName, PATHINFO_FILENAME);
-			$fileNameDest .= "-".str_replace(array(" ", ":"), "-", date("Y-m-d H:i:s", filemtime($fileName)));
-			$fileNameDest .= ".".pathinfo($fileName, PATHINFO_EXTENSION);
-			$ok = @rename($fileName, $fileNameDest);
+			$fileNameDestination = $pathTrash;
+			$fileNameDestination .= pathinfo($fileName, PATHINFO_FILENAME);
+			$fileNameDestination .= "-".str_replace(array(" ", ":"), "-", date("Y-m-d H:i:s", filemtime($fileName)));
+			$fileNameDestination .= ".".pathinfo($fileName, PATHINFO_EXTENSION);
+			$ok = @rename($fileName, $fileNameDestination);
 		}
 		return $ok;
 	}
@@ -3095,10 +3103,10 @@ class YellowToolbox
 			$ok = @rmdir($path);
 		} else {
 			if(!is_dir($pathTrash)) @mkdir($pathTrash, 0777, true);
-			$pathDest = $pathTrash;
-			$pathDest .= basename($path);
-			$pathDest .= "-".str_replace(array(" ", ":"), "-", date("Y-m-d H:i:s", filemtime($path)));
-			$ok = @rename($path, $pathDest);
+			$pathDestination = $pathTrash;
+			$pathDestination .= basename($path);
+			$pathDestination .= "-".str_replace(array(" ", ":"), "-", date("Y-m-d H:i:s", filemtime($path)));
+			$ok = @rename($path, $pathDestination);
 		}
 		return $ok;
 	}
@@ -3399,7 +3407,7 @@ class YellowToolbox
 							$dataBufferDiff = min($dataBufferSizeMax, $dataBufferSize*2) - $dataBufferSize;
 							$dataBufferSize += $dataBufferDiff;
 							$dataBufferChunk = fread($fileHandle, $dataBufferDiff);
-							if(feof($fileHandle) || $dataBufferChunk===null) { $dataBufferSize = 0; break; }
+							if(feof($fileHandle) || $dataBufferChunk===false) { $dataBufferSize = 0; break; }
 							$dataBuffer .= $dataBufferChunk;
 						}
 					}
