@@ -5,7 +5,7 @@
 
 class YellowEdit
 {
-	const VERSION = "0.7.4";
+	const VERSION = "0.7.5";
 	var $yellow;			//access to API
 	var $response;			//web response
 	var $users;				//user accounts
@@ -134,8 +134,11 @@ class YellowEdit
 		if($path=="all")
 		{
 			$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("editUserFile");
-			if(!$this->users->clean($fileNameUser)) $statusCode = 500;
-			if($statusCode==500) echo "ERROR cleaning configuration: Can't write file '$fileNameUser'!\n";
+			if(!$this->users->clean($fileNameUser))
+			{
+				$statusCode = 500;
+				echo "ERROR cleaning configuration: Can't write file '$fileNameUser'!\n";
+			}
 		}
 		return $statusCode;
 	}
@@ -215,7 +218,7 @@ class YellowEdit
 				case "reconfirm":	$statusCode = $this->processRequestReconfirm($scheme, $address, $base, $location, $fileName); break;
 				case "change":		$statusCode = $this->processRequestChange($scheme, $address, $base, $location, $fileName); break;
 			}
-			if($this->response->action=="fail") $this->processFail($scheme, $address, $base);
+			$this->checkUserFailed($scheme, $address, $base, $location, $fileName);
 		}
 		return $statusCode;
 	}
@@ -230,14 +233,12 @@ class YellowEdit
 		} else {
 			if($this->yellow->lookup->isRedirectLocation($location))
 			{
-				$statusCode = 301;
 				$location = $this->yellow->lookup->isFileLocation($location) ? "$location/" : "/".$this->yellow->getRequestLanguage()."/";
 				$location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
-				$this->yellow->sendStatus($statusCode, $location);
+				$statusCode = $this->yellow->sendStatus(301, $location);
 			} else {
-				$statusCode = $this->response->isUserRestrictions() ? 404 : 424;
-				$this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
-				$this->yellow->page->error($statusCode);
+				$this->yellow->page->error($this->response->isUserRestrictions() ? 404 : 424);
+				$statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
 			}
 		}
 		return $statusCode;
@@ -252,18 +253,15 @@ class YellowEdit
 			$home = $this->users->getHome($this->response->userEmail);
 			if(substru($location, 0, strlenu($home))==$home)
 			{
-				$statusCode = 303;
 				$location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
-				$this->yellow->sendStatus($statusCode, $location);
+				$statusCode = $this->yellow->sendStatus(303, $location);
 			} else {
-				$statusCode = 302;
 				$location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $home);
-				$this->yellow->sendStatus($statusCode, $location);
+				$statusCode = $this->yellow->sendStatus(302, $location);
 			}
 		} else {
-			$statusCode = 500;
-			$this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
-			$this->yellow->page->error($statusCode, "Can't write file '$fileNameUser'!");
+			$this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
+			$statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
 		}
 		return $statusCode;
 	}
@@ -271,14 +269,13 @@ class YellowEdit
 	// Process request for user logout
 	function processRequestLogout($scheme, $address, $base, $location, $fileName)
 	{
-		$statusCode = 302;
 		$this->response->userEmail = "";
 		$this->response->destroyCookie($scheme, $address, $base);
 		$location = $this->yellow->lookup->normaliseUrl(
 			$this->yellow->config->get("serverScheme"),
 			$this->yellow->config->get("serverAddress"),
 			$this->yellow->config->get("serverBase"), $location);
-		$this->yellow->sendStatus($statusCode, $location);
+		$statusCode = $this->yellow->sendStatus(302, $location);
 		return $statusCode;
 	}
 
@@ -457,9 +454,8 @@ class YellowEdit
 		}
 		if($this->response->status=="done")
 		{
-			$statusCode = 303;
 			$location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
-			$this->yellow->sendStatus($statusCode, $location);
+			$statusCode = $this->yellow->sendStatus(303, $location);
 		} else {
 			$statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
 		}
@@ -559,7 +555,7 @@ class YellowEdit
 					{
 						if(!is_null($dataModified[$key]) && !is_null($dataLatest[$key]))
 						{
-							$rawData = $this->yellow->text->getTextHtml("editVersionUpdateModified", $this->response->language)." - <a href=\"#\" onclick=\"yellow.action('update','update','".$this->yellow->toolbox->normaliseArgs("option:force/feature:$key")."'); return false;\">".$this->yellow->text->getTextHtml("editVersionUpdateForce", $this->response->language)."</a>";
+							$rawData = $this->yellow->text->getTextHtml("editVersionUpdateModified", $this->response->language)." - <a href=\"#\" data-action=\"update\" data-status=\"update\" data-args=\"".$this->yellow->toolbox->normaliseArgs("option:force/feature:$key")."\">".$this->yellow->text->getTextHtml("editVersionUpdateForce", $this->response->language)."</a>";
 							$rawData = preg_replace("/@software/i", htmlspecialchars("$key $dataLatest[$key]"), $rawData);
 							if(!empty($this->response->rawDataOutput)) $this->response->rawDataOutput .= "<br />\n";
 							$this->response->rawDataOutput .= $rawData;
@@ -590,9 +586,8 @@ class YellowEdit
 			$statusCode = $this->yellow->command("update", $option, $feature);
 			if($statusCode==200)
 			{
-				$statusCode = 303;
 				$location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
-				$this->yellow->sendStatus($statusCode, $location);
+				$statusCode = $this->yellow->sendStatus(303, $location);
 			}
 		}
 		return $statusCode;
@@ -602,27 +597,24 @@ class YellowEdit
 	function processRequestCreate($scheme, $address, $base, $location, $fileName)
 	{
 		$statusCode = 0;
-		if(!$this->response->isUserRestrictions() && !empty($_POST["rawdataedit"]))
+		if(!$this->response->isUserRestrictions() && !empty($_REQUEST["rawdataedit"]))
 		{
-			$this->response->rawDataSource = $this->response->rawDataEdit = rawurldecode($_POST["rawdatasource"]);
-			$rawData = rawurldecode($_POST["rawdataedit"]);
+			$this->response->rawDataSource = $this->response->rawDataEdit = rawurldecode($_REQUEST["rawdatasource"]);
+			$rawData = rawurldecode($_REQUEST["rawdataedit"]);
 			$page = $this->response->getPageNew($scheme, $address, $base, $location, $fileName, $rawData);
 			if(!$page->isError())
 			{
 				if($this->yellow->toolbox->createFile($page->fileName, $page->rawData, true))
 				{
-					$statusCode = 303;
 					$location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $page->location);
-					$this->yellow->sendStatus($statusCode, $location);
+					$statusCode = $this->yellow->sendStatus(303, $location);
 				} else {
-					$statusCode = 500;
-					$this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
-					$this->yellow->page->error($statusCode, "Can't write file '$page->fileName'!");
+					$this->yellow->page->error(500, "Can't write file '$page->fileName'!");
+					$statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
 				}
 			} else {
-				$statusCode = 500;
-				$this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
-				$this->yellow->page->error($statusCode, $page->get("pageError"));
+				$this->yellow->page->error(500, $page->get("pageError"));
+				$statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
 			}
 		}
 		return $statusCode;
@@ -632,10 +624,10 @@ class YellowEdit
 	function processRequestEdit($scheme, $address, $base, $location, $fileName)
 	{
 		$statusCode = 0;
-		if(!$this->response->isUserRestrictions() && !empty($_POST["rawdataedit"]))
+		if(!$this->response->isUserRestrictions() && !empty($_REQUEST["rawdataedit"]))
 		{
-			$this->response->rawDataSource = rawurldecode($_POST["rawdatasource"]);
-			$this->response->rawDataEdit = rawurldecode($_POST["rawdataedit"]);
+			$this->response->rawDataSource = rawurldecode($_REQUEST["rawdatasource"]);
+			$this->response->rawDataEdit = rawurldecode($_REQUEST["rawdataedit"]);
 			$page = $this->response->getPageEdit($scheme, $address, $base, $location, $fileName,
 				$this->response->rawDataSource, $this->response->rawDataEdit, $this->yellow->toolbox->readFile($fileName));
 			if(!$page->isError())
@@ -643,18 +635,15 @@ class YellowEdit
 				if($this->yellow->toolbox->renameFile($fileName, $page->fileName, true) &&
 				   $this->yellow->toolbox->createFile($page->fileName, $page->rawData))
 				{
-					$statusCode = 303;
 					$location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $page->location);
-					$this->yellow->sendStatus($statusCode, $location);
+					$statusCode = $this->yellow->sendStatus(303, $location);
 				} else {
-					$statusCode = 500;
-					$this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
-					$this->yellow->page->error($statusCode, "Can't write file '$page->fileName'!");
+					$this->yellow->page->error(500, "Can't write file '$page->fileName'!");
+					$statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
 				}
 			} else {
-				$statusCode = 500;
-				$this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
-				$this->yellow->page->error($statusCode, $page->get("pageError"));
+				$this->yellow->page->error(500, $page->get("pageError"));
+				$statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
 			}
 		}
 		return $statusCode;
@@ -666,7 +655,7 @@ class YellowEdit
 		$statusCode = 0;
 		if(!$this->response->isUserRestrictions() && is_file($fileName))
 		{
-			$this->response->rawDataSource = $this->response->rawDataEdit = rawurldecode($_POST["rawdatasource"]);
+			$this->response->rawDataSource = $this->response->rawDataEdit = rawurldecode($_REQUEST["rawdatasource"]);
 			$page = $this->response->getPageDelete($scheme, $address, $base, $location, $fileName, $this->response->rawDataSource);
 			if(!$page->isError())
 			{
@@ -674,61 +663,28 @@ class YellowEdit
 				{
 					if($this->yellow->toolbox->deleteFile($fileName, $this->yellow->config->get("trashDir")))
 					{
-						$statusCode = 303;
 						$location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
-						$this->yellow->sendStatus($statusCode, $location);
+						$statusCode = $this->yellow->sendStatus(303, $location);
 					} else {
-						$statusCode = 500;
-						$this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
-						$this->yellow->page->error($statusCode, "Can't delete file '$fileName'!");
+						$this->yellow->page->error(500, "Can't delete file '$fileName'!");
+						$statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
 					}
 				} else {
 					if($this->yellow->toolbox->deleteDirectory(dirname($fileName), $this->yellow->config->get("trashDir")))
 					{
-						$statusCode = 303;
 						$location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
-						$this->yellow->sendStatus($statusCode, $location);
+						$statusCode = $this->yellow->sendStatus(303, $location);
 					} else {
-						$statusCode = 500;
-						$this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
-						$this->yellow->page->error($statusCode, "Can't delete file '$fileName'!");
+						$this->yellow->page->error(500, "Can't delete file '$fileName'!");
+						$statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
 					}
 				}
 			} else {
-				$statusCode = 500;
-				$this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
-				$this->yellow->page->error($statusCode, $page->get("pageError"));
+				$this->yellow->page->error(500, $page->get("pageError"));
+				$statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
 			}
 		}
 		return $statusCode;
-	}
-
-	// Process login failed
-	function processFail($scheme, $address, $base)
-	{
-		$email = $this->response->email;
-		if($this->users->isExisting($email))
-		{
-			$modified = $this->users->getModified($email);
-			$errors = $this->users->getErrors($email)+1;
-			$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("editUserFile");
-			$status = $this->users->update($fileNameUser, $email, "", "", "", "", $modified, $errors) ? "ok" : "error";
-			if($status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
-			if($errors==$this->yellow->config->get("editBruteForceProtection"))
-			{
-				if($status=="ok")
-				{
-					$status = $this->users->update($fileNameUser, $email, "", "", "", "inactive", $modified, $errors) ? "ok" : "error";
-					if($status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
-				}
-				if($status=="ok")
-				{
-					$status = $this->response->sendMail($scheme, $address, $base, $email, "reactivate") ? "done" : "error";
-					if($status=="error") $this->yellow->page->error(500, "Can't send email on this server!");
-				}
-			}
-		}
-		$this->yellow->page->error(430);
 	}
 	
 	// Check request
@@ -748,8 +704,9 @@ class YellowEdit
 			$password = $_POST["password"];
 			if($this->users->checkUser($email, $password))
 			{
-				$this->response->createCookie($scheme, $address, $base, $email);
+				$session = $this->response->createCookie($scheme, $address, $base, $email);
 				$this->response->userEmail = $email;
+				$this->response->userSession = $session;
 				$this->response->userRestrictions = $this->getUserRestrictions($email, $location, $fileName);
 				$this->response->language = $this->getUserLanguage($email);
 			} else {
@@ -761,6 +718,7 @@ class YellowEdit
 			if($this->users->checkCookie($email, $session))
 			{
 				$this->response->userEmail = $email;
+				$this->response->userSession = $session;
 				$this->response->userRestrictions = $this->getUserRestrictions($email, $location, $fileName);
 				$this->response->language = $this->getUserLanguage($email);
 			} else {
@@ -769,6 +727,37 @@ class YellowEdit
 			}
 		}
 		return $this->response->isUser();
+	}
+	
+	// Check user failed
+	function checkUserFailed($scheme, $address, $base, $location, $fileName)
+	{
+		if($this->response->action=="fail")
+		{
+			$email = $this->response->email;
+			if($this->users->isExisting($email))
+			{
+				$modified = $this->users->getModified($email);
+				$errors = $this->users->getErrors($email)+1;
+				$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("editUserFile");
+				$status = $this->users->update($fileNameUser, $email, "", "", "", "", $modified, $errors) ? "ok" : "error";
+				if($status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
+				if($errors==$this->yellow->config->get("editBruteForceProtection"))
+				{
+					if($status=="ok")
+					{
+						$status = $this->users->update($fileNameUser, $email, "", "", "", "inactive", $modified, $errors) ? "ok" : "error";
+						if($status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
+					}
+					if($status=="ok")
+					{
+						$status = $this->response->sendMail($scheme, $address, $base, $email, "reactivate") ? "done" : "error";
+						if($status=="error") $this->yellow->page->error(500, "Can't send email on this server!");
+					}
+				}
+			}
+			$this->yellow->page->error(430);
+		}
 	}
 	
 	// Return user account changes
@@ -826,6 +815,7 @@ class YellowResponse
 	var $yellow;			//access to API
 	var $plugin;			//access to plugin
 	var $userEmail;			//user email
+	var $userSession;		//user session
 	var $userRestrictions;	//user can change page? (boolean)
 	var $active;			//location is active? (boolean)
 	var $rawDataSource;		//raw data of page for comparison
@@ -1077,24 +1067,13 @@ class YellowResponse
 		$session = $this->plugin->users->createSession($email);
 		$timeout = $this->yellow->config->get("editLoginSessionTimeout");
 		setcookie("login", "$email,$session", $timeout ? time()+$timeout : 0, "$base/", "", $scheme=="https");
+		return $session;
 	}
 	
 	// Destroy browser cookie
 	function destroyCookie($scheme, $address, $base)
 	{
 		setcookie("login", "", time()-60*60, "$base/", "", $scheme=="https");
-	}
-	
-	// Edit content file
-	function editContentFile($page, $action)
-	{
-		if(!$page->isError())
-		{
-			foreach($this->yellow->plugins->plugins as $key=>$value)
-			{
-				if(method_exists($value["obj"], "onEditContentFile")) $value["obj"]->onEditContentFile($page, $action);
-			}
-		}
 	}
 	
 	// Send mail to user
@@ -1135,6 +1114,18 @@ class YellowResponse
 		$mailHeaders .= "Content-Type: text/plain; charset=utf-8\r\n";
 		$mailMessage = "$message\r\n\r\n$url\r\n-- \r\n$sitename";
 		return mail($mailTo, $mailSubject, $mailMessage, $mailHeaders);
+	}
+	
+	// Edit content file
+	function editContentFile($page, $action)
+	{
+		if(!$page->isError())
+		{
+			foreach($this->yellow->plugins->plugins as $key=>$value)
+			{
+				if(method_exists($value["obj"], "onEditContentFile")) $value["obj"]->onEditContentFile($page, $action);
+			}
+		}
 	}
 	
 	// Check if active

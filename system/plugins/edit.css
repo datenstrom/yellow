@@ -2,26 +2,27 @@
 /* Copyright (c) 2013-2017 Datenstrom, https://datenstrom.se */
 /* This file may be used and distributed under the terms of the public license. */
 
-.yellow-bar { position:relative; overflow:hidden; height:2em; margin-bottom:10px; }
+.yellow-bar { position:relative; overflow:hidden; line-height:2em; margin-bottom:10px; }
 .yellow-bar-left { display:block; float:left; }
 .yellow-bar-right { display:block; float:right; }
 .yellow-bar-right a { margin-left:1em; }
 .yellow-bar-right #yellow-pane-create-link { padding:0 0.5em; }
 .yellow-bar-right #yellow-pane-delete-link { padding:0 0.5em; }
+.yellow-bar-banner { clear:both; }
 .yellow-body-modal-open { overflow:hidden; }
-
 .yellow-pane {
-	position:absolute; display:none; z-index:100;
-	margin:10px 0; padding:10px;
+	position:absolute; display:none; z-index:100; padding:10px;
 	background-color:#fff; color:#000;
 	border:1px solid #bbb; 
 	border-radius:4px; box-shadow:2px 4px 10px rgba(0, 0, 0, 0.2);
 }
-.yellow-pane h1 { color:#000; }
+.yellow-pane h1 { color:#000; font-size:2em; margin:0 1em; }
 .yellow-pane p { margin:0.5em; }
-.yellow-pane ul { list-style:none; margin:0 0.5em; padding:0; }
 .yellow-pane div { overflow:hidden; }
-.yellow-close { display:block; float:right; padding:0 0.5em; font-size:1.1em; color:#bbb; text-decoration:none; }
+.yellow-close {
+	position:absolute;
+	top:0.4em; right:0.8em; cursor:pointer;
+	font-size:1.2em; color:#bbb; text-decoration:none; }
 .yellow-close:hover { color:#000; text-decoration:none; }
 .yellow-arrow { position:absolute; top:0; left:0; }
 .yellow-arrow:after, .yellow-arrow:before {
@@ -43,7 +44,10 @@
 	border-width:11px;
 	margin-left:-11px;
 }
-
+.yellow-dropdown { list-style:none; margin:0; padding:0; }
+.yellow-dropdown span { display:block; margin:0; padding:0.25em 1em; }
+.yellow-dropdown a { display:block; padding:0.2em 1em; text-decoration:none; }
+.yellow-dropdown a:hover { color:#fff; background-color:#18e; text-decoration:none; }
 .yellow-form-control {
 	margin:0; padding:2px 4px;
 	display:inline-block;
@@ -64,6 +68,7 @@
 	outline-offset:-2px;
 	font-size:0.9em; font-family:inherit; font-weight:normal; line-height:1;
 	text-align:center; text-decoration:none;
+	box-sizing:border-box;
 }
 .yellow-btn:hover, .yellow-btn:focus, .yellow-btn:active {
 	color:#333333;
@@ -79,7 +84,6 @@
 .yellow-btn-delete:hover, .yellow-btn-delete:focus, .yellow-btn-delete:active { color:#ffffff; }
 
 #yellow-pane-login { text-align:center; white-space:nowrap; }
-#yellow-pane-login h1 { margin:0 1em; font-size:2em; }
 #yellow-pane-login .yellow-form-control { width:15em; box-sizing:border-box; }
 #yellow-pane-login .yellow-btn { width:15em; margin:1em 1em 0.5em 0; }
 #yellow-pane-login-fields { width:15em; text-align:left; margin:0 auto; }
@@ -87,7 +91,6 @@
 #yellow-pane-login-buttons p { margin:0; }
 
 #yellow-pane-signup { text-align:center; white-space:nowrap; }
-#yellow-pane-signup h1 { margin:0 1em; font-size:2em; }
 #yellow-pane-signup .yellow-form-control { width:15em; box-sizing:border-box; }
 #yellow-pane-signup .yellow-btn { width:15em; margin:1em 1em 0.5em 0; }
 #yellow-pane-signup-status { margin:0.5em 0; display:inline-block; }
@@ -95,7 +98,6 @@
 #yellow-pane-signup-buttons { margin-top:-0.5em; }
 
 #yellow-pane-recover { text-align:center; white-space:nowrap; }
-#yellow-pane-recover h1 { margin:0 1em; font-size:2em; }
 #yellow-pane-recover .yellow-form-control { width:15em; box-sizing:border-box; }
 #yellow-pane-recover .yellow-btn { width:15em; margin:1em 1em 0.5em 0; }
 #yellow-pane-recover-status { margin:0.5em 0; display:inline-block; }
@@ -103,7 +105,6 @@
 #yellow-pane-recover-buttons { margin-top:-0.5em; }
 
 #yellow-pane-settings { text-align:center; white-space:nowrap; }
-#yellow-pane-settings h1 { margin:0 1em; font-size:2em; }
 #yellow-pane-settings .yellow-form-control { width:15em; box-sizing:border-box; }
 #yellow-pane-settings .yellow-btn { width:15em; margin:1em 1em 0.5em 0; }
 #yellow-pane-settings-status { margin:0.5em 0; display:inline-block; }
@@ -111,19 +112,15 @@
 #yellow-pane-settings-buttons { margin-top:-0.5em; }
 
 #yellow-pane-version { text-align:center; white-space:nowrap; }
-#yellow-pane-version h1 { margin:0 1em; font-size:2em; }
 #yellow-pane-version .yellow-btn { width:15em; margin:1em 1em 0.5em 0; }
 #yellow-pane-version-status { margin:0.5em 0; display:inline-block; }
 #yellow-pane-version-fields { text-align:center; margin:0.5em 0; }
 #yellow-pane-version-buttons { margin-top:-0.5em; }
 
-#yellow-pane-edit { }
-#yellow-pane-edit h1 { margin:0 0 10px 0; font-size:2em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+#yellow-pane-edit h1 { margin:0 0 10px 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 #yellow-pane-edit-page { padding:5px; outline:none; resize:none; }
 #yellow-pane-edit-buttons { margin-top:5px; }
 #yellow-pane-edit-buttons input { margin-right:10px; }
 #yellow-pane-edit-help { float:right; }
 
-#yellow-pane-user { cursor:pointer; }
-#yellow-pane-user a { text-decoration:none; }
-#yellow-pane-user a:hover { text-decoration:underline; }
+#yellow-pane-user { padding:10px 0; }
