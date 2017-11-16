@@ -1,5 +1,5 @@
 <?php
-// Yellow is for people who make websites. http://datenstrom.se/yellow/
+// Yellow is for people who make websites. https://datenstrom.se/yellow/
 // Copyright (c) 2013-2017 Datenstrom, https://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
