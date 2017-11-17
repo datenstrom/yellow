@@ -5,7 +5,7 @@
 
 class YellowUpdate
 {
-	const VERSION = "0.7.6";
+	const VERSION = "0.7.7";
 	var $yellow;					//access to API
 	var $updates;					//number of updates
 	
@@ -596,7 +596,11 @@ class YellowUpdate
 			$status = trim($_REQUEST["status"]);
 			if($status=="install")
 			{
-				$status = "ok";
+				$status = $this->checkServerRewrite($scheme, $address, $base, $location, $fileName) ? "ok" : "error";
+				if($status=="error") $this->yellow->page->error(500, "Rewrite module not working on this server!");
+			}
+			if($status=="ok")
+			{
 				if(!empty($email) && !empty($password) && $this->yellow->plugins->isExisting("edit"))
 				{
 					$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("editUserFile");
@@ -640,6 +644,27 @@ class YellowUpdate
 			}
 		}
 		return $statusCode;
+	}
+	
+	// Check web server rewrite
+	function checkServerRewrite($scheme, $address, $base, $location, $fileName)
+	{
+		$ok = true;
+		if(extension_loaded("curl"))
+		{
+			$curlHandle = curl_init();
+			$location = $this->yellow->config->get("assetLocation").$this->yellow->page->get("theme").".css";
+			$url = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
+			curl_setopt($curlHandle, CURLOPT_URL, $url);
+			curl_setopt($curlHandle, CURLOPT_USERAGENT, "Mozilla/5.0 (compatible; YellowCore/".YellowCore::VERSION).")";
+			curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, 1);
+			curl_setopt($curlHandle, CURLOPT_CONNECTTIMEOUT, 30);
+			$rawData = curl_exec($curlHandle);
+			$statusCode = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);
+			curl_close($curlHandle);
+			if(empty($rawData) || $statusCode!=200) $ok = false;
+		}
+		return $ok;
 	}
 	
 	// Return raw data for installation page
