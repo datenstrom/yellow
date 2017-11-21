@@ -96,9 +96,9 @@ EditVersionUpdateModified: @software wurde modifiziert
 EditOkButton: Ok
 EditCancelButton: Abbruch
 EditCreateButton: Erzeugen
-EditEditButton: Ändern
+EditEditButton: Speichern
 EditDeleteButton: Löschen
-EditEdit: Seite ändern
+EditEdit: Seite bearbeiten
 EditCreate: +
 EditDelete: -
 EditCreateTitle: Seite erzeugen
