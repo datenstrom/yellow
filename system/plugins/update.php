@@ -5,7 +5,7 @@
 
 class YellowUpdate
 {
-	const VERSION = "0.7.7";
+	const VERSION = "0.7.8";
 	var $yellow;					//access to API
 	var $updates;					//number of updates
 	
@@ -125,6 +125,8 @@ class YellowUpdate
 				$value = $this->yellow->lookup->normaliseName($matches[1], true, false, true);
 				if(!is_file($this->yellow->config->get("templateDir").$value.".html")) $value = $valueDefault;
 				$pageTemplate = $this->yellow->toolbox->getMetaData($page->rawData, "template");
+				$pagePublished = $this->yellow->toolbox->getMetaData($page->rawData, "published");
+				if(empty($pagePublished) && $value=="blog") $value = $valueDefault;
 				if(empty($pageTemplate) && $value!=$valueDefault)
 				{
 					$rawDataNew = $this->yellow->toolbox->setMetaData($page->rawData, "template", $value);
