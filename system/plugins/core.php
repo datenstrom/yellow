@@ -1717,7 +1717,7 @@ class YellowPlugins
 			if(empty($value["plugin"]) || empty($value["version"])) continue;
 			$data[$value["plugin"]] = $value["version"];
 		}
-		uksort($data, strnatcasecmp);
+		uksort($data, "strnatcasecmp");
 		return $data;
 	}
 	
@@ -1805,7 +1805,7 @@ class YellowThemes
 			if(empty($value["theme"]) || empty($value["version"])) continue;
 			$data[$value["theme"]] = $value["version"];
 		}
-		uksort($data, strnatcasecmp);
+		uksort($data, "strnatcasecmp");
 		return $data;
 	}
 	

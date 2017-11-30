@@ -5,7 +5,7 @@
 
 class YellowEdit
 {
-	const VERSION = "0.7.5";
+	const VERSION = "0.7.6";
 	var $yellow;			//access to API
 	var $response;			//web response
 	var $users;				//user accounts
@@ -1399,7 +1399,7 @@ class YellowUsers
 			$data[$key] = "$value[email] - $name $language $status";
 			if($value["home"]!="/") $data[$key] .= " restrictions";
 		}
-		uksort($data, strnatcasecmp);
+		uksort($data, "strnatcasecmp");
 		return $data;
 	}
 	
