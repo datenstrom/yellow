@@ -137,6 +137,7 @@ a:hover { color:#07d; text-decoration:underline; }
 	outline-offset:-2px;
 	font-size:0.9em; font-family:inherit; font-weight:normal; line-height:1;
 	text-align:center; text-decoration:none;
+	box-sizing:border-box;
 }
 .btn:hover, .btn:focus, .btn:active {
 	color:#333333;

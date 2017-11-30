@@ -5,7 +5,7 @@
 
 class YellowThemeFlatsite
 {
-	const VERSION = "0.7.1";	
+	const VERSION = "0.7.2";	
 }
 
 $yellow->themes->register("flatsite", "YellowThemeFlatsite", YellowThemeFlatsite::VERSION);
