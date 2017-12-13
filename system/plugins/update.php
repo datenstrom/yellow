@@ -598,8 +598,9 @@ class YellowUpdate
 			$status = trim($_REQUEST["status"]);
 			if($status=="install")
 			{
+				$serverVersion = $this->yellow->toolbox->getServerVersion(true);
 				$status = $this->checkServerRewrite($scheme, $address, $base, $location, $fileName) ? "ok" : "error";
-				if($status=="error") $this->yellow->page->error(500, "Rewrite module not working on this server!");
+				if($status=="error") $this->yellow->page->error(500, "Rewrite module not working on $serverVersion web server!");
 			}
 			if($status=="ok")
 			{

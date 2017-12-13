@@ -641,7 +641,11 @@ class YellowPage
 		{
 			$this->error(500, "Folder '".dirname($this->fileName)."' may not contain subfolders!");
 		}
-		if($this->yellow->toolbox->isRequestSelf()) $this->error(500, "Rewrite module not enabled on this server!");
+		if($this->yellow->toolbox->isRequestSelf())
+		{
+			$serverVersion = $this->yellow->toolbox->getServerVersion(true);
+			$this->error(500, "Rewrite module not working on $serverVersion web server!");
+		}
 		if($this->yellow->getRequestHandler()=="core" && $this->isExisting("redirect") && $this->statusCode==200)
 		{
 			$location = $this->yellow->lookup->normaliseLocation($this->get("redirect"), $this->location);
@@ -2635,10 +2639,11 @@ class YellowLookup
 class YellowToolbox
 {
 	// Return server version from current HTTP request
-	function getServerVersion()
+	function getServerVersion($shortFormat = false)
 	{
 		$serverVersion = strtoupperu(PHP_SAPI)." ".PHP_OS;
 		if(preg_match("/^(\S+)/", $_SERVER["SERVER_SOFTWARE"], $matches)) $serverVersion = $matches[1]." ".PHP_OS;
+		if($shortFormat && preg_match("/^(\pL+)/u", $serverVersion, $matches)) $serverVersion = $matches[1];
 		return $serverVersion;
 	}
 	
