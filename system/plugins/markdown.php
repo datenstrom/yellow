@@ -1,11 +1,11 @@
 <?php
 // Markdown plugin, https://github.com/datenstrom/yellow-plugins/tree/master/markdown
-// Copyright (c) 2013-2017 Datenstrom, https://datenstrom.se
+// Copyright (c) 2013-2018 Datenstrom, https://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 class YellowMarkdown
 {
-	const VERSION = "0.6.7";
+	const VERSION = "0.6.8";
 	var $yellow;			//access to API
 	
 	// Handle initialisation
@@ -23,13 +23,13 @@ class YellowMarkdown
 }
 
 // PHP Markdown Lib
-// Copyright (c) 2004-2016 Michel Fortin
-// <https://michelf.ca/projects/php-markdown/>
+// Copyright (c) 2004-2018 Michel Fortin
+// <https://michelf.ca/>
 // All rights reserved.
 //
 // Original Markdown
 // Copyright (c) 2004-2006 John Gruber
-// <https://daringfireball.net/projects/markdown/>
+// <https://daringfireball.net/>
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -64,7 +64,7 @@ class MarkdownParser {
 	 * Define the package version
 	 * @var string
 	 */
-	const MARKDOWNLIB_VERSION = "1.7.0";
+	const MARKDOWNLIB_VERSION = "1.8.0";
 
 	/**
 	 * Simple function interface - Initialize the parser and return the result
@@ -3552,7 +3552,7 @@ class MarkdownExtraParser extends MarkdownParser {
 
 		if (!empty($this->footnotes_ordered)) {
 			$text .= "\n\n";
-			$text .= "<div class=\"footnotes\">\n";
+			$text .= "<div class=\"footnotes\" role=\"doc-endnotes\">\n";
 			$text .= "<hr" . $this->empty_element_suffix . "\n";
 			$text .= "<ol>\n\n";
 
@@ -3566,7 +3566,9 @@ class MarkdownExtraParser extends MarkdownParser {
 				$title = $this->fn_backlink_title;
 				$title = $this->encodeAttribute($title);
 				$attr .= " title=\"$title\"";
+				$attr .= " aria-label=\"$title\"";
 			}
+			$attr .= " role=\"doc-backlink\"";
 			$backlink_text = $this->fn_backlink_html;
 			$num = 0;
 
@@ -3598,7 +3600,7 @@ class MarkdownExtraParser extends MarkdownParser {
 					$footnote .= "\n\n<p>$backlink</p>";
 				}
 
-				$text .= "<li id=\"fn:$note_id\">\n";
+				$text .= "<li id=\"fn:$note_id\" role=\"doc-endnote\">\n";
 				$text .= $footnote . "\n";
 				$text .= "</li>\n\n";
 			}
@@ -3643,6 +3645,7 @@ class MarkdownExtraParser extends MarkdownParser {
 				$title = $this->encodeAttribute($title);
 				$attr .= " title=\"$title\"";
 			}
+			$attr .= " role=\"doc-noteref\"";
 
 			$attr = str_replace("%%", $num, $attr);
 			$node_id = $this->encodeAttribute($node_id);
@@ -3733,7 +3736,7 @@ class MarkdownExtraParser extends MarkdownParser {
 }
 									  
 // Markdown extra parser extensions
-// Copyright (c) 2013-2017 Datenstrom
+// Copyright (c) 2013-2018 Datenstrom
 									  
 class YellowMarkdownExtraParser extends MarkdownExtraParser
 {
