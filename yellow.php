@@ -1,6 +1,6 @@
 <?php
-// Yellow is for people who make websites. https://datenstrom.se/yellow/
-// Copyright (c) 2013-2017 Datenstrom, https://datenstrom.se
+// Datenstrom Yellow is for people who make websites. https://datenstrom.se/yellow/
+// Copyright (c) 2013-2018 Datenstrom, https://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 version_compare(PHP_VERSION, "5.4", ">=") || die("Datenstrom Yellow requires PHP 5.4 or higher!");

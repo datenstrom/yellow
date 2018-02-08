@@ -86,7 +86,7 @@ EditWelcomeMessage: Hallo @usershort, dein Benutzerkonto wurde erstellt. Viel Sp
 EditInformationSubject: Willkommen zurück
 EditInformationMessage: Hallo @usershort, dein Benutzerkonto wurde geändert. Du kannst dich jetzt anmelden.
 EditVersionTitle: Über diese Webseite
-EditVersionStatusNone: Yellow ist für Menschen die Webseiten machen.
+EditVersionStatusNone: Datenstrom Yellow ist für Menschen die Webseiten machen.
 EditVersionStatusCheck: Nach Aktualisierung suchen…
 EditVersionStatusDone: Deine Webseite ist auf dem neusten Stand.
 EditVersionStatusUpdates: Aktualisierung verfügbar, bitte an den Webmaster wenden.

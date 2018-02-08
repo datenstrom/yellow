@@ -86,7 +86,7 @@ EditWelcomeMessage: Bonjour @usershort, votre compte utilisateur a bien été cr
 EditInformationSubject: Bienvenue à nouveau
 EditInformationMessage: Bonjour @usershort, votre compte utilisateur a bien été changé. Vous pouvez maintenant vous connecter.
 EditVersionTitle: A propos de ce site
-EditVersionStatusNone: Yellow est fait pour les gens qui font des sites web.
+EditVersionStatusNone: Datenstrom Yellow est fait pour les gens qui font des sites web.
 EditVersionStatusCheck: Vérification des mises à jour…
 EditVersionStatusDone: Votre site est à jour.
 EditVersionStatusUpdates: Mises à jour disponibles, s'il vous plaît contacter le webmestre.
