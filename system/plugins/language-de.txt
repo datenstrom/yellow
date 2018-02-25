@@ -3,7 +3,7 @@
 Language: de
 LanguageDescription: Deutsch
 LanguageTranslator: David Fehrmann
-LanguageVersion: 0.7.2
+LanguageVersion: 0.7.3
 
 BlogBy: von
 BlogFilter: Blog:
@@ -13,7 +13,7 @@ ContactName: Name:
 ContactEmail: E-Mail:
 ContactMessage: Nachricht:
 ContactButton: Absenden
-ContactStatusNone: Sag Hallo! Feedback ist uns sehr willkommen.
+ContactStatusNone: Sag Hallo! Feedback ist sehr willkommen.
 ContactStatusIncomplete: Bitte alle Felder ausfüllen.
 ContactStatusInvalid: Bitte eine gültige E-Mail angeben.
 ContactStatusDone: Nachricht wurde versandt. Vielen Dank!
@@ -26,7 +26,7 @@ DateFormatMedium: d.m.Y
 DateFormatLong: d.m.Y H:i
 EditInstallationTitle: Hallo
 EditInstallationFeature: Was willst du machen?
-EditInstallationHomePage: Deine Webseite funktioniert!\n\nDu kannst [edit - diese Seite bearbeiten] oder einen Texteditor benutzen.
+EditInstallationHomePage: Deine Webseite funktioniert!\n\n[edit - Du kannst diese Seite bearbeiten] oder einen Texteditor benutzen.
 EditInstallationAboutPage: Diese Webseite ist erstellt mit [yellow]. [Weitere Informationen](https://developers.datenstrom.se/de/help/).
 EditLoginTitle: Willkommen
 EditLoginEmail: E-Mail:

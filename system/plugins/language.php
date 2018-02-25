@@ -5,7 +5,7 @@
 
 class YellowLanguage
 {
-	const VERSION = "0.7.2";
+	const VERSION = "0.7.3";
 }
 
 $yellow->plugins->register("language", "YellowLanguage", YellowLanguage::VERSION);
