@@ -2492,6 +2492,7 @@ class YellowLookup
 			} else if(!preg_match("#^($pageBase|$mediaBase)#", $location)) {
 				$location = $pageBase.$location;
 			}
+			$location = strreplaceu("/./", "/", $location);
 			$location = strreplaceu(':', $this->yellow->toolbox->getLocationArgsSeparator(), $location);
 		} else {
 			if($filterStrict && !preg_match("/^(http|https|ftp|mailto):/", $location)) $location = "error-xss-filter";
