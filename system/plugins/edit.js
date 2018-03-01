@@ -1,5 +1,5 @@
 // Edit plugin, https://github.com/datenstrom/yellow-plugins/tree/master/edit
-// Copyright (c) 2013-2017 Datenstrom, https://datenstrom.se
+// Copyright (c) 2013-2018 Datenstrom, https://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 var yellow =
@@ -537,17 +537,15 @@ yellow.toolbox =
 	// Add element class
 	addClass: function(element, name)
 	{
-		var string = element.className + " " + name;
-		element.className = string.replace(/^\s+|\s+$/, "");
+		element.classList.add(name);
 	},
-
+	
 	// Remove element class
 	removeClass: function(element, name)
 	{
-		var string = (" " + element.className + " ").replace(" " + name + " ", " ");
-		element.className = string.replace(/^\s+|\s+$/, "");
+		element.classList.remove(name);
 	},
-	
+
 	// Add attribute information
 	addValue: function(selector, name, value)
 	{

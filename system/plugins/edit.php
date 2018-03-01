@@ -1,11 +1,11 @@
 <?php
 // Edit plugin, https://github.com/datenstrom/yellow-plugins/tree/master/edit
-// Copyright (c) 2013-2017 Datenstrom, https://datenstrom.se
+// Copyright (c) 2013-2018 Datenstrom, https://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 class YellowEdit
 {
-	const VERSION = "0.7.6";
+	const VERSION = "0.7.7";
 	var $yellow;			//access to API
 	var $response;			//web response
 	var $users;				//user accounts
