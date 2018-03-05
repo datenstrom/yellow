@@ -65,7 +65,7 @@ class YellowEdit
 			{
 				if(empty($this->response->rawDataSource)) $this->response->rawDataSource = $page->rawData;
 				if(empty($this->response->rawDataEdit)) $this->response->rawDataEdit = $page->rawData;
-				if($page->statusCode==424) $this->response->rawDataEdit = $this->response->getRawDataNew($page->location);
+				if($page->statusCode==434) $this->response->rawDataEdit = $this->response->getRawDataNew($page->location);
 			}
 			if(empty($this->response->language)) $this->response->language = $page->get("language");
 			if(empty($this->response->action)) $this->response->action = $this->response->isUser() ? "none" : "login";
@@ -237,7 +237,7 @@ class YellowEdit
 				$location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
 				$statusCode = $this->yellow->sendStatus(301, $location);
 			} else {
-				$this->yellow->page->error($this->response->isUserRestrictions() ? 404 : 424);
+				$this->yellow->page->error($this->response->isUserRestrictions() ? 404 : 434);
 				$statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
 			}
 		}

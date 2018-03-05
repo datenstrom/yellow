@@ -496,7 +496,7 @@ yellow.edit =
 				case "edit":	action = document.getElementById("yellow-pane-edit-page").value ? "edit" : "delete"; break;
 				case "delete":	action = "delete"; break;
 			}
-			if(yellow.page.statusCode==424 && paneAction!="delete") action = "create";
+			if(yellow.page.statusCode==434 && paneAction!="delete") action = "create";
 			if(yellow.config.userRestrictions) action = "";
 		}
 		return action;

@@ -1,4 +1,0 @@
----
-Title: File not found
----
-You can [create this page](javascript:yellow.action('edit');).

@@ -2881,8 +2881,8 @@ class YellowToolbox
 			case 400:	$text = "Bad request"; break;
 			case 403:	$text = "Forbidden"; break;
 			case 404:	$text = "Not found"; break;
-			case 424:	$text = "Not existing"; break;
 			case 430:	$text = "Login failed"; break;
+			case 434:	$text = "Not existing"; break;
 			case 500:	$text = "Server error"; break;
 			case 503:	$text = "Service unavailable"; break;
 			default:	$text = "Error $statusCode";
