@@ -1,11 +1,11 @@
 <?php
 // Update plugin, https://github.com/datenstrom/yellow-plugins/tree/master/update
-// Copyright (c) 2013-2017 Datenstrom, https://datenstrom.se
+// Copyright (c) 2013-2018 Datenstrom, https://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 class YellowUpdate
 {
-	const VERSION = "0.7.8";
+	const VERSION = "0.7.9";
 	var $yellow;					//access to API
 	var $updates;					//number of updates
 	
@@ -18,6 +18,7 @@ class YellowUpdate
 		$this->yellow->config->setDefault("updateInformationFile", "update.ini");
 		$this->yellow->config->setDefault("updateVersionFile", "version.ini");
 		$this->yellow->config->setDefault("updateResourceFile", "resource.ini");
+		$this->yellow->config->setDefault("newFile", "page-new-(.*).txt"); //TODO: remove with next release
 	}
 	
 	// Handle startup
@@ -674,7 +675,7 @@ class YellowUpdate
 	function getRawDataInstallation()
 	{
 		$language = $this->yellow->toolbox->detectBrowserLanguage($this->yellow->text->getLanguages(), $this->yellow->config->get("language"));
-		$fileName = strreplaceu("(.*)", "installation", $this->yellow->config->get("configDir").$this->yellow->config->get("editNewFile"));
+		$fileName = strreplaceu("(.*)", "installation", $this->yellow->config->get("configDir").$this->yellow->config->get("newFile"));
 		$rawData = $this->yellow->toolbox->readFile($fileName);
 		if(empty($rawData))
 		{

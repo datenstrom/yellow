@@ -5,7 +5,7 @@
 
 class YellowEdit
 {
-	const VERSION = "0.7.7";
+	const VERSION = "0.7.8";
 	var $yellow;			//access to API
 	var $response;			//web response
 	var $users;				//user accounts
@@ -19,7 +19,6 @@ class YellowEdit
 		$this->users = new YellowUsers($yellow);
 		$this->merge = new YellowMerge($yellow);
 		$this->yellow->config->setDefault("editLocation", "/edit/");
-		$this->yellow->config->setDefault("editNewFile", "page-new-(.*).txt");
 		$this->yellow->config->setDefault("editUserFile", "user.ini");
 		$this->yellow->config->setDefault("editUserPasswordMinLength", "4");
 		$this->yellow->config->setDefault("editUserHashAlgorithm", "bcrypt");
@@ -999,14 +998,14 @@ class YellowResponse
 			if($page->isExisting("templateNew"))
 			{
 				$name = $this->yellow->lookup->normaliseName($page->get("templateNew"));
-				$fileName = strreplaceu("(.*)", $name, $this->yellow->config->get("configDir").$this->yellow->config->get("editNewFile"));
+				$fileName = strreplaceu("(.*)", $name, $this->yellow->config->get("configDir").$this->yellow->config->get("newFile"));
 				if(is_file($fileName)) break;
 			}
 		}
 		if(!is_file($fileName))
 		{
 			$name = $this->yellow->lookup->normaliseName($this->yellow->config->get("template"));
-			$fileName = strreplaceu("(.*)", $name, $this->yellow->config->get("configDir").$this->yellow->config->get("editNewFile"));
+			$fileName = strreplaceu("(.*)", $name, $this->yellow->config->get("configDir").$this->yellow->config->get("newFile"));
 		}
 		$rawData = $this->yellow->toolbox->readFile($fileName);
 		$rawData = preg_replace("/@timestamp/i", time(), $rawData);
