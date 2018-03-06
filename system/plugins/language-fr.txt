@@ -3,7 +3,7 @@
 Language: fr
 LanguageDescription: Français
 LanguageTranslator: Juh Nibreh
-LanguageVersion: 0.7.3
+LanguageVersion: 0.7.4
 
 BlogBy: par
 BlogFilter: Blog:
@@ -12,7 +12,7 @@ BlogMore: Lire la suite…
 ContactName: Nom:
 ContactEmail: Email:
 ContactMessage: Message:
-ContactButton: Envoyer
+ContactButton: Envoyer le message
 ContactStatusNone: Dites bonjour! Vos commentaires sont les bienvenus.
 ContactStatusIncomplete: S'il vous plaît, veuillez remplir tous les champs.
 ContactStatusInvalid: S'il vous plaît, veuillez entrer une adresse email valide.
@@ -27,7 +27,7 @@ DateFormatLong: d/m/Y H:i
 EditInstallationTitle: Bonjour
 EditInstallationFeature: Que voulez-vous faire?
 EditInstallationHomePage: Votre site web fonctionne!\n\n[edit - Vous pouvez modifier cette page] ou utiliser un éditeur de texte.
-EditInstallationAboutPage: Ce site web est fait avec [yellow]. [Apprenez-en plus](https://developers.datenstrom.se/fr/help/).
+EditInstallationAboutPage: Ce site web est fait avec [Datenstrom Yellow](https://datenstrom.se/fr/yellow/). [edit - Se connecter].
 EditLoginTitle: Bienvenue
 EditLoginEmail: Email:
 EditLoginPassword: Mot de passe:

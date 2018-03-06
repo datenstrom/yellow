@@ -3,7 +3,7 @@
 Language: en
 LanguageDescription: English
 LanguageTranslator: Mark Seuffert
-LanguageVersion: 0.7.3
+LanguageVersion: 0.7.4
 
 BlogBy: by
 BlogFilter: Blog:
@@ -27,7 +27,7 @@ DateFormatLong: Y-m-d H:i
 EditInstallationTitle: Hello
 EditInstallationFeature: What do you want to make?
 EditInstallationHomePage: Your website works!\n\n[edit - You can edit this page] or use your text editor.
-EditInstallationAboutPage: This website is made with [yellow]. [Learn more](https://developers.datenstrom.se/help/).
+EditInstallationAboutPage: This website is made with [Datenstrom Yellow](https://datenstrom.se/yellow/). [edit - Log in].
 EditLoginTitle: Welcome
 EditLoginEmail: Email:
 EditLoginPassword: Password:
