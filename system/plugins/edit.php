@@ -5,7 +5,7 @@
 
 class YellowEdit
 {
-	const VERSION = "0.7.8";
+	const VERSION = "0.7.9";
 	var $yellow;			//access to API
 	var $response;			//web response
 	var $users;				//user accounts
@@ -19,6 +19,7 @@ class YellowEdit
 		$this->users = new YellowUsers($yellow);
 		$this->merge = new YellowMerge($yellow);
 		$this->yellow->config->setDefault("editLocation", "/edit/");
+		$this->yellow->config->setDefault("editEndOfLine", "auto");
 		$this->yellow->config->setDefault("editUserFile", "user.ini");
 		$this->yellow->config->setDefault("editUserPasswordMinLength", "4");
 		$this->yellow->config->setDefault("editUserHashAlgorithm", "bcrypt");
@@ -64,6 +65,7 @@ class YellowEdit
 			{
 				if(empty($this->response->rawDataSource)) $this->response->rawDataSource = $page->rawData;
 				if(empty($this->response->rawDataEdit)) $this->response->rawDataEdit = $page->rawData;
+				if(empty($this->response->rawDataEndOfLine)) $this->response->rawDataEndOfLine = $this->response->getEndOfLine($page->rawData);
 				if($page->statusCode==434) $this->response->rawDataEdit = $this->response->getRawDataNew($page->location);
 			}
 			if(empty($this->response->language)) $this->response->language = $page->get("language");
@@ -598,9 +600,11 @@ class YellowEdit
 		$statusCode = 0;
 		if(!$this->response->isUserRestrictions() && !empty($_REQUEST["rawdataedit"]))
 		{
-			$this->response->rawDataSource = $this->response->rawDataEdit = rawurldecode($_REQUEST["rawdatasource"]);
-			$rawData = rawurldecode($_REQUEST["rawdataedit"]);
-			$page = $this->response->getPageNew($scheme, $address, $base, $location, $fileName, $rawData);
+			$this->response->rawDataSource = $_REQUEST["rawdatasource"];
+			$this->response->rawDataEdit = $_REQUEST["rawdatasource"];
+			$this->response->rawDataEndOfLine = $_REQUEST["rawdataendofline"];
+			$rawData = $_REQUEST["rawdataedit"];
+			$page = $this->response->getPageNew($scheme, $address, $base, $location, $fileName, $rawData, $this->response->getEndOfLine());
 			if(!$page->isError())
 			{
 				if($this->yellow->toolbox->createFile($page->fileName, $page->rawData, true))
@@ -625,10 +629,12 @@ class YellowEdit
 		$statusCode = 0;
 		if(!$this->response->isUserRestrictions() && !empty($_REQUEST["rawdataedit"]))
 		{
-			$this->response->rawDataSource = rawurldecode($_REQUEST["rawdatasource"]);
-			$this->response->rawDataEdit = rawurldecode($_REQUEST["rawdataedit"]);
+			$this->response->rawDataSource = $_REQUEST["rawdatasource"];
+			$this->response->rawDataEdit = $_REQUEST["rawdataedit"];
+			$this->response->rawDataEndOfLine = $_REQUEST["rawdataendofline"];
+			$rawDataFile = $this->yellow->toolbox->readFile($fileName);
 			$page = $this->response->getPageEdit($scheme, $address, $base, $location, $fileName,
-				$this->response->rawDataSource, $this->response->rawDataEdit, $this->yellow->toolbox->readFile($fileName));
+				$this->response->rawDataSource, $this->response->rawDataEdit, $rawDataFile, $this->response->rawDataEndOfLine);
 			if(!$page->isError())
 			{
 				if($this->yellow->toolbox->renameFile($fileName, $page->fileName, true) &&
@@ -654,8 +660,12 @@ class YellowEdit
 		$statusCode = 0;
 		if(!$this->response->isUserRestrictions() && is_file($fileName))
 		{
-			$this->response->rawDataSource = $this->response->rawDataEdit = rawurldecode($_REQUEST["rawdatasource"]);
-			$page = $this->response->getPageDelete($scheme, $address, $base, $location, $fileName, $this->response->rawDataSource);
+			$this->response->rawDataSource = $_REQUEST["rawdatasource"];
+			$this->response->rawDataEdit = $_REQUEST["rawdatasource"];
+			$this->response->rawDataEndOfLine = $_REQUEST["rawdataendofline"];
+			$rawDataFile = $this->yellow->toolbox->readFile($fileName);
+			$page = $this->response->getPageDelete($scheme, $address, $base, $location, $fileName,
+				$rawDataFile, $this->response->rawDataEndOfLine);
 			if(!$page->isError())
 			{
 				if($this->yellow->lookup->isFileLocation($location))
@@ -820,8 +830,9 @@ class YellowResponse
 	var $rawDataSource;		//raw data of page for comparison
 	var $rawDataEdit;		//raw data of page for editing
 	var $rawDataOutput;		//raw data of dynamic output
-	var $email;				//response email
-	var $language;			//response language
+	var $rawDataEndOfLine;	//end of line format for raw data
+	var $email;				//response user email
+	var $language;			//response user language
 	var $action;			//response action
 	var $status;			//response status
 	
@@ -832,11 +843,11 @@ class YellowResponse
 	}
 	
 	// Return new page
-	function getPageNew($scheme, $address, $base, $location, $fileName, $rawData)
+	function getPageNew($scheme, $address, $base, $location, $fileName, $rawData, $endOfLine)
 	{
 		$page = new YellowPage($this->yellow);
 		$page->setRequestInformation($scheme, $address, $base, $location, $fileName);
-		$page->parseData($rawData, false, 0);
+		$page->parseData($this->normaliseLines($rawData, $endOfLine), false, 0);
 		$this->editContentFile($page, "create");
 		if($this->yellow->lookup->isFileLocation($location) || $this->yellow->pages->find($page->location))
 		{
@@ -844,7 +855,8 @@ class YellowResponse
 			$page->fileName = $this->yellow->lookup->findFileNew($page->location, $page->get("published"));
 			while($this->yellow->pages->find($page->location) || empty($page->fileName))
 			{
-				$page->rawData = $this->yellow->toolbox->setMetaData($page->rawData, "title", $this->getTitleNext($page->rawData));
+				$rawData = $this->yellow->toolbox->setMetaData($page->rawData, "title", $this->getTitleNext($page->rawData));
+				$page->rawData = $this->normaliseLines($rawData, $endOfLine);
 				$page->location = $this->getLocationNew($page->rawData, $page->location, $page->get("pageNewLocation"));
 				$page->fileName = $this->yellow->lookup->findFileNew($page->location, $page->get("published"));
 				if(++$pageCounter>999) break;
@@ -864,11 +876,15 @@ class YellowResponse
 	}
 	
 	// Return modified page
-	function getPageEdit($scheme, $address, $base, $location, $fileName, $rawDataSource, $rawDataEdit, $rawDataFile)
+	function getPageEdit($scheme, $address, $base, $location, $fileName, $rawDataSource, $rawDataEdit, $rawDataFile, $endOfLine)
 	{
 		$page = new YellowPage($this->yellow);
 		$page->setRequestInformation($scheme, $address, $base, $location, $fileName);
-		$page->parseData($this->plugin->merge->merge($rawDataSource, $rawDataEdit, $rawDataFile), false, 0);
+		$rawData = $this->plugin->merge->merge(
+			$this->normaliseLines($rawDataSource, $endOfLine),
+			$this->normaliseLines($rawDataEdit, $endOfLine),
+			$this->normaliseLines($rawDataFile, $endOfLine));
+		$page->parseData($this->normaliseLines($rawData, $endOfLine), false, 0);
 		$this->editContentFile($page, "edit");
 		if(empty($page->rawData)) $page->error(500, "Page has been modified by someone else!");
 		if($this->yellow->lookup->isFileLocation($location) && !$page->isError())
@@ -900,11 +916,11 @@ class YellowResponse
 	}
 	
 	// Return deleted page
-	function getPageDelete($scheme, $address, $base, $location, $fileName, $rawDataSource)
+	function getPageDelete($scheme, $address, $base, $location, $fileName, $rawData, $endOfLine)
 	{
 		$page = new YellowPage($this->yellow);
 		$page->setRequestInformation($scheme, $address, $base, $location, $fileName);
-		$page->parseData($rawDataSource, false, 0);
+		$page->parseData($this->normaliseLines($rawData, $endOfLine), false, 0);
 		$this->editContentFile($page, "delete");
 		if($this->plugin->getUserRestrictions($this->userEmail, $page->location, $page->fileName))
 		{
@@ -924,6 +940,7 @@ class YellowResponse
 			$data["rawDataEdit"] = $this->rawDataEdit;
 			$data["rawDataNew"] = $this->getRawDataNew();
 			$data["rawDataOutput"] = strval($this->rawDataOutput);
+			$data["rawDataEndOfLine"] = $this->rawDataEndOfLine;
 			$data["scheme"] = $this->yellow->page->scheme;
 			$data["address"] = $this->yellow->page->address;
 			$data["base"] = $this->yellow->page->base;
@@ -988,6 +1005,18 @@ class YellowResponse
 		$textEdit = $this->yellow->text->getData("edit", $this->language);
 		$textYellow = $this->yellow->text->getData("yellow", $this->language);
 		return array_merge($textLanguage, $textEdit, $textYellow);
+	}
+	
+	// Return end of line format
+	function getEndOfLine($rawData = "")
+	{
+		$endOfLine = $this->yellow->config->get("editEndOfLine");
+		if($endOfLine=="auto")
+		{
+			$rawData = empty($rawData) ? PHP_EOL : substru($rawData, 0, 4096);
+			$endOfLine = strposu($rawData, "\r")===false ? "lf" : "crlf";
+		}
+		return $endOfLine;
 	}
 	
 	// Return raw data for new page
@@ -1058,6 +1087,18 @@ class YellowResponse
 		$titleText = $matches[1];
 		$titleNumber = strempty($matches[2]) ? " 2" : $matches[2]+1;
 		return $titleText.$titleNumber;
+	}
+
+	// Normalise text lines, convert line endings
+	function normaliseLines($text, $endOfLine = "lf")
+	{
+		if($endOfLine=="lf")
+		{
+			$text = preg_replace("/\R/u", "\n", $text);
+		} else {
+			$text = preg_replace("/\R/u", "\r\n", $text);
+		}
+		return $text;
 	}
 	
 	// Create browser cookie

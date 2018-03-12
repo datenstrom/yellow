@@ -455,7 +455,8 @@ yellow.edit =
 				args.action = paneAction;
 				args.rawdatasource = yellow.page.rawDataSource;
 				args.rawdataedit = document.getElementById("yellow-pane-edit-page").value;
-				yellow.toolbox.submitForm(args, true);
+				args.rawdataendofline = yellow.page.rawDataEndOfLine;
+				yellow.toolbox.submitForm(args);
 			} else {
 				this.hidePane(paneId);
 			}
@@ -721,15 +722,6 @@ yellow.toolbox =
 		return element && element.style.display!="none";
 	},
 	
-	// Encode newline characters
-	encodeNewline: function(string)
-	{
-		return string
-			.replace(/[%]/g, "%25")
-			.replace(/[\r]/g, "%0d")
-			.replace(/[\n]/g, "%0a");
-	},
-
 	// Encode HTML special characters
 	encodeHtml: function(string)
 	{
@@ -741,18 +733,17 @@ yellow.toolbox =
 	},
 	
 	// Submit form with post method
-	submitForm: function(args, encodeNewline)
+	submitForm: function(args)
 	{
 		var elementForm = document.createElement("form");
 		elementForm.setAttribute("method", "post");
 		for(var key in args)
 		{
 			if(!args.hasOwnProperty(key)) continue;
-			var value = encodeNewline ? this.encodeNewline(args[key]) : args[key];
 			var elementInput = document.createElement("input");
 			elementInput.setAttribute("type", "hidden");
 			elementInput.setAttribute("name", key);
-			elementInput.setAttribute("value", value);
+			elementInput.setAttribute("value", args[key]);
 			elementForm.appendChild(elementInput);
 		}
 		document.body.appendChild(elementForm);
