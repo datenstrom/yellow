@@ -891,7 +891,7 @@ class YellowResponse
 		{
 			$pageSource = new YellowPage($this->yellow);
 			$pageSource->setRequestInformation($scheme, $address, $base, $location, $fileName);
-			$pageSource->parseData($rawDataSource, false, 0);
+			$pageSource->parseData($this->normaliseLines($rawDataSource, $endOfLine), false, 0);
 			if(substrb($pageSource->rawData, 0, $pageSource->metaDataOffsetBytes) !=
 			   substrb($page->rawData, 0, $page->metaDataOffsetBytes))
 			{
