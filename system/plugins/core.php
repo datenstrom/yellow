@@ -139,7 +139,7 @@ class YellowCore
 		if($this->page->isExisting("pageError")) $statusCode = $this->processRequestError();
 		$this->toolbox->timerStop($time);
 		ob_end_flush();
-		if(defined("DEBUG") && DEBUG>=1)
+		if(defined("DEBUG") && DEBUG>=1 && $this->lookup->isContentFile($fileName))
 		{
 			$handler = $this->getRequestHandler();
 			echo "YellowCore::request status:$statusCode handler:$handler time:$time ms<br/>\n";
@@ -179,7 +179,10 @@ class YellowCore
 				$statusCode = $this->sendFile(200, $fileName, true);
 			}
 		}
-		if(defined("DEBUG") && DEBUG>=1) echo "YellowCore::processRequest file:$fileName<br/>\n";
+		if(defined("DEBUG") && DEBUG>=1 && $this->lookup->isContentFile($fileName))
+		{
+			echo "YellowCore::processRequest file:$fileName<br/>\n";
+		}
 		return $statusCode;
 	}
 	
