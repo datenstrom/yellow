@@ -8,4 +8,4 @@ Datenstrom Yellow is for people who make websites. [See demo](https://developers
 2. Copy all files to your web hosting.
 3. Open your website in a web browser.
 
-We have a developer kit and an [API for developers](https://developers.datenstrom.se/help/api).
+We have a developer kit and an API for developers. [Read more](https://developers.datenstrom.se/help/).
