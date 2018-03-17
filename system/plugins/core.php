@@ -3143,10 +3143,9 @@ class YellowToolbox
 	// Return lines from text string, including newline
 	function getTextLines($text)
 	{
-		$lines = array();
-		$split = preg_split("/(\R)/u", $text, -1, PREG_SPLIT_DELIM_CAPTURE);
-		for($i=0; $i<count($split)-1; $i+=2) array_push($lines, $split[$i].$split[$i+1]);
-		if($split[$i]!="") array_push($lines, $split[$i]."\n");
+		$lines = preg_split("/\n/", $text);
+		foreach($lines as &$line) $line = $line."\n";
+		if(strempty($text) || substru($text, -1, 1)=="\n") array_pop($lines);
 		return $lines;
 	}
 	

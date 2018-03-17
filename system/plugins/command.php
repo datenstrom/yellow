@@ -316,7 +316,6 @@ class YellowCommand
 	{
 		$serverVersion = $this->yellow->toolbox->getServerVersion();
 		echo "Datenstrom Yellow ".YellowCore::VERSION.", PHP ".PHP_VERSION.", $serverVersion\n";
-		list($command) = $args;
 		list($statusCode, $dataCurrent) = $this->getSoftwareVersion();
 		list($statusCode, $dataLatest) = $this->getSoftwareVersion(true);
 		foreach($dataCurrent as $key=>$value)
