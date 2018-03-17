@@ -389,7 +389,6 @@ yellow.edit =
 			case "yellow-pane-user":
 				yellow.toolbox.setOuterLeft(document.getElementById("yellow-pane-user"), paneLeft + paneWidth - yellow.toolbox.getOuterWidth(document.getElementById("yellow-pane-user")));
 				yellow.toolbox.setOuterTop(document.getElementById("yellow-pane-user"), paneTop);
-				yellow.toolbox.setOuterHeight(document.getElementById("yellow-pane-user"), paneHeight, true);
 				var elementLink = document.getElementById("yellow-pane-user-link");
 				var position = yellow.toolbox.getOuterLeft(elementLink) + yellow.toolbox.getOuterWidth(elementLink)/2;
 				position -= yellow.toolbox.getOuterLeft(document.getElementById("yellow-pane-user"));
@@ -464,7 +463,7 @@ yellow.edit =
 			var args = {"action":paneAction};
 			if(paneArgs)
 			{
-				var tokens = paneArgs.split('/');
+				var tokens = paneArgs.split("/");
 				for(var i=0; i<tokens.length; i++)
 				{
 					var pair = tokens[i].split(/[:=]/);
@@ -489,6 +488,7 @@ yellow.edit =
 	// Return action
 	getAction: function(paneId, paneAction)
 	{
+		var action = "";
 		if(paneId=="yellow-pane-edit")
 		{
 			switch(paneAction)
@@ -586,27 +586,15 @@ yellow.toolbox =
 	},
 	
 	// Set element width in pixel, including padding and border
-	setOuterWidth: function(element, width, setMax)
+	setOuterWidth: function(element, width)
 	{
-		width -= this.getBoxSize(element).width;
-		if(setMax)
-		{
-			element.style.maxWidth = Math.max(0, width) + "px";
-		} else {
-			element.style.width = Math.max(0, width) + "px";
-		}
+		element.style.width = Math.max(0, width - this.getBoxSize(element).width) + "px";
 	},
 	
 	// Set element height in pixel, including padding and border
-	setOuterHeight: function(element, height, setMax)
+	setOuterHeight: function(element, height)
 	{
-		height -= this.getBoxSize(element).height;
-		if(setMax)
-		{
-			element.style.maxHeight = Math.max(0, height) + "px";
-		} else {
-			element.style.height = Math.max(0, height) + "px";
-		}
+		element.style.height = Math.max(0, height - this.getBoxSize(element).height) + "px";
 	},
 	
 	// Return element width in pixel, including padding and border
@@ -640,15 +628,13 @@ yellow.toolbox =
 	// Return element left position in pixel
 	getOuterLeft: function(element)
 	{
-		var left = element.getBoundingClientRect().left;
-		return left + window.pageXOffset;
+		return element.getBoundingClientRect().left + window.pageXOffset;
 	},
 	
 	// Return element top position in pixel
 	getOuterTop: function(element)
 	{
-		var top = element.getBoundingClientRect().top;
-		return top + window.pageYOffset;
+		return element.getBoundingClientRect().top + window.pageYOffset;
 	},
 	
 	// Return window width in pixel
