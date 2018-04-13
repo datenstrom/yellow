@@ -262,6 +262,17 @@ class YellowCore
 		}
 		return $statusCode;
 	}
+	
+	// Send data response
+	function sendData($statusCode, $rawData, $fileName, $cacheable)
+	{
+		@header($this->toolbox->getHttpStatusFormatted($statusCode));
+		if(!$cacheable) @header("Cache-Control: no-cache, must-revalidate");
+		@header("Content-Type: ".$this->toolbox->getMimeContentType($fileName));
+		@header("Last-Modified: ".$this->toolbox->getHttpDateFormatted(time()));
+		echo $rawData;
+		return $statusCode;
+	}
 
 	// Send status response
 	function sendStatus($statusCode, $location = "")
