@@ -3,7 +3,7 @@
 Language: fr
 LanguageDescription: Français
 LanguageTranslator: Juh Nibreh
-LanguageVersion: 0.7.4
+LanguageVersion: 0.7.5
 
 BlogBy: par
 BlogFilter: Blog:
@@ -101,9 +101,32 @@ EditDeleteButton: Supprimer
 EditEdit: Éditer page
 EditCreate: +
 EditDelete: -
-EditCreateTitle: Créer page
-EditDeleteTitle: Supprimer page
-EditMarkdownHelp: Markdown
+EditToolbarPreview: Aperçu
+EditToolbarFormat: Format
+EditToolbarHeading: Titre
+EditToolbarH1: Titre 1
+EditToolbarH2: Titre 2
+EditToolbarH3: Titre 3
+EditToolbarParagraph: Texte normal
+EditToolbarPre: Code source
+EditToolbarQuote: Citation
+EditToolbarBold: Gras
+EditToolbarItalic: Italique
+EditToolbarStrikethrough: Barré
+EditToolbarCode: Code
+EditToolbarList: Liste
+EditToolbarUl: • Liste non ordonnée
+EditToolbarOl: 1. Liste commandée
+EditToolbarTl: ✓ Liste des tâches
+EditToolbarLink: Lien
+EditToolbarFile: Fichier
+EditToolbarEmojiawesome: Emoji
+EditToolbarFontawesome: Icone
+EditToolbarDraft: Brouillon
+EditToolbarUndo: Annuler
+EditToolbarRedo: Refaire
+EditToolbarMarkdown: Markdown
+EditToolbarHelp: Aide
 EditUserHelp: Aide
 EditUserLogout: Déconnexion
 PagePrevious: ← Précédent: @title
@@ -123,5 +146,5 @@ WikiTag: Tags:
 WikiSpecialPages: Toutes les pages
 WikiSpecialChanges: Changements récents
 YellowUrl: https://datenstrom.se/fr/yellow/
-YellowUserHelpUrl: https://developers.datenstrom.se/fr/help/
-YellowMarkdownHelpUrl: https://developers.datenstrom.se/fr/help/markdown-cheat-sheet
+YellowHelpUrl: https://developers.datenstrom.se/fr/help/
+YellowMarkdownUrl: https://developers.datenstrom.se/fr/help/markdown-cheat-sheet

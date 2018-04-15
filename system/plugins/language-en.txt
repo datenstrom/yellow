@@ -3,7 +3,7 @@
 Language: en
 LanguageDescription: English
 LanguageTranslator: Mark Seuffert
-LanguageVersion: 0.7.4
+LanguageVersion: 0.7.5
 
 BlogBy: by
 BlogFilter: Blog:
@@ -101,9 +101,32 @@ EditDeleteButton: Delete
 EditEdit: Edit page
 EditCreate: +
 EditDelete: -
-EditCreateTitle: Create page
-EditDeleteTitle: Delete page
-EditMarkdownHelp: Markdown
+EditToolbarPreview: Preview
+EditToolbarFormat: Format
+EditToolbarHeading: Heading
+EditToolbarH1: Heading 1
+EditToolbarH2: Heading 2
+EditToolbarH3: Heading 3
+EditToolbarParagraph: Normal text
+EditToolbarPre: Source code
+EditToolbarQuote: Quote
+EditToolbarBold: Bold
+EditToolbarItalic: Italic
+EditToolbarStrikethrough: Strikethrough
+EditToolbarCode: Code
+EditToolbarList: List
+EditToolbarUl: • Unordered list
+EditToolbarOl: 1. Ordered list
+EditToolbarTl: ✓ Task list
+EditToolbarLink: Link
+EditToolbarFile: File
+EditToolbarEmojiawesome: Emoji
+EditToolbarFontawesome: Icon
+EditToolbarDraft: Draft
+EditToolbarUndo: Undo
+EditToolbarRedo: Redo
+EditToolbarMarkdown: Markdown
+EditToolbarHelp: Help
 EditUserHelp: Help
 EditUserLogout: Logout
 PagePrevious: ← Previous: @title
@@ -123,5 +146,5 @@ WikiTag: Tags:
 WikiSpecialPages: All pages
 WikiSpecialChanges: Recent changes
 YellowUrl: https://datenstrom.se/yellow/
-YellowUserHelpUrl: https://developers.datenstrom.se/help/
-YellowMarkdownHelpUrl: https://developers.datenstrom.se/help/markdown-cheat-sheet
+YellowHelpUrl: https://developers.datenstrom.se/help/
+YellowMarkdownUrl: https://developers.datenstrom.se/help/markdown-cheat-sheet

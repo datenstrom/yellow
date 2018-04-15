@@ -1,5 +1,5 @@
 /* Flatsite theme, https://github.com/datenstrom/yellow-themes/tree/master/flatsite */
-/* Copyright (c) 2013-2017 Datenstrom, https://datenstrom.se */
+/* Copyright (c) 2013-2018 Datenstrom, https://datenstrom.se */
 /* This file may be used and distributed under the terms of the public license. */
 
 html, body, div, form, pre, span, tr, th, td, img { margin:0; padding:0; border:0; vertical-align:baseline; }
@@ -29,7 +29,7 @@ body {
 	font-weight:300;
 	line-height:1.5;
 }
-h1, h2, h3, h4, h5, h6 { color:#07d; font-weight:normal; }
+h1, h2, h3, h4, h5, h6 { color:#111; font-weight:normal; }
 h1 { font-size:2.0em; }
 hr { height:1px; background:#ddd; border:0; }
 strong { font-weight:bold; }
@@ -37,7 +37,8 @@ code { font-size:1.1em; }
 a { color:#07d; text-decoration:none; }
 a:hover { color:#07d; text-decoration:underline; }
 .content h1:first-child, .content>*:first-child { margin-top:0; }
-.content h1 a:hover { text-decoration:none; }
+.content h1 a { color:#111; }
+.content h1 a:hover { color:#111; text-decoration:none; }
 .content img { max-width:100%; height:auto; }
 .content form { margin:1em 0; }
 .content table { border-spacing:0; border-collapse:collapse; }

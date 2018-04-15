@@ -5,7 +5,7 @@
 
 class YellowEdit
 {
-	const VERSION = "0.7.9";
+	const VERSION = "0.7.10";
 	var $yellow;			//access to API
 	var $response;			//web response
 	var $users;				//user accounts
@@ -19,6 +19,7 @@ class YellowEdit
 		$this->users = new YellowUsers($yellow);
 		$this->merge = new YellowMerge($yellow);
 		$this->yellow->config->setDefault("editLocation", "/edit/");
+		$this->yellow->config->setDefault("editToolbarButtons", "auto");
 		$this->yellow->config->setDefault("editEndOfLine", "auto");
 		$this->yellow->config->setDefault("editUserFile", "user.ini");
 		$this->yellow->config->setDefault("editUserPasswordMinLength", "4");
@@ -205,6 +206,7 @@ class YellowEdit
 				case "create":		$statusCode = $this->processRequestCreate($scheme, $address, $base, $location, $fileName); break;
 				case "edit":		$statusCode = $this->processRequestEdit($scheme, $address, $base, $location, $fileName); break;
 				case "delete":		$statusCode = $this->processRequestDelete($scheme, $address, $base, $location, $fileName); break;
+				case "preview":		$statusCode = $this->processRequestPreview($scheme, $address, $base, $location, $fileName); break;
 			}
 		} else {
 			$this->yellow->lookup->requestHandler = "core";
@@ -695,6 +697,20 @@ class YellowEdit
 		}
 		return $statusCode;
 	}
+
+	// Process request to show preview
+	function processRequestPreview($scheme, $address, $base, $location, $fileName)
+	{
+		$page = $this->response->getPagePreview($scheme, $address, $base, $location, $fileName,
+			$_REQUEST["rawdataedit"], $_REQUEST["rawdataendofline"]);
+		$statusCode = $this->yellow->sendData(200, $page->outputData, "", false);
+		if(defined("DEBUG") && DEBUG>=1)
+		{
+			$parser = $page->get("parser");
+			echo "YellowEdit::processRequestPreview parser:$parser<br/>\n";
+		}
+		return $statusCode;
+	}
 	
 	// Check request
 	function checkRequest($location)
@@ -928,7 +944,27 @@ class YellowResponse
 		}
 		return $page;
 	}
-	
+
+	// Return preview page
+	function getPagePreview($scheme, $address, $base, $location, $fileName, $rawData, $endOfLine)
+	{
+		$page = new YellowPage($this->yellow);
+		$page->setRequestInformation($scheme, $address, $base, $location, $fileName);
+		$page->parseData($this->normaliseLines($rawData, $endOfLine), false, 200);
+		$this->yellow->text->setLanguage($page->get("language"));
+		$page->set("pageClass", "page-preview");
+		$page->set("pageClass", $page->get("pageClass")." template-".$page->get("template"));
+		$output = "<div class=\"".$page->getHtml("pageClass")."\"><div class=\"content\">";
+		if($this->yellow->config->get("editToolbarButtons")!="none")
+		{
+			$output .= "<h1>".$page->getHtml("titleContent")."</h1>\n";
+		}
+		$output .= $page->getContent();
+		$output .= "</div></div>";
+		$page->setOutput($output);
+		return $page;
+	}
+
 	// Return page data including login information
 	function getPageData()
 	{
@@ -967,16 +1003,23 @@ class YellowResponse
 			$data["userHome"] = $this->plugin->users->getHome($this->userEmail);
 			$data["userRestrictions"] = intval($this->isUserRestrictions());
 			$data["userWebmaster"] = intval($this->isUserWebmaster());
-			$data["userUpdate"] = intval($this->yellow->plugins->isExisting("update"));
+			$data["serverScheme"] = $this->yellow->config->get("serverScheme");
+			$data["serverAddress"] = $this->yellow->config->get("serverAddress");
+			$data["serverBase"] = $this->yellow->config->get("serverBase");
+			$data["serverVersion"] = "Datenstrom Yellow ".YellowCore::VERSION;
+			$data["serverPlugins"] = array();
+			foreach($this->yellow->plugins->plugins as $key=>$value)
+			{
+				$data["serverPlugins"][$key] = $value["plugin"];
+			}
 			$data["serverLanguages"] = array();
 			foreach($this->yellow->text->getLanguages() as $language)
 			{
 				$data["serverLanguages"][$language] = $this->yellow->text->getTextHtml("languageDescription", $language);
 			}
-			$data["serverScheme"] = $this->yellow->config->get("serverScheme");
-			$data["serverAddress"] = $this->yellow->config->get("serverAddress");
-			$data["serverBase"] = $this->yellow->config->get("serverBase");
-			$data["serverVersion"] = "Datenstrom Yellow ".YellowCore::VERSION;
+			$data["editToolbarButtons"] = $this->getToolbarButtons("edit");
+			$data["emojiawesomeToolbarButtons"] =  $this->getToolbarButtons("emojiawesome");
+			$data["fontawesomeToolbarButtons"] =  $this->getToolbarButtons("fontawesome");
 		} else {
 			$data["editLoginEmail"] = $this->yellow->config->get("editLoginEmail");
 			$data["editLoginPassword"] = $this->yellow->config->get("editLoginPassword");
@@ -992,7 +1035,7 @@ class YellowResponse
 		$data = array();
 		foreach($_REQUEST as $key=>$value)
 		{
-			if($key=="login" || $key=="password") continue;
+			if($key=="login" || $key=="password" || substru($key, 0, 7)=="rawdata") continue;
 			$data["request".ucfirst($key)] = trim($value);
 		}
 		return $data;
@@ -1005,6 +1048,27 @@ class YellowResponse
 		$textEdit = $this->yellow->text->getData("edit", $this->language);
 		$textYellow = $this->yellow->text->getData("yellow", $this->language);
 		return array_merge($textLanguage, $textEdit, $textYellow);
+	}
+	
+	// Return toolbar buttons
+	function getToolbarButtons($name)
+	{
+		if($name=="edit")
+		{
+			$toolbarButtons = $this->yellow->config->get("editToolbarButtons");
+			if($toolbarButtons=="auto")
+			{
+				$toolbarButtons = "";
+				if($this->yellow->plugins->isExisting("markdown")) $toolbarButtons = "preview, format, bold, italic, code, list, link, file";
+				if($this->yellow->plugins->isExisting("emojiawesome")) $toolbarButtons .= ", emojiawesome";
+				if($this->yellow->plugins->isExisting("fontawesome")) $toolbarButtons .= ", fontawesome";
+				if($this->yellow->plugins->isExisting("draft")) $toolbarButtons .= ", draft";
+				if($this->yellow->plugins->isExisting("markdown")) $toolbarButtons .= ", markdown";
+			}
+		} else {
+			$toolbarButtons = $this->yellow->config->get("{$name}ToolbarButtons");
+		}
+		return $toolbarButtons;
 	}
 	
 	// Return end of line format

@@ -3,7 +3,7 @@
 Language: de
 LanguageDescription: Deutsch
 LanguageTranslator: David Fehrmann
-LanguageVersion: 0.7.4
+LanguageVersion: 0.7.5
 
 BlogBy: von
 BlogFilter: Blog:
@@ -101,9 +101,32 @@ EditDeleteButton: Löschen
 EditEdit: Seite bearbeiten
 EditCreate: +
 EditDelete: -
-EditCreateTitle: Seite erzeugen
-EditDeleteTitle: Seite löschen
-EditMarkdownHelp: Markdown
+EditToolbarPreview: Vorschau
+EditToolbarFormat: Format
+EditToolbarHeading: Überschrift
+EditToolbarH1: Überschrift 1
+EditToolbarH2: Überschrift 2
+EditToolbarH3: Überschrift 3
+EditToolbarParagraph: Normaler Text
+EditToolbarPre: Quellcode
+EditToolbarQuote: Zitat
+EditToolbarBold: Fettschrift
+EditToolbarItalic: Kursiv
+EditToolbarStrikethrough: Durchgestrichen
+EditToolbarCode: Code
+EditToolbarList: Liste
+EditToolbarUl: • Unsortierte Liste
+EditToolbarOl: 1. Sortierte Liste
+EditToolbarTl: ✓ Aufgabenliste
+EditToolbarLink: Link
+EditToolbarFile: Datei
+EditToolbarEmojiawesome: Emoji
+EditToolbarFontawesome: Symbol
+EditToolbarDraft: Entwurf
+EditToolbarUndo: Rückgängig
+EditToolbarRedo: Wiederholen
+EditToolbarMarkdown: Markdown
+EditToolbarHelp: Hilfe
 EditUserHelp: Hilfe
 EditUserLogout: Abmelden
 PagePrevious: ← Zurück: @title
@@ -123,5 +146,5 @@ WikiTag: Tags:
 WikiSpecialPages: Alle Seiten
 WikiSpecialChanges: Letzte Änderungen
 YellowUrl: https://datenstrom.se/de/yellow/
-YellowUserHelpUrl: https://developers.datenstrom.se/de/help/
-YellowMarkdownHelpUrl: https://developers.datenstrom.se/de/help/markdown-cheat-sheet
+YellowHelpUrl: https://developers.datenstrom.se/de/help/
+YellowMarkdownUrl: https://developers.datenstrom.se/de/help/markdown-cheat-sheet
