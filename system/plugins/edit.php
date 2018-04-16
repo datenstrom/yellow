@@ -5,7 +5,7 @@
 
 class YellowEdit
 {
-	const VERSION = "0.7.10";
+	const VERSION = "0.7.11";
 	var $yellow;			//access to API
 	var $response;			//web response
 	var $users;				//user accounts
@@ -19,6 +19,7 @@ class YellowEdit
 		$this->users = new YellowUsers($yellow);
 		$this->merge = new YellowMerge($yellow);
 		$this->yellow->config->setDefault("editLocation", "/edit/");
+		$this->yellow->config->setDefault("editKeyboardShortcuts", "ctrl+b bold, ctrl+i italic, ctrl+e code, ctrl+k link, ctrl+s save");
 		$this->yellow->config->setDefault("editToolbarButtons", "auto");
 		$this->yellow->config->setDefault("editEndOfLine", "auto");
 		$this->yellow->config->setDefault("editUserFile", "user.ini");
@@ -1017,6 +1018,7 @@ class YellowResponse
 			{
 				$data["serverLanguages"][$language] = $this->yellow->text->getTextHtml("languageDescription", $language);
 			}
+			$data["editKeyboardShortcuts"] = $this->yellow->config->get("editKeyboardShortcuts");
 			$data["editToolbarButtons"] = $this->getToolbarButtons("edit");
 			$data["emojiawesomeToolbarButtons"] =  $this->getToolbarButtons("emojiawesome");
 			$data["fontawesomeToolbarButtons"] =  $this->getToolbarButtons("fontawesome");

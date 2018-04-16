@@ -92,6 +92,7 @@
 }
 .yellow-toolbar .yellow-toolbar-btn-delete:hover { background-color:#d44; border-color:#d44; }
 .yellow-toolbar .yellow-toolbar-btn-separator { visibility:hidden; padding:6px; }
+.yellow-toolbar .yellow-toolbar-checked { background-color:#666; border-color:#666; color:#fff; }
 .yellow-toolbar-tooltip { position:relative; }
 .yellow-toolbar-tooltip::after, .yellow-toolbar-tooltip::before {
 	position:absolute; z-index:300; display:none;

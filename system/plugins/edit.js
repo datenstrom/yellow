@@ -88,6 +88,7 @@ yellow.edit =
 	// Handle keyboard
 	keydown: function(e)
 	{
+		if(this.paneId=="yellow-pane-edit") this.processShortcut(e);
 		if(this.paneId && e.keyCode==27) this.hidePane(this.paneId);
 	},
 	
@@ -358,6 +359,7 @@ yellow.edit =
 					if(yellow.config.editToolbarButtons!="none")
 					{
 						yellow.toolbox.setVisible(document.getElementById("yellow-pane-edit-toolbar-title"), false);
+						this.updateToolbar(0, "yellow-toolbar-checked");
 					}
 					if(yellow.config.userRestrictions)
 					{
@@ -521,6 +523,26 @@ yellow.edit =
 		window.open(this.getText("HelpUrl", "yellow"), "_self");
 	},
 	
+	// Process shortcut
+	processShortcut: function(e)
+	{
+		var shortcut = yellow.toolbox.getEventShortcut(e)
+		if(shortcut)
+		{
+			var tokens = yellow.config.editKeyboardShortcuts.split(",");
+			for(var i=0; i<tokens.length; i++)
+			{
+				var pair = tokens[i].trim().split(" ");
+				if(shortcut==pair[0] || shortcut.replace("meta+", "ctrl+")==pair[0])
+				{
+					e.stopPropagation();
+					e.preventDefault();
+					this.processToolbar(pair[1]);
+				}
+			}
+		}
+	},
+	
 	// Process toolbar
 	processToolbar: function(status, args)
 	{
@@ -553,7 +575,8 @@ yellow.edit =
 				case "redo":		yellow.editor.redo(); break;
 			}
 		}
-		if(status=="preview") yellow.editor.showPreview(elementText, elementPreview);
+		if(status=="preview") this.showPreview(elementText, elementPreview);
+		if(status=="save" && !yellow.config.userRestrictions && this.paneAction!="delete") this.action("send");
 		if(status=="help") window.open(this.getText("HelpUrl", "yellow"), "_blank");
 		if(status=="markdown") window.open(this.getText("MarkdownUrl", "yellow"), "_blank");
 		if(status=="format" || status=="heading" || status=="list" || status=="emojiawesome" || status=="fontawesome")
@@ -565,16 +588,17 @@ yellow.edit =
 	},
 	
 	// Update toolbar
-	updateToolbar: function(status)
+	updateToolbar: function(status, name)
 	{
 		if(status)
 		{
-			yellow.toolbox.addClass(document.getElementById("yellow-toolbar-"+status), "yellow-toolbar-selected");
+			var element = document.getElementById("yellow-toolbar-"+status);
+			if(element) yellow.toolbox.addClass(element, name);
 		} else {
-			var elements = document.getElementsByClassName("yellow-toolbar-selected");
+			var elements = document.getElementsByClassName(name);
 			for(var i=0, l=elements.length; i<l; i++)
 			{
-				yellow.toolbox.removeClass(elements[i], "yellow-toolbar-selected");
+				yellow.toolbox.removeClass(elements[i], name);
 			}
 		}
 	},
@@ -661,7 +685,7 @@ yellow.edit =
 			if(yellow.config.debug) console.log("yellow.edit.showPopup id:"+popupId);
 			yellow.toolbox.setVisible(element, true);
 			this.popupId = popupId;
-			this.updateToolbar(status);
+			this.updateToolbar(status, "yellow-toolbar-selected");
 			var elementParent = document.getElementById("yellow-toolbar-"+status);
 			var popupLeft = yellow.toolbox.getOuterLeft(elementParent);
 			var popupTop = yellow.toolbox.getOuterTop(elementParent) + yellow.toolbox.getOuterHeight(elementParent) - 1;
@@ -680,7 +704,43 @@ yellow.edit =
 		{
 			yellow.toolbox.setVisible(element, false, fadeout);
 			this.popupId = 0;
-			this.updateToolbar(0);
+			this.updateToolbar(0, "yellow-toolbar-selected");
+		}
+	},
+	
+	// Show or hide preview
+	showPreview: function(elementText, elementPreview)
+	{
+		if(!yellow.toolbox.isVisible(elementPreview))
+		{
+			var thisObject = this;
+			var formData = new FormData();
+			formData.append("action", "preview");
+			formData.append("rawdataedit", elementText.value);
+			formData.append("rawdataendofline", yellow.page.rawDataEndOfLine);
+			var request = new XMLHttpRequest();
+			request.open("POST", window.location.pathname, true);
+			request.onload = function() { if(this.status==200) thisObject.updatePreview.call(thisObject, elementText, elementPreview, this.responseText); };
+			request.send(formData);
+		} else {
+			this.updatePreview(elementText, elementPreview, "");
+		}
+	},
+	
+	// Update preview
+	updatePreview: function(elementText, elementPreview, string)
+	{
+		var showPreview = string.length!=0;
+		yellow.toolbox.setVisible(elementText, !showPreview);
+		yellow.toolbox.setVisible(elementPreview, showPreview);
+		if(showPreview)
+		{
+			this.updateToolbar("preview", "yellow-toolbar-checked");
+			elementPreview.innerHTML = string;
+			dispatchEvent(new Event("load"));
+		} else {
+			this.updateToolbar(0, "yellow-toolbar-checked");
+			elementText.focus();
 		}
 	},
 	
@@ -986,34 +1046,6 @@ yellow.editor =
 		return { "text":text, "value":value, "start":start, "end":end, "top":top, "bottom":bottom, "found":found };
 	},
 	
-	// Show or hide preview
-	showPreview: function(elementText, elementPreview)
-	{
-		if(!yellow.toolbox.isVisible(elementPreview))
-		{
-			var formData = new FormData();
-			formData.append("action", "preview");
-			formData.append("rawdataedit", elementText.value);
-			formData.append("rawdataendofline", yellow.page.rawDataEndOfLine);
-			var request = new XMLHttpRequest();
-			request.open("POST", window.location.pathname, true);
-			request.onload = function() { if(this.status==200) yellow.editor.updatePreview(elementText, elementPreview, this.responseText); };
-			request.send(formData);
-		} else {
-			yellow.toolbox.setVisible(elementText, true);
-			yellow.toolbox.setVisible(elementPreview, false);
-			elementText.focus();
-		}
-	},
-	
-	// Update preview
-	updatePreview: function(elementText, elementPreview, responseText)
-	{
-		yellow.toolbox.setVisible(elementText, false);
-		yellow.toolbox.setVisible(elementPreview, true);
-		elementPreview.innerHTML = responseText;
-	},
-	
 	// Undo changes
 	undo: function()
 	{
@@ -1077,6 +1109,18 @@ yellow.toolbox =
 	removeEvent: function(element, type, handler)
 	{
 		element.removeEventListener(type, handler, false);
+	},
+	
+	// Return shortcut from keyboard event, alphanumeric only
+	getEventShortcut: function(e)
+	{
+		var shortcut = "";
+		if(e.keyCode>=48 && e.keyCode<=90)
+		{
+			shortcut += (e.ctrlKey ? "ctrl+" : "")+(e.metaKey ? "meta+" : "")+(e.altKey ? "alt+" : "")+(e.shiftKey ? "shift+" : "");
+			shortcut += String.fromCharCode(e.keyCode).toLowerCase();
+		}
+		return shortcut;
 	},
 	
 	// Return element width in pixel
