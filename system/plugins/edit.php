@@ -19,7 +19,7 @@ class YellowEdit
 		$this->users = new YellowUsers($yellow);
 		$this->merge = new YellowMerge($yellow);
 		$this->yellow->config->setDefault("editLocation", "/edit/");
-		$this->yellow->config->setDefault("editKeyboardShortcuts", "ctrl+b bold, ctrl+i italic, ctrl+e code, ctrl+k link, ctrl+s save");
+		$this->yellow->config->setDefault("editKeyboardShortcuts", "ctrl+b bold, ctrl+i italic, ctrl+e code, ctrl+k link, ctrl+s save, ctrl+shift+p preview");
 		$this->yellow->config->setDefault("editToolbarButtons", "auto");
 		$this->yellow->config->setDefault("editEndOfLine", "auto");
 		$this->yellow->config->setDefault("editUserFile", "user.ini");
