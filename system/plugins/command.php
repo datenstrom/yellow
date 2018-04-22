@@ -5,7 +5,7 @@
 
 class YellowCommand
 {
-	const VERSION = "0.7.4";
+	const VERSION = "0.7.5";
 	var $yellow;					//access to API
 	var $files;						//number of files
 	var $links;						//number of links
@@ -366,6 +366,7 @@ class YellowCommand
 				$statusCodeUrl = array_shift($locations);
 				foreach($locations as $location)
 				{
+					if($statusCodeUrl==302) continue;
 					if($statusCodeUrl>=300 && $statusCodeUrl<=399) {
 						$redirect["$scheme://$address$location -> $url - ".$this->getStatusFormatted($statusCodeUrl)] = $statusCodeUrl;
 					} else {
