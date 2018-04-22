@@ -5,7 +5,7 @@
 
 class YellowUpdate
 {
-	const VERSION = "0.7.9";
+	const VERSION = "0.7.10";
 	var $yellow;					//access to API
 	var $updates;					//number of updates
 	
@@ -18,7 +18,6 @@ class YellowUpdate
 		$this->yellow->config->setDefault("updateInformationFile", "update.ini");
 		$this->yellow->config->setDefault("updateVersionFile", "version.ini");
 		$this->yellow->config->setDefault("updateResourceFile", "resource.ini");
-		$this->yellow->config->setDefault("newFile", "page-new-(.*).txt"); //TODO: remove with next release
 	}
 	
 	// Handle startup
@@ -826,7 +825,7 @@ class YellowUpdate
 			}
 			$curlHandle = curl_init();
 			curl_setopt($curlHandle, CURLOPT_URL, $urlRequest);
-			curl_setopt($curlHandle, CURLOPT_USERAGENT, "Mozilla/5.0 (compatible; YellowCore/".YellowCore::VERSION).")";
+			curl_setopt($curlHandle, CURLOPT_USERAGENT, "Mozilla/5.0 (compatible; DatenstromYellow/".YellowCore::VERSION."; SoftwareUpdater)");
 			curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, 1);
 			curl_setopt($curlHandle, CURLOPT_CONNECTTIMEOUT, 30);
 			$rawData = curl_exec($curlHandle);
