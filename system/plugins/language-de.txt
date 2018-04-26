@@ -3,7 +3,7 @@
 Language: de
 LanguageDescription: Deutsch
 LanguageTranslator: David Fehrmann
-LanguageVersion: 0.7.5
+LanguageVersion: 0.7.6
 
 BlogBy: von
 BlogFilter: Blog:
@@ -18,6 +18,8 @@ ContactStatusIncomplete: Bitte alle Felder ausfüllen.
 ContactStatusInvalid: Bitte eine gültige E-Mail angeben.
 ContactStatusDone: Nachricht wurde versandt. Vielen Dank!
 ContactStatusError: Nachricht konnte nicht versandt werden, versuche es später erneut!
+DatePast: heute, gestern, vor @x Tagen, vor 1 Monat, vor @x Monaten, vor 1 Jahr, vor @x Jahren
+DateFuture: bald, morgen, in @x Tagen, in 1 Monat, in @x Monaten, in 1 Jahr, in @x Jahren
 DateMonths: Januar, Februar, März, April, Mai, Juni, Juli, August, September, Oktober, November, Dezember
 DateWeekdays: Montag, Dienstag, Mittwoch, Donnerstag, Freitag, Samstag, Sonntag
 DateWeekstart: Montag
@@ -93,6 +95,7 @@ EditVersionStatusUpdates: Aktualisierung verfügbar, bitte an den Webmaster wend
 EditVersionUpdateNormal: Aktualisierung verfügbar, jetzt aktualisieren.
 EditVersionUpdateForce: Aktualisierung erzwingen
 EditVersionUpdateModified: @software wurde modifiziert
+EditUploadProgress: [Datei hochladen…]
 EditOkButton: Ok
 EditCancelButton: Abbruch
 EditCreateButton: Erzeugen

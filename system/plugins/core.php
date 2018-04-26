@@ -62,7 +62,6 @@ class YellowCore
 		$this->config->setDefault("contentExtension", ".txt");
 		$this->config->setDefault("configExtension", ".ini");
 		$this->config->setDefault("downloadExtension", ".download");
-		$this->config->setDefault("uploadExtension", ".upload");
 		$this->config->setDefault("configFile", "config.ini");
 		$this->config->setDefault("textFile", "text.ini");
 		$this->config->setDefault("languageFile", "language-(.*).txt");
@@ -738,6 +737,24 @@ class YellowPage
 	function getDateHtml($key, $format = "")
 	{
 		return htmlspecialchars($this->getDate($key, $format));
+	}
+
+	// Return page meta data as language specific date and relative to today
+	function getDateRelative($key, $format = "", $daysLimit = 0)
+	{
+		if(!empty($format))
+		{
+			$format = $this->yellow->text->get($format);
+		} else {
+			$format = $this->yellow->text->get("dateFormatMedium");
+		}
+		return $this->yellow->text->getDateRelative(strtotime($this->get($key)), $format, $daysLimit);
+	}
+	
+	// Return page meta data as language specific date and relative to today, HTML encoded
+	function getDateRelativeHtml($key, $format = "", $daysLimit = 0)
+	{
+		return htmlspecialchars($this->getDateRelative($key, $format, $daysLimit));
 	}
 
 	// Return page meta data as custom date
@@ -1682,11 +1699,6 @@ class YellowPlugins
 	// Load plugins
 	function load($path = "")
 	{
-		if(count($this->yellow->config->config)==0) //TODO: remove later, backwards compability for old version
-		{
-			$this->yellow->load();
-			return;
-		}
 		$path = empty($path) ? $this->yellow->config->get("pluginDir") : $path;
 		foreach($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.php$/", true, false) as $entry)
 		{
@@ -2079,6 +2091,36 @@ class YellowText
 		$format = preg_replace("/(?<!\\\)l/", addcslashes($weekday, 'A..Za..z'), $format);
 		$format = preg_replace("/(?<!\\\)T/", addcslashes($timeZoneAbbreviation, 'A..Za..z'), $format);
 		return date($format, $timestamp);
+	}
+	
+	// Return human readable date, relative to today
+	function getDateRelative($timestamp, $format, $daysLimit)
+	{
+		$timeDifference = time() - $timestamp;
+		$days = abs(intval($timeDifference / 86400));
+		if($days<=$daysLimit || $daysLimit==0)
+		{
+			$tokens = preg_split("/\s*,\s*/", $this->get($timeDifference>=0 ? "datePast" : "dateFuture"));
+			if($days==0)
+			{
+				$output = $tokens[0];
+			} else if($days==1) {
+				$output = $tokens[1];
+			} else if($days>=2 && $days<=6) {
+				$output = preg_replace("/@x/i", $days, $tokens[2]);
+			} else if($days>=7 && $days<=13) {
+				$output = $tokens[3];
+			} else if($days>=14 && $days<=364) {
+				$output = preg_replace("/@x/i", intval($days/30), $tokens[4]);
+			} else if($days>=365 && $days<=729) {
+				$output = $tokens[5];
+			} else {
+				$output = preg_replace("/@x/i", intval($days/365.25), $tokens[6]);
+			}
+		} else {
+			$output = $this->getDateFormatted($timestamp, $format);
+		}
+		return $output;
 	}
 	
 	// Return languages
@@ -3058,32 +3100,6 @@ class YellowToolbox
 			if(!empty($path) && !is_dir($path)) @mkdir($path, 0777, true);
 		}
 		return @rename($fileNameSource, $fileNameDestination);
-	}
-	
-	// Merge file
-	function mergeFile($fileNameSource, $fileNameDestination)
-	{
-		$ok = false;
-		clearstatcache();
-		$fileHandleSource = @fopen($fileNameSource, "rb");
-		if($fileHandleSource)
-		{
-			$fileHandleDestination = @fopen($fileNameDestination, "ab");
-			if($fileHandleDestination)
-			{
-				while(true)
-				{
-					$dataBufferChunk = fread($fileHandleSource, 1024*64);
-					fwrite($fileHandleDestination, $dataBufferChunk);
-					if(feof($fileHandleSource) || $dataBufferChunk===false) break;
-				}
-				fclose($fileHandleDestination);
-				$ok = true;
-			}
-			fclose($fileHandleSource);
-			if($ok) @unlink($fileNameSource);
-		}
-		return $ok;
 	}
 	
 	// Delete file

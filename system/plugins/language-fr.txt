@@ -3,7 +3,7 @@
 Language: fr
 LanguageDescription: Français
 LanguageTranslator: Juh Nibreh
-LanguageVersion: 0.7.5
+LanguageVersion: 0.7.6
 
 BlogBy: par
 BlogFilter: Blog:
@@ -18,6 +18,8 @@ ContactStatusIncomplete: S'il vous plaît, veuillez remplir tous les champs.
 ContactStatusInvalid: S'il vous plaît, veuillez entrer une adresse email valide.
 ContactStatusDone: Votre message a bien été envoyé. Merci!
 ContactStatusError: Votre message n'a pas pu être envoyé, réessayez plus tard s'il vous plaît!
+DatePast: aujourd'hui, hier, il y a @x jours, il ya 1 mois, il y a @x mois, il y a 1 an, il y a @x ans
+DateFuture: bientôt, demain, dans @x jours, en 1 mois, dans @x mois, en 1 an, dans @x ans
 DateMonths: janvier, février, mars, avril, mai, juin, juillet, août, septembre, octobre, novembre, décembre
 DateWeekdays: lundi, mardi, mercredi, jeudi, vendredi, samedi, dimanche
 DateWeekstart: lundi
@@ -93,6 +95,7 @@ EditVersionStatusUpdates: Mises à jour disponibles, s'il vous plaît contacter 
 EditVersionUpdateNormal: Mises à jour disponibles, mettre à jour maintenant.
 EditVersionUpdateForce: Forcer mise à jour
 EditVersionUpdateModified: @software a été modifié
+EditUploadProgress: [Téléchargement du fichier…]
 EditOkButton: Ok
 EditCancelButton: Annuler
 EditCreateButton: Créer

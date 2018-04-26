@@ -3,7 +3,7 @@
 Language: en
 LanguageDescription: English
 LanguageTranslator: Mark Seuffert
-LanguageVersion: 0.7.5
+LanguageVersion: 0.7.6
 
 BlogBy: by
 BlogFilter: Blog:
@@ -18,6 +18,8 @@ ContactStatusIncomplete: Please fill out all fields.
 ContactStatusInvalid: Please enter a valid email.
 ContactStatusDone: You have sent an email. Thank you!
 ContactStatusError: Email could not be sent, please try again later!
+DatePast: today, yesterday, @x days ago, 1 month ago, @x months ago, 1 year ago, @x years ago
+DateFuture: soon, tomorrow, in @x days, in 1 month, in @x months, in 1 year, in @x years
 DateMonths: January, February, March, April, May, June, July, August, September, October, November, December
 DateWeekdays: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
 DateWeekstart: Monday
@@ -93,6 +95,7 @@ EditVersionStatusUpdates: Updates available, please contact the webmaster.
 EditVersionUpdateNormal: Updates available, update now.
 EditVersionUpdateForce: Force update
 EditVersionUpdateModified: @software has been modified
+EditUploadProgress: [Uploading file…]
 EditOkButton: Ok
 EditCancelButton: Cancel
 EditCreateButton: Create
