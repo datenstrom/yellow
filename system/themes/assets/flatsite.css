@@ -42,8 +42,8 @@ a:hover { color:#07d; text-decoration:underline; }
 .content img { max-width:100%; height:auto; }
 .content form { margin:1em 0; }
 .content table { border-spacing:0; border-collapse:collapse; }
-.content th { text-align:left; padding:0.3em; border-bottom:1px solid #ddd; }
-.content td { text-align:left; padding:0.3em; border-top:1px solid #ddd; }
+.content th { text-align:left; padding:0.3em; }
+.content td { text-align:left; padding:0.3em; border-top:1px solid #ddd; border-bottom:1px solid #ddd; }
 .content blockquote { margin-left:0; padding-left:1em; border-left:.5em solid #0a0; }
 .content blockquote blockquote { margin-left:-1.5em; border-left:.5em solid #fb0; }
 .content blockquote blockquote blockquote { border-color:#d00; }
