@@ -510,6 +510,7 @@ class YellowPage
 				rtrim($this->yellow->config->get("editLocation"), '/').$this->location));
 		} else {
 			$this->set("type", $this->yellow->toolbox->getFileType($this->fileName));
+			$this->set("group", $this->yellow->toolbox->getFileGroup($this->fileName, $this->yellow->config->get("mediaDir")));
 			$this->set("modified", date("Y-m-d H:i:s", $this->yellow->toolbox->getFileModified($this->fileName)));
 		}
 		if(!empty($pageError)) $this->set("pageError", $pageError);
@@ -2965,6 +2966,7 @@ class YellowToolbox
 			"html" => "text/html; charset=utf-8",
 			"ico" => "image/x-icon",
 			"js" => "application/javascript",
+			"json" => "application/json",
 			"jpg" => "image/jpeg",
 			"png" => "image/png",
 			"svg" => "image/svg+xml",
@@ -2980,6 +2982,19 @@ class YellowToolbox
 			$contentType = $contentTypes[$fileType];
 		}
 		return $contentType;
+	}
+	
+	// Return file type
+	function getFileType($fileName)
+	{
+		return strtoloweru(($pos = strrposu($fileName, '.')) ? substru($fileName, $pos+1) : "");
+	}
+	
+	// Return file group
+	function getFileGroup($fileName, $path)
+	{
+		preg_match("#^$path(.+?)\/#", $fileName, $matches);
+		return strtoloweru($matches[1]);
 	}
 	
 	// Return number of bytes
@@ -3159,12 +3174,6 @@ class YellowToolbox
 	function getFileModified($fileName)
 	{
 		return is_file($fileName) ? filemtime($fileName) : 0;
-	}
-	
-	// Return file type
-	function getFileType($fileName)
-	{
-		return strtoloweru(($pos = strrposu($fileName, '.')) ? substru($fileName, $pos+1) : "");
 	}
 	
 	// Return lines from text string, including newline
