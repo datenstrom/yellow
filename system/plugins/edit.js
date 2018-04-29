@@ -9,6 +9,8 @@ var yellow =
 	onClickAction: function(e) { yellow.edit.clickAction(e); },
 	onClick: function(e) { yellow.edit.click(e); },
 	onKeydown: function(e) { yellow.edit.keydown(e); },
+	onDrag: function(e) { yellow.edit.drag(e); },
+	onDrop: function(e) { yellow.edit.drop(e); },
 	onUpdate: function() { yellow.edit.updatePane(yellow.edit.paneId, yellow.edit.paneAction, yellow.edit.paneStatus); },
 	onResize: function() { yellow.edit.resizePane(yellow.edit.paneId, yellow.edit.paneAction, yellow.edit.paneStatus); }
 };
@@ -92,6 +94,23 @@ yellow.edit =
 		if(this.paneId && e.keyCode==27) this.hidePane(this.paneId);
 	},
 	
+	// Handle drag
+	drag: function(e)
+	{
+		e.stopPropagation();
+		e.preventDefault();
+	},
+	
+	// Handle drop
+	drop: function(e)
+	{
+		e.stopPropagation();
+		e.preventDefault();
+		var elementText = document.getElementById("yellow-pane-edit-text");
+		var files = e.dataTransfer ? e.dataTransfer.files : e.target.files;
+		for(var i=0; i<files.length; i++) this.uploadFile(elementText, files[i]);
+	},
+	
 	// Create bar
 	createBar: function(barId)
 	{
@@ -136,6 +155,9 @@ yellow.edit =
 		if(paneId=="yellow-pane-edit")
 		{
 			yellow.toolbox.addEvent(elementPane, "input", yellow.onUpdate);
+			yellow.toolbox.addEvent(elementPane, "dragenter", yellow.onDrag);
+			yellow.toolbox.addEvent(elementPane, "dragover", yellow.onDrag);
+			yellow.toolbox.addEvent(elementPane, "drop", yellow.onDrop);
 		}
 		if(paneId=="yellow-pane-edit" || paneId=="yellow-pane-user")
 		{
@@ -568,9 +590,9 @@ yellow.edit =
 				case "ol":			yellow.editor.setMarkdown(elementText, "1. ", "insert-multiline-block", true); break;
 				case "tl":			yellow.editor.setMarkdown(elementText, "- [ ] ", "insert-multiline-block", true); break;
 				case "link":		yellow.editor.setMarkdown(elementText, "[link](url)", "insert", false, yellow.editor.getMarkdownLink); break;
-				case "file":		yellow.editor.setMarkdown(elementText, "[image picture.jpg]", "insert"); break;
 				case "text":		yellow.editor.setMarkdown(elementText, args, "insert"); break;
 				case "draft":		yellow.editor.setMetaData(elementText, "status", "draft", true); break;
+				case "file":		this.showFileDialog(); break;
 				case "undo":		yellow.editor.undo(); break;
 				case "redo":		yellow.editor.redo(); break;
 			}
@@ -720,23 +742,23 @@ yellow.edit =
 			formData.append("rawdataendofline", yellow.page.rawDataEndOfLine);
 			var request = new XMLHttpRequest();
 			request.open("POST", window.location.pathname, true);
-			request.onload = function() { if(this.status==200) thisObject.updatePreview.call(thisObject, elementText, elementPreview, this.responseText); };
+			request.onload = function() { if(this.status==200) thisObject.showPreviewDone.call(thisObject, elementText, elementPreview, this.responseText); };
 			request.send(formData);
 		} else {
-			this.updatePreview(elementText, elementPreview, "");
+			this.showPreviewDone(elementText, elementPreview, "");
 		}
 	},
 	
-	// Update preview
-	updatePreview: function(elementText, elementPreview, string)
+	// Preview done
+	showPreviewDone: function(elementText, elementPreview, responseText)
 	{
-		var showPreview = string.length!=0;
+		var showPreview = responseText.length!=0;
 		yellow.toolbox.setVisible(elementText, !showPreview);
 		yellow.toolbox.setVisible(elementPreview, showPreview);
 		if(showPreview)
 		{
 			this.updateToolbar("preview", "yellow-toolbar-checked");
-			elementPreview.innerHTML = string;
+			elementPreview.innerHTML = responseText;
 			dispatchEvent(new Event("load"));
 		} else {
 			this.updateToolbar(0, "yellow-toolbar-checked");
@@ -744,6 +766,68 @@ yellow.edit =
 		}
 	},
 	
+	// Show file dialog and trigger upload
+	showFileDialog: function()
+	{
+		var element = document.createElement("input");
+		element.setAttribute("id", "yellow-file-dialog");
+		element.setAttribute("type", "file");
+		element.setAttribute("accept", yellow.config.editUploadExtensions);
+		element.setAttribute("multiple", "multiple");
+		yellow.toolbox.addEvent(element, "change", yellow.onDrop);
+		element.click();
+	},
+	
+	// Upload file
+	uploadFile: function(elementText, file)
+	{
+		var extension = (file.name.lastIndexOf(".")!=-1 ? file.name.substring(file.name.lastIndexOf("."), file.name.length) : "").toLowerCase();
+		var extensions = yellow.config.editUploadExtensions.split(/\s*,\s*/);
+		if(file.size<=yellow.config.serverFileSizeMax && extensions.indexOf(extension)!=-1)
+		{
+			var text = this.getText("UploadProgress");
+			yellow.editor.setMarkdown(elementText, text, "insert");
+			var thisObject = this;
+			var formData = new FormData();
+			formData.append("action", "upload");
+			formData.append("file", file);
+			var request = new XMLHttpRequest();
+			request.open("POST", window.location.pathname, true);
+			request.onload = function() { if(this.status==200) { thisObject.uploadFileDone.call(thisObject, elementText, this.responseText); } else { thisObject.uploadFileError.call(thisObject, elementText, this.responseText); } };
+			request.send(formData);
+		}
+	},
+	
+	// Upload done
+	uploadFileDone: function(elementText, responseText)
+	{
+		var result = JSON.parse(responseText);
+		if(result)
+		{
+			var textOld = this.getText("UploadProgress");
+			var textNew;
+			if(result.location.substring(0, yellow.config.imageLocation.length)==yellow.config.imageLocation)
+			{
+				textNew = "[image "+result.location.substring(yellow.config.imageLocation.length)+"]";
+			} else {
+				textNew = "[link]("+result.location+")";
+			}
+			yellow.editor.replace(elementText, textOld, textNew);
+		}
+	},
+	
+	// Upload error
+	uploadFileError: function(elementText, responseText)
+	{
+		var result = JSON.parse(responseText);
+		if(result)
+		{
+			var textOld = this.getText("UploadProgress");
+			var textNew = "["+result.error+"]";
+			yellow.editor.replace(elementText, textOld, textNew);
+		}
+	},
+
 	// Bind actions to links
 	bindActions: function(element)
 	{
@@ -1044,6 +1128,31 @@ yellow.editor =
 			}
 		}
 		return { "text":text, "value":value, "start":start, "end":end, "top":top, "bottom":bottom, "found":found };
+	},
+	
+	// Replace text
+	replace: function(element, textOld, textNew)
+	{
+		var text = element.value;
+		var selectionStart = element.selectionStart;
+		var selectionEnd = element.selectionEnd;
+		var selectionStartFound = text.indexOf(textOld);
+		var selectionEndFound = selectionStartFound + textOld.length;
+		if(selectionStartFound!=-1)
+		{
+			var selectionStartNew = selectionStart<selectionStartFound ? selectionStart : selectionStart+textNew.length-textOld.length;
+			var selectionEndNew = selectionEnd<selectionEndFound ? selectionEnd : selectionEnd+textNew.length-textOld.length;
+			var textBefore = text.substring(0, selectionStartFound);
+			var textAfter = text.substring(selectionEndFound, text.length);
+			if(textOld!=textNew)
+			{
+				element.focus();
+				element.setSelectionRange(selectionStartFound, selectionEndFound);
+				document.execCommand("insertText", false, textNew);
+				element.value = textBefore + textNew + textAfter;
+				element.setSelectionRange(selectionStartNew, selectionEndNew);
+			}
+		}
 	},
 	
 	// Undo changes

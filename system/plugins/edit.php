@@ -5,7 +5,7 @@
 
 class YellowEdit
 {
-	const VERSION = "0.7.11";
+	const VERSION = "0.7.12";
 	var $yellow;			//access to API
 	var $response;			//web response
 	var $users;				//user accounts
@@ -19,6 +19,8 @@ class YellowEdit
 		$this->users = new YellowUsers($yellow);
 		$this->merge = new YellowMerge($yellow);
 		$this->yellow->config->setDefault("editLocation", "/edit/");
+		$this->yellow->config->setDefault("editUploadNewLocation", "/media/@group/@filename");
+		$this->yellow->config->setDefault("editUploadExtensions", ".gif, .jpg, .pdf, .png, .svg, .tgz, .zip");
 		$this->yellow->config->setDefault("editKeyboardShortcuts", "ctrl+b bold, ctrl+i italic, ctrl+e code, ctrl+k link, ctrl+s save, ctrl+shift+p preview");
 		$this->yellow->config->setDefault("editToolbarButtons", "auto");
 		$this->yellow->config->setDefault("editEndOfLine", "auto");
@@ -208,6 +210,7 @@ class YellowEdit
 				case "edit":		$statusCode = $this->processRequestEdit($scheme, $address, $base, $location, $fileName); break;
 				case "delete":		$statusCode = $this->processRequestDelete($scheme, $address, $base, $location, $fileName); break;
 				case "preview":		$statusCode = $this->processRequestPreview($scheme, $address, $base, $location, $fileName); break;
+				case "upload":		$statusCode = $this->processRequestUpload($scheme, $address, $base, $location, $fileName); break;
 			}
 		} else {
 			$this->yellow->lookup->requestHandler = "core";
@@ -713,6 +716,32 @@ class YellowEdit
 		return $statusCode;
 	}
 	
+	// Process request to upload file
+	function processRequestUpload($scheme, $address, $base, $location, $fileName)
+	{
+		$data = array();
+		$fileNameTemp = $_FILES["file"]["tmp_name"];
+		$fileNameShort = preg_replace("/[^\pL\d\-\.]/u", "-", basename($_FILES["file"]["name"]));
+		$fileSizeMax = $this->yellow->toolbox->getNumberBytes(ini_get("upload_max_filesize"));
+		$extension = strtoloweru(($pos = strrposu($fileNameShort, '.')) ? substru($fileNameShort, $pos) : "");
+		$extensions = preg_split("/\s*,\s*/", $this->yellow->config->get("editUploadExtensions"));
+		if(!$this->response->isUserRestrictions() && is_uploaded_file($fileNameTemp) &&
+		   filesize($fileNameTemp)<=$fileSizeMax && in_array($extension, $extensions))
+		{
+			$file = $this->response->getFileUpload($scheme, $address, $base, $location, $fileNameTemp, $fileNameShort);
+			if(!$file->isError() && $this->yellow->toolbox->renameFile($fileNameTemp, $file->fileName, true))
+			{
+				$data["location"] = $file->getLocation();
+			} else {
+				$data["error"] = "Can't write file '$file->fileName'!";
+			}
+		} else {
+			$data["error"] = "Can't write file '$fileNameShort'!";
+		}
+		$statusCode = $this->yellow->sendData(is_null($data["error"]) ? 200 : 500, json_encode($data), "a.json", false);
+		return $statusCode;
+	}
+	
 	// Check request
 	function checkRequest($location)
 	{
@@ -868,13 +897,13 @@ class YellowResponse
 		$this->editContentFile($page, "create");
 		if($this->yellow->lookup->isFileLocation($location) || $this->yellow->pages->find($page->location))
 		{
-			$page->location = $this->getLocationNew($page->rawData, $page->location, $page->get("pageNewLocation"));
+			$page->location = $this->getPageNewLocation($page->rawData, $page->location, $page->get("pageNewLocation"));
 			$page->fileName = $this->yellow->lookup->findFileNew($page->location, $page->get("published"));
 			while($this->yellow->pages->find($page->location) || empty($page->fileName))
 			{
 				$rawData = $this->yellow->toolbox->setMetaData($page->rawData, "title", $this->getTitleNext($page->rawData));
 				$page->rawData = $this->normaliseLines($rawData, $endOfLine);
-				$page->location = $this->getLocationNew($page->rawData, $page->location, $page->get("pageNewLocation"));
+				$page->location = $this->getPageNewLocation($page->rawData, $page->location, $page->get("pageNewLocation"));
 				$page->fileName = $this->yellow->lookup->findFileNew($page->location, $page->get("published"));
 				if(++$pageCounter>999) break;
 			}
@@ -912,7 +941,7 @@ class YellowResponse
 			if(substrb($pageSource->rawData, 0, $pageSource->metaDataOffsetBytes) !=
 			   substrb($page->rawData, 0, $page->metaDataOffsetBytes))
 			{
-				$page->location = $this->getLocationNew($page->rawData, $page->location, $page->get("pageNewLocation"));
+				$page->location = $this->getPageNewLocation($page->rawData, $page->location, $page->get("pageNewLocation"));
 				$page->fileName = $this->yellow->lookup->findFileNew($page->location, $page->get("published"));
 				if($page->location!=$pageSource->location)
 				{
@@ -965,6 +994,27 @@ class YellowResponse
 		$page->setOutput($output);
 		return $page;
 	}
+	
+	// Return uploaded file
+	function getFileUpload($scheme, $address, $base, $pageLocation, $fileNameTemp, $fileNameShort)
+	{
+		$file = new YellowPage($this->yellow);
+		$file->setRequestInformation($scheme, $address, $base, "/".$fileNameTemp, $fileNameTemp);
+		$file->parseData(null, false, 0);
+		$file->set("fileNameShort", $fileNameShort);
+		$this->editMediaFile($file, "upload");
+		$file->location = $this->getFileNewLocation($fileNameShort, $pageLocation, $file->get("fileNewLocation"));
+		$file->fileName = substru($file->location, 1);
+		while(is_file($file->fileName))
+		{
+			$fileNameShort = $this->getFileNext(basename($file->fileName));
+			$file->location = $this->getFileNewLocation($fileNameShort, $pageLocation, $file->get("fileNewLocation"));
+			$file->fileName = substru($file->location, 1);
+			if(++$fileCounter>999) break;
+		}
+		if(is_file($file->fileName)) $file->error(500, "File '".$file->get("fileNameShort")."' is not possible!");
+		return $file;
+	}
 
 	// Return page data including login information
 	function getPageData()
@@ -1007,6 +1057,7 @@ class YellowResponse
 			$data["serverScheme"] = $this->yellow->config->get("serverScheme");
 			$data["serverAddress"] = $this->yellow->config->get("serverAddress");
 			$data["serverBase"] = $this->yellow->config->get("serverBase");
+			$data["serverFileSizeMax"] = $this->yellow->toolbox->getNumberBytes(ini_get("upload_max_filesize"));
 			$data["serverVersion"] = "Datenstrom Yellow ".YellowCore::VERSION;
 			$data["serverPlugins"] = array();
 			foreach($this->yellow->plugins->plugins as $key=>$value)
@@ -1018,6 +1069,7 @@ class YellowResponse
 			{
 				$data["serverLanguages"][$language] = $this->yellow->text->getTextHtml("languageDescription", $language);
 			}
+			$data["editUploadExtensions"] = $this->yellow->config->get("editUploadExtensions");
 			$data["editKeyboardShortcuts"] = $this->yellow->config->get("editKeyboardShortcuts");
 			$data["editToolbarButtons"] = $this->getToolbarButtons("edit");
 			$data["emojiawesomeToolbarButtons"] =  $this->getToolbarButtons("emojiawesome");
@@ -1117,17 +1169,17 @@ class YellowResponse
 	}
 	
 	// Return location for new/modified page
-	function getLocationNew($rawData, $pageLocation, $pageNewLocation)
+	function getPageNewLocation($rawData, $pageLocation, $pageNewLocation)
 	{
 		$location = empty($pageNewLocation) ? "@title" : $pageNewLocation;
-		$location = preg_replace("/@timestamp/i", $this->getLocationDataNew($rawData, "published", true, "U"), $location);
-		$location = preg_replace("/@date/i", $this->getLocationDataNew($rawData, "published", true, "Y-m-d"), $location);
-		$location = preg_replace("/@year/i", $this->getLocationDataNew($rawData, "published", true, "Y"), $location);
-		$location = preg_replace("/@month/i", $this->getLocationDataNew($rawData, "published", true, "m"), $location);
-		$location = preg_replace("/@day/i", $this->getLocationDataNew($rawData, "published", true, "d"), $location);
-		$location = preg_replace("/@tag/i", $this->getLocationDataNew($rawData, "tag", true), $location);
-		$location = preg_replace("/@author/i", $this->getLocationDataNew($rawData, "author", true), $location);
-		$location = preg_replace("/@title/i", $this->getLocationDataNew($rawData, "title"), $location);
+		$location = preg_replace("/@timestamp/i", $this->getPageNewData($rawData, "published", true, "U"), $location);
+		$location = preg_replace("/@date/i", $this->getPageNewData($rawData, "published", true, "Y-m-d"), $location);
+		$location = preg_replace("/@year/i", $this->getPageNewData($rawData, "published", true, "Y"), $location);
+		$location = preg_replace("/@month/i", $this->getPageNewData($rawData, "published", true, "m"), $location);
+		$location = preg_replace("/@day/i", $this->getPageNewData($rawData, "published", true, "d"), $location);
+		$location = preg_replace("/@tag/i", $this->getPageNewData($rawData, "tag", true), $location);
+		$location = preg_replace("/@author/i", $this->getPageNewData($rawData, "author", true), $location);
+		$location = preg_replace("/@title/i", $this->getPageNewData($rawData, "title"), $location);
 		if(!preg_match("/^\//", $location))
 		{
 			$location = $this->yellow->lookup->getDirectoryLocation($pageLocation).$location;
@@ -1135,8 +1187,8 @@ class YellowResponse
 		return $location;
 	}
 	
-	// Return location data for new/modified page
-	function getLocationDataNew($rawData, $key, $filterFirst = false, $dateFormat = "")
+	// Return data for new/modified page
+	function getPageNewData($rawData, $key, $filterFirst = false, $dateFormat = "")
 	{
 		$value = $this->yellow->toolbox->getMetaData($rawData, $key);
 		if($filterFirst && preg_match("/^(.*?)\,(.*)$/", $value, $matches)) $value = $matches[1];
@@ -1145,14 +1197,58 @@ class YellowResponse
 		$value = $this->yellow->lookup->normaliseName($value, true, false, true);
 		return trim(preg_replace("/-+/", "-", $value), "-");
 	}
+
+	// Return location for new file
+	function getFileNewLocation($fileNameShort, $pageLocation, $fileNewLocation)
+	{
+		$location = empty($fileNewLocation) ? $this->yellow->config->get("editUploadNewLocation") : $fileNewLocation;
+		$location = preg_replace("/@timestamp/i", time(), $location);
+		$location = preg_replace("/@type/i", $this->yellow->toolbox->getFileType($fileNameShort), $location);
+		$location = preg_replace("/@group/i", $this->getFileNewGroup($fileNameShort), $location);
+		$location = preg_replace("/@folder/i", $this->getFileNewFolder($pageLocation), $location);
+		$location = preg_replace("/@filename/i", strtoloweru($fileNameShort), $location);
+		if(!preg_match("/^\//", $location))
+		{
+			$location = $this->yellow->config->get("mediaLocation").$location;
+		}
+		return $location;
+	}
 	
-	// Return title for next page
+	// Return group for new file
+	function getFileNewGroup($fileNameShort)
+	{
+		$path = $this->yellow->config->get("mediaDir");
+		$fileType = $this->yellow->toolbox->getFileType($fileNameShort);
+		$fileName = $this->yellow->config->get(preg_match("/(gif|jpg|png|svg)$/", $fileType) ? "imageDir" : "downloadDir").$fileNameShort;
+		preg_match("#^$path(.+?)\/#", $fileName, $matches);
+		return strtoloweru($matches[1]);
+	}
+
+	// Return folder for new file
+	function getFileNewFolder($pageLocation)
+	{
+		$parentTopLocation = $this->yellow->pages->getParentTopLocation($pageLocation);
+		if($parentTopLocation==$this->yellow->pages->getHomeLocation($pageLocation)) $parentTopLocation .= "home";
+		return strtoloweru(trim($parentTopLocation, '/'));
+	}
+	
+	// Return next title
 	function getTitleNext($rawData)
 	{
 		preg_match("/^(.*?)(\d*)$/", $this->yellow->toolbox->getMetaData($rawData, "title"), $matches);
 		$titleText = $matches[1];
 		$titleNumber = strempty($matches[2]) ? " 2" : $matches[2]+1;
 		return $titleText.$titleNumber;
+	}
+	
+	// Return next file name
+	function getFileNext($fileNameShort)
+	{
+		preg_match("/^(.*?)(\d*)(\..*?)?$/", $fileNameShort, $matches);
+		$fileText = $matches[1];
+		$fileNumber = strempty($matches[2]) ? "-2" : $matches[2]+1;
+		$fileExtension = $matches[3];
+		return $fileText.$fileNumber.$fileExtension;
 	}
 
 	// Normalise text lines, convert line endings
@@ -1222,7 +1318,7 @@ class YellowResponse
 		return mail($mailTo, $mailSubject, $mailMessage, $mailHeaders);
 	}
 	
-	// Edit content file
+	// Change content file
 	function editContentFile($page, $action)
 	{
 		if(!$page->isError())
@@ -1230,6 +1326,18 @@ class YellowResponse
 			foreach($this->yellow->plugins->plugins as $key=>$value)
 			{
 				if(method_exists($value["obj"], "onEditContentFile")) $value["obj"]->onEditContentFile($page, $action);
+			}
+		}
+	}
+
+	// Change media file
+	function editMediaFile($file, $action)
+	{
+		if(!$file->isError())
+		{
+			foreach($this->yellow->plugins->plugins as $key=>$value)
+			{
+				if(method_exists($value["obj"], "onEditMediaFile")) $value["obj"]->onEditMediaFile($file, $action);
 			}
 		}
 	}
@@ -1288,7 +1396,6 @@ class YellowUsers
 			if(!empty($matches[1]) && !empty($matches[2]))
 			{
 				list($hash, $name, $language, $status, $modified, $errors, $pending, $home) = explode(',', $matches[2]);
-				if($errors=="none") { $home=$pending; $pending=$errors; $errors="0"; } //TODO: remove later, converts old file format
 				$this->set($matches[1], $hash, $name, $language, $status, $modified, $errors, $pending, $home);
 				if(defined("DEBUG") && DEBUG>=3) echo "YellowUsers::load email:$matches[1]<br/>\n";
 			}
@@ -1305,7 +1412,6 @@ class YellowUsers
 			if(!empty($matches[1]) && !empty($matches[2]))
 			{
 				list($hash, $name, $language, $status, $modified, $errors, $pending, $home) = explode(',', $matches[2]);
-				if($errors=="none") { $home=$pending; $pending=$errors; $errors="0"; } //TODO: remove later, converts old file format
 				if($status=="active" || $status=="inactive")
 				{
 					$pending = "none";
