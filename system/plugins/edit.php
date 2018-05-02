@@ -5,7 +5,7 @@
 
 class YellowEdit
 {
-	const VERSION = "0.7.12";
+	const VERSION = "0.7.13";
 	var $yellow;			//access to API
 	var $response;			//web response
 	var $users;				//user accounts
@@ -30,8 +30,6 @@ class YellowEdit
 		$this->yellow->config->setDefault("editUserHashCost", "10");
 		$this->yellow->config->setDefault("editUserStatus", "active");
 		$this->yellow->config->setDefault("editUserHome", "/");
-		$this->yellow->config->setDefault("editLoginEmail", "");
-		$this->yellow->config->setDefault("editLoginPassword", "");
 		$this->yellow->config->setDefault("editLoginRestrictions", "0");
 		$this->yellow->config->setDefault("editLoginSessionTimeout", "31536000");
 		$this->yellow->config->setDefault("editBruteForceProtection", "25");
@@ -1075,8 +1073,8 @@ class YellowResponse
 			$data["emojiawesomeToolbarButtons"] =  $this->getToolbarButtons("emojiawesome");
 			$data["fontawesomeToolbarButtons"] =  $this->getToolbarButtons("fontawesome");
 		} else {
-			$data["editLoginEmail"] = $this->yellow->config->get("editLoginEmail");
-			$data["editLoginPassword"] = $this->yellow->config->get("editLoginPassword");
+			$data["editLoginEmail"] = $this->yellow->page->get("editLoginEmail");
+			$data["editLoginPassword"] = $this->yellow->page->get("editLoginPassword");
 			$data["editLoginRestrictions"] = intval($this->isLoginRestrictions());
 		}
 		if(defined("DEBUG") && DEBUG>=1) $data["debug"] = DEBUG;
