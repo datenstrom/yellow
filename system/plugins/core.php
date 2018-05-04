@@ -3193,6 +3193,14 @@ class YellowToolbox
 		foreach($tokens as $key=>$value) if($value==$optional) $tokens[$key] = "";
 		return $tokens;
 	}
+
+	// Return number of words in text string
+	function getTextWords($text)
+	{
+		$text = preg_replace("/([\p{Han}\p{Hiragana}\p{Katakana}]{3})/u", "$1 ", $text);
+		$text = preg_replace("/(\pL|\p{N})/u", "x", $text);
+		return str_word_count($text);
+	}
 	
 	// Create description from text string
 	function createTextDescription($text, $lengthMax = 0, $removeHtml = true, $endMarker = "", $endMarkerText = "")
