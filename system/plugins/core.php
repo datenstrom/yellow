@@ -2107,11 +2107,11 @@ class YellowText
 				$output = $tokens[0];
 			} else if($days==1) {
 				$output = $tokens[1];
-			} else if($days>=2 && $days<=6) {
+			} else if($days>=2 && $days<=29) {
 				$output = preg_replace("/@x/i", $days, $tokens[2]);
-			} else if($days>=7 && $days<=13) {
+			} else if($days>=30 && $days<=59) {
 				$output = $tokens[3];
-			} else if($days>=14 && $days<=364) {
+			} else if($days>=60 && $days<=364) {
 				$output = preg_replace("/@x/i", intval($days/30), $tokens[4]);
 			} else if($days>=365 && $days<=729) {
 				$output = $tokens[5];
