@@ -3357,8 +3357,14 @@ class YellowToolbox
 							}
 							break;
 		}
-		$ok = !empty($hashCalculated) && strlenb($hashCalculated)==strlenb($hash);
-		if($ok) for($i=0; $i<strlenb($hashCalculated); ++$i) $ok &= $hashCalculated[$i]==$hash[$i];
+		return $this->verifyToken($hashCalculated, $hash);
+	}
+	
+	// Verify that text is identical, timing attack safe text string comparison
+	function verifyToken($text1, $text2)
+	{
+		$ok = !empty($text1) && strlenb($text1)==strlenb($text2);
+		if($ok) for($i=0; $i<strlenb($text1); ++$i) $ok &= $text1[$i]==$text2[$i];
 		return $ok;
 	}
 	
