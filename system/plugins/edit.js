@@ -244,6 +244,7 @@ yellow.edit =
 				"<div id=\"yellow-pane-settings-status\" class=\""+paneStatus+"\">"+this.getText(paneAction+"Status", "", paneStatus)+"</div>"+
 				"<div id=\"yellow-pane-settings-fields\">"+
 				"<input type=\"hidden\" name=\"action\" value=\"settings\" />"+
+				"<input type=\"hidden\" name=\"csrftoken\" value=\""+yellow.toolbox.encodeHtml(this.getCookie("csrftoken"))+"\" />"+
 				"<p><label for=\"yellow-pane-settings-name\">"+this.getText("SignupName")+"</label><br /><input class=\"yellow-form-control\" name=\"name\" id=\"yellow-pane-settings-name\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("name"))+"\" /></p>"+
 				"<p><label for=\"yellow-pane-settings-email\">"+this.getText("SignupEmail")+"</label><br /><input class=\"yellow-form-control\" name=\"email\" id=\"yellow-pane-settings-email\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("email"))+"\" /></p>"+
 				"<p><label for=\"yellow-pane-settings-password\">"+this.getText("SignupPassword")+"</label><br /><input class=\"yellow-form-control\" type=\"password\" name=\"password\" id=\"yellow-pane-settings-password\" maxlength=\"64\" value=\"\" /></p>"+rawDataLanguages+
@@ -517,7 +518,7 @@ yellow.edit =
 	sendPane: function(paneId, paneAction, paneStatus, paneArgs)
 	{
 		if(yellow.config.debug) console.log("yellow.edit.sendPane id:"+paneId);
-		var args = { "action":paneAction };
+		var args = { "action":paneAction, "csrftoken":this.getCookie("csrftoken") };
 		if(paneId=="yellow-pane-edit")
 		{
 			args.action = this.getAction(paneId, paneAction);
@@ -738,6 +739,7 @@ yellow.edit =
 			var thisObject = this;
 			var formData = new FormData();
 			formData.append("action", "preview");
+			formData.append("csrftoken", this.getCookie("csrftoken"));
 			formData.append("rawdataedit", elementText.value);
 			formData.append("rawdataendofline", yellow.page.rawDataEndOfLine);
 			var request = new XMLHttpRequest();
@@ -790,6 +792,7 @@ yellow.edit =
 			var thisObject = this;
 			var formData = new FormData();
 			formData.append("action", "upload");
+			formData.append("csrftoken", this.getCookie("csrftoken"));
 			formData.append("file", file);
 			var request = new XMLHttpRequest();
 			request.open("POST", window.location.pathname, true);
@@ -872,7 +875,13 @@ yellow.edit =
 		key = prefix + yellow.toolbox.toUpperFirst(key) + yellow.toolbox.toUpperFirst(postfix);
 		return (key in yellow.text) ? yellow.text[key] : "["+key+"]";
 	},
-	
+
+	// Return cookie string
+	getCookie: function(name)
+	{
+		return yellow.toolbox.getCookie(name);
+	},
+
 	// Check if plugin exists
 	isPlugin: function(name)
 	{
@@ -1391,6 +1400,13 @@ yellow.toolbox =
 		for(var i=0; i<lines.length; i++) lines[i] = lines[i]+"\n";
 		if(string.length==0 || string.charAt(string.length-1)=="\n") lines.pop();
 		return lines;
+	},
+	
+	// Return cookie string
+	getCookie: function(name)
+	{
+		var matches = document.cookie.match("(^|; )"+name+"=([^;]+)");
+		return matches ? unescape(matches[2]) : "";
 	},
 	
 	// Encode HTML special characters

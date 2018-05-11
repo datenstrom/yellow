@@ -3351,7 +3351,7 @@ class YellowToolbox
 							break;
 			case "sha256":	if(substrb($hash, 0, 4)=="$5y$")
 							{
-								$prefix = substrb($hash, 0, 4);
+								$prefix = "$5y$";
 								$salt = substrb($hash, 4, 32);
 								$hashCalculated = "$prefix$salt".hash("sha256", $salt.$text);
 							}
