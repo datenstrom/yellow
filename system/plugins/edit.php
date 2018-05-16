@@ -1512,7 +1512,8 @@ class YellowUsers
 	// Create authentication token
 	function createAuthToken($email)
 	{
-		$session = $this->createSession($email);
+		$session = $this->yellow->toolbox->createHash($this->users[$email]["hash"], "sha256");
+		if(empty($session)) $session = "padd"."error-hash-algorithm-sha256";
 		return substru($session, 4).$this->getStamp($email);
 	}
 	
@@ -1520,14 +1521,6 @@ class YellowUsers
 	function createCsrfToken()
 	{
 		return $this->yellow->toolbox->createSalt(64);
-	}
-	
-	// Create user session
-	function createSession($email)
-	{
-		$session = $this->yellow->toolbox->createHash($this->users[$email]["hash"], "sha256");
-		if(empty($session)) $session = "error-hash-algorithm-sha256";
-		return $session;
 	}
 	
 	// Create user stamp
@@ -1664,11 +1657,17 @@ class YellowUsers
 		return $data;
 	}
 	
-	// Verify that text is identical, timing attack safe text string comparison
-	function verifyToken($text1, $text2) //TODO: remove later, use directly from core after next release
+	// Verify that token is not empty and identical, timing attack safe text string comparison
+	function verifyToken($tokenExpected, $tokenReceived) //TODO: remove later, use directly from core after next release
 	{
-		$ok = !empty($text1) && strlenb($text1)==strlenb($text2);
-		if($ok) for($i=0; $i<strlenb($text1); ++$i) $ok &= $text1[$i]==$text2[$i];
+		$ok = false;
+		$lengthExpected = strlenb($tokenExpected);
+		$lengthReceived = strlenb($tokenReceived);
+		if($lengthExpected!=0 && $lengthReceived!=0)
+		{
+			$ok = $lengthExpected==$lengthReceived;
+			for($i=0; $i<$lengthReceived; ++$i) $ok &= $tokenExpected[$i<$lengthExpected ? $i : 0]==$tokenReceived[$i];
+		}
 		return $ok;
 	}
 	
