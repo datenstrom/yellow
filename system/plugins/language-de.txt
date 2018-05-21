@@ -3,7 +3,7 @@
 Language: de
 LanguageDescription: Deutsch
 LanguageTranslator: David Fehrmann
-LanguageVersion: 0.7.6
+LanguageVersion: 0.7.7
 
 BlogBy: von
 BlogFilter: Blog:
@@ -33,7 +33,7 @@ EditInstallationAboutPage: Diese Webseite ist erstellt mit [Datenstrom Yellow](h
 EditLoginTitle: Willkommen
 EditLoginEmail: E-Mail:
 EditLoginPassword: Kennwort:
-EditLoginRecover: Kennwort vergessen?
+EditLoginForgot: Kennwort vergessen?
 EditLoginSignup: Benutzerkonto erstellen?
 EditLoginButton: Anmelden
 EditSignupTitle: Benutzerkonto erstellen
@@ -46,14 +46,15 @@ EditSignupStatusIncomplete: Bitte alle Felder ausfüllen.
 EditSignupStatusInvalid: Bitte eine gültige E-Mail angeben.
 EditSignupStatusWeak: Bitte ein anderes Kennwort angeben.
 EditSignupStatusNext: Benutzerkonto wird erstellt, bitte überprüfe deine E-Mails.
+EditForgotTitle: Kennwort vergessen
+EditForgotEmail: E-Mail:
+EditForgotStatusNone: Kein Problem, du kannst ein neues Kennwort erstellen.
+EditForgotStatusInvalid: Bitte eine gültige E-Mail angeben.
+EditForgotStatusNext: Benutzerkonto wird wiederhergestellt, bitte überprüfe deine E-Mails.
 EditRecoverTitle: Kennwort vergessen
-EditRecoverEmail: E-Mail:
 EditRecoverPassword: Kennwort:
-EditRecoverStatusNone: Kein Problem, du kannst ein neues Kennwort erstellen.
-EditRecoverStatusInvalid: Bitte eine gültige E-Mail angeben.
 EditRecoverStatusPassword: Bitte ein neues Kennwort angeben.
 EditRecoverStatusWeak: Bitte ein anderes Kennwort angeben.
-EditRecoverStatusNext: Benutzerkonto wird wiederhergestellt, bitte überprüfe deine E-Mails.
 EditSettingsTitle: Einstellungen
 EditSettingsStatusInvalid: Bitte eine gültige E-Mail angeben.
 EditSettingsStatusTaken: Bitte eine andere E-Mail angeben.
@@ -62,27 +63,21 @@ EditSettingsStatusNext: Benutzerkonto wird geändert, bitte überprüfe deine E-
 EditConfirmSubject: Benutzerkonto bestätigen
 EditConfirmMessage: Hallo @usershort, bitte bestätige dein Benutzerkonto. Klicke auf den folgenden Link.
 EditConfirmStatusDone: Benutzerkonto wurde bestätigt und wartet auf Genehmigung. Vielen Dank!
-EditConfirmStatusExpired: Benutzerkonto kann nicht bestätigt werden. Link ist abgelaufen!
 EditApproveSubject: Benutzerkonto genehmigen
 EditApproveMessage: Hallo @usershort, bitte genehmige ein neues Benutzerkonto für @useraccount. Klicke auf den folgenden Link.
 EditApproveStatusDone: Benutzerkonto wurde genehmigt. Vielen Dank!
-EditApproveStatusExpired: Benutzerkonto kann nicht genehmigt werden. Link ist abgelaufen!
 EditReactivateSubject: Benutzerkonto reaktivieren
 EditReactivateMessage: Hallo @usershort, bitte reaktiviere dein Benutzerkonto. Es gab zu viele fehlgeschlagene Anmeldeversuche. Klicke auf den folgenden Link.
 EditReactivateStatusDone: Benutzerkonto wurde reaktiviert. Vielen Dank!
-EditReactivateStatusExpired: Benutzerkonto kann nicht reaktiviert werden. Link ist abgelaufen!
 EditRecoverSubject: Benutzerkonto wiederherstellen
 EditRecoverMessage: Hallo @usershort, bitte bestätige, dass du dein Kennwort vergessen hast. Klicke auf den folgenden Link.
 EditRecoverStatusDone: Benutzerkonto wurde wiederhergestellt. Vielen Dank!
-EditRecoverStatusExpired: Benutzerkonto kann nicht wiederhergestellt werden. Link ist abgelaufen!
-EditReconfirmSubject: Benutzerkonto ändern
-EditReconfirmMessage: Hallo @usershort, bitte bestätige eine neue E-Mail für dein Benutzerkonto. Klicke auf den folgenden Link.
-EditReconfirmStatusDone: Benutzerkonto wurde bestätigt. Vielen Dank!
-EditReconfirmStatusExpired: Benutzerkonto kann nicht bestätigt werden. Link ist abgelaufen!
+EditVerifySubject: Benutzerkonto bestätigen
+EditVerifyMessage: Hallo @usershort, bitte bestätige eine neue E-Mail für dein Benutzerkonto. Klicke auf den folgenden Link.
+EditVerifyStatusDone: Benutzerkonto wurde bestätigt. Vielen Dank!
 EditChangeSubject: Benutzerkonto ändern
 EditChangeMessage: Hallo @usershort, bitte bestätige, dass du dein Benutzerkonto ändern möchtest. Klicke auf den folgenden Link.
 EditChangeStatusDone: Benutzerkonto wurde geändert. Vielen Dank!
-EditChangeStatusExpired: Benutzerkonto kann nicht geändert werden. Link ist abgelaufen!
 EditWelcomeSubject: Willkommen
 EditWelcomeMessage: Hallo @usershort, dein Benutzerkonto wurde erstellt. Viel Spass beim Bearbeiten der Webseite.
 EditInformationSubject: Willkommen zurück

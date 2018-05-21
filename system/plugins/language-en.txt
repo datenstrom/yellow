@@ -3,7 +3,7 @@
 Language: en
 LanguageDescription: English
 LanguageTranslator: Mark Seuffert
-LanguageVersion: 0.7.6
+LanguageVersion: 0.7.7
 
 BlogBy: by
 BlogFilter: Blog:
@@ -33,7 +33,7 @@ EditInstallationAboutPage: This website is made with [Datenstrom Yellow](https:/
 EditLoginTitle: Welcome
 EditLoginEmail: Email:
 EditLoginPassword: Password:
-EditLoginRecover: Forgot your password?
+EditLoginForgot: Forgot your password?
 EditLoginSignup: Create user account?
 EditLoginButton: Log in
 EditSignupTitle: Create user account
@@ -46,14 +46,15 @@ EditSignupStatusIncomplete: Please fill out all fields.
 EditSignupStatusInvalid: Please enter a valid email.
 EditSignupStatusWeak: Please enter a different password.
 EditSignupStatusNext: User account will be created, please check your emails.
+EditForgotTitle: Forgot your password
+EditForgotEmail: Email:
+EditForgotStatusNone: No problem, you can create a new password.
+EditForgotStatusInvalid: Please enter a valid email.
+EditForgotStatusNext: User account will be recovered, please check your emails.
 EditRecoverTitle: Forgot your password
-EditRecoverEmail: Email:
 EditRecoverPassword: Password:
-EditRecoverStatusNone: No problem, you can create a new password.
-EditRecoverStatusInvalid: Please enter a valid email.
 EditRecoverStatusPassword: Please enter a new password.
 EditRecoverStatusWeak: Please enter a different password.
-EditRecoverStatusNext: User account will be recovered, please check your emails.
 EditSettingsTitle: Settings
 EditSettingsStatusInvalid: Please enter a valid email.
 EditSettingsStatusTaken: Please enter a different email.
@@ -62,27 +63,21 @@ EditSettingsStatusNext: User account will be changed, please check your emails.
 EditConfirmSubject: Confirm user account
 EditConfirmMessage: Hi @usershort, please confirm your user account. Click the following link.
 EditConfirmStatusDone: User account confirmed and waiting for approval. Thank you!
-EditConfirmStatusExpired: User account can not be confirmed. Link has expired!
 EditApproveSubject: Approve user account
 EditApproveMessage: Hi @usershort, please approve a new user account for @useraccount. Click the following link.
 EditApproveStatusDone: User account approved. Thank you!
-EditApproveStatusExpired: User account can not be approved. Link has expired!
 EditReactivateSubject: Reactivate user account
 EditReactivateMessage: Hi @usershort, please reactivate your user account. There were too many failed login attempts. Click the following link.
 EditReactivateStatusDone: User account reactivated. Thank you!
-EditReactivateStatusExpired: User account can not be reactivated. Link has expired!
 EditRecoverSubject: Recover user account
 EditRecoverMessage: Hi @usershort, please confirm that you forgot your password. Click the following link.
 EditRecoverStatusDone: User account recovered. Thank you!
-EditRecoverStatusExpired: User account can not be recovered. Link has expired!
-EditReconfirmSubject: Change user account
-EditReconfirmMessage: Hi @usershort, please confirm a new email for your user account. Click the following link.
-EditReconfirmStatusDone: User account confirmed. Thank you!
-EditReconfirmStatusExpired: User account can not be confirmed. Link has expired!
+EditVerifySubject: Confirm user account
+EditVerifyMessage: Hi @usershort, please confirm a new email for your user account. Click the following link.
+EditVerifyStatusDone: User account confirmed. Thank you!
 EditChangeSubject: Change user account
 EditChangeMessage: Hi @usershort, please confirm that you want to change your user account. Click the following link.
 EditChangeStatusDone: User account changed. Thank you!
-EditChangeStatusExpired: User account can not be changed. Link has expired!
 EditWelcomeSubject: Welcome
 EditWelcomeMessage: Hi @usershort, your user account has been created. Have fun editing the website.
 EditInformationSubject: Welcome back

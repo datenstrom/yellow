@@ -3,7 +3,7 @@
 Language: fr
 LanguageDescription: Français
 LanguageTranslator: Juh Nibreh
-LanguageVersion: 0.7.6
+LanguageVersion: 0.7.7
 
 BlogBy: par
 BlogFilter: Blog:
@@ -33,7 +33,7 @@ EditInstallationAboutPage: Ce site web est fait avec [Datenstrom Yellow](https:/
 EditLoginTitle: Bienvenue
 EditLoginEmail: Email:
 EditLoginPassword: Mot de passe:
-EditLoginRecover: Mot de passe oublié?
+EditLoginForgot: Mot de passe oublié?
 EditLoginSignup: Créer un compte utilisateur?
 EditLoginButton: Se connecter
 EditSignupTitle: Créer un compte utilisateur
@@ -46,14 +46,15 @@ EditSignupStatusIncomplete: Veuillez remplir tous les champs.
 EditSignupStatusInvalid: S'il vous plaît, veuillez entrer une adresse email valide.
 EditSignupStatusWeak: S'il vous plaît, choisissez un mot de passe différent.
 EditSignupStatusNext: Votre compte a été créé, vérifiez vos emails.
+EditForgotTitle: Mot de passe oublié
+EditForgotEmail: Email:
+EditForgotStatusNone: Pas de problème, vous pouvez créer un nouveau mot de passe.
+EditForgotStatusInvalid: S'il vous plaît, veuillez entrer une adresse email valide.
+EditForgotStatusNext: Votre compte est à nouveau disponible, vérifiez vos emails.
 EditRecoverTitle: Mot de passe oublié
-EditRecoverEmail: Email:
 EditRecoverPassword: Mot de passe:
-EditRecoverStatusNone: Pas de problème, vous pouvez créer un nouveau mot de passe.
-EditRecoverStatusInvalid: S'il vous plaît, veuillez entrer une adresse email valide.
 EditRecoverStatusPassword: S'il vous plaît, choisissez un nouveau mot de passe.
 EditRecoverStatusWeak: S'il vous plaît, choisissez un mot de passe différent.
-EditRecoverStatusNext: Votre compte est à nouveau disponible, vérifiez vos emails.
 EditSettingsTitle: Paramètres
 EditSettingsStatusInvalid: S'il vous plaît, veuillez entrer une adresse email valide.
 EditSettingsStatusTaken: S'il vous plaît, veuillez entrer une adresse email différent.
@@ -62,27 +63,21 @@ EditSettingsStatusNext: Votre compte a été changé, vérifiez vos emails.
 EditConfirmSubject: Confirmation d'un compte utilisateur
 EditConfirmMessage: Bonjour @usershort, veuillez confirmer votre compte utilisateur. Cliquez sur le lien suivant.
 EditConfirmStatusDone: Votre compte utilisateur est confirmé et en attente d'approbation. Merci!
-EditConfirmStatusExpired: Le compte ne peut pas être créé. Le lien de confirmation a expiré!
 EditApproveSubject: Approuver un nouvel utilisateur
 EditApproveMessage: Bonjour @usershort, veuillez approuver la création d'un nouveau compte utilisateur pour @useraccount. Cliquez sur le lien suivant.
 EditApproveStatusDone: Compte utilisateur approuvé. Merci!
-EditApproveStatusExpired: Le compte ne peut pas être approuvé. Le lien de confirmation a expiré!
 EditReactivateSubject: Réactivation d'un compte utilisateur
 EditReactivateMessage: Bonjour @usershort, veuillez réactivér votre compte utilisateur. Il y a eu trop de tentatives de connexion échouées. Cliquez sur le lien suivant.
 EditReactivateStatusDone: Compte d'utilisateur réactivé. Merci!
-EditReactivateStatusExpired: Le compte ne peut pas être réctivé. Le lien de confirmation a expiré!
 EditRecoverSubject: Restauration d'un compte utilisateur
 EditRecoverMessage: Bonjour @usershort, veuillez confirmer que vous avez oublié votre mot de passe. Cliquez sur le lien suivant.
 EditRecoverStatusDone: Compte utilisateur restauré. Merci!
-EditRecoverStatusExpired: Le compte ne peut pas être restauré. Le lien de confirmation a expiré!
-EditReconfirmSubject: Changement d'un compte utilisateur
-EditReconfirmMessage: Bonjour @usershort, veuillez confirmer une nouvelle adresse email pour votre compte utilisateur. Cliquez sur le lien suivant.
-EditReconfirmStatusDone: Votre compte utilisateur est confirmé. Merci!
-EditReconfirmStatusExpired: Le compte ne peut pas être créé. Le lien de confirmation a expiré!
+EditVerifySubject: Confirmation d'un compte utilisateur
+EditVerifyMessage: Bonjour @usershort, veuillez confirmer une nouvelle adresse email pour votre compte utilisateur. Cliquez sur le lien suivant.
+EditVerifyStatusDone: Votre compte utilisateur est confirmé. Merci!
 EditChangeSubject: Changement d'un compte utilisateur
 EditChangeMessage: Bonjour @usershort, veuillez confirmer que vous souhaitez modifier votre compte utilisateur. Cliquez sur le lien suivant.
 EditChangeStatusDone: Compte utilisateur changé. Merci!
-EditChangeStatusExpired: Le compte ne peut pas être changé. Le lien de confirmation a expiré!
 EditWelcomeSubject: Bienvenue
 EditWelcomeMessage: Bonjour @usershort, votre compte utilisateur a bien été créé. Amusez-vous bien en éditant le site web.
 EditInformationSubject: Bienvenue à nouveau
