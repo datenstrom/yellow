@@ -111,8 +111,9 @@ a:hover { color:#07d; text-decoration:underline; }
 
 /* Sidebar */
 
-.with-sidebar .main { margin-right:17em; }
-.with-sidebar .sidebar { float:right; width:16em; margin-top:3.9em; padding:2px; overflow:hidden; font-size:0.9em; }
+.with-sidebar .main { margin-right:15em; }
+.with-sidebar .sidebar { float:right; width:13em; margin-top:3.2em; padding:2px; overflow:hidden; text-align:right; }
+.with-sidebar .sidebar ul { padding:0; list-style:none; }
 .with-sidebar .sidebar .search-form input { width:100%; box-sizing:border-box; }
 .with-sidebar .content:after { content:""; display:table; clear:both; }
 
