@@ -5,7 +5,7 @@
 
 class YellowEdit
 {
-	const VERSION = "0.7.15";
+	const VERSION = "0.7.16";
 	var $yellow;			//access to API
 	var $response;			//web response
 	var $users;				//user accounts
@@ -187,7 +187,7 @@ class YellowEdit
 	function processRequest($scheme, $address, $base, $location, $fileName)
 	{
 		$statusCode = 0;
-		if($this->checkUser($scheme, $address, $base, $location, $fileName))
+		if($this->checkUserAuth($scheme, $address, $base, $location, $fileName))
 		{
 			switch($_REQUEST["action"])
 			{
@@ -203,21 +203,22 @@ class YellowEdit
 				case "preview":		$statusCode = $this->processRequestPreview($scheme, $address, $base, $location, $fileName); break;
 				case "upload":		$statusCode = $this->processRequestUpload($scheme, $address, $base, $location, $fileName); break;
 			}
-		} else {
+		} else if($this->checkUserUnauth($scheme, $address, $base, $location, $fileName)) {
 			$this->yellow->lookup->requestHandler = "core";
 			switch($_REQUEST["action"])
 			{
 				case "":			$statusCode = $this->processRequestShow($scheme, $address, $base, $location, $fileName); break;
 				case "signup":		$statusCode = $this->processRequestSignup($scheme, $address, $base, $location, $fileName); break;
+				case "forgot":		$statusCode = $this->processRequestForgot($scheme, $address, $base, $location, $fileName); break;
 				case "confirm":		$statusCode = $this->processRequestConfirm($scheme, $address, $base, $location, $fileName); break;
 				case "approve":		$statusCode = $this->processRequestApprove($scheme, $address, $base, $location, $fileName); break;
-				case "reactivate":	$statusCode = $this->processRequestReactivate($scheme, $address, $base, $location, $fileName); break;
 				case "recover":		$statusCode = $this->processRequestRecover($scheme, $address, $base, $location, $fileName); break;
-				case "reconfirm":	$statusCode = $this->processRequestReconfirm($scheme, $address, $base, $location, $fileName); break;
+				case "reactivate":	$statusCode = $this->processRequestReactivate($scheme, $address, $base, $location, $fileName); break;
+				case "verify":		$statusCode = $this->processRequestVerify($scheme, $address, $base, $location, $fileName); break;
 				case "change":		$statusCode = $this->processRequestChange($scheme, $address, $base, $location, $fileName); break;
 			}
-			$this->checkUserFailed($scheme, $address, $base, $location, $fileName);
 		}
+		$this->checkUserFailed($scheme, $address, $base, $location, $fileName);
 		return $statusCode;
 	}
 	
@@ -310,7 +311,7 @@ class YellowEdit
 		$this->response->action = "confirm";
 		$this->response->status = "ok";
 		$email = $_REQUEST["email"];
-		$this->response->status = $this->users->getResponseStatus($email, $_REQUEST["action"], $_REQUEST["expire"], $_REQUEST["id"]);
+		$this->response->status = $this->getUserStatus($email, $_REQUEST["action"]);
 		if($this->response->status=="ok")
 		{
 			$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("editUserFile");
@@ -332,7 +333,7 @@ class YellowEdit
 		$this->response->action = "approve";
 		$this->response->status = "ok";
 		$email = $_REQUEST["email"];
-		$this->response->status = $this->users->getResponseStatus($email, $_REQUEST["action"], $_REQUEST["expire"], $_REQUEST["id"]);
+		$this->response->status = $this->getUserStatus($email, $_REQUEST["action"]);
 		if($this->response->status=="ok")
 		{
 			$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("editUserFile");
@@ -348,18 +349,18 @@ class YellowEdit
 		return $statusCode;
 	}
 
-	// Process request to reactivate account
-	function processRequestReactivate($scheme, $address, $base, $location, $fileName)
+	// Process request for forgotten password
+	function processRequestForgot($scheme, $address, $base, $location, $fileName)
 	{
-		$this->response->action = "reactivate";
+		$this->response->action = "forgot";
 		$this->response->status = "ok";
-		$email = $_REQUEST["email"];
-		$this->response->status = $this->users->getResponseStatus($email, $_REQUEST["action"], $_REQUEST["expire"], $_REQUEST["id"]);
+		$email = trim($_REQUEST["email"]);
+		if(!filter_var($email, FILTER_VALIDATE_EMAIL)) $this->response->status = "invalid";
+		if($this->response->status=="ok" && !$this->users->isExisting($email)) $this->response->status = "next";
 		if($this->response->status=="ok")
 		{
-			$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("editUserFile");
-			$this->response->status = $this->users->update($fileNameUser, $email, "", "", "", "active") ? "done" : "error";
-			if($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
+			$this->response->status = $this->response->sendMail($scheme, $address, $base, $email, "recover") ? "next" : "error";
+			if($this->response->status=="error") $this->yellow->page->error(500, "Can't send email on this server!");
 		}
 		$statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
 		return $statusCode;
@@ -372,35 +373,41 @@ class YellowEdit
 		$this->response->status = "ok";
 		$email = trim($_REQUEST["email"]);
 		$password = trim($_REQUEST["password"]);
-		if(empty($_REQUEST["id"]))
+		$this->response->status = $this->getUserStatus($email, $_REQUEST["action"]);
+		if($this->response->status=="ok")
 		{
-			if(!filter_var($email, FILTER_VALIDATE_EMAIL)) $this->response->status = "invalid";
-			if($this->response->status=="ok" && !$this->users->isExisting($email)) $this->response->status = "next";
+			if(empty($password)) $this->response->status = "password";
+			if($this->response->status=="ok") $this->response->status = $this->getUserAccount($email, $password, $this->response->action);
 			if($this->response->status=="ok")
 			{
-				$this->response->status = $this->response->sendMail($scheme, $address, $base, $email, "recover") ? "next" : "error";
+				$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("editUserFile");
+				$this->response->status = $this->users->update($fileNameUser, $email, $password) ? "ok" : "error";
+				if($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
+			}
+			if($this->response->status=="ok")
+			{
+				$this->response->userEmail = "";
+				$this->response->destroyCookies($scheme, $address, $base);
+				$this->response->status = $this->response->sendMail($scheme, $address, $base, $email, "information") ? "done" : "error";
 				if($this->response->status=="error") $this->yellow->page->error(500, "Can't send email on this server!");
 			}
-		} else {
-			$this->response->status = $this->users->getResponseStatus($email, $_REQUEST["action"], $_REQUEST["expire"], $_REQUEST["id"]);
-			if($this->response->status=="ok")
-			{
-				if(empty($password)) $this->response->status = "password";
-				if($this->response->status=="ok") $this->response->status = $this->getUserAccount($email, $password, $this->response->action);
-				if($this->response->status=="ok")
-				{
-					$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("editUserFile");
-					$this->response->status = $this->users->update($fileNameUser, $email, $password) ? "ok" : "error";
-					if($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
-				}
-				if($this->response->status=="ok")
-				{
-					$this->response->userEmail = "";
-					$this->response->destroyCookies($scheme, $address, $base);
-					$this->response->status = $this->response->sendMail($scheme, $address, $base, $email, "information") ? "done" : "error";
-					if($this->response->status=="error") $this->yellow->page->error(500, "Can't send email on this server!");
-				}
-			}
+		}
+		$statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
+		return $statusCode;
+	}
+	
+	// Process request to reactivate account
+	function processRequestReactivate($scheme, $address, $base, $location, $fileName)
+	{
+		$this->response->action = "reactivate";
+		$this->response->status = "ok";
+		$email = $_REQUEST["email"];
+		$this->response->status = $this->getUserStatus($email, $_REQUEST["action"]);
+		if($this->response->status=="ok")
+		{
+			$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("editUserFile");
+			$this->response->status = $this->users->update($fileNameUser, $email, "", "", "", "active") ? "done" : "error";
+			if($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
 		}
 		$statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
 		return $statusCode;
@@ -426,7 +433,7 @@ class YellowEdit
 				$pending = $emailSource;
 				$home = $this->users->getHome($emailSource);
 				$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("editUserFile");
-				$this->response->status = $this->users->update($fileNameUser, $email, "no", $name, $language, "unconfirmed", "", "", "", $pending, $home) ? "ok" : "error";
+				$this->response->status = $this->users->update($fileNameUser, $email, "no", $name, $language, "unverified", "", "", "", $pending, $home) ? "ok" : "error";
 				if($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
 			}
 			if($this->response->status=="ok")
@@ -438,7 +445,7 @@ class YellowEdit
 			}
 			if($this->response->status=="ok")
 			{
-				$action = $email!=$emailSource ? "reconfirm" : "change";
+				$action = $email!=$emailSource ? "verify" : "change";
 				$this->response->status = $this->response->sendMail($scheme, $address, $base, $email, $action) ? "next" : "error";
 				if($this->response->status=="error") $this->yellow->page->error(500, "Can't send email on this server!");
 			}
@@ -460,13 +467,13 @@ class YellowEdit
 		return $statusCode;
 	}
 
-	// Process request to reconfirm email
-	function processRequestReconfirm($scheme, $address, $base, $location, $fileName)
+	// Process request to verify email
+	function processRequestVerify($scheme, $address, $base, $location, $fileName)
 	{
-		$this->response->action = "reconfirm";
+		$this->response->action = "verify";
 		$this->response->status = "ok";
 		$email = $emailSource = $_REQUEST["email"];
-		$this->response->status = $this->users->getResponseStatus($email, $_REQUEST["action"], $_REQUEST["expire"], $_REQUEST["id"]);
+		$this->response->status = $this->getUserStatus($email, $_REQUEST["action"]);
 		if($this->response->status=="ok")
 		{
 			$emailSource = $this->users->getPending($email);
@@ -487,13 +494,13 @@ class YellowEdit
 		return $statusCode;
 	}
 	
-	// Process request to change account
+	// Process request to change email or password
 	function processRequestChange($scheme, $address, $base, $location, $fileName)
 	{
 		$this->response->action = "change";
 		$this->response->status = "ok";
 		$email = $emailSource = trim($_REQUEST["email"]);
-		$this->response->status = $this->users->getResponseStatus($email, $_REQUEST["action"], $_REQUEST["expire"], $_REQUEST["id"]);
+		$this->response->status = $this->getUserStatus($email, $_REQUEST["action"]);
 		if($this->response->status=="ok")
 		{
 			list($email, $hash) = explode(':', $this->users->getPending($email), 2);
@@ -503,7 +510,7 @@ class YellowEdit
 		{
 			$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("editUserFile");
 			$this->users->users[$emailSource]["pending"] = "none";
-			$this->response->status = $this->users->update($fileNameUser, $emailSource, "", "", "", "inactive") ? "ok" : "error";
+			$this->response->status = $this->users->update($fileNameUser, $emailSource, "", "", "", "removed") ? "ok" : "error";
 			if($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
 		}
 		if($this->response->status=="ok")
@@ -741,8 +748,8 @@ class YellowEdit
 		return $this->response->isActive();
 	}
 	
-	// Check user
-	function checkUser($scheme, $address, $base, $location, $fileName)
+	// Check user authentication
+	function checkUserAuth($scheme, $address, $base, $location, $fileName)
 	{
 		if($this->isRequestSameSite("POST", $scheme, $address) || $_REQUEST["action"]=="")
 		{
@@ -757,8 +764,9 @@ class YellowEdit
 					$this->response->userRestrictions = $this->getUserRestrictions($email, $location, $fileName);
 					$this->response->language = $this->getUserLanguage($email);
 				} else {
-					$this->response->userFailed = true;
+					$this->response->userFailedError = "login";
 					$this->response->userFailedEmail = $email;
+					$this->response->userFailedExpire = PHP_INT_MAX;
 				}
 			} else if(isset($_COOKIE["authtoken"]) && isset($_COOKIE["csrftoken"])) {
 				if($this->users->checkAuthToken($_COOKIE["authtoken"], $_COOKIE["csrftoken"], $_POST["csrftoken"], $_REQUEST["action"]==""))
@@ -767,22 +775,43 @@ class YellowEdit
 					$this->response->userRestrictions = $this->getUserRestrictions($email, $location, $fileName);
 					$this->response->language = $this->getUserLanguage($email);
 				} else {
-					$this->response->userFailed = true;
+					$this->response->userFailedError = "auth";
 					$this->response->userFailedEmail = $this->users->getAuthEmail($_COOKIE["authtoken"]);
+					$this->response->userFailedExpire = $this->users->getAuthExpire($_COOKIE["authtoken"]);
 				}
 			}
 		}
 		return $this->response->isUser();
 	}
-	
+
+	// Check user without authentication
+	function checkUserUnauth($scheme, $address, $base, $location, $fileName)
+	{
+		$ok = false;
+		if($_REQUEST["action"]=="" || $_REQUEST["action"]=="signup" || $_REQUEST["action"]=="forgot")
+		{
+			$ok = true;
+		} else if(isset($_REQUEST["actiontoken"])) {
+			if($this->users->checkActionToken($_REQUEST["actiontoken"], $_REQUEST["email"], $_REQUEST["action"], $_REQUEST["expire"]))
+			{
+				$ok = true;
+			} else {
+				$this->response->userFailedError = "action";
+				$this->response->userFailedEmail = $_REQUEST["email"];
+				$this->response->userFailedExpire = $_REQUEST["expire"];
+			}
+		}
+		return $ok;
+	}
+
 	// Check user failed
 	function checkUserFailed($scheme, $address, $base, $location, $fileName)
 	{
-		if($this->response->userFailed)
+		if(!empty($this->response->userFailedError))
 		{
-			$email = $this->response->userFailedEmail;
-			if($this->users->isExisting($email))
+			if($this->response->userFailedExpire>time() && $this->users->isExisting($this->response->userFailedEmail))
 			{
+				$email = $this->response->userFailedEmail;
 				$modified = $this->users->getModified($email);
 				$errors = $this->users->getErrors($email)+1;
 				$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("editUserFile");
@@ -790,24 +819,47 @@ class YellowEdit
 				if($status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
 				if($errors==$this->yellow->config->get("editBruteForceProtection"))
 				{
+					$statusBeforeProtection = $this->users->getStatus($email);
+					$statusAfterProtection = ($statusBeforeProtection=="active" || $statusBeforeProtection=="inactive") ? "inactive" : "removed";
 					if($status=="ok")
 					{
-						$status = $this->users->update($fileNameUser, $email, "", "", "", "inactive", "", $modified, $errors) ? "ok" : "error";
+						$status = $this->users->update($fileNameUser, $email, "", "", "", $statusAfterProtection, "", $modified, $errors) ? "ok" : "error";
 						if($status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
 					}
-					if($status=="ok")
+					if($status=="ok" && $statusBeforeProtection=="active")
 					{
 						$status = $this->response->sendMail($scheme, $address, $base, $email, "reactivate") ? "done" : "error";
 						if($status=="error") $this->yellow->page->error(500, "Can't send email on this server!");
 					}
 				}
 			}
-			$this->response->destroyCookies($scheme, $address, $base);
-			$this->response->status = "error";
-			$this->yellow->page->error(430);
+			if($this->response->userFailedError=="login" || $this->response->userFailedError=="auth")
+			{
+				$this->response->destroyCookies($scheme, $address, $base);
+				$this->response->status = "error";
+				$this->yellow->page->error(430);
+			} else {
+				$this->response->status = "error";
+				$this->yellow->page->error(500, "Link has expired!");
+			}
 		}
 	}
 	
+	// Return user status changes
+	function getUserStatus($email, $action)
+	{
+		switch($action)
+		{
+			case "confirm":		$statusExpected = "unconfirmed"; break;
+			case "approve":		$statusExpected = "unapproved"; break;
+			case "recover":		$statusExpected = "active"; break;
+			case "reactivate":	$statusExpected = "inactive"; break;
+			case "verify":		$statusExpected = "unverified"; break;
+			case "change":		$statusExpected = "active"; break;
+		}
+		return $this->users->getStatus($email)==$statusExpected ? "ok" : "done";
+	}
+
 	// Return user account changes
 	function getUserAccount($email, $password, $action)
 	{
@@ -873,8 +925,9 @@ class YellowResponse
 	var $active;			//location is active? (boolean)
 	var $userEmail;			//user email
 	var $userRestrictions;	//user can change page? (boolean)
-	var $userFailed;		//user failed authentication? (boolean)
+	var $userFailedError;	//error of failed authentication
 	var $userFailedEmail;	//email of failed authentication
+	var $userFailedExpire;	//expiration time of failed authentication
 	var $rawDataSource;		//raw data of page for comparison
 	var $rawDataEdit;		//raw data of page for editing
 	var $rawDataOutput;		//raw data of dynamic output
@@ -1090,7 +1143,7 @@ class YellowResponse
 		$data = array();
 		foreach($_REQUEST as $key=>$value)
 		{
-			if($key=="password" || $key=="authtoken" || $key=="csrftoken" || substru($key, 0, 7)=="rawdata") continue;
+			if($key=="password" || $key=="authtoken" || $key=="csrftoken" || $key=="actiontoken" || substru($key, 0, 7)=="rawdata") continue;
 			$data["request".ucfirst($key)] = trim($value);
 		}
 		return $data;
@@ -1267,11 +1320,11 @@ class YellowResponse
 	// Create browser cookies
 	function createCookies($scheme, $address, $base, $email)
 	{
-		$authToken = $this->plugin->users->createAuthToken($email);
+		$expire = time() + $this->yellow->config->get("editLoginSessionTimeout");
+		$authToken = $this->plugin->users->createAuthToken($email, $expire);
 		$csrfToken = $this->plugin->users->createCsrfToken();
-		$timeout = $this->yellow->config->get("editLoginSessionTimeout");
-		setcookie("authtoken", $authToken, $timeout ? time()+$timeout : 0, "$base/", "", $scheme=="https", true);
-		setcookie("csrftoken", $csrfToken, $timeout ? time()+$timeout : 0, "$base/", "", $scheme=="https", false);
+		setcookie("authtoken", $authToken, $expire, "$base/", "", $scheme=="https", true);
+		setcookie("csrftoken", $csrfToken, $expire, "$base/", "", $scheme=="https", false);
 	}
 	
 	// Destroy browser cookies
@@ -1288,9 +1341,9 @@ class YellowResponse
 		{
 			$url = "$scheme://$address$base/";
 		} else {
-			$expire = time()+60*60*24;
-			$id = $this->plugin->users->createRequestId($email, $action, $expire);
-			$url = "$scheme://$address$base"."/action:$action/email:$email/expire:$expire/id:$id/";
+			$expire = time() + 60*60*24;
+			$actionToken = $this->plugin->users->createActionToken($email, $action, $expire);
+			$url = "$scheme://$address$base"."/action:$action/email:$email/expire:$expire/actiontoken:$actionToken/";
 		}
 		if($action=="approve")
 		{
@@ -1417,7 +1470,7 @@ class YellowUsers
 			{
 				list($hash, $name, $language, $status, $stamp, $modified, $errors, $pending, $home) = explode(',', $matches[2]);
 				if($errors=="none") { $home=$pending; $pending=$errors; $errors=$modified; $modified=$stamp; $stamp=$this->createStamp(); } //TODO: remove later
-				if(strlenu($stamp)!=20) $stamp=$this->createStamp(); //TODO: remove later, converts old file format
+				if(strlenb($stamp)!=20) $stamp=$this->createStamp(); //TODO: remove later, converts old file format
 				if($status=="active" || $status=="inactive")
 				{
 					$pending = "none";
@@ -1502,33 +1555,42 @@ class YellowUsers
 	// Check user authentication from tokens
 	function checkAuthToken($authToken, $csrfTokenExpected, $csrfTokenReceived, $ignoreCsrfToken)
 	{
-		$session = "$5y$".substru($authToken, 0, 96);
+		$signature = "$5y$".substrb($authToken, 0, 96);
 		$email = $this->getAuthEmail($authToken);
-		return $this->isExisting($email) && $this->users[$email]["status"]=="active" &&
-			$this->yellow->toolbox->verifyHash($this->users[$email]["hash"], "sha256", $session) &&
+		$expire = $this->getAuthExpire($authToken);
+		return $expire>time() && $this->isExisting($email) && $this->users[$email]["status"]=="active" &&
+			$this->yellow->toolbox->verifyHash($this->users[$email]["hash"]."auth".$expire, "sha256", $signature) &&
 			($this->verifyToken($csrfTokenExpected, $csrfTokenReceived) || $ignoreCsrfToken);
 	}
 	
-	// Create authentication token
-	function createAuthToken($email)
+	// Check action token
+	function checkActionToken($actionToken, $email, $action, $expire)
 	{
-		$session = $this->yellow->toolbox->createHash($this->users[$email]["hash"], "sha256");
-		if(empty($session)) $session = "padd"."error-hash-algorithm-sha256";
-		return substru($session, 4).$this->getStamp($email);
+		$signature = "$5y$".$actionToken;
+		return $expire>time() && $this->isExisting($email) &&
+			$this->yellow->toolbox->verifyHash($this->users[$email]["hash"].$action.$expire, "sha256", $signature);
+	}
+		   
+	// Create authentication token
+	function createAuthToken($email, $expire)
+	{
+		$signature = $this->yellow->toolbox->createHash($this->users[$email]["hash"]."auth".$expire, "sha256");
+		if(empty($signature)) $signature = "padd"."error-hash-algorithm-sha256";
+		return substrb($signature, 4).$this->getStamp($email).dechex($expire);
+	}
+	
+	// Create action token
+	function createActionToken($email, $action, $expire)
+	{
+		$signature = $this->yellow->toolbox->createHash($this->users[$email]["hash"].$action.$expire, "sha256");
+		if(empty($signature)) $signature = "padd"."error-hash-algorithm-sha256";
+		return substrb($signature, 4);
 	}
 	
 	// Create CSRF token
 	function createCsrfToken()
 	{
 		return $this->yellow->toolbox->createSalt(64);
-	}
-	
-	// Create user stamp
-	function createStamp()
-	{
-		$stamp = $this->yellow->toolbox->createSalt(20);
-		while($this->getAuthEmail("none", $stamp)) $stamp = $this->yellow->toolbox->createSalt(20);
-		return $stamp;
 	}
 	
 	// Create password hash
@@ -1541,44 +1603,29 @@ class YellowUsers
 		return $hash;
 	}
 	
-	// Create request ID for action
-	function createRequestId($email, $action, $expire)
+	// Create user stamp
+	function createStamp()
 	{
-		$id = $this->yellow->toolbox->createHash($this->users[$email]["hash"].$action.$expire, "sha256");
-		if(empty($id)) $hash = "error-hash-algorithm-sha256";
-		return $id;
+		$stamp = $this->yellow->toolbox->createSalt(20);
+		while($this->getAuthEmail("none", $stamp)) $stamp = $this->yellow->toolbox->createSalt(20);
+		return $stamp;
 	}
 	
-	// Return response status for action
-	function getResponseStatus($email, $action, $expire, $id)
-	{
-		$status = "done";
-		switch($action)
-		{
-			case "confirm":		$statusExpected = "unconfirmed"; break;
-			case "reconfirm":	$statusExpected = "unconfirmed"; break;
-			case "approve":		$statusExpected = "unapproved"; break;
-			case "reactivate":	$statusExpected = "inactive"; break;
-			default:			$statusExpected = "active"; break;
-		}
-		if($this->isExisting($email) && $this->users[$email]["status"]==$statusExpected &&
-		   $this->yellow->toolbox->verifyHash($this->users[$email]["hash"].$action.$expire, "sha256", $id))
-		{
-			$status = "ok";
-		}
-		if($expire<=time()) $status = "expired";
-		return $status;
-	}
-
 	// Return user email from authentication, timing attack safe email lookup
 	function getAuthEmail($authToken, $stamp = "")
 	{
-		if(empty($stamp)) $stamp = substru($authToken, 96);
+		if(empty($stamp)) $stamp = substrb($authToken, 96, 20);
 		foreach($this->users as $key=>$value)
 		{
 			if($this->verifyToken($value["stamp"], $stamp)) $email = $key;
 		}
 		return $email;
+	}
+	
+	// Return expiration time from authentication
+	function getAuthExpire($authToken)
+	{
+		return hexdec(substrb($authToken, 96+20));
 	}
 	
 	// Return user hash

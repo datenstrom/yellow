@@ -49,10 +49,11 @@ yellow.edit =
 			case "signup":		this.showPane("yellow-pane-signup", action, status); break;
 			case "confirm":		this.showPane("yellow-pane-signup", action, status); break;
 			case "approve":		this.showPane("yellow-pane-signup", action, status); break;
-			case "reactivate":	this.showPane("yellow-pane-settings", action, status); break;
+			case "forgot":		this.showPane("yellow-pane-forgot", action, status); break;
 			case "recover":		this.showPane("yellow-pane-recover", action, status); break;
+			case "reactivate":	this.showPane("yellow-pane-settings", action, status); break;
 			case "settings":	this.showPane("yellow-pane-settings", action, status); break;
-			case "reconfirm":	this.showPane("yellow-pane-settings", action, status); break;
+			case "verify":		this.showPane("yellow-pane-settings", action, status); break;
 			case "change":		this.showPane("yellow-pane-settings", action, status); break;
 			case "version":		this.showPane("yellow-pane-version", action, status); break;
 			case "update":		this.sendPane("yellow-pane-update", action, status, args); break;
@@ -182,7 +183,7 @@ yellow.edit =
 				"<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("LoginButton")+"\" /></p>"+
 				"</div>"+
 				"<div id=\"yellow-pane-login-buttons\">"+
-				"<p><a href=\"#\" id=\"yellow-pane-login-recover\" data-action=\"recover\">"+this.getText("LoginRecover")+"</a><p>"+
+				"<p><a href=\"#\" id=\"yellow-pane-login-forgot\" data-action=\"forgot\">"+this.getText("LoginForgot")+"</a><p>"+
 				"<p><a href=\"#\" id=\"yellow-pane-login-signup\" data-action=\"signup\">"+this.getText("LoginSignup")+"</a><p>"+
 				"</div>"+
 				"</form>";
@@ -205,18 +206,29 @@ yellow.edit =
 				"</div>"+
 				"</form>";
 				break;
+			case "yellow-pane-forgot":
+				elementDiv.innerHTML =
+				"<form method=\"post\">"+
+				"<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\"></i></a>"+
+				"<h1>"+this.getText("ForgotTitle")+"</h1>"+
+				"<div id=\"yellow-pane-forgot-status\" class=\""+paneStatus+"\">"+this.getText(paneAction+"Status", "", paneStatus)+"</div>"+
+				"<div id=\"yellow-pane-forgot-fields\">"+
+				"<input type=\"hidden\" name=\"action\" value=\"forgot\" />"+
+				"<p><label for=\"yellow-pane-forgot-email\">"+this.getText("ForgotEmail")+"</label><br /><input class=\"yellow-form-control\" name=\"email\" id=\"yellow-pane-forgot-email\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("email"))+"\" /></p>"+
+				"<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("OkButton")+"\" /></p>"+
+				"</div>"+
+				"<div id=\"yellow-pane-forgot-buttons\">"+
+				"<p><a href=\"#\" class=\"yellow-btn\" data-action=\"close\">"+this.getText("OkButton")+"</a></p>"+
+				"</div>"+
+				"</form>";
+				break;
 			case "yellow-pane-recover":
 				elementDiv.innerHTML =
 				"<form method=\"post\">"+
 				"<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\"></i></a>"+
 				"<h1>"+this.getText("RecoverTitle")+"</h1>"+
 				"<div id=\"yellow-pane-recover-status\" class=\""+paneStatus+"\">"+this.getText(paneAction+"Status", "", paneStatus)+"</div>"+
-				"<div id=\"yellow-pane-recover-fields-first\">"+
-				"<input type=\"hidden\" name=\"action\" value=\"recover\" />"+
-				"<p><label for=\"yellow-pane-recover-email\">"+this.getText("RecoverEmail")+"</label><br /><input class=\"yellow-form-control\" name=\"email\" id=\"yellow-pane-recover-email\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("email"))+"\" /></p>"+
-				"<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("OkButton")+"\" /></p>"+
-				"</div>"+
-				"<div id=\"yellow-pane-recover-fields-second\">"+
+				"<div id=\"yellow-pane-recover-fields\">"+
 				"<p><label for=\"yellow-pane-recover-password\">"+this.getText("RecoverPassword")+"</label><br /><input class=\"yellow-form-control\" type=\"password\" name=\"password\" id=\"yellow-pane-recover-password\" maxlength=\"64\" value=\"\" /></p>"+
 				"<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("OkButton")+"\" /></p>"+
 				"</div>"+
@@ -318,7 +330,7 @@ yellow.edit =
 	updatePane: function(paneId, paneAction, paneStatus, init)
 	{
 		if(yellow.config.debug) console.log("yellow.edit.updatePane id:"+paneId);
-		var showFields = paneStatus!="next" && paneStatus!="done" && paneStatus!="expired";
+		var showFields = paneStatus!="next" && paneStatus!="done";
 		switch(paneId)
 		{
 			case "yellow-pane-login":
@@ -331,19 +343,13 @@ yellow.edit =
 				yellow.toolbox.setVisible(document.getElementById("yellow-pane-signup-fields"), showFields);
 				yellow.toolbox.setVisible(document.getElementById("yellow-pane-signup-buttons"), !showFields);
 				break;
+			case "yellow-pane-forgot":
+				yellow.toolbox.setVisible(document.getElementById("yellow-pane-forgot-fields"), showFields);
+				yellow.toolbox.setVisible(document.getElementById("yellow-pane-forgot-buttons"), !showFields);
+				break;
 			case "yellow-pane-recover":
-				yellow.toolbox.setVisible(document.getElementById("yellow-pane-recover-fields-first"), showFields);
-				yellow.toolbox.setVisible(document.getElementById("yellow-pane-recover-fields-second"), showFields);
+				yellow.toolbox.setVisible(document.getElementById("yellow-pane-recover-fields"), showFields);
 				yellow.toolbox.setVisible(document.getElementById("yellow-pane-recover-buttons"), !showFields);
-				if(showFields)
-				{
-					if(this.getRequest("id"))
-					{
-						yellow.toolbox.setVisible(document.getElementById("yellow-pane-recover-fields-first"), false);
-					} else {
-						yellow.toolbox.setVisible(document.getElementById("yellow-pane-recover-fields-second"), false);
-					}
-				}
 				break;
 			case "yellow-pane-settings":
 				yellow.toolbox.setVisible(document.getElementById("yellow-pane-settings-fields"), showFields);
@@ -423,6 +429,7 @@ yellow.edit =
 		{
 			case "yellow-pane-login":
 			case "yellow-pane-signup":
+			case "yellow-pane-forgot":
 			case "yellow-pane-recover":
 			case "yellow-pane-settings":
 			case "yellow-pane-version":

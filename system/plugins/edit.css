@@ -171,11 +171,18 @@
 #yellow-pane-signup-fields { width:15em; text-align:left; margin:0 auto; }
 #yellow-pane-signup-buttons { margin-top:-0.5em; }
 
+#yellow-pane-forgot { text-align:center; white-space:nowrap; }
+#yellow-pane-forgot .yellow-form-control { width:15em; box-sizing:border-box; }
+#yellow-pane-forgot .yellow-btn { width:15em; margin:1em 1em 0.5em 0; }
+#yellow-pane-forgot-status { margin:0.5em 0; display:inline-block; }
+#yellow-pane-forgot-fields { width:15em; text-align:left; margin:0 auto; }
+#yellow-pane-forgot-buttons { margin-top:-0.5em; }
+
 #yellow-pane-recover { text-align:center; white-space:nowrap; }
 #yellow-pane-recover .yellow-form-control { width:15em; box-sizing:border-box; }
 #yellow-pane-recover .yellow-btn { width:15em; margin:1em 1em 0.5em 0; }
 #yellow-pane-recover-status { margin:0.5em 0; display:inline-block; }
-#yellow-pane-recover-fields-first, #yellow-pane-recover-fields-second { width:15em; text-align:left; margin:0 auto; }
+#yellow-pane-recover-fields { width:15em; text-align:left; margin:0 auto; }
 #yellow-pane-recover-buttons { margin-top:-0.5em; }
 
 #yellow-pane-settings { text-align:center; white-space:nowrap; }
