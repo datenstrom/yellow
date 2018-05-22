@@ -3,7 +3,7 @@
 Language: de
 LanguageDescription: Deutsch
 LanguageTranslator: David Fehrmann
-LanguageVersion: 0.7.7
+LanguageVersion: 0.7.8
 
 BlogBy: von
 BlogFilter: Blog:
@@ -12,6 +12,7 @@ BlogMore: Lies mehr…
 ContactName: Name:
 ContactEmail: E-Mail:
 ContactMessage: Nachricht:
+ContactConsent: Ich stimme zu, dass diese Webseite meine persönlichen Daten speichert und zur Kontaktaufnahme verwendet.
 ContactButton: Nachricht absenden
 ContactStatusNone: Sag Hallo! Dein Feedback ist sehr willkommen.
 ContactStatusIncomplete: Bitte alle Felder ausfüllen.
@@ -40,6 +41,7 @@ EditSignupTitle: Benutzerkonto erstellen
 EditSignupName: Name:
 EditSignupEmail: E-Mail:
 EditSignupPassword: Kennwort:
+EditSignupConsent: Ich stimme zu, dass diese Webseite meine persönlichen Daten speichert.
 EditSignupButton: Erstellen
 EditSignupStatusNone: Hier kannst du ein neues Benutzerkonto erstellen.
 EditSignupStatusIncomplete: Bitte alle Felder ausfüllen.

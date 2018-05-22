@@ -3,7 +3,7 @@
 Language: fr
 LanguageDescription: Français
 LanguageTranslator: Juh Nibreh
-LanguageVersion: 0.7.7
+LanguageVersion: 0.7.8
 
 BlogBy: par
 BlogFilter: Blog:
@@ -12,6 +12,7 @@ BlogMore: Lire la suite…
 ContactName: Nom:
 ContactEmail: Email:
 ContactMessage: Message:
+ContactConsent: Je consens que ce site web stocke mes données personnelles et l'utilise pour me contacter.
 ContactButton: Envoyer le message
 ContactStatusNone: Dites bonjour! Vos commentaires sont les bienvenus.
 ContactStatusIncomplete: S'il vous plaît, veuillez remplir tous les champs.
@@ -40,6 +41,7 @@ EditSignupTitle: Créer un compte utilisateur
 EditSignupName: Nom:
 EditSignupEmail: Email:
 EditSignupPassword: Mot de passe:
+EditSignupConsent: Je consens que ce site web stocke mes données personnelles.
 EditSignupButton: Créer
 EditSignupStatusNone: Ici, vous pouvez créer un nouveau compte utilisateur.
 EditSignupStatusIncomplete: Veuillez remplir tous les champs.

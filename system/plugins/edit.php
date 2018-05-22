@@ -5,7 +5,7 @@
 
 class YellowEdit
 {
-	const VERSION = "0.7.16";
+	const VERSION = "0.7.17";
 	var $yellow;			//access to API
 	var $response;			//web response
 	var $users;				//user accounts
@@ -286,7 +286,8 @@ class YellowEdit
 		$name = trim(preg_replace("/[^\pL\d\-\. ]/u", "-", $_REQUEST["name"]));
 		$email = trim($_REQUEST["email"]);
 		$password = trim($_REQUEST["password"]);
-		if(empty($name) || empty($email) || empty($password)) $this->response->status = "incomplete";
+		$consent = trim($_REQUEST["consent"]);
+		if(empty($name) || empty($email) || empty($password) || empty($consent)) $this->response->status = "incomplete";
 		if($this->response->status=="ok") $this->response->status = $this->getUserAccount($email, $password, $this->response->action);
 		if($this->response->status=="ok" && $this->response->isLoginRestrictions()) $this->response->status = "next";
 		if($this->response->status=="ok" && $this->users->isTaken($email)) $this->response->status = "next";

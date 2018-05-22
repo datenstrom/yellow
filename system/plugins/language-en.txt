@@ -3,7 +3,7 @@
 Language: en
 LanguageDescription: English
 LanguageTranslator: Mark Seuffert
-LanguageVersion: 0.7.7
+LanguageVersion: 0.7.8
 
 BlogBy: by
 BlogFilter: Blog:
@@ -12,6 +12,7 @@ BlogMore: Read more…
 ContactName: Name:
 ContactEmail: Email:
 ContactMessage: Message:
+ContactConsent: I consent that this website stores my personal data and uses it to contact me.
 ContactButton: Send message
 ContactStatusNone: Say hello. Your feedback is very welcome.
 ContactStatusIncomplete: Please fill out all fields.
@@ -40,6 +41,7 @@ EditSignupTitle: Create user account
 EditSignupName: Name:
 EditSignupEmail: Email:
 EditSignupPassword: Password:
+EditSignupConsent: I consent that this website stores my personal data.
 EditSignupButton: Create
 EditSignupStatusNone: Here you can create a new user account.
 EditSignupStatusIncomplete: Please fill out all fields.
