@@ -5,7 +5,7 @@
 
 class YellowEdit
 {
-	const VERSION = "0.7.17";
+	const VERSION = "0.7.18";
 	var $yellow;			//access to API
 	var $response;			//web response
 	var $users;				//user accounts
@@ -1227,6 +1227,7 @@ class YellowResponse
 	function getPageNewLocation($rawData, $pageLocation, $pageNewLocation)
 	{
 		$location = empty($pageNewLocation) ? "@title" : $pageNewLocation;
+		$location = preg_replace("/@title/i", $this->getPageNewTitle($rawData), $location);
 		$location = preg_replace("/@timestamp/i", $this->getPageNewData($rawData, "published", true, "U"), $location);
 		$location = preg_replace("/@date/i", $this->getPageNewData($rawData, "published", true, "Y-m-d"), $location);
 		$location = preg_replace("/@year/i", $this->getPageNewData($rawData, "published", true, "Y"), $location);
@@ -1234,12 +1235,21 @@ class YellowResponse
 		$location = preg_replace("/@day/i", $this->getPageNewData($rawData, "published", true, "d"), $location);
 		$location = preg_replace("/@tag/i", $this->getPageNewData($rawData, "tag", true), $location);
 		$location = preg_replace("/@author/i", $this->getPageNewData($rawData, "author", true), $location);
-		$location = preg_replace("/@title/i", $this->getPageNewData($rawData, "title"), $location);
 		if(!preg_match("/^\//", $location))
 		{
 			$location = $this->yellow->lookup->getDirectoryLocation($pageLocation).$location;
 		}
 		return $location;
+	}
+	
+	// Return title for new/modified page
+	function getPageNewTitle($rawData)
+	{
+		$title = $this->yellow->toolbox->getMetaData($rawData, "title");
+		$titleSlug = $this->yellow->toolbox->getMetaData($rawData, "titleSlug");
+		$value = empty($titleSlug) ? $title : $titleSlug;
+		$value = $this->yellow->lookup->normaliseName($value, true, false, true);
+		return trim(preg_replace("/-+/", "-", $value), "-");
 	}
 	
 	// Return data for new/modified page
