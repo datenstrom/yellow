@@ -331,7 +331,7 @@ class YellowCore
 		if($this->config->get("startupUpdate")!="none")
 		{
 			$fileNameConfig = $this->config->get("configDir").$this->config->get("configFile");
-			$this->config->update($fileNameConfig, array("startupUpdate" => "none"));
+			$this->config->save($fileNameConfig, array("startupUpdate" => "none"));
 		}
 	}
 	
@@ -1887,8 +1887,8 @@ class YellowConfig
 		}
 	}
 	
-	// Update configuration in file
-	function update($fileName, $config)
+	// Save configuration to file
+	function save($fileName, $config)
 	{
 		$configNew = new YellowDataCollection();
 		foreach($config as $key=>$value)
@@ -1917,6 +1917,12 @@ class YellowConfig
 			$fileDataNew .= ucfirst($key).": $value\n";
 		}
 		return $this->yellow->toolbox->createFile($fileName, $fileDataNew);
+	}
+	
+	// Update configuration in file, TODO: remove later, used for backwards compatibility
+	function update($fileName, $config)
+	{
+		$this->save($fileName, $config);
 	}
 	
 	// Set default configuration
