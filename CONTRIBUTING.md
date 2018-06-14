@@ -3,7 +3,7 @@ Contributing guidelines
 
 ## How do I report a problem?
 
-Submit an issue for each problem. Please keep in mind the people who make open source software are volunteers.
+[Submit an issue](https://github.com/datenstrom/yellow/issues) for each problem. Please keep in mind the people who make open source software are volunteers.
 
 1. **Describe your problem**, sometimes there are different solutions.
 2. **Add a lot of details**, the more we know the better we can help.
