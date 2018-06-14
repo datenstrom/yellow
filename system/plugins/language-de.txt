@@ -3,7 +3,7 @@
 Language: de
 LanguageDescription: Deutsch
 LanguageTranslator: David Fehrmann
-LanguageVersion: 0.7.9
+LanguageVersion: 0.7.10
 
 BlogBy: von
 BlogFilter: Blog:
@@ -69,30 +69,30 @@ EditQuitStatusNone: Bitte gib deinen Namen zur Bestätigung ein.
 EditQuitStatusMismatch: Bitte gib einen anderen Namen ein.
 EditQuitStatusNext: Benutzerkonto wird gelöscht, bitte überprüfe deine E-Mails.
 EditConfirmSubject: Benutzerkonto bestätigen
-EditConfirmMessage: Hallo @usershort, bitte bestätige dein Benutzerkonto. Klicke auf den folgenden Link.
+EditConfirmMessage: Hallo @usershort,\n\nbitte bestätige dein Benutzerkonto. Klicke auf den folgenden Link.
 EditConfirmStatusDone: Benutzerkonto wurde bestätigt und wartet auf Genehmigung. Vielen Dank!
 EditApproveSubject: Benutzerkonto genehmigen
-EditApproveMessage: Hallo @usershort, bitte genehmige ein neues Benutzerkonto für @useraccount. Klicke auf den folgenden Link.
+EditApproveMessage: Hallo @usershort,\n\nbitte genehmige ein neues Benutzerkonto für @useraccount. Klicke auf den folgenden Link.
 EditApproveStatusDone: Benutzerkonto wurde genehmigt. Vielen Dank!
 EditReactivateSubject: Benutzerkonto reaktivieren
-EditReactivateMessage: Hallo @usershort, bitte reaktiviere dein Benutzerkonto. Es gab zu viele fehlgeschlagene Anmeldeversuche. Klicke auf den folgenden Link.
+EditReactivateMessage: Hallo @usershort,\n\nbitte reaktiviere dein Benutzerkonto. Es gab zu viele fehlgeschlagene Anmeldeversuche. Klicke auf den folgenden Link.
 EditReactivateStatusDone: Benutzerkonto wurde reaktiviert. Vielen Dank!
 EditRecoverSubject: Benutzerkonto wiederherstellen
-EditRecoverMessage: Hallo @usershort, bitte bestätige, dass du dein Kennwort vergessen hast. Klicke auf den folgenden Link.
+EditRecoverMessage: Hallo @usershort,\n\nbitte bestätige, dass du dein Kennwort vergessen hast. Klicke auf den folgenden Link.
 EditRecoverStatusDone: Benutzerkonto wurde wiederhergestellt. Vielen Dank!
 EditVerifySubject: Benutzerkonto bestätigen
-EditVerifyMessage: Hallo @usershort, bitte bestätige eine neue E-Mail für dein Benutzerkonto. Klicke auf den folgenden Link.
+EditVerifyMessage: Hallo @usershort,\n\nbitte bestätige eine neue E-Mail für dein Benutzerkonto. Klicke auf den folgenden Link.
 EditVerifyStatusDone: Benutzerkonto wurde bestätigt. Vielen Dank!
 EditChangeSubject: Benutzerkonto ändern
-EditChangeMessage: Hallo @usershort, bitte bestätige, dass du dein Benutzerkonto ändern möchtest. Klicke auf den folgenden Link.
+EditChangeMessage: Hallo @usershort,\n\nbitte bestätige, dass du dein Benutzerkonto ändern möchtest. Klicke auf den folgenden Link.
 EditChangeStatusDone: Benutzerkonto wurde geändert. Vielen Dank!
 EditRemoveSubject: Benutzerkonto löschen
-EditRemoveMessage: Hallo @usershort, bitte bestätige, dass du dein Benutzerkonto löschen möchtest. Klicke auf den folgenden Link.
+EditRemoveMessage: Hallo @usershort,\n\nbitte bestätige, dass du dein Benutzerkonto löschen möchtest. Klicke auf den folgenden Link.
 EditRemoveStatusDone: Benutzerkonto wurde gelöscht. Vielen Dank!
 EditWelcomeSubject: Willkommen
-EditWelcomeMessage: Hallo @usershort, dein Benutzerkonto wurde erstellt. Viel Spass beim Bearbeiten der Webseite.
+EditWelcomeMessage: Hallo @usershort,\n\ndein Benutzerkonto wurde erstellt. Viel Spass beim Bearbeiten der Webseite.
 EditGoodbyeSubject: Auf Wiedersehen
-EditGoodbyeMessage: Hallo @usershort, dein Benutzerkonto wurde gelöscht. Mach's gut.
+EditGoodbyeMessage: Hallo @usershort,\n\ndein Benutzerkonto wurde gelöscht. Mach's gut.
 EditVersionTitle: Über diese Webseite
 EditVersionStatusNone: Datenstrom Yellow ist für Menschen die Webseiten machen.
 EditVersionStatusCheck: Nach Aktualisierung suchen…

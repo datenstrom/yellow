@@ -3,7 +3,7 @@
 Language: fr
 LanguageDescription: Français
 LanguageTranslator: Juh Nibreh
-LanguageVersion: 0.7.9
+LanguageVersion: 0.7.10
 
 BlogBy: par
 BlogFilter: Blog:
@@ -69,30 +69,30 @@ EditQuitStatusNone: S'il vous plaît entrez votre nom pour confirmer.
 EditQuitStatusMismatch: S'il vous plaît entrer un nom différent.
 EditQuitStatusNext: Votre compte sera supprimé, vérifier vos emails.
 EditConfirmSubject: Confirmation d'un compte utilisateur
-EditConfirmMessage: Bonjour @usershort, veuillez confirmer votre compte utilisateur. Cliquez sur le lien suivant.
+EditConfirmMessage: Bonjour @usershort,\n\nveuillez confirmer votre compte utilisateur. Cliquez sur le lien suivant.
 EditConfirmStatusDone: Votre compte utilisateur est confirmé et en attente d'approbation. Merci!
 EditApproveSubject: Approuver un nouvel utilisateur
-EditApproveMessage: Bonjour @usershort, veuillez approuver la création d'un nouveau compte utilisateur pour @useraccount. Cliquez sur le lien suivant.
+EditApproveMessage: Bonjour @usershort,\n\nveuillez approuver la création d'un nouveau compte utilisateur pour @useraccount. Cliquez sur le lien suivant.
 EditApproveStatusDone: Compte utilisateur approuvé. Merci!
 EditReactivateSubject: Réactivation d'un compte utilisateur
-EditReactivateMessage: Bonjour @usershort, veuillez réactivér votre compte utilisateur. Il y a eu trop de tentatives de connexion échouées. Cliquez sur le lien suivant.
+EditReactivateMessage: Bonjour @usershort,\n\nveuillez réactivér votre compte utilisateur. Il y a eu trop de tentatives de connexion échouées. Cliquez sur le lien suivant.
 EditReactivateStatusDone: Compte d'utilisateur réactivé. Merci!
 EditRecoverSubject: Restauration d'un compte utilisateur
-EditRecoverMessage: Bonjour @usershort, veuillez confirmer que vous avez oublié votre mot de passe. Cliquez sur le lien suivant.
+EditRecoverMessage: Bonjour @usershort,\n\nveuillez confirmer que vous avez oublié votre mot de passe. Cliquez sur le lien suivant.
 EditRecoverStatusDone: Compte utilisateur restauré. Merci!
 EditVerifySubject: Confirmation d'un compte utilisateur
-EditVerifyMessage: Bonjour @usershort, veuillez confirmer une nouvelle adresse email pour votre compte utilisateur. Cliquez sur le lien suivant.
+EditVerifyMessage: Bonjour @usershort,\n\nveuillez confirmer une nouvelle adresse email pour votre compte utilisateur. Cliquez sur le lien suivant.
 EditVerifyStatusDone: Votre compte utilisateur est confirmé. Merci!
 EditChangeSubject: Changement d'un compte utilisateur
-EditChangeMessage: Bonjour @usershort, veuillez confirmer que vous souhaitez modifier votre compte utilisateur. Cliquez sur le lien suivant.
+EditChangeMessage: Bonjour @usershort,\n\nveuillez confirmer que vous souhaitez modifier votre compte utilisateur. Cliquez sur le lien suivant.
 EditChangeStatusDone: Compte utilisateur changé. Merci!
 EditRemoveSubject: Supprimer le compte d'utilisateur
-EditRemoveMessage: Bonjour @usershort, veuillez confirmer que vous souhaitez supprimer votre compte d'utilisateur. Cliquez sur le lien suivant.
+EditRemoveMessage: Bonjour @usershort,\n\nveuillez confirmer que vous souhaitez supprimer votre compte d'utilisateur. Cliquez sur le lien suivant.
 EditRemoveStatusDone: Compte d'utilisateur supprimé. Merci!
 EditWelcomeSubject: Bienvenue
-EditWelcomeMessage: Bonjour @usershort, votre compte utilisateur a bien été créé. Amusez-vous bien en éditant le site web.
+EditWelcomeMessage: Bonjour @usershort,\n\nvotre compte utilisateur a bien été créé. Amusez-vous bien en éditant le site web.
 EditGoodbyeSubject: Au revoir
-EditGoodbyeMessage: Bonjour @usershort, votre compte utilisateur a bien été supprimé. Prends soin.
+EditGoodbyeMessage: Bonjour @usershort,\n\nvotre compte utilisateur a bien été supprimé. Prends soin.
 EditVersionTitle: A propos de ce site
 EditVersionStatusNone: Datenstrom Yellow est fait pour les gens qui font des sites web.
 EditVersionStatusCheck: Vérification des mises à jour…

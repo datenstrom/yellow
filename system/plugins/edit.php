@@ -5,7 +5,7 @@
 
 class YellowEdit
 {
-	const VERSION = "0.7.19";
+	const VERSION = "0.7.20";
 	var $yellow;			//access to API
 	var $response;			//web response
 	var $users;				//user accounts
@@ -1497,6 +1497,7 @@ class YellowResponse
 		$sitename = $this->yellow->config->get("sitename");
 		$prefix = "edit".ucfirst($action);
 		$message = $this->yellow->text->getText("{$prefix}Message", $language);
+		$message = strreplaceu("\\n", "\n", $message);
 		$message = preg_replace("/@useraccount/i", $account, $message);
 		$message = preg_replace("/@usershort/i", strtok($name, " "), $message);
 		$message = preg_replace("/@username/i", $name, $message);
