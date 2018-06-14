@@ -5,7 +5,7 @@
 
 class YellowUpdate
 {
-	const VERSION = "0.7.10";
+	const VERSION = "0.7.11";
 	var $yellow;					//access to API
 	var $updates;					//number of updates
 	
@@ -607,7 +607,7 @@ class YellowUpdate
 				if(!empty($email) && !empty($password) && $this->yellow->plugins->isExisting("edit"))
 				{
 					$fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("editUserFile");
-					$status = $this->yellow->plugins->get("edit")->users->update($fileNameUser, $email, $password, $name, $language) ? "ok" : "error";
+					$status = $this->yellow->plugins->get("edit")->users->save($fileNameUser, $email, $password, $name, $language) ? "ok" : "error";
 					if($status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
 				}
 			}

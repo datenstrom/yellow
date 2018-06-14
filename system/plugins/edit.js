@@ -57,6 +57,8 @@ yellow.edit =
 			case "change":		this.showPane("yellow-pane-settings", action, status); break;
 			case "version":		this.showPane("yellow-pane-version", action, status); break;
 			case "update":		this.sendPane("yellow-pane-update", action, status, args); break;
+			case "quit":		this.showPane("yellow-pane-quit", action, status); break;
+			case "remove":		this.showPane("yellow-pane-quit", action, status); break;
 			case "create":		this.showPane("yellow-pane-edit", action, status, true); break;
 			case "edit":		this.showPane("yellow-pane-edit", action, status, true); break;
 			case "delete":		this.showPane("yellow-pane-edit", action, status, true); break;
@@ -261,6 +263,7 @@ yellow.edit =
 				"<p><label for=\"yellow-pane-settings-name\">"+this.getText("SignupName")+"</label><br /><input class=\"yellow-form-control\" name=\"name\" id=\"yellow-pane-settings-name\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("name"))+"\" /></p>"+
 				"<p><label for=\"yellow-pane-settings-email\">"+this.getText("SignupEmail")+"</label><br /><input class=\"yellow-form-control\" name=\"email\" id=\"yellow-pane-settings-email\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("email"))+"\" /></p>"+
 				"<p><label for=\"yellow-pane-settings-password\">"+this.getText("SignupPassword")+"</label><br /><input class=\"yellow-form-control\" type=\"password\" name=\"password\" id=\"yellow-pane-settings-password\" maxlength=\"64\" value=\"\" /></p>"+rawDataLanguages+
+				"<p>"+this.getText("SettingsQuit")+" <a href=\"#\" data-action=\"quit\">"+this.getText("SettingsMore")+"</a></p>"+
 				"<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("OkButton")+"\" /></p>"+
 				"</div>"+
 				"<div id=\"yellow-pane-settings-buttons\">"+
@@ -276,6 +279,23 @@ yellow.edit =
 				"<div id=\"yellow-pane-version-status\" class=\""+paneStatus+"\">"+this.getText("VersionStatus", "", paneStatus)+"</div>"+
 				"<div id=\"yellow-pane-version-fields\">"+yellow.page.rawDataOutput+"</div>"+
 				"<div id=\"yellow-pane-version-buttons\">"+
+				"<p><a href=\"#\" class=\"yellow-btn\" data-action=\"close\">"+this.getText("OkButton")+"</a></p>"+
+				"</div>"+
+				"</form>";
+				break;
+			case "yellow-pane-quit":
+				elementDiv.innerHTML =
+				"<form method=\"post\">"+
+				"<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\"></i></a>"+
+				"<h1>"+this.getText("QuitTitle")+"</h1>"+
+				"<div id=\"yellow-pane-quit-status\" class=\""+paneStatus+"\">"+this.getText(paneAction+"Status", "", paneStatus)+"</div>"+
+				"<div id=\"yellow-pane-quit-fields\">"+
+				"<input type=\"hidden\" name=\"action\" value=\"quit\" />"+
+				"<input type=\"hidden\" name=\"csrftoken\" value=\""+yellow.toolbox.encodeHtml(this.getCookie("csrftoken"))+"\" />"+
+				"<p><label for=\"yellow-pane-quit-name\">"+this.getText("SignupName")+"</label><br /><input class=\"yellow-form-control\" name=\"name\" id=\"yellow-pane-quit-name\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("name"))+"\" /></p>"+
+				"<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("DeleteButton")+"\" /></p>"+
+				"</div>"+
+				"<div id=\"yellow-pane-quit-buttons\">"+
 				"<p><a href=\"#\" class=\"yellow-btn\" data-action=\"close\">"+this.getText("OkButton")+"</a></p>"+
 				"</div>"+
 				"</form>";
@@ -375,6 +395,15 @@ yellow.edit =
 					document.getElementById("yellow-pane-version-status").innerHTML = "<a href=\"#\" data-action=\"update\">"+this.getText("VersionUpdateNormal")+"</a>";
 				}
 				break;
+			case "yellow-pane-quit":
+				yellow.toolbox.setVisible(document.getElementById("yellow-pane-quit-fields"), showFields);
+				yellow.toolbox.setVisible(document.getElementById("yellow-pane-quit-buttons"), !showFields);
+				if(paneStatus=="none")
+				{
+					document.getElementById("yellow-pane-quit-status").innerHTML = this.getText("QuitStatusNone");
+					document.getElementById("yellow-pane-quit-name").value = "";
+				}
+				break;
 			case "yellow-pane-edit":
 				document.getElementById("yellow-pane-edit-text").focus();
 				if(init)
@@ -434,6 +463,7 @@ yellow.edit =
 			case "yellow-pane-recover":
 			case "yellow-pane-settings":
 			case "yellow-pane-version":
+			case "yellow-pane-quit":
 				yellow.toolbox.setOuterLeft(document.getElementById(paneId), paneLeft);
 				yellow.toolbox.setOuterTop(document.getElementById(paneId), paneTop);
 				yellow.toolbox.setOuterWidth(document.getElementById(paneId), paneWidth);
@@ -795,7 +825,7 @@ yellow.edit =
 		var extensions = yellow.config.editUploadExtensions.split(/\s*,\s*/);
 		if(file.size<=yellow.config.serverFileSizeMax && extensions.indexOf(extension)!=-1)
 		{
-			var text = this.getText("UploadProgress");
+			var text = this.getText("UploadProgress")+"\u200b";
 			yellow.editor.setMarkdown(elementText, text, "insert");
 			var thisObject = this;
 			var formData = new FormData();
@@ -815,7 +845,7 @@ yellow.edit =
 		var result = JSON.parse(responseText);
 		if(result)
 		{
-			var textOld = this.getText("UploadProgress");
+			var textOld = this.getText("UploadProgress")+"\u200b";
 			var textNew;
 			if(result.location.substring(0, yellow.config.imageLocation.length)==yellow.config.imageLocation)
 			{
@@ -833,7 +863,7 @@ yellow.edit =
 		var result = JSON.parse(responseText);
 		if(result)
 		{
-			var textOld = this.getText("UploadProgress");
+			var textOld = this.getText("UploadProgress")+"\u200b";
 			var textNew = "["+result.error+"]";
 			yellow.editor.replace(elementText, textOld, textNew);
 		}

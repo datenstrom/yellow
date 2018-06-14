@@ -3,7 +3,7 @@
 Language: de
 LanguageDescription: Deutsch
 LanguageTranslator: David Fehrmann
-LanguageVersion: 0.7.8
+LanguageVersion: 0.7.9
 
 BlogBy: von
 BlogFilter: Blog:
@@ -12,7 +12,7 @@ BlogMore: Lies mehr…
 ContactName: Name:
 ContactEmail: E-Mail:
 ContactMessage: Nachricht:
-ContactConsent: Ich stimme zu, dass diese Webseite meine persönlichen Daten speichert und zur Kontaktaufnahme verwendet.
+ContactConsent: Ich stimme zu, dass diese Webseite meine persönlichen Daten speichert.
 ContactButton: Nachricht absenden
 ContactStatusNone: Sag Hallo! Dein Feedback ist sehr willkommen.
 ContactStatusIncomplete: Bitte alle Felder ausfüllen.
@@ -58,10 +58,16 @@ EditRecoverPassword: Kennwort:
 EditRecoverStatusPassword: Bitte ein neues Kennwort angeben.
 EditRecoverStatusWeak: Bitte ein anderes Kennwort angeben.
 EditSettingsTitle: Einstellungen
+EditSettingsQuit: Du kannst dein Benutzerkonto jederzeit löschen.
+EditSettingsMore: Mehr…
 EditSettingsStatusInvalid: Bitte eine gültige E-Mail angeben.
 EditSettingsStatusTaken: Bitte eine andere E-Mail angeben.
 EditSettingsStatusWeak: Bitte ein anderes Kennwort angeben.
 EditSettingsStatusNext: Benutzerkonto wird geändert, bitte überprüfe deine E-Mails.
+EditQuitTitle: Benutzerkonto löschen
+EditQuitStatusNone: Bitte gib deinen Namen zur Bestätigung ein.
+EditQuitStatusMismatch: Bitte gib einen anderen Namen ein.
+EditQuitStatusNext: Benutzerkonto wird gelöscht, bitte überprüfe deine E-Mails.
 EditConfirmSubject: Benutzerkonto bestätigen
 EditConfirmMessage: Hallo @usershort, bitte bestätige dein Benutzerkonto. Klicke auf den folgenden Link.
 EditConfirmStatusDone: Benutzerkonto wurde bestätigt und wartet auf Genehmigung. Vielen Dank!
@@ -80,10 +86,13 @@ EditVerifyStatusDone: Benutzerkonto wurde bestätigt. Vielen Dank!
 EditChangeSubject: Benutzerkonto ändern
 EditChangeMessage: Hallo @usershort, bitte bestätige, dass du dein Benutzerkonto ändern möchtest. Klicke auf den folgenden Link.
 EditChangeStatusDone: Benutzerkonto wurde geändert. Vielen Dank!
+EditRemoveSubject: Benutzerkonto löschen
+EditRemoveMessage: Hallo @usershort, bitte bestätige, dass du dein Benutzerkonto löschen möchtest. Klicke auf den folgenden Link.
+EditRemoveStatusDone: Benutzerkonto wurde gelöscht. Vielen Dank!
 EditWelcomeSubject: Willkommen
 EditWelcomeMessage: Hallo @usershort, dein Benutzerkonto wurde erstellt. Viel Spass beim Bearbeiten der Webseite.
-EditInformationSubject: Willkommen zurück
-EditInformationMessage: Hallo @usershort, dein Benutzerkonto wurde geändert. Du kannst dich jetzt anmelden.
+EditGoodbyeSubject: Auf Wiedersehen
+EditGoodbyeMessage: Hallo @usershort, dein Benutzerkonto wurde gelöscht. Mach's gut.
 EditVersionTitle: Über diese Webseite
 EditVersionStatusNone: Datenstrom Yellow ist für Menschen die Webseiten machen.
 EditVersionStatusCheck: Nach Aktualisierung suchen…

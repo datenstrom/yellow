@@ -198,6 +198,13 @@
 #yellow-pane-version-fields { text-align:center; margin:0.5em 0; }
 #yellow-pane-version-buttons { margin-top:-0.5em; }
 
+#yellow-pane-quit { text-align:center; }
+#yellow-pane-quit .yellow-form-control { width:15em; box-sizing:border-box; }
+#yellow-pane-quit .yellow-btn { width:15em; margin:1em 1em 0.5em 0; }
+#yellow-pane-quit-status { margin:0.5em 0; display:inline-block; }
+#yellow-pane-quit-fields { width:15em; text-align:left; margin:0 auto; }
+#yellow-pane-quit-buttons { margin-top:-0.5em; }
+
 #yellow-pane-edit-toolbar-title { margin:-5px 0 0 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 #yellow-pane-edit-text { padding:0 2px; outline:none; resize:none; border:none; }
 #yellow-pane-edit-preview { padding:0; overflow:auto; }

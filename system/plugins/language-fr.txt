@@ -3,7 +3,7 @@
 Language: fr
 LanguageDescription: Français
 LanguageTranslator: Juh Nibreh
-LanguageVersion: 0.7.8
+LanguageVersion: 0.7.9
 
 BlogBy: par
 BlogFilter: Blog:
@@ -12,7 +12,7 @@ BlogMore: Lire la suite…
 ContactName: Nom:
 ContactEmail: Email:
 ContactMessage: Message:
-ContactConsent: Je consens que ce site web stocke mes données personnelles et l'utilise pour me contacter.
+ContactConsent: Je consens que ce site web stocke mes données personnelles.
 ContactButton: Envoyer le message
 ContactStatusNone: Dites bonjour! Vos commentaires sont les bienvenus.
 ContactStatusIncomplete: S'il vous plaît, veuillez remplir tous les champs.
@@ -58,10 +58,16 @@ EditRecoverPassword: Mot de passe:
 EditRecoverStatusPassword: S'il vous plaît, choisissez un nouveau mot de passe.
 EditRecoverStatusWeak: S'il vous plaît, choisissez un mot de passe différent.
 EditSettingsTitle: Paramètres
+EditSettingsQuit: Vous pouvez supprimer votre compte d'utilisateur.
+EditSettingsMore: Plus…
 EditSettingsStatusInvalid: S'il vous plaît, veuillez entrer une adresse email valide.
 EditSettingsStatusTaken: S'il vous plaît, veuillez entrer une adresse email différent.
 EditSettingsStatusWeak: S'il vous plaît, choisissez un mot de passe différent.
 EditSettingsStatusNext: Votre compte a été changé, vérifiez vos emails.
+EditQuitTitle: Supprimer le compte d'utilisateur
+EditQuitStatusNone: S'il vous plaît entrez votre nom pour confirmer.
+EditQuitStatusMismatch: S'il vous plaît entrer un nom différent.
+EditQuitStatusNext: Votre compte sera supprimé, vérifier vos emails.
 EditConfirmSubject: Confirmation d'un compte utilisateur
 EditConfirmMessage: Bonjour @usershort, veuillez confirmer votre compte utilisateur. Cliquez sur le lien suivant.
 EditConfirmStatusDone: Votre compte utilisateur est confirmé et en attente d'approbation. Merci!
@@ -80,10 +86,13 @@ EditVerifyStatusDone: Votre compte utilisateur est confirmé. Merci!
 EditChangeSubject: Changement d'un compte utilisateur
 EditChangeMessage: Bonjour @usershort, veuillez confirmer que vous souhaitez modifier votre compte utilisateur. Cliquez sur le lien suivant.
 EditChangeStatusDone: Compte utilisateur changé. Merci!
+EditRemoveSubject: Supprimer le compte d'utilisateur
+EditRemoveMessage: Bonjour @usershort, veuillez confirmer que vous souhaitez supprimer votre compte d'utilisateur. Cliquez sur le lien suivant.
+EditRemoveStatusDone: Compte d'utilisateur supprimé. Merci!
 EditWelcomeSubject: Bienvenue
 EditWelcomeMessage: Bonjour @usershort, votre compte utilisateur a bien été créé. Amusez-vous bien en éditant le site web.
-EditInformationSubject: Bienvenue à nouveau
-EditInformationMessage: Bonjour @usershort, votre compte utilisateur a bien été changé. Vous pouvez maintenant vous connecter.
+EditGoodbyeSubject: Au revoir
+EditGoodbyeMessage: Bonjour @usershort, votre compte utilisateur a bien été supprimé. Prends soin.
 EditVersionTitle: A propos de ce site
 EditVersionStatusNone: Datenstrom Yellow est fait pour les gens qui font des sites web.
 EditVersionStatusCheck: Vérification des mises à jour…
