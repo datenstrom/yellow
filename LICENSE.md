@@ -338,4 +338,4 @@ Public License instead of this License.
 
 ## Note
 
-Programs by Datenstrom are licensed under GPLv2 unless stated otherwise.
+Software by Datenstrom is licensed under GPLv2 unless stated otherwise.
