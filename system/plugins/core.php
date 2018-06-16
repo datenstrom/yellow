@@ -1922,7 +1922,7 @@ class YellowConfig
 	// Update configuration in file, TODO: remove later, used for backwards compatibility
 	function update($fileName, $config)
 	{
-		$this->save($fileName, $config);
+		return $this->save($fileName, $config);
 	}
 	
 	// Set default configuration
