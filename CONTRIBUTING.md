@@ -15,6 +15,6 @@ Contributing guidelines
 
 1. Write feedback, it helps us to understand what people need. 
 2. Fix a problem, use the simplest solution that actually works. 
-3. First make it work, then make it better. [Read more…](https://developers.datenstrom.se/help/support).
+3. First make it work, then make it better. [Get support](https://developers.datenstrom.se/help/support).
 
 Thank you. Your help is much appreciated. :+1:
