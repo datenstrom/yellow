@@ -3,10 +3,9 @@
 Language: en
 LanguageDescription: English
 LanguageTranslator: Mark Seuffert
-LanguageVersion: 0.7.10
+LanguageVersion: 0.7.11
 
 BlogBy: by
-BlogFilter: Blog:
 BlogTag: Tags:
 BlogMore: Read more…
 ContactName: Name:
@@ -142,7 +141,6 @@ PagePrevious: ← Previous: @title
 PageNext: Next: @title →
 PaginationPrevious: ← Previous
 PaginationNext: Next →
-SearchQuery: Search:
 SearchResultsNone: Enter a search term.
 SearchResultsEmpty: No results found.
 SearchSpecialChanges: Recent changes
@@ -150,7 +148,6 @@ SearchButton: Search
 TimeFormatShort: H:i
 TimeFormatMedium: H:i:s
 TimeFormatLong: H:i:s T
-WikiFilter: Wiki:
 WikiTag: Tags:
 WikiSpecialPages: All pages
 WikiSpecialChanges: Recent changes

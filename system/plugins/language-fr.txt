@@ -3,10 +3,9 @@
 Language: fr
 LanguageDescription: Français
 LanguageTranslator: Juh Nibreh
-LanguageVersion: 0.7.10
+LanguageVersion: 0.7.11
 
 BlogBy: par
-BlogFilter: Blog:
 BlogTag: Tags:
 BlogMore: Lire la suite…
 ContactName: Nom:
@@ -142,7 +141,6 @@ PagePrevious: ← Précédent: @title
 PageNext: Suivant: @title →
 PaginationPrevious: ← Précédent
 PaginationNext: Suivant →
-SearchQuery: Rechercher:
 SearchResultsNone: Entrez un mot dans le champ de recherche.
 SearchResultsEmpty: Pas de résultats.
 SearchSpecialChanges: Changements récents
@@ -150,7 +148,6 @@ SearchButton: Rechercher
 TimeFormatShort: H:i
 TimeFormatMedium: H:i:s
 TimeFormatLong: H:i:s T
-WikiFilter: Wiki:
 WikiTag: Tags:
 WikiSpecialPages: Toutes les pages
 WikiSpecialChanges: Changements récents

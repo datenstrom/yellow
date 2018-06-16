@@ -3,10 +3,9 @@
 Language: de
 LanguageDescription: Deutsch
 LanguageTranslator: David Fehrmann
-LanguageVersion: 0.7.10
+LanguageVersion: 0.7.11
 
 BlogBy: von
-BlogFilter: Blog:
 BlogTag: Tags:
 BlogMore: Lies mehr…
 ContactName: Name:
@@ -142,7 +141,6 @@ PagePrevious: ← Zurück: @title
 PageNext: Weiter: @title →
 PaginationPrevious: ← Zurück
 PaginationNext: Weiter →
-SearchQuery: Suche:
 SearchResultsNone: Bitte einen Suchbegriff eingeben.
 SearchResultsEmpty: Keine Treffer für diese Suchanfrage.
 SearchSpecialChanges: Letzte Änderungen
@@ -150,7 +148,6 @@ SearchButton: Suchen
 TimeFormatShort: H:i
 TimeFormatMedium: H:i:s
 TimeFormatLong: H:i:s T
-WikiFilter: Wiki:
 WikiTag: Tags:
 WikiSpecialPages: Alle Seiten
 WikiSpecialChanges: Letzte Änderungen
