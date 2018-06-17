@@ -5,7 +5,7 @@
 
 class YellowEdit
 {
-	const VERSION = "0.7.20";
+	const VERSION = "0.7.21";
 	var $yellow;			//access to API
 	var $response;			//web response
 	var $users;				//user accounts
@@ -49,7 +49,7 @@ class YellowEdit
 				{
 					list($hash, $name, $language, $status, $stamp, $modified, $errors, $pending, $home) = explode(',', $matches[2]);
 					if($errors=="none") { $home=$pending; $pending=$errors; $errors=$modified; $modified=$stamp; $stamp=""; } //TODO: remove later
-					if(strlenb($stamp)!=20) $stamp=$this->createStamp(); //TODO: remove later, converts old file format
+					if(strlenb($stamp)!=20) $stamp=$this->users->createStamp(); //TODO: remove later, converts old file format
 					if($status!="active" && $status!="inactive") { unset($this->users->users[$matches[1]]); continue; }
 					$pending = "none";
 					$this->users->set($matches[1], $hash, $name, $language, $status, $stamp, $modified, $errors, $pending, $home);
