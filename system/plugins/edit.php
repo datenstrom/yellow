@@ -5,7 +5,7 @@
 
 class YellowEdit
 {
-	const VERSION = "0.7.22";
+	const VERSION = "0.7.23";
 	var $yellow;			//access to API
 	var $response;			//web response
 	var $users;				//user accounts
@@ -1506,7 +1506,6 @@ class YellowResponse
 		$mailSubject = mb_encode_mimeheader($this->yellow->text->getText("{$prefix}Subject", $language));
 		$mailHeaders = mb_encode_mimeheader("From: $sitename")." <noreply>\r\n";
 		$mailHeaders .= mb_encode_mimeheader("X-Request-Url: $scheme://$address$base")."\r\n";
-		$mailHeaders .= mb_encode_mimeheader("X-Remote-Addr: $_SERVER[REMOTE_ADDR]")."\r\n";
 		$mailHeaders .= "Mime-Version: 1.0\r\n";
 		$mailHeaders .= "Content-Type: text/plain; charset=utf-8\r\n";
 		$mailMessage = "$message\r\n\r\n$url\r\n-- \r\n$sitename";

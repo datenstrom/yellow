@@ -3,7 +3,7 @@
 Language: de
 LanguageDescription: Deutsch
 LanguageTranslator: David Fehrmann
-LanguageVersion: 0.7.11
+LanguageVersion: 0.7.12
 
 BlogBy: von
 BlogTag: Tags:
@@ -11,7 +11,7 @@ BlogMore: Lies mehr…
 ContactName: Name:
 ContactEmail: E-Mail:
 ContactMessage: Nachricht:
-ContactConsent: Ich stimme zu, dass diese Webseite meine persönlichen Daten speichert.
+ContactConsent: Ich stimme zu, dass diese Webseite meine Nachricht speichert.
 ContactButton: Nachricht absenden
 ContactStatusNone: Sag Hallo! Dein Feedback ist sehr willkommen.
 ContactStatusIncomplete: Bitte alle Felder ausfüllen.

@@ -3,7 +3,7 @@
 Language: fr
 LanguageDescription: Français
 LanguageTranslator: Juh Nibreh
-LanguageVersion: 0.7.11
+LanguageVersion: 0.7.12
 
 BlogBy: par
 BlogTag: Tags:
@@ -11,7 +11,7 @@ BlogMore: Lire la suite…
 ContactName: Nom:
 ContactEmail: Email:
 ContactMessage: Message:
-ContactConsent: Je consens que ce site web stocke mes données personnelles.
+ContactConsent: Je consens que ce site stocke mon message.
 ContactButton: Envoyer le message
 ContactStatusNone: Dites bonjour! Vos commentaires sont les bienvenus.
 ContactStatusIncomplete: S'il vous plaît, veuillez remplir tous les champs.

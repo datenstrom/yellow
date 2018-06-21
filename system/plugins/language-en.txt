@@ -3,7 +3,7 @@
 Language: en
 LanguageDescription: English
 LanguageTranslator: Mark Seuffert
-LanguageVersion: 0.7.11
+LanguageVersion: 0.7.12
 
 BlogBy: by
 BlogTag: Tags:
@@ -11,7 +11,7 @@ BlogMore: Read more…
 ContactName: Name:
 ContactEmail: Email:
 ContactMessage: Message:
-ContactConsent: I consent that this website stores my personal data.
+ContactConsent: I consent that this website stores my message.
 ContactButton: Send message
 ContactStatusNone: Say hello. Your feedback is very welcome.
 ContactStatusIncomplete: Please fill out all fields.
