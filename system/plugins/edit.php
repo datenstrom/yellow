@@ -5,7 +5,7 @@
 
 class YellowEdit
 {
-	const VERSION = "0.7.21";
+	const VERSION = "0.7.22";
 	var $yellow;			//access to API
 	var $response;			//web response
 	var $users;				//user accounts
@@ -853,7 +853,7 @@ class YellowEdit
 		   filesize($fileNameTemp)<=$fileSizeMax && in_array($extension, $extensions))
 		{
 			$file = $this->response->getFileUpload($scheme, $address, $base, $location, $fileNameTemp, $fileNameShort);
-			if(!$file->isError() && $this->yellow->toolbox->renameFile($fileNameTemp, $file->fileName, true))
+			if(!$file->isError() && $this->yellow->toolbox->copyFile($fileNameTemp, $file->fileName, true))
 			{
 				$data["location"] = $file->getLocation();
 			} else {
