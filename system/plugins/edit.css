@@ -24,9 +24,6 @@
  -webkit-margin-before: 0;
  -webkit-margin-after: 0;
 }
-.yellow-pane br {
-  line-height: 0;
-}
 .yellow-close {
 	position:absolute;
 	top:0.8em; right:1em; cursor:pointer;
