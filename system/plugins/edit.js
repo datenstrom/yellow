@@ -180,13 +180,13 @@ yellow.edit =
 				"<h1>"+this.getText("LoginTitle")+"</h1>"+
 				"<div id=\"yellow-pane-login-fields\">"+
 				"<input type=\"hidden\" name=\"action\" value=\"login\" />"+
-				"<p><label for=\"yellow-pane-login-email\">"+this.getText("LoginEmail")+"</label><br /><input class=\"yellow-form-control\" name=\"email\" id=\"yellow-pane-login-email\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(yellow.config.editLoginEmail)+"\" /></p>"+
-				"<p><label for=\"yellow-pane-login-password\">"+this.getText("LoginPassword")+"</label><br /><input class=\"yellow-form-control\" type=\"password\" name=\"password\" id=\"yellow-pane-login-password\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(yellow.config.editLoginPassword)+"\" /></p>"+
-				"<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("LoginButton")+"\" /></p>"+
+				"<div><label for=\"yellow-pane-login-email\">"+this.getText("LoginEmail")+"</label><br /><input class=\"yellow-form-control\" name=\"email\" id=\"yellow-pane-login-email\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(yellow.config.editLoginEmail)+"\" /></div>"+
+				"<div><label for=\"yellow-pane-login-password\">"+this.getText("LoginPassword")+"</label><br /><input class=\"yellow-form-control\" type=\"password\" name=\"password\" id=\"yellow-pane-login-password\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(yellow.config.editLoginPassword)+"\" /></div>"+
+				"<div><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("LoginButton")+"\" /></div>"+
 				"</div>"+
 				"<div id=\"yellow-pane-login-buttons\">"+
-				"<p><a href=\"#\" id=\"yellow-pane-login-forgot\" data-action=\"forgot\">"+this.getText("LoginForgot")+"</a><p>"+
-				"<p><a href=\"#\" id=\"yellow-pane-login-signup\" data-action=\"signup\">"+this.getText("LoginSignup")+"</a><p>"+
+				"<div><a href=\"#\" id=\"yellow-pane-login-forgot\" data-action=\"forgot\">"+this.getText("LoginForgot")+"</a></div>"+
+				"<div><a href=\"#\" id=\"yellow-pane-login-signup\" data-action=\"signup\">"+this.getText("LoginSignup")+"</a></div>"+
 				"</div>"+
 				"</form>";
 				break;
@@ -198,14 +198,14 @@ yellow.edit =
 				"<div id=\"yellow-pane-signup-status\" class=\""+paneStatus+"\">"+this.getText(paneAction+"Status", "", paneStatus)+"</div>"+
 				"<div id=\"yellow-pane-signup-fields\">"+
 				"<input type=\"hidden\" name=\"action\" value=\"signup\" />"+
-				"<p><label for=\"yellow-pane-signup-name\">"+this.getText("SignupName")+"</label><br /><input class=\"yellow-form-control\" name=\"name\" id=\"yellow-pane-signup-name\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("name"))+"\" /></p>"+
-				"<p><label for=\"yellow-pane-signup-email\">"+this.getText("SignupEmail")+"</label><br /><input class=\"yellow-form-control\" name=\"email\" id=\"yellow-pane-signup-email\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("email"))+"\" /></p>"+
-				"<p><label for=\"yellow-pane-signup-password\">"+this.getText("SignupPassword")+"</label><br /><input class=\"yellow-form-control\" type=\"password\" name=\"password\" id=\"yellow-pane-signup-password\" maxlength=\"64\" value=\"\" /></p>"+
-				"<p><input type=\"checkbox\" name=\"consent\" value=\"consent\" id=\"consent\""+(this.getRequest("consent") ? " checked=\"checked\"" : "")+"> <label for=\"consent\">"+this.getText("SignupConsent")+"</label></p>"+
-				"<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("SignupButton")+"\" /></p>"+
+				"<div><label for=\"yellow-pane-signup-name\">"+this.getText("SignupName")+"</label><br /><input class=\"yellow-form-control\" name=\"name\" id=\"yellow-pane-signup-name\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("name"))+"\" /></div>"+
+				"<div><label for=\"yellow-pane-signup-email\">"+this.getText("SignupEmail")+"</label><br /><input class=\"yellow-form-control\" name=\"email\" id=\"yellow-pane-signup-email\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("email"))+"\" /></div>"+
+				"<div><label for=\"yellow-pane-signup-password\">"+this.getText("SignupPassword")+"</label><br /><input class=\"yellow-form-control\" type=\"password\" name=\"password\" id=\"yellow-pane-signup-password\" maxlength=\"64\" value=\"\" /></div>"+
+				"<div><input type=\"checkbox\" name=\"consent\" value=\"consent\" id=\"consent\""+(this.getRequest("consent") ? " checked=\"checked\"" : "")+"> <label for=\"consent\">"+this.getText("SignupConsent")+"</label></div>"+
+				"<div><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("SignupButton")+"\" /></div>"+
 				"</div>"+
 				"<div id=\"yellow-pane-signup-buttons\">"+
-				"<p><a href=\"#\" class=\"yellow-btn\" data-action=\"close\">"+this.getText("OkButton")+"</a></p>"+
+				"<div><a href=\"#\" class=\"yellow-btn\" data-action=\"close\">"+this.getText("OkButton")+"</a></div>"+
 				"</div>"+
 				"</form>";
 				break;
@@ -217,11 +217,11 @@ yellow.edit =
 				"<div id=\"yellow-pane-forgot-status\" class=\""+paneStatus+"\">"+this.getText(paneAction+"Status", "", paneStatus)+"</div>"+
 				"<div id=\"yellow-pane-forgot-fields\">"+
 				"<input type=\"hidden\" name=\"action\" value=\"forgot\" />"+
-				"<p><label for=\"yellow-pane-forgot-email\">"+this.getText("ForgotEmail")+"</label><br /><input class=\"yellow-form-control\" name=\"email\" id=\"yellow-pane-forgot-email\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("email"))+"\" /></p>"+
-				"<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("OkButton")+"\" /></p>"+
+				"<div><label for=\"yellow-pane-forgot-email\">"+this.getText("ForgotEmail")+"</label><br /><input class=\"yellow-form-control\" name=\"email\" id=\"yellow-pane-forgot-email\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("email"))+"\" /></div>"+
+				"<div><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("OkButton")+"\" /></div>"+
 				"</div>"+
 				"<div id=\"yellow-pane-forgot-buttons\">"+
-				"<p><a href=\"#\" class=\"yellow-btn\" data-action=\"close\">"+this.getText("OkButton")+"</a></p>"+
+				"<div><a href=\"#\" class=\"yellow-btn\" data-action=\"close\">"+this.getText("OkButton")+"</a></div>"+
 				"</div>"+
 				"</form>";
 				break;
@@ -232,11 +232,11 @@ yellow.edit =
 				"<h1>"+this.getText("RecoverTitle")+"</h1>"+
 				"<div id=\"yellow-pane-recover-status\" class=\""+paneStatus+"\">"+this.getText(paneAction+"Status", "", paneStatus)+"</div>"+
 				"<div id=\"yellow-pane-recover-fields\">"+
-				"<p><label for=\"yellow-pane-recover-password\">"+this.getText("RecoverPassword")+"</label><br /><input class=\"yellow-form-control\" type=\"password\" name=\"password\" id=\"yellow-pane-recover-password\" maxlength=\"64\" value=\"\" /></p>"+
-				"<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("OkButton")+"\" /></p>"+
+				"<div><label for=\"yellow-pane-recover-password\">"+this.getText("RecoverPassword")+"</label><br /><input class=\"yellow-form-control\" type=\"password\" name=\"password\" id=\"yellow-pane-recover-password\" maxlength=\"64\" value=\"\" /></div>"+
+				"<div><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("OkButton")+"\" /></div>"+
 				"</div>"+
 				"<div id=\"yellow-pane-recover-buttons\">"+
-				"<p><a href=\"#\" class=\"yellow-btn\" data-action=\"close\">"+this.getText("OkButton")+"</a></p>"+
+				"<div><a href=\"#\" class=\"yellow-btn\" data-action=\"close\">"+this.getText("OkButton")+"</a></div>"+
 				"</div>"+
 				"</form>";
 				break;
@@ -244,13 +244,13 @@ yellow.edit =
 				var rawDataLanguages = "";
 				if(yellow.config.serverLanguages && Object.keys(yellow.config.serverLanguages).length>1)
 				{
-					rawDataLanguages += "<p>";
+					rawDataLanguages += "<div>";
 					for(var language in yellow.config.serverLanguages)
 					{
 						var checked = language==this.getRequest("language") ? " checked=\"checked\"" : "";
 						rawDataLanguages += "<label for=\"yellow-pane-settings-"+language+"\"><input type=\"radio\" name=\"language\" id=\"yellow-pane-settings-"+language+"\" value=\""+language+"\""+checked+"> "+yellow.toolbox.encodeHtml(yellow.config.serverLanguages[language])+"</label><br />";
 					}
-					rawDataLanguages += "</p>";
+					rawDataLanguages += "</div>";
 				}
 				elementDiv.innerHTML =
 				"<form method=\"post\">"+
@@ -260,14 +260,14 @@ yellow.edit =
 				"<div id=\"yellow-pane-settings-fields\">"+
 				"<input type=\"hidden\" name=\"action\" value=\"settings\" />"+
 				"<input type=\"hidden\" name=\"csrftoken\" value=\""+yellow.toolbox.encodeHtml(this.getCookie("csrftoken"))+"\" />"+
-				"<p><label for=\"yellow-pane-settings-name\">"+this.getText("SignupName")+"</label><br /><input class=\"yellow-form-control\" name=\"name\" id=\"yellow-pane-settings-name\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("name"))+"\" /></p>"+
-				"<p><label for=\"yellow-pane-settings-email\">"+this.getText("SignupEmail")+"</label><br /><input class=\"yellow-form-control\" name=\"email\" id=\"yellow-pane-settings-email\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("email"))+"\" /></p>"+
-				"<p><label for=\"yellow-pane-settings-password\">"+this.getText("SignupPassword")+"</label><br /><input class=\"yellow-form-control\" type=\"password\" name=\"password\" id=\"yellow-pane-settings-password\" maxlength=\"64\" value=\"\" /></p>"+rawDataLanguages+
-				"<p>"+this.getText("SettingsQuit")+" <a href=\"#\" data-action=\"quit\">"+this.getText("SettingsMore")+"</a></p>"+
-				"<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("OkButton")+"\" /></p>"+
+				"<div><label for=\"yellow-pane-settings-name\">"+this.getText("SignupName")+"</label><br /><input class=\"yellow-form-control\" name=\"name\" id=\"yellow-pane-settings-name\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("name"))+"\" /></div>"+
+				"<div><label for=\"yellow-pane-settings-email\">"+this.getText("SignupEmail")+"</label><br /><input class=\"yellow-form-control\" name=\"email\" id=\"yellow-pane-settings-email\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("email"))+"\" /></div>"+
+				"<div><label for=\"yellow-pane-settings-password\">"+this.getText("SignupPassword")+"</label><br /><input class=\"yellow-form-control\" type=\"password\" name=\"password\" id=\"yellow-pane-settings-password\" maxlength=\"64\" value=\"\" /></div>"+rawDataLanguages+
+				"<div>"+this.getText("SettingsQuit")+" <a href=\"#\" data-action=\"quit\">"+this.getText("SettingsMore")+"</a></div>"+
+				"<div><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("OkButton")+"\" /></div>"+
 				"</div>"+
 				"<div id=\"yellow-pane-settings-buttons\">"+
-				"<p><a href=\"#\" class=\"yellow-btn\" data-action=\"close\">"+this.getText("OkButton")+"</a></p>"+
+				"<div><a href=\"#\" class=\"yellow-btn\" data-action=\"close\">"+this.getText("OkButton")+"</a></div>"+
 				"</div>"+
 				"</form>";
 				break;
@@ -279,7 +279,7 @@ yellow.edit =
 				"<div id=\"yellow-pane-version-status\" class=\""+paneStatus+"\">"+this.getText("VersionStatus", "", paneStatus)+"</div>"+
 				"<div id=\"yellow-pane-version-fields\">"+yellow.page.rawDataOutput+"</div>"+
 				"<div id=\"yellow-pane-version-buttons\">"+
-				"<p><a href=\"#\" class=\"yellow-btn\" data-action=\"close\">"+this.getText("OkButton")+"</a></p>"+
+				"<div><a href=\"#\" class=\"yellow-btn\" data-action=\"close\">"+this.getText("OkButton")+"</a></div>"+
 				"</div>"+
 				"</form>";
 				break;
@@ -292,11 +292,11 @@ yellow.edit =
 				"<div id=\"yellow-pane-quit-fields\">"+
 				"<input type=\"hidden\" name=\"action\" value=\"quit\" />"+
 				"<input type=\"hidden\" name=\"csrftoken\" value=\""+yellow.toolbox.encodeHtml(this.getCookie("csrftoken"))+"\" />"+
-				"<p><label for=\"yellow-pane-quit-name\">"+this.getText("SignupName")+"</label><br /><input class=\"yellow-form-control\" name=\"name\" id=\"yellow-pane-quit-name\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("name"))+"\" /></p>"+
-				"<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("DeleteButton")+"\" /></p>"+
+				"<div><label for=\"yellow-pane-quit-name\">"+this.getText("SignupName")+"</label><br /><input class=\"yellow-form-control\" name=\"name\" id=\"yellow-pane-quit-name\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("name"))+"\" /></div>"+
+				"<div><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("DeleteButton")+"\" /></div>"+
 				"</div>"+
 				"<div id=\"yellow-pane-quit-buttons\">"+
-				"<p><a href=\"#\" class=\"yellow-btn\" data-action=\"close\">"+this.getText("OkButton")+"</a></p>"+
+				"<div><a href=\"#\" class=\"yellow-btn\" data-action=\"close\">"+this.getText("OkButton")+"</a></div>"+
 				"</div>"+
 				"</form>";
 				break;
