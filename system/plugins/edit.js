@@ -185,8 +185,8 @@ yellow.edit =
 				"<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("LoginButton")+"\" /></p>"+
 				"</div>"+
 				"<div id=\"yellow-pane-login-buttons\">"+
-				"<p><a href=\"#\" id=\"yellow-pane-login-forgot\" data-action=\"forgot\">"+this.getText("LoginForgot")+"</a><p>"+
-				"<p><a href=\"#\" id=\"yellow-pane-login-signup\" data-action=\"signup\">"+this.getText("LoginSignup")+"</a><p>"+
+				"<p><a href=\"#\" id=\"yellow-pane-login-forgot\" data-action=\"forgot\">"+this.getText("LoginForgot")+"</a></p>"+
+				"<p><a href=\"#\" id=\"yellow-pane-login-signup\" data-action=\"signup\">"+this.getText("LoginSignup")+"</a></p>"+
 				"</div>"+
 				"</form>";
 				break;
