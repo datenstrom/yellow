@@ -3,7 +3,7 @@
 Language: de
 LanguageDescription: Deutsch
 LanguageTranslator: David Fehrmann
-LanguageVersion: 0.7.12
+LanguageVersion: 0.7.13
 
 BlogBy: von
 BlogTag: Tags:
@@ -96,8 +96,8 @@ EditVersionTitle: Über diese Webseite
 EditVersionStatusNone: Datenstrom Yellow ist für Menschen die Webseiten machen.
 EditVersionStatusCheck: Nach Aktualisierung suchen…
 EditVersionStatusDone: Deine Webseite ist auf dem neusten Stand.
-EditVersionStatusUpdates: Aktualisierung verfügbar, bitte an den Webmaster wenden.
-EditVersionUpdateNormal: Aktualisierung verfügbar, jetzt aktualisieren.
+EditVersionStatusWarning: Aktualisierung verfügbar, bitte aktualisiere deine Webseite.
+EditVersionStatusUpdates: Aktualisierung verfügbar, jetzt aktualisieren.
 EditVersionUpdateForce: Aktualisierung erzwingen
 EditVersionUpdateModified: @software wurde modifiziert
 EditUploadProgress: [Datei hochladen…]

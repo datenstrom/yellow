@@ -3,7 +3,7 @@
 Language: fr
 LanguageDescription: Français
 LanguageTranslator: Juh Nibreh
-LanguageVersion: 0.7.12
+LanguageVersion: 0.7.13
 
 BlogBy: par
 BlogTag: Tags:
@@ -95,9 +95,9 @@ EditGoodbyeMessage: Bonjour @usershort,\n\nvotre compte utilisateur a bien été
 EditVersionTitle: A propos de ce site
 EditVersionStatusNone: Datenstrom Yellow est fait pour les gens qui font des sites web.
 EditVersionStatusCheck: Vérification des mises à jour…
-EditVersionStatusDone: Votre site est à jour.
-EditVersionStatusUpdates: Mises à jour disponibles, s'il vous plaît contacter le webmestre.
-EditVersionUpdateNormal: Mises à jour disponibles, mettre à jour maintenant.
+EditVersionStatusDone: Votre site web est à jour.
+EditVersionStatusWarning: Mises à jour disponibles, veuillez mettre à jour votre site web.
+EditVersionStatusUpdates: Mises à jour disponibles, mettre à jour maintenant.
 EditVersionUpdateForce: Forcer mise à jour
 EditVersionUpdateModified: @software a été modifié
 EditUploadProgress: [Téléchargement du fichier…]

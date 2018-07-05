@@ -18,6 +18,11 @@
 }
 .yellow-pane h1 { color:#000; font-size:2em; margin:0 1em; }
 .yellow-pane p { margin:0.5em; }
+.yellow-pane .yellow-status { margin-bottom:1em; }
+.yellow-pane .yellow-fields { width:15em; text-align:left; margin:0 auto; }
+.yellow-pane .yellow-form-control { width:15em; box-sizing:border-box; }
+.yellow-pane .yellow-fields .yellow-btn { width:15em; margin:1em 0 0.5em 0; }
+.yellow-pane .yellow-buttons .yellow-btn { width:15em; margin:0.5em 0; }
 .yellow-close {
 	position:absolute;
 	top:0.8em; right:1em; cursor:pointer;
@@ -157,61 +162,15 @@
 }
 .yellow-btn:active { box-shadow:inset 0 2px 4px rgba(0, 0, 0, 0.1); }
 
-#yellow-pane-login { text-align:center; }
-#yellow-pane-login .yellow-form-control { width:15em; box-sizing:border-box; }
-#yellow-pane-login .yellow-btn { width:15em; margin:1em 1em 0.5em 0; }
-#yellow-pane-login-fields { width:15em; text-align:left; margin:0 auto; }
-#yellow-pane-login-buttons { margin:0.5em 0; }
-#yellow-pane-login-buttons p { margin:0; }
-
-#yellow-pane-signup { text-align:center; }
-#yellow-pane-signup .yellow-form-control { width:15em; box-sizing:border-box; }
-#yellow-pane-signup .yellow-btn { width:15em; margin:1em 1em 0.5em 0; }
-#yellow-pane-signup-status { margin:0.5em 0; display:inline-block; }
-#yellow-pane-signup-fields { width:15em; text-align:left; margin:0 auto; }
-#yellow-pane-signup-buttons { margin-top:-0.5em; }
-
-#yellow-pane-forgot { text-align:center; }
-#yellow-pane-forgot .yellow-form-control { width:15em; box-sizing:border-box; }
-#yellow-pane-forgot .yellow-btn { width:15em; margin:1em 1em 0.5em 0; }
-#yellow-pane-forgot-status { margin:0.5em 0; display:inline-block; }
-#yellow-pane-forgot-fields { width:15em; text-align:left; margin:0 auto; }
-#yellow-pane-forgot-buttons { margin-top:-0.5em; }
-
-#yellow-pane-recover { text-align:center; }
-#yellow-pane-recover .yellow-form-control { width:15em; box-sizing:border-box; }
-#yellow-pane-recover .yellow-btn { width:15em; margin:1em 1em 0.5em 0; }
-#yellow-pane-recover-status { margin:0.5em 0; display:inline-block; }
-#yellow-pane-recover-fields { width:15em; text-align:left; margin:0 auto; }
-#yellow-pane-recover-buttons { margin-top:-0.5em; }
-
-#yellow-pane-settings { text-align:center; }
-#yellow-pane-settings .yellow-form-control { width:15em; box-sizing:border-box; }
-#yellow-pane-settings .yellow-btn { width:15em; margin:1em 1em 0.5em 0; }
-#yellow-pane-settings-status { margin:0.5em 0; display:inline-block; }
-#yellow-pane-settings-fields { width:15em; text-align:left; margin:0 auto; }
-#yellow-pane-settings-buttons { margin-top:-0.5em; }
-
-#yellow-pane-version { text-align:center; }
-#yellow-pane-version .yellow-btn { width:15em; margin:1em 1em 0.5em 0; }
-#yellow-pane-version-status { margin:0.5em 0; display:inline-block; }
-#yellow-pane-version-fields { text-align:center; margin:0.5em 0; }
-#yellow-pane-version-buttons { margin-top:-0.5em; }
-
-#yellow-pane-quit { text-align:center; }
-#yellow-pane-quit .yellow-form-control { width:15em; box-sizing:border-box; }
-#yellow-pane-quit .yellow-btn { width:15em; margin:1em 1em 0.5em 0; }
-#yellow-pane-quit-status { margin:0.5em 0; display:inline-block; }
-#yellow-pane-quit-fields { width:15em; text-align:left; margin:0 auto; }
-#yellow-pane-quit-buttons { margin-top:-0.5em; }
-
+#yellow-pane-login, #yellow-pane-signup, #yellow-pane-forgot, #yellow-pane-recover, #yellow-pane-settings, #yellow-pane-version, #yellow-pane-quit {
+	text-align:center;
+}
 #yellow-pane-edit-toolbar-title { margin:-5px 0 0 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 #yellow-pane-edit-text { padding:0 2px; outline:none; resize:none; border:none; }
 #yellow-pane-edit-preview { padding:0; overflow:auto; }
 #yellow-pane-edit-preview h1 { margin:0.67em 0; }
 #yellow-pane-edit-preview p { margin:1em 0; }
 #yellow-pane-edit-preview .content { margin:0; padding:0; }
-
 #yellow-pane-user { padding:10px 0; }
 
 #yellow-popup-format, #yellow-popup-heading, #yellow-popup-list { width:16em; }

@@ -5,7 +5,7 @@
 
 class YellowEdit
 {
-	const VERSION = "0.7.23";
+	const VERSION = "0.7.24";
 	var $yellow;			//access to API
 	var $response;			//web response
 	var $users;				//user accounts
@@ -624,8 +624,8 @@ class YellowEdit
 					if(strnatcasecmp($dataCurrent[$key], $dataLatest[$key])<0)
 					{
 						++$updates;
-						if(!empty($this->response->rawDataOutput)) $this->response->rawDataOutput .= "<br />\n";
-						$this->response->rawDataOutput .= htmlspecialchars("$key $dataLatest[$key]");
+						$rawData = htmlspecialchars("$key $dataLatest[$key]")."<br />\n";
+						$this->response->rawDataOutput .= $rawData;
 					}
 				}
 				if($updates==0)
@@ -634,20 +634,20 @@ class YellowEdit
 					{
 						if(!is_null($dataModified[$key]) && !is_null($dataLatest[$key]))
 						{
-							$rawData = $this->yellow->text->getTextHtml("editVersionUpdateModified", $this->response->language)." - <a href=\"#\" data-action=\"update\" data-status=\"update\" data-args=\"".$this->yellow->toolbox->normaliseArgs("option:force/feature:$key")."\">".$this->yellow->text->getTextHtml("editVersionUpdateForce", $this->response->language)."</a>";
+							$rawData = $this->yellow->text->getTextHtml("editVersionUpdateModified", $this->response->language)." - <a href=\"#\" data-action=\"update\" data-status=\"update\" data-args=\"".$this->yellow->toolbox->normaliseArgs("option:force/feature:$key")."\">".$this->yellow->text->getTextHtml("editVersionUpdateForce", $this->response->language)."</a><br />\n";
 							$rawData = preg_replace("/@software/i", htmlspecialchars("$key $dataLatest[$key]"), $rawData);
-							if(!empty($this->response->rawDataOutput)) $this->response->rawDataOutput .= "<br />\n";
 							$this->response->rawDataOutput .= $rawData;
 						}
 					}
 				}
+				$this->response->status = $updates ? "updates" : "done";
 			} else {
 				foreach($dataCurrent as $key=>$value)
 				{
 					if(strnatcasecmp($dataCurrent[$key], $dataLatest[$key])<0) ++$updates;
 				}
+				$this->response->status = $updates ? "warning" : "done";
 			}
-			$this->response->status = $updates ? "updates" : "done";
 			if($statusCode!=200) $this->response->status = "error";
 		}
 		$statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);

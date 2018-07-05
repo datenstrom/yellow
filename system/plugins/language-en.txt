@@ -3,7 +3,7 @@
 Language: en
 LanguageDescription: English
 LanguageTranslator: Mark Seuffert
-LanguageVersion: 0.7.12
+LanguageVersion: 0.7.13
 
 BlogBy: by
 BlogTag: Tags:
@@ -96,8 +96,8 @@ EditVersionTitle: About this website
 EditVersionStatusNone: Datenstrom Yellow is for people who make websites.
 EditVersionStatusCheck: Checking for updates…
 EditVersionStatusDone: Your website is up to date.
-EditVersionStatusUpdates: Updates available, please contact the webmaster.
-EditVersionUpdateNormal: Updates available, update now.
+EditVersionStatusWarning: Updates available, please update your website.
+EditVersionStatusUpdates: Updates available, update now.
 EditVersionUpdateForce: Force update
 EditVersionUpdateModified: @software has been modified
 EditUploadProgress: [Uploading file…]

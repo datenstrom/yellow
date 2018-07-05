@@ -170,6 +170,7 @@ yellow.edit =
 			elementPane.appendChild(elementArrow);
 		}
 		var elementDiv = document.createElement("div");
+		elementDiv.className = "yellow-content";
 		elementDiv.setAttribute("id", paneId+"-content");
 		switch(paneId)
 		{
@@ -177,16 +178,15 @@ yellow.edit =
 				elementDiv.innerHTML =
 				"<form method=\"post\">"+
 				"<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\"></i></a>"+
-				"<h1>"+this.getText("LoginTitle")+"</h1>"+
-				"<div id=\"yellow-pane-login-fields\">"+
+				"<div class=\"yellow-title\"><h1>"+this.getText("LoginTitle")+"</h1></div>"+
+				"<div class=\"yellow-fields\" id=\"yellow-pane-login-fields\">"+
 				"<input type=\"hidden\" name=\"action\" value=\"login\" />"+
 				"<p><label for=\"yellow-pane-login-email\">"+this.getText("LoginEmail")+"</label><br /><input class=\"yellow-form-control\" name=\"email\" id=\"yellow-pane-login-email\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(yellow.config.editLoginEmail)+"\" /></p>"+
 				"<p><label for=\"yellow-pane-login-password\">"+this.getText("LoginPassword")+"</label><br /><input class=\"yellow-form-control\" type=\"password\" name=\"password\" id=\"yellow-pane-login-password\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(yellow.config.editLoginPassword)+"\" /></p>"+
 				"<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("LoginButton")+"\" /></p>"+
 				"</div>"+
-				"<div id=\"yellow-pane-login-buttons\">"+
-				"<p><a href=\"#\" id=\"yellow-pane-login-forgot\" data-action=\"forgot\">"+this.getText("LoginForgot")+"</a></p>"+
-				"<p><a href=\"#\" id=\"yellow-pane-login-signup\" data-action=\"signup\">"+this.getText("LoginSignup")+"</a></p>"+
+				"<div class=\"yellow-actions\" id=\"yellow-pane-login-actions\">"+
+				"<p><a href=\"#\" id=\"yellow-pane-login-forgot\" data-action=\"forgot\">"+this.getText("LoginForgot")+"</a><br /><a href=\"#\" id=\"yellow-pane-login-signup\" data-action=\"signup\">"+this.getText("LoginSignup")+"</a></p>"+
 				"</div>"+
 				"</form>";
 				break;
@@ -194,9 +194,9 @@ yellow.edit =
 				elementDiv.innerHTML =
 				"<form method=\"post\">"+
 				"<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\"></i></a>"+
-				"<h1>"+this.getText("SignupTitle")+"</h1>"+
-				"<div id=\"yellow-pane-signup-status\" class=\""+paneStatus+"\">"+this.getText(paneAction+"Status", "", paneStatus)+"</div>"+
-				"<div id=\"yellow-pane-signup-fields\">"+
+				"<div class=\"yellow-title\"><h1>"+this.getText("SignupTitle")+"</h1></div>"+
+				"<div class=\"yellow-status\"><p id=\"yellow-pane-signup-status\" class=\""+paneStatus+"\">"+this.getText(paneAction+"Status", "", paneStatus)+"</p></div>"+
+				"<div class=\"yellow-fields\" id=\"yellow-pane-signup-fields\">"+
 				"<input type=\"hidden\" name=\"action\" value=\"signup\" />"+
 				"<p><label for=\"yellow-pane-signup-name\">"+this.getText("SignupName")+"</label><br /><input class=\"yellow-form-control\" name=\"name\" id=\"yellow-pane-signup-name\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("name"))+"\" /></p>"+
 				"<p><label for=\"yellow-pane-signup-email\">"+this.getText("SignupEmail")+"</label><br /><input class=\"yellow-form-control\" name=\"email\" id=\"yellow-pane-signup-email\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("email"))+"\" /></p>"+
@@ -204,7 +204,7 @@ yellow.edit =
 				"<p><input type=\"checkbox\" name=\"consent\" value=\"consent\" id=\"consent\""+(this.getRequest("consent") ? " checked=\"checked\"" : "")+"> <label for=\"consent\">"+this.getText("SignupConsent")+"</label></p>"+
 				"<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("SignupButton")+"\" /></p>"+
 				"</div>"+
-				"<div id=\"yellow-pane-signup-buttons\">"+
+				"<div class=\"yellow-buttons\" id=\"yellow-pane-signup-buttons\">"+
 				"<p><a href=\"#\" class=\"yellow-btn\" data-action=\"close\">"+this.getText("OkButton")+"</a></p>"+
 				"</div>"+
 				"</form>";
@@ -213,14 +213,14 @@ yellow.edit =
 				elementDiv.innerHTML =
 				"<form method=\"post\">"+
 				"<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\"></i></a>"+
-				"<h1>"+this.getText("ForgotTitle")+"</h1>"+
-				"<div id=\"yellow-pane-forgot-status\" class=\""+paneStatus+"\">"+this.getText(paneAction+"Status", "", paneStatus)+"</div>"+
-				"<div id=\"yellow-pane-forgot-fields\">"+
+				"<div class=\"yellow-title\"><h1>"+this.getText("ForgotTitle")+"</h1></div>"+
+				"<div class=\"yellow-status\"><p id=\"yellow-pane-forgot-status\" class=\""+paneStatus+"\">"+this.getText(paneAction+"Status", "", paneStatus)+"</p></div>"+
+				"<div class=\"yellow-fields\" id=\"yellow-pane-forgot-fields\">"+
 				"<input type=\"hidden\" name=\"action\" value=\"forgot\" />"+
 				"<p><label for=\"yellow-pane-forgot-email\">"+this.getText("ForgotEmail")+"</label><br /><input class=\"yellow-form-control\" name=\"email\" id=\"yellow-pane-forgot-email\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("email"))+"\" /></p>"+
 				"<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("OkButton")+"\" /></p>"+
 				"</div>"+
-				"<div id=\"yellow-pane-forgot-buttons\">"+
+				"<div class=\"yellow-buttons\" id=\"yellow-pane-forgot-buttons\">"+
 				"<p><a href=\"#\" class=\"yellow-btn\" data-action=\"close\">"+this.getText("OkButton")+"</a></p>"+
 				"</div>"+
 				"</form>";
@@ -229,13 +229,13 @@ yellow.edit =
 				elementDiv.innerHTML =
 				"<form method=\"post\">"+
 				"<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\"></i></a>"+
-				"<h1>"+this.getText("RecoverTitle")+"</h1>"+
-				"<div id=\"yellow-pane-recover-status\" class=\""+paneStatus+"\">"+this.getText(paneAction+"Status", "", paneStatus)+"</div>"+
-				"<div id=\"yellow-pane-recover-fields\">"+
+				"<div class=\"yellow-title\"><h1>"+this.getText("RecoverTitle")+"</h1></div>"+
+				"<div class=\"yellow-status\"><p id=\"yellow-pane-recover-status\" class=\""+paneStatus+"\">"+this.getText(paneAction+"Status", "", paneStatus)+"</p></div>"+
+				"<div class=\"yellow-fields\" id=\"yellow-pane-recover-fields\">"+
 				"<p><label for=\"yellow-pane-recover-password\">"+this.getText("RecoverPassword")+"</label><br /><input class=\"yellow-form-control\" type=\"password\" name=\"password\" id=\"yellow-pane-recover-password\" maxlength=\"64\" value=\"\" /></p>"+
 				"<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("OkButton")+"\" /></p>"+
 				"</div>"+
-				"<div id=\"yellow-pane-recover-buttons\">"+
+				"<div class=\"yellow-buttons\" id=\"yellow-pane-recover-buttons\">"+
 				"<p><a href=\"#\" class=\"yellow-btn\" data-action=\"close\">"+this.getText("OkButton")+"</a></p>"+
 				"</div>"+
 				"</form>";
@@ -255,9 +255,9 @@ yellow.edit =
 				elementDiv.innerHTML =
 				"<form method=\"post\">"+
 				"<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\"></i></a>"+
-				"<h1 id=\"yellow-pane-settings-title\">"+this.getText("SettingsTitle")+"</h1>"+
-				"<div id=\"yellow-pane-settings-status\" class=\""+paneStatus+"\">"+this.getText(paneAction+"Status", "", paneStatus)+"</div>"+
-				"<div id=\"yellow-pane-settings-fields\">"+
+				"<div class=\"yellow-title\"><h1 id=\"yellow-pane-settings-title\">"+this.getText("SettingsTitle")+"</h1></div>"+
+				"<div class=\"yellow-status\"><p id=\"yellow-pane-settings-status\" class=\""+paneStatus+"\">"+this.getText(paneAction+"Status", "", paneStatus)+"</p></div>"+
+				"<div class=\"yellow-fields\" id=\"yellow-pane-settings-fields\">"+
 				"<input type=\"hidden\" name=\"action\" value=\"settings\" />"+
 				"<input type=\"hidden\" name=\"csrftoken\" value=\""+yellow.toolbox.encodeHtml(this.getCookie("csrftoken"))+"\" />"+
 				"<p><label for=\"yellow-pane-settings-name\">"+this.getText("SignupName")+"</label><br /><input class=\"yellow-form-control\" name=\"name\" id=\"yellow-pane-settings-name\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("name"))+"\" /></p>"+
@@ -266,7 +266,7 @@ yellow.edit =
 				"<p>"+this.getText("SettingsQuit")+" <a href=\"#\" data-action=\"quit\">"+this.getText("SettingsMore")+"</a></p>"+
 				"<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("OkButton")+"\" /></p>"+
 				"</div>"+
-				"<div id=\"yellow-pane-settings-buttons\">"+
+				"<div class=\"yellow-buttons\" id=\"yellow-pane-settings-buttons\">"+
 				"<p><a href=\"#\" class=\"yellow-btn\" data-action=\"close\">"+this.getText("OkButton")+"</a></p>"+
 				"</div>"+
 				"</form>";
@@ -275,10 +275,10 @@ yellow.edit =
 				elementDiv.innerHTML =
 				"<form method=\"post\">"+
 				"<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\"></i></a>"+
-				"<h1 id=\"yellow-pane-version-title\">"+yellow.toolbox.encodeHtml(yellow.config.serverVersion)+"</h1>"+
-				"<div id=\"yellow-pane-version-status\" class=\""+paneStatus+"\">"+this.getText("VersionStatus", "", paneStatus)+"</div>"+
-				"<div id=\"yellow-pane-version-fields\">"+yellow.page.rawDataOutput+"</div>"+
-				"<div id=\"yellow-pane-version-buttons\">"+
+				"<div class=\"yellow-title\"><h1 id=\"yellow-pane-version-title\">"+yellow.toolbox.encodeHtml(yellow.config.serverVersion)+"</h1></div>"+
+				"<div class=\"yellow-status\"><p id=\"yellow-pane-version-status\" class=\""+paneStatus+"\">"+this.getText("VersionStatus", "", paneStatus)+"</p></div>"+
+				"<div class=\"yellow-output\" id=\"yellow-pane-version-output\">"+yellow.page.rawDataOutput+"</div>"+
+				"<div class=\"yellow-buttons\" id=\"yellow-pane-version-buttons\">"+
 				"<p><a href=\"#\" class=\"yellow-btn\" data-action=\"close\">"+this.getText("OkButton")+"</a></p>"+
 				"</div>"+
 				"</form>";
@@ -287,15 +287,15 @@ yellow.edit =
 				elementDiv.innerHTML =
 				"<form method=\"post\">"+
 				"<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\"></i></a>"+
-				"<h1>"+this.getText("QuitTitle")+"</h1>"+
-				"<div id=\"yellow-pane-quit-status\" class=\""+paneStatus+"\">"+this.getText(paneAction+"Status", "", paneStatus)+"</div>"+
-				"<div id=\"yellow-pane-quit-fields\">"+
+				"<div class=\"yellow-title\"><h1>"+this.getText("QuitTitle")+"</h1></div>"+
+				"<div class=\"yellow-status\"><p id=\"yellow-pane-quit-status\" class=\""+paneStatus+"\">"+this.getText(paneAction+"Status", "", paneStatus)+"</p></div>"+
+				"<div class=\"yellow-fields\" id=\"yellow-pane-quit-fields\">"+
 				"<input type=\"hidden\" name=\"action\" value=\"quit\" />"+
 				"<input type=\"hidden\" name=\"csrftoken\" value=\""+yellow.toolbox.encodeHtml(this.getCookie("csrftoken"))+"\" />"+
 				"<p><label for=\"yellow-pane-quit-name\">"+this.getText("SignupName")+"</label><br /><input class=\"yellow-form-control\" name=\"name\" id=\"yellow-pane-quit-name\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("name"))+"\" /></p>"+
 				"<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("DeleteButton")+"\" /></p>"+
 				"</div>"+
-				"<div id=\"yellow-pane-quit-buttons\">"+
+				"<div class=\"yellow-buttons\" id=\"yellow-pane-quit-buttons\">"+
 				"<p><a href=\"#\" class=\"yellow-btn\" data-action=\"close\">"+this.getText("OkButton")+"</a></p>"+
 				"</div>"+
 				"</form>";
@@ -387,12 +387,12 @@ yellow.edit =
 				if(paneStatus=="none" && this.isPlugin("update"))
 				{
 					document.getElementById("yellow-pane-version-status").innerHTML = this.getText("VersionStatusCheck");
-					document.getElementById("yellow-pane-version-fields").innerHTML = "";
+					document.getElementById("yellow-pane-version-output").innerHTML = "";
 					setTimeout("yellow.action('send');", 500);
 				}
-				if(paneStatus=="updates" && yellow.config.userWebmaster)
+				if(paneStatus=="updates" && this.isPlugin("update"))
 				{
-					document.getElementById("yellow-pane-version-status").innerHTML = "<a href=\"#\" data-action=\"update\">"+this.getText("VersionUpdateNormal")+"</a>";
+					document.getElementById("yellow-pane-version-status").innerHTML = "<a href=\"#\" data-action=\"update\">"+this.getText("VersionStatusUpdates")+"</a>";
 				}
 				break;
 			case "yellow-pane-quit":
