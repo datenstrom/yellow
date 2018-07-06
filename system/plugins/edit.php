@@ -5,7 +5,7 @@
 
 class YellowEdit
 {
-	const VERSION = "0.7.24";
+	const VERSION = "0.7.25";
 	var $yellow;			//access to API
 	var $response;			//web response
 	var $users;				//user accounts
@@ -1689,7 +1689,7 @@ class YellowUsers
 		$expire = $this->getAuthExpire($authToken);
 		return $expire>time() && $this->isExisting($email) && $this->users[$email]["status"]=="active" &&
 			$this->yellow->toolbox->verifyHash($this->users[$email]["hash"]."auth".$expire, "sha256", $signature) &&
-			($this->verifyToken($csrfTokenExpected, $csrfTokenReceived) || $ignoreCsrfToken);
+			($this->yellow->toolbox->verifyToken($csrfTokenExpected, $csrfTokenReceived) || $ignoreCsrfToken);
 	}
 	
 	// Check action token
@@ -1746,7 +1746,7 @@ class YellowUsers
 		if(empty($stamp)) $stamp = substrb($authToken, 96, 20);
 		foreach($this->users as $key=>$value)
 		{
-			if($this->verifyToken($value["stamp"], $stamp)) $email = $key;
+			if($this->yellow->toolbox->verifyToken($value["stamp"], $stamp)) $email = $key;
 		}
 		return $email;
 	}
@@ -1829,20 +1829,6 @@ class YellowUsers
 		}
 		uksort($data, "strnatcasecmp");
 		return $data;
-	}
-	
-	// Verify that token is not empty and identical, timing attack safe text string comparison
-	function verifyToken($tokenExpected, $tokenReceived) //TODO: remove later, use directly from core after next release
-	{
-		$ok = false;
-		$lengthExpected = strlenb($tokenExpected);
-		$lengthReceived = strlenb($tokenReceived);
-		if($lengthExpected!=0 && $lengthReceived!=0)
-		{
-			$ok = $lengthExpected==$lengthReceived;
-			for($i=0; $i<$lengthReceived; ++$i) $ok &= $tokenExpected[$i<$lengthExpected ? $i : 0]==$tokenReceived[$i];
-		}
-		return $ok;
 	}
 	
 	// Check if user is taken

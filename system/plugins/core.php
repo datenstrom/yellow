@@ -1919,12 +1919,6 @@ class YellowConfig
 		return $this->yellow->toolbox->createFile($fileName, $fileDataNew);
 	}
 	
-	// Update configuration in file, TODO: remove later, used for backwards compatibility
-	function update($fileName, $config)
-	{
-		return $this->save($fileName, $config);
-	}
-	
 	// Set default configuration
 	function setDefault($key, $value)
 	{

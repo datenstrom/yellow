@@ -5,7 +5,7 @@
 
 class YellowUpdate
 {
-	const VERSION = "0.7.11";
+	const VERSION = "0.7.12";
 	var $yellow;					//access to API
 	var $updates;					//number of updates
 	
@@ -23,13 +23,6 @@ class YellowUpdate
 	// Handle startup
 	function onStartup($update)
 	{
-		if(!$this->yellow->config->isExisting("startupUpdate")) //TODO: remove later, detects old version
-		{
-			$update = true;
-			$fileNameConfig = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
-			$this->yellow->config->update($fileNameConfig, array("startupUpdate" => "none"));
-			$this->yellow->config->setDefault("startupUpdate", "none");
-		}
 		if($update)
 		{
 			$fileNameConfig = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
@@ -39,12 +32,6 @@ class YellowUpdate
 			foreach($this->yellow->toolbox->getTextLines($fileData) as $line)
 			{
 				preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
-				if(substru($line, 0, 12)=="Webinterface")	//TODO: remove later, converts old config
-				{
-					$line = preg_replace("/^Webinterface/i", "Edit", $line);
-					preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
-					if(!empty($matches[1]) && !strempty($matches[2])) $this->yellow->config->set($matches[1], $matches[2]);
-				}
 				if(!empty($matches[1]) && !is_null($configDefaults[$matches[1]])) unset($configDefaults[$matches[1]]);
 				if(!empty($matches[1]) && $matches[1][0]!='#' && is_null($this->yellow->config->configDefaults[$matches[1]]))
 				{
@@ -496,7 +483,7 @@ class YellowUpdate
 		if($startupUpdate=="none") $startupUpdate = "YellowUpdate";
 		if($software!="YellowUpdate") $startupUpdate .= ",$software";
 		$fileNameConfig = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
-		if(!$this->yellow->config->update($fileNameConfig, array("startupUpdate" => $startupUpdate)))
+		if(!$this->yellow->config->save($fileNameConfig, array("startupUpdate" => $startupUpdate)))
 		{
 			$statusCode = 500;
 			$this->yellow->page->error(500, "Can't write file '$fileNameConfig'!");
@@ -635,7 +622,7 @@ class YellowUpdate
 			{
 				if($this->yellow->config->get("sitename")=="Yellow") $_REQUEST["sitename"] = $name;
 				$fileNameConfig = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
-				$status = $this->yellow->config->update($fileNameConfig, $this->getConfigData()) ? "done" : "error";
+				$status = $this->yellow->config->save($fileNameConfig, $this->getConfigData()) ? "done" : "error";
 				if($status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameConfig'!");
 			}
 			if($status=="done")
