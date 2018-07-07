@@ -5,7 +5,7 @@
 
 class YellowCommand
 {
-	const VERSION = "0.7.5";
+	const VERSION = "0.7.6";
 	var $yellow;					//access to API
 	var $files;						//number of files
 	var $links;						//number of links
@@ -333,50 +333,44 @@ class YellowCommand
 	{
 		$statusCode = 200;
 		$broken = $redirect = $data = array();
-		if(extension_loaded("curl"))
+		$staticUrl = $this->yellow->config->get("staticUrl");
+		list($scheme, $address, $base) = $this->yellow->lookup->getUrlInformation($staticUrl);
+		$staticLocations = $this->getContentLocations(true);
+		uksort($links, "strnatcasecmp");
+		foreach($links as $url=>$value)
 		{
-			$staticUrl = $this->yellow->config->get("staticUrl");
-			list($scheme, $address, $base) = $this->yellow->lookup->getUrlInformation($staticUrl);
-			$staticLocations = $this->getContentLocations(true);
-			uksort($links, "strnatcasecmp");
-			foreach($links as $url=>$value)
+			if(defined("DEBUG") && DEBUG>=1) echo "YellowCommand::analyseLinks url:$url\n";
+			if(preg_match("#^$staticUrl#", $url))
 			{
-				if(defined("DEBUG") && DEBUG>=1) echo "YellowCommand::analyseLinks url:$url\n";
-				if(preg_match("#^$staticUrl#", $url))
+				$location = substru($url, 32);
+				$fileName = $path.substru($url, 32);
+				if(is_readable($fileName)) continue;
+				if(in_array($location, $staticLocations)) continue;
+			}
+			if(preg_match("/^(http|https):/", $url))
+			{
+				$referer = "$scheme://$address".(($pos = strposu($value, ',')) ? substru($value, 0, $pos) : $value);
+				$statusCodeUrl = $this->getLinkStatus($url, $referer);
+				if($statusCodeUrl!=200)
 				{
-					$location = substru($url, 32);
-					$fileName = $path.substru($url, 32);
-					if(is_readable($fileName)) continue;
-					if(in_array($location, $staticLocations)) continue;
-				}
-				if(preg_match("/^(http|https):/", $url))
-				{
-					$referer = "$scheme://$address".(($pos = strposu($value, ',')) ? substru($value, 0, $pos) : $value);
-					$statusCodeUrl = $this->getLinkStatus($url, $referer);
-					if($statusCodeUrl!=200)
-					{
-						$statusCode = max($statusCode, $statusCodeUrl);
-						$data[$url] = "$statusCodeUrl,$value";
-					}
+					$statusCode = max($statusCode, $statusCodeUrl);
+					$data[$url] = "$statusCodeUrl,$value";
 				}
 			}
-			foreach($data as $url=>$value)
+		}
+		foreach($data as $url=>$value)
+		{
+			$locations = preg_split("/\s*,\s*/", $value);
+			$statusCodeUrl = array_shift($locations);
+			foreach($locations as $location)
 			{
-				$locations = preg_split("/\s*,\s*/", $value);
-				$statusCodeUrl = array_shift($locations);
-				foreach($locations as $location)
-				{
-					if($statusCodeUrl==302) continue;
-					if($statusCodeUrl>=300 && $statusCodeUrl<=399) {
-						$redirect["$scheme://$address$location -> $url - ".$this->getStatusFormatted($statusCodeUrl)] = $statusCodeUrl;
-					} else {
-						$broken["$scheme://$address$location -> $url - ".$this->getStatusFormatted($statusCodeUrl)] = $statusCodeUrl;
-					}
+				if($statusCodeUrl==302) continue;
+				if($statusCodeUrl>=300 && $statusCodeUrl<=399) {
+					$redirect["$scheme://$address$location -> $url - ".$this->getStatusFormatted($statusCodeUrl)] = $statusCodeUrl;
+				} else {
+					$broken["$scheme://$address$location -> $url - ".$this->getStatusFormatted($statusCodeUrl)] = $statusCodeUrl;
 				}
 			}
-		} else {
-			$statusCode = 500;
-			echo "ERROR checking links: Plugin 'command' requires cURL library!\n";
 		}
 		return array($statusCode, $broken, $redirect);
 	}
@@ -646,21 +640,16 @@ class YellowCommand
 	// Return link status
 	function getLinkStatus($url, $referer)
 	{
-		if(extension_loaded("curl"))
-		{
-			$curlHandle = curl_init();
-			curl_setopt($curlHandle, CURLOPT_URL, $url);
-			curl_setopt($curlHandle, CURLOPT_REFERER, $referer);
-			curl_setopt($curlHandle, CURLOPT_USERAGENT, "Mozilla/5.0 (compatible; DatenstromYellow/".YellowCore::VERSION."; LinkChecker)");
-			curl_setopt($curlHandle, CURLOPT_NOBODY, 1);
-			curl_setopt($curlHandle, CURLOPT_CONNECTTIMEOUT, 30);
-			curl_exec($curlHandle);
-			$statusCode = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);
-			curl_close($curlHandle);
-			if(defined("DEBUG") && DEBUG>=2) echo "YellowCommand::getLinkStatus status:$statusCode url:$url<br/>\n";
-		} else {
-			$statusCode = 500;
-		}
+		$curlHandle = curl_init();
+		curl_setopt($curlHandle, CURLOPT_URL, $url);
+		curl_setopt($curlHandle, CURLOPT_REFERER, $referer);
+		curl_setopt($curlHandle, CURLOPT_USERAGENT, "Mozilla/5.0 (compatible; DatenstromYellow/".YellowCore::VERSION."; LinkChecker)");
+		curl_setopt($curlHandle, CURLOPT_NOBODY, 1);
+		curl_setopt($curlHandle, CURLOPT_CONNECTTIMEOUT, 30);
+		curl_exec($curlHandle);
+		$statusCode = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);
+		curl_close($curlHandle);
+		if(defined("DEBUG") && DEBUG>=2) echo "YellowCommand::getLinkStatus status:$statusCode url:$url<br/>\n";
 		return $statusCode;
 	}
 }

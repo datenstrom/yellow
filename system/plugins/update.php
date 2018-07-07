@@ -5,7 +5,7 @@
 
 class YellowUpdate
 {
-	const VERSION = "0.7.12";
+	const VERSION = "0.7.13";
 	var $yellow;					//access to API
 	var $updates;					//number of updates
 	
@@ -639,22 +639,17 @@ class YellowUpdate
 	// Check web server rewrite
 	function checkServerRewrite($scheme, $address, $base, $location, $fileName)
 	{
-		$ok = true;
-		if(extension_loaded("curl"))
-		{
-			$curlHandle = curl_init();
-			$location = $this->yellow->config->get("assetLocation").$this->yellow->page->get("theme").".css";
-			$url = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
-			curl_setopt($curlHandle, CURLOPT_URL, $url);
-			curl_setopt($curlHandle, CURLOPT_USERAGENT, "Mozilla/5.0 (compatible; YellowCore/".YellowCore::VERSION).")";
-			curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, 1);
-			curl_setopt($curlHandle, CURLOPT_CONNECTTIMEOUT, 30);
-			$rawData = curl_exec($curlHandle);
-			$statusCode = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);
-			curl_close($curlHandle);
-			if(empty($rawData) || $statusCode!=200) $ok = false;
-		}
-		return $ok;
+		$curlHandle = curl_init();
+		$location = $this->yellow->config->get("assetLocation").$this->yellow->page->get("theme").".css";
+		$url = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
+		curl_setopt($curlHandle, CURLOPT_URL, $url);
+		curl_setopt($curlHandle, CURLOPT_USERAGENT, "Mozilla/5.0 (compatible; YellowCore/".YellowCore::VERSION).")";
+		curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($curlHandle, CURLOPT_CONNECTTIMEOUT, 30);
+		$rawData = curl_exec($curlHandle);
+		$statusCode = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);
+		curl_close($curlHandle);
+		return !empty($rawData) && $statusCode==200;
 	}
 	
 	// Return raw data for installation page
@@ -802,38 +797,31 @@ class YellowUpdate
 	// Return software file
 	function getSoftwareFile($url)
 	{
-		$fileData = "";
-		if(extension_loaded("curl"))
+		$urlRequest = $url;
+		if(preg_match("#^https://github.com/(.+)/raw/(.+)$#", $url, $matches))
 		{
-			$urlRequest = $url;
-			if(preg_match("#^https://github.com/(.+)/raw/(.+)$#", $url, $matches))
-			{
-				$urlRequest = "https://raw.githubusercontent.com/".$matches[1]."/".$matches[2];
-			}
-			$curlHandle = curl_init();
-			curl_setopt($curlHandle, CURLOPT_URL, $urlRequest);
-			curl_setopt($curlHandle, CURLOPT_USERAGENT, "Mozilla/5.0 (compatible; DatenstromYellow/".YellowCore::VERSION."; SoftwareUpdater)");
-			curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, 1);
-			curl_setopt($curlHandle, CURLOPT_CONNECTTIMEOUT, 30);
-			$rawData = curl_exec($curlHandle);
-			$statusCode = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);
-			curl_close($curlHandle);
-			if($statusCode==200)
-			{
-				$fileData = $rawData;
-			} else if($statusCode==0) {
-				$statusCode = 500;
-				list($scheme, $address) = $this->yellow->lookup->getUrlInformation($url);
-				$this->yellow->page->error($statusCode, "Can't connect to server '$scheme://$address'!");
-			} else {
-				$statusCode = 500;
-				$this->yellow->page->error($statusCode, "Can't download file '$url'!");
-			}
-			if(defined("DEBUG") && DEBUG>=2) echo "YellowUpdate::getSoftwareFile status:$statusCode url:$url<br/>\n";
+			$urlRequest = "https://raw.githubusercontent.com/".$matches[1]."/".$matches[2];
+		}
+		$curlHandle = curl_init();
+		curl_setopt($curlHandle, CURLOPT_URL, $urlRequest);
+		curl_setopt($curlHandle, CURLOPT_USERAGENT, "Mozilla/5.0 (compatible; DatenstromYellow/".YellowCore::VERSION."; SoftwareUpdater)");
+		curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($curlHandle, CURLOPT_CONNECTTIMEOUT, 30);
+		$rawData = curl_exec($curlHandle);
+		$statusCode = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);
+		curl_close($curlHandle);
+		if($statusCode==200)
+		{
+			$fileData = $rawData;
+		} else if($statusCode==0) {
+			$statusCode = 500;
+			list($scheme, $address) = $this->yellow->lookup->getUrlInformation($url);
+			$this->yellow->page->error($statusCode, "Can't connect to server '$scheme://$address'!");
 		} else {
 			$statusCode = 500;
-			$this->yellow->page->error($statusCode, "Plugin 'update' requires cURL library!");
+			$this->yellow->page->error($statusCode, "Can't download file '$url'!");
 		}
+		if(defined("DEBUG") && DEBUG>=2) echo "YellowUpdate::getSoftwareFile status:$statusCode url:$url<br/>\n";
 		return array($statusCode, $fileData);
 	}
 	
