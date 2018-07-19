@@ -92,7 +92,7 @@ EditWelcomeSubject: Bienvenue
 EditWelcomeMessage: Bonjour @usershort,\n\nvotre compte utilisateur a bien été créé. Amusez-vous bien en éditant le site web.
 EditGoodbyeSubject: Au revoir
 EditGoodbyeMessage: Bonjour @usershort,\n\nvotre compte utilisateur a bien été supprimé. Prends soin.
-EditVersionTitle: A propos de ce site
+EditVersionTitle: Recherche de mises à jour
 EditVersionStatusNone: Datenstrom Yellow est fait pour les gens qui font des sites web.
 EditVersionStatusCheck: Vérification des mises à jour…
 EditVersionStatusDone: Votre site web est à jour.

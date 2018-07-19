@@ -92,7 +92,7 @@ EditWelcomeSubject: Welcome
 EditWelcomeMessage: Hi @usershort,\n\nyour user account has been created. Have fun editing the website.
 EditGoodbyeSubject: Goodbye
 EditGoodbyeMessage: Hi @usershort,\n\nyour user account has been deleted. Take care.
-EditVersionTitle: About this website
+EditVersionTitle: Search for updates
 EditVersionStatusNone: Datenstrom Yellow is for people who make websites.
 EditVersionStatusCheck: Checking for updates…
 EditVersionStatusDone: Your website is up to date.
