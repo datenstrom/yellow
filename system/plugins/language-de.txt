@@ -92,7 +92,7 @@ EditWelcomeSubject: Willkommen
 EditWelcomeMessage: Hallo @usershort,\n\ndein Benutzerkonto wurde erstellt. Viel Spass beim Bearbeiten der Webseite.
 EditGoodbyeSubject: Auf Wiedersehen
 EditGoodbyeMessage: Hallo @usershort,\n\ndein Benutzerkonto wurde gelöscht. Mach's gut.
-EditVersionTitle: Über diese Webseite
+EditVersionTitle: nach Aktualisierungen suchen
 EditVersionStatusNone: Datenstrom Yellow ist für Menschen die Webseiten machen.
 EditVersionStatusCheck: Nach Aktualisierung suchen…
 EditVersionStatusDone: Deine Webseite ist auf dem neusten Stand.
