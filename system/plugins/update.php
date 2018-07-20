@@ -5,7 +5,7 @@
 
 class YellowUpdate
 {
-	const VERSION = "0.7.13";
+	const VERSION = "0.7.14";
 	var $yellow;					//access to API
 	var $updates;					//number of updates
 	
@@ -801,6 +801,10 @@ class YellowUpdate
 		if(preg_match("#^https://github.com/(.+)/raw/(.+)$#", $url, $matches))
 		{
 			$urlRequest = "https://raw.githubusercontent.com/".$matches[1]."/".$matches[2];
+		}
+		if(preg_match("#^https://github.com/(.+)/archive/master.zip$#", $url, $matches))
+		{
+			$urlRequest = "https://codeload.github.com/".$matches[1]."/zip/master";
 		}
 		$curlHandle = curl_init();
 		curl_setopt($curlHandle, CURLOPT_URL, $urlRequest);
