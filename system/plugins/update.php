@@ -5,7 +5,7 @@
 
 class YellowUpdate
 {
-	const VERSION = "0.7.14";
+	const VERSION = "0.7.15";
 	var $yellow;					//access to API
 	var $updates;					//number of updates
 	
@@ -61,16 +61,6 @@ class YellowUpdate
 				}
 				$this->yellow->toolbox->deleteFile($entry, $this->yellow->config->get("trashDir"));
 				$_GET["clean-url"] = "theme-has-been-updated";
-			}
-		}
-		if($update) //TODO: remove later, converts old script
-		{
-			$fileName = "yellow.php";
-			if(is_file($fileName))
-			{
-				$fileData = $this->yellow->toolbox->readFile($fileName);
-				$fileDataNew = preg_replace("#yellow->plugins->load\(\)#", "yellow->load()", $fileData);
-				if($fileData!=$fileDataNew) $this->yellow->toolbox->createFile($fileName, $fileDataNew);
 			}
 		}
 		if($update)	//TODO: remove later, converts old error page
@@ -267,7 +257,7 @@ class YellowUpdate
 		$fileExtension = $this->yellow->config->get("downloadExtension");
 		foreach($data as $key=>$value)
 		{
-			$fileName = strtoloweru("$path$key.zip");
+			$fileName = $path.$this->yellow->lookup->normaliseName($key, true, false, true).".zip";
 			list($version, $url) = explode(',', $value);
 			list($statusCode, $fileData) = $this->getSoftwareFile($url);
 			if(empty($fileData) || !$this->yellow->toolbox->createFile($fileName.$fileExtension, $fileData))
@@ -281,7 +271,7 @@ class YellowUpdate
 		{
 			foreach($data as $key=>$value)
 			{
-				$fileName = strtoloweru("$path$key.zip");
+				$fileName = $path.$this->yellow->lookup->normaliseName($key, true, false, true).".zip";
 				if(!$this->yellow->toolbox->renameFile($fileName.$fileExtension, $fileName))
 				{
 					$statusCode = 500;
@@ -801,10 +791,6 @@ class YellowUpdate
 		if(preg_match("#^https://github.com/(.+)/raw/(.+)$#", $url, $matches))
 		{
 			$urlRequest = "https://raw.githubusercontent.com/".$matches[1]."/".$matches[2];
-		}
-		if(preg_match("#^https://github.com/(.+)/archive/master.zip$#", $url, $matches))
-		{
-			$urlRequest = "https://codeload.github.com/".$matches[1]."/zip/master";
 		}
 		$curlHandle = curl_init();
 		curl_setopt($curlHandle, CURLOPT_URL, $urlRequest);
