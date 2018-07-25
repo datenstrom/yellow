@@ -5,7 +5,7 @@
 
 class YellowCore
 {
-	const VERSION = "0.7.4";
+	const VERSION = "0.7.5";
 	var $page;				//current page
 	var $pages;				//pages from file system
 	var $files;				//files from file system
