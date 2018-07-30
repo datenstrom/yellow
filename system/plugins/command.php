@@ -5,7 +5,7 @@
 
 class YellowCommand
 {
-	const VERSION = "0.7.6";
+	const VERSION = "0.7.7";
 	var $yellow;					//access to API
 	var $files;						//number of files
 	var $links;						//number of links
@@ -90,17 +90,17 @@ class YellowCommand
 		list($scheme, $address, $base) = $this->yellow->lookup->getUrlInformation($staticUrl);
 		foreach($this->getContentLocations() as $location)
 		{
-			if(!preg_match("#^$base$locationFilter#", $location)) continue;
+			if(!preg_match("#^$base$locationFilter#", "$base$location")) continue;
 			$statusCode = max($statusCode, $this->buildStaticFile($path, $location, true));
 		}
 		foreach($this->locationsArgs as $location)
 		{
-			if(!preg_match("#^$base$locationFilter#", $location)) continue;
+			if(!preg_match("#^$base$locationFilter#", "$base$location")) continue;
 			$statusCode = max($statusCode, $this->buildStaticFile($path, $location, true));
 		}
 		foreach($this->locationsArgsPagination as $location)
 		{
-			if(!preg_match("#^$base$locationFilter#", $location)) continue;
+			if(!preg_match("#^$base$locationFilter#", "$base$location")) continue;
 			if(substru($location, -1)!=$this->yellow->toolbox->getLocationArgsSeparator())
 			{
 				$statusCode = max($statusCode, $this->buildStaticFile($path, $location, false, true));
@@ -294,7 +294,7 @@ class YellowCommand
 				if(is_readable($fileName))
 				{
 					$locationSource = $this->getStaticLocation($path, $fileName);
-					if(!preg_match("#^$base$locationFilter#", $locationSource)) continue;
+					if(!preg_match("#^$base$locationFilter#", "$base$locationSource")) continue;
 					$fileData = $this->yellow->toolbox->readFile($fileName);
 					preg_match_all("/<(.*?)href=\"([^\"]+)\"(.*?)>/i", $fileData, $matches);
 					foreach($matches[2] as $match)
@@ -334,6 +334,7 @@ class YellowCommand
 		$statusCode = 200;
 		$broken = $redirect = $data = array();
 		$staticUrl = $this->yellow->config->get("staticUrl");
+		$staticUrlLength = strlenu(rtrim($staticUrl, '/'));
 		list($scheme, $address, $base) = $this->yellow->lookup->getUrlInformation($staticUrl);
 		$staticLocations = $this->getContentLocations(true);
 		uksort($links, "strnatcasecmp");
@@ -342,14 +343,14 @@ class YellowCommand
 			if(defined("DEBUG") && DEBUG>=1) echo "YellowCommand::analyseLinks url:$url\n";
 			if(preg_match("#^$staticUrl#", $url))
 			{
-				$location = substru($url, 32);
-				$fileName = $path.substru($url, 32);
+				$location = substru($url, $staticUrlLength);
+				$fileName = $path.substru($url, $staticUrlLength);
 				if(is_readable($fileName)) continue;
 				if(in_array($location, $staticLocations)) continue;
 			}
 			if(preg_match("/^(http|https):/", $url))
 			{
-				$referer = "$scheme://$address".(($pos = strposu($value, ',')) ? substru($value, 0, $pos) : $value);
+				$referer = "$scheme://$address$base".(($pos = strposu($value, ',')) ? substru($value, 0, $pos) : $value);
 				$statusCodeUrl = $this->getLinkStatus($url, $referer);
 				if($statusCodeUrl!=200)
 				{
@@ -366,9 +367,9 @@ class YellowCommand
 			{
 				if($statusCodeUrl==302) continue;
 				if($statusCodeUrl>=300 && $statusCodeUrl<=399) {
-					$redirect["$scheme://$address$location -> $url - ".$this->getStatusFormatted($statusCodeUrl)] = $statusCodeUrl;
+					$redirect["$scheme://$address$base$location -> $url - ".$this->getStatusFormatted($statusCodeUrl)] = $statusCodeUrl;
 				} else {
-					$broken["$scheme://$address$location -> $url - ".$this->getStatusFormatted($statusCodeUrl)] = $statusCodeUrl;
+					$broken["$scheme://$address$base$location -> $url - ".$this->getStatusFormatted($statusCodeUrl)] = $statusCodeUrl;
 				}
 			}
 		}
