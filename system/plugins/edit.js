@@ -623,7 +623,7 @@ yellow.edit =
 				case "pre":			yellow.editor.setMarkdown(elementText, "```\n", "insert-fenced-block", true); break;
 				case "bold":		yellow.editor.setMarkdown(elementText, "**", "insert-inline", true); break;
 				case "italic":		yellow.editor.setMarkdown(elementText, "*", "insert-inline", true); break;
-				case "strikethrough": yellow.editor.setMarkdown(elementText, "~", "insert-inline", true); break;
+				case "strikethrough": yellow.editor.setMarkdown(elementText, "~~", "insert-inline", true); break;
 				case "code":		yellow.editor.setMarkdown(elementText, "`", "insert-autodetect", true); break;
 				case "ul":			yellow.editor.setMarkdown(elementText, "* ", "insert-multiline-block", true); break;
 				case "ol":			yellow.editor.setMarkdown(elementText, "1. ", "insert-multiline-block", true); break;
