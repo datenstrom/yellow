@@ -5,7 +5,7 @@
 
 class YellowUpdate
 {
-	const VERSION = "0.7.15";
+	const VERSION = "0.7.16";
 	var $yellow;					//access to API
 	var $updates;					//number of updates
 	
@@ -153,7 +153,7 @@ class YellowUpdate
 	// Handle command help
 	function onCommandHelp()
 	{
-		return "update [OPTION FEATURE]";
+		return "update [option feature]";
 	}
 	
 	// Clean downloads

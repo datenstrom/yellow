@@ -5,7 +5,7 @@
 
 class YellowEdit
 {
-	const VERSION = "0.7.26";
+	const VERSION = "0.7.27";
 	var $yellow;			//access to API
 	var $response;			//web response
 	var $users;				//user accounts
@@ -145,7 +145,7 @@ class YellowEdit
 	// Handle command help
 	function onCommandHelp()
 	{
-		return "user [OPTION EMAIL PASSWORD NAME]\n";
+		return "user [option email password name]\n";
 	}
 
 	// Update user account

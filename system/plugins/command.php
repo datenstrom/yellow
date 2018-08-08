@@ -5,7 +5,7 @@
 
 class YellowCommand
 {
-	const VERSION = "0.7.7";
+	const VERSION = "0.7.8";
 	var $yellow;					//access to API
 	var $files;						//number of files
 	var $links;						//number of links
@@ -38,9 +38,9 @@ class YellowCommand
 	// Handle command help
 	function onCommandHelp()
 	{
-		$help .= "build [DIRECTORY LOCATION]\n";
-		$help .= "check [DIRECTORY LOCATION]\n";
-		$help .= "clean [DIRECTORY LOCATION]\n";
+		$help .= "build [directory location]\n";
+		$help .= "check [directory location]\n";
+		$help .= "clean [directory location]\n";
 		$help .= "version\n";
 		return $help;
 	}
