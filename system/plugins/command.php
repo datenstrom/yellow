@@ -124,31 +124,11 @@ class YellowCommand {
             $statusCode = $this->requestStaticFile($scheme, $address, $base, $location);
             if ($statusCode<400 || $error) {
                 $fileData = ob_get_contents();
-                $modified = strtotime($this->yellow->page->getHeader("Last-Modified"));
-                if ($modified==0) $modified = $this->yellow->toolbox->getFileModified($this->yellow->page->fileName);
-                if ($statusCode>=301 && $statusCode<=303) {
-                    $fileData = $this->getStaticRedirect($this->yellow->page->getHeader("Location"));
-                    $modified = time();
-                }
-                $fileName = $this->getStaticFile($path, $location, $statusCode);
-                if (!$this->yellow->toolbox->createFile($fileName, $fileData, true) ||
-                    !$this->yellow->toolbox->modifyFile($fileName, $modified)) {
-                    $statusCode = 500;
-                    $this->yellow->page->statusCode = $statusCode;
-                    $this->yellow->page->set("pageError", "Can't write file '$fileName'!");
-                }
+                $statusCode = $this->saveStaticFile($path, $location, $fileData, $statusCode);
             }
             ob_end_clean();
         } else {
-            $statusCode = 200;
-            $modified = $this->yellow->toolbox->getFileModified($this->yellow->page->fileName);
-            $fileName = $this->getStaticFile($path, $location, $statusCode);
-            if (!$this->yellow->toolbox->copyFile($this->yellow->page->fileName, $fileName, true) ||
-                !$this->yellow->toolbox->modifyFile($fileName, $modified)) {
-                $statusCode = 500;
-                $this->yellow->page->statusCode = $statusCode;
-                $this->yellow->page->set("pageError", "Can't write file '$fileName'!");
-            }
+            $statusCode = $this->copyStaticFile($path, $location);
         }
         if ($statusCode==200 && $analyse) $this->analyseStaticFile($scheme, $address, $base, $fileData);
         if ($statusCode==404 && $probe) $statusCode = 100;
@@ -176,6 +156,38 @@ class YellowCommand {
         $_SERVER["REMOTE_ADDR"] = "127.0.0.1";
         $_REQUEST = array();
         return $this->yellow->request();
+    }
+    
+    // Save static file
+    public function saveStaticFile($path, $location, $fileData, $statusCode) {
+        $modified = strtotime($this->yellow->page->getHeader("Last-Modified"));
+        if ($modified==0) $modified = $this->yellow->toolbox->getFileModified($this->yellow->page->fileName);
+        if ($statusCode>=301 && $statusCode<=303) {
+            $fileData = $this->getStaticRedirect($this->yellow->page->getHeader("Location"));
+            $modified = time();
+        }
+        $fileName = $this->getStaticFile($path, $location, $statusCode);
+        if (!$this->yellow->toolbox->createFile($fileName, $fileData, true) ||
+            !$this->yellow->toolbox->modifyFile($fileName, $modified)) {
+            $statusCode = 500;
+            $this->yellow->page->statusCode = $statusCode;
+            $this->yellow->page->set("pageError", "Can't write file '$fileName'!");
+        }
+        return $statusCode;
+    }
+    
+    // Copy static file
+    public function copyStaticFile($path, $location) {
+        $statusCode = 200;
+        $modified = $this->yellow->toolbox->getFileModified($this->yellow->page->fileName);
+        $fileName = $this->getStaticFile($path, $location, $statusCode);
+        if (!$this->yellow->toolbox->copyFile($this->yellow->page->fileName, $fileName, true) ||
+            !$this->yellow->toolbox->modifyFile($fileName, $modified)) {
+            $statusCode = 500;
+            $this->yellow->page->statusCode = $statusCode;
+            $this->yellow->page->set("pageError", "Can't write file '$fileName'!");
+        }
+        return $statusCode;
     }
     
     // Analyse static file, detect locations with arguments
