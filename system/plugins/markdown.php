@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowMarkdown {
-    const VERSION = "0.6.8";
+    const VERSION = "0.6.9";
     public $yellow;         //access to API
     
     // Handle initialisation
@@ -3766,12 +3766,12 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser {
     // Handle links
     public function doAutoLinks($text) {
         $text = preg_replace_callback("/<(\w+:[^\'\">\s]+)>/", array(&$this, "_doAutoLinks_url_callback"), $text);
-        $text = preg_replace_callback("/<([\w\-\.]+@[\w\-\.]+)>/", array(&$this, "_doAutoLinks_email_callback"), $text);
+        $text = preg_replace_callback("/<([\w\+\-\.]+@[\w\-\.]+)>/", array(&$this, "_doAutoLinks_email_callback"), $text);
         $text = preg_replace_callback("/\[\-\-(.*?)\-\-\]/", array(&$this, "_doAutoLinks_comment_callback"), $text);
         $text = preg_replace_callback("/\[(\w+)(.*?)\]/", array(&$this, "_doAutoLinks_shortcut_callback"), $text);
         $text = preg_replace_callback("/\:([\w\+\-\_]+)\:/", array(&$this, "_doAutoLinks_shortcode_callback"), $text);
         $text = preg_replace_callback("/((http|https|ftp):\/\/\S+[^\'\"\,\.\;\:\s]+)/", array(&$this, "_doAutoLinks_url_callback"), $text);
-        $text = preg_replace_callback("/([\w\-\.]+@[\w\-\.]+\.[\w]{2,4})/", array(&$this, "_doAutoLinks_email_callback"), $text);
+        $text = preg_replace_callback("/([\w\+\-\.]+@[\w\-\.]+\.[\w]{2,4})/", array(&$this, "_doAutoLinks_email_callback"), $text);
         return $text;
     }
     
