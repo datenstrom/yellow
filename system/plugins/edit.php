@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowEdit {
-    const VERSION = "0.7.27";
+    const VERSION = "0.7.28";
     public $yellow;         //access to API
     public $response;       //web response
     public $users;          //user accounts
@@ -73,7 +73,7 @@ class YellowEdit {
         return $statusCode;
     }
     
-    // Handle page meta data parsing
+    // Handle page meta data
     public function onParseMeta($page) {
         if ($page==$this->yellow->page && $this->response->isActive()) {
             if ($this->response->isUser()) {
@@ -89,7 +89,7 @@ class YellowEdit {
         }
     }
     
-    // Handle page content parsing of custom block
+    // Handle page content of custom block
     public function onParseContentBlock($page, $name, $text, $shortcut) {
         $output = null;
         if ($name=="edit" && $shortcut) {
@@ -100,13 +100,13 @@ class YellowEdit {
         return $output;
     }
     
-    // Handle page extra HTML data
-    public function onExtra($name) {
+    // Handle page extra data
+    public function onParsePageExtra($page, $name) {
         $output = null;
         if ($name=="header" && $this->response->isActive()) {
             $pluginLocation = $this->yellow->config->get("serverBase").$this->yellow->config->get("pluginLocation");
-            $output = "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"{$pluginLocation}edit.css\" />\n";
-            $output .= "<script type=\"text/javascript\" src=\"{$pluginLocation}edit.js\"></script>\n";
+            $output = "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" data-bundle=\"none\" href=\"{$pluginLocation}edit.css\" />\n";
+            $output .= "<script type=\"text/javascript\" data-bundle=\"none\" src=\"{$pluginLocation}edit.js\"></script>\n";
             $output .= "<script type=\"text/javascript\">\n";
             $output .= "// <![CDATA[\n";
             $output .= "yellow.page = ".json_encode($this->response->getPageData()).";\n";

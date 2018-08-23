@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowCommand {
-    const VERSION = "0.7.8";
+    const VERSION = "0.7.9";
     public $yellow;                     //access to API
     public $files;                      //number of files
     public $links;                      //number of links
@@ -130,7 +130,7 @@ class YellowCommand {
         } else {
             $statusCode = $this->copyStaticFile($path, $location);
         }
-        if ($statusCode==200 && $analyse) $this->analyseStaticFile($scheme, $address, $base, $fileData);
+        if ($statusCode==200 && $analyse) $this->analyseLocations($scheme, $address, $base, $fileData);
         if ($statusCode==404 && $probe) $statusCode = 100;
         if ($statusCode==404 && $error) $statusCode = 200;
         if ($statusCode>=200) ++$this->files;
@@ -190,8 +190,8 @@ class YellowCommand {
         return $statusCode;
     }
     
-    // Analyse static file, detect locations with arguments
-    public function analyseStaticFile($scheme, $address, $base, $rawData) {
+    // Analyse locations with arguments
+    public function analyseLocations($scheme, $address, $base, $rawData) {
         $pagination = $this->yellow->config->get("contentPagination");
         preg_match_all("/<(.*?)href=\"([^\"]+)\"(.*?)>/i", $rawData, $matches);
         foreach ($matches[2] as $match) {
@@ -209,13 +209,13 @@ class YellowCommand {
                 $location = rtrim($location, "/")."/";
                 if (is_null($this->locationsArgs[$location])) {
                     $this->locationsArgs[$location] = $location;
-                    if (defined("DEBUG") && DEBUG>=2) echo "YellowCommand::analyseStaticFile detected location:$location<br/>\n";
+                    if (defined("DEBUG") && DEBUG>=2) echo "YellowCommand::analyseLocations detected location:$location<br/>\n";
                 }
             } else {
                 $location = rtrim($location, "0..9");
                 if (is_null($this->locationsArgsPagination[$location])) {
                     $this->locationsArgsPagination[$location] = $location;
-                    if (defined("DEBUG") && DEBUG>=2) echo "YellowCommand::analyseStaticFile detected location:$location<br/>\n";
+                    if (defined("DEBUG") && DEBUG>=2) echo "YellowCommand::analyseLocations detected location:$location<br/>\n";
                 }
             }
         }
@@ -249,8 +249,8 @@ class YellowCommand {
         $this->files = $this->links = 0;
         $regex = "/^[^.]+$|".$this->yellow->config->get("staticDefaultFile")."$/";
         $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($path, $regex, false, false);
-        list($statusCodeFiles, $links) = $this->analyseStaticFiles($path, $locationFilter, $fileNames);
-        list($statusCodeLinks, $broken, $redirect) = $this->analyseLinks($path, $links);
+        list($statusCodeFiles, $links) = $this->analyseLinks($path, $locationFilter, $fileNames);
+        list($statusCodeLinks, $broken, $redirect) = $this->analyseStatus($path, $links);
         if ($statusCodeLinks!=200) {
             $this->showLinks($broken, "Broken links");
             $this->showLinks($redirect, "Redirect links");
@@ -258,8 +258,8 @@ class YellowCommand {
         return max($statusCodeFiles, $statusCodeLinks);
     }
     
-    // Analyse static files, detect links
-    public function analyseStaticFiles($path, $locationFilter, $fileNames) {
+    // Analyse links in static files
+    public function analyseLinks($path, $locationFilter, $fileNames) {
         $statusCode = 200;
         $links = array();
         if (!empty($fileNames)) {
@@ -278,12 +278,12 @@ class YellowCommand {
                             $url = $location.(empty($matches[3]) ? "/" : "");
                             if (!is_null($links[$url])) $links[$url] .= ",";
                             $links[$url] .= $locationSource;
-                            if (defined("DEBUG") && DEBUG>=2) echo "YellowCommand::analyseStaticFiles detected url:$url<br/>\n";
+                            if (defined("DEBUG") && DEBUG>=2) echo "YellowCommand::analyseLinks detected url:$url<br/>\n";
                         } elseif ($location[0]=="/") {
                             $url = "$scheme://$address$location";
                             if (!is_null($links[$url])) $links[$url] .= ",";
                             $links[$url] .= $locationSource;
-                            if (defined("DEBUG") && DEBUG>=2) echo "YellowCommand::analyseStaticFiles detected url:$url<br/>\n";
+                            if (defined("DEBUG") && DEBUG>=2) echo "YellowCommand::analyseLinks detected url:$url<br/>\n";
                         }
                     }
                     ++$this->files;
@@ -300,8 +300,8 @@ class YellowCommand {
         return array($statusCode, $links);
     }
     
-    // Analyse links, detect status
-    public function analyseLinks($path, $links) {
+    // Analyse link status
+    public function analyseStatus($path, $links) {
         $statusCode = 200;
         $broken = $redirect = $data = array();
         $staticUrl = $this->yellow->config->get("staticUrl");
@@ -310,7 +310,7 @@ class YellowCommand {
         $staticLocations = $this->getContentLocations(true);
         uksort($links, "strnatcasecmp");
         foreach ($links as $url=>$value) {
-            if (defined("DEBUG") && DEBUG>=1) echo "YellowCommand::analyseLinks url:$url\n";
+            if (defined("DEBUG") && DEBUG>=1) echo "YellowCommand::analyseStatus url:$url\n";
             if (preg_match("#^$staticUrl#", $url)) {
                 $location = substru($url, $staticUrlLength);
                 $fileName = $path.substru($url, $staticUrlLength);

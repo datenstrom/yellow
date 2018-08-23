@@ -12,7 +12,7 @@ class YellowMarkdown {
         $this->yellow = $yellow;
     }
     
-    // Handle page content parsing of raw format
+    // Handle page content in raw format
     public function onParseContentRaw($page, $text) {
         $markdown = new YellowMarkdownExtraParser($this->yellow, $page);
         return $markdown->transform($text);
@@ -3848,7 +3848,7 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser {
         $width = $height = 0;
         $src = $matches[3]=="" ? $matches[4] : $matches[3];
         if (!preg_match("/^\w+:/", $src)) {
-            list($width, $height) = $this->yellow->toolbox->detectImageInfo($this->yellow->config->get("imageDir").$src);
+            list($width, $height) = $this->yellow->toolbox->detectImageInformation($this->yellow->config->get("imageDir").$src);
             $src = $this->yellow->config->get("serverBase").$this->yellow->config->get("imageLocation").$src;
         }
         $alt = $matches[2];

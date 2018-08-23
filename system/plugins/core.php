@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowCore {
-    const VERSION = "0.7.5";
+    const VERSION = "0.7.6";
     public $page;           //current page
     public $pages;          //pages from file system
     public $files;          //files from file system
@@ -68,6 +68,7 @@ class YellowCore {
         $this->config->setDefault("robotsFile", "robots.txt");
         $this->config->setDefault("faviconFile", "favicon.ico");
         $this->config->setDefault("serverUrl", "");
+        $this->config->setDefault("startupUpdate", "none");
         $this->config->setDefault("template", "default");
         $this->config->setDefault("navigation", "navigation");
         $this->config->setDefault("sidebar", "sidebar");
@@ -77,7 +78,6 @@ class YellowCore {
         $this->config->setDefault("parserSafeMode", "0");
         $this->config->setDefault("multiLanguageMode", "0");
         $this->config->setDefault("installationMode", "0");
-        $this->config->setDefault("startupUpdate", "none");
     }
     
     public function __destruct() {
@@ -315,10 +315,10 @@ class YellowCore {
         }
     }
     
-    // Parse snippet
+    // Include snippet
     public function snippet($name, $args = null) {
         $this->lookup->snippetArgs = func_get_args();
-        $this->page->parseSnippet($name);
+        $this->page->includePageSnippet($name);
     }
     
     // Return snippet arguments
@@ -551,18 +551,7 @@ class YellowPage {
     
     // Parse page
     public function parsePage() {
-        $this->outputData = null;
-        if (!$this->isError()) {
-            foreach ($this->yellow->plugins->plugins as $key=>$value) {
-                if (method_exists($value["obj"], "onParsePage")) $value["obj"]->onParsePage();
-            }
-        }
-        if (is_null($this->outputData)) {
-            ob_start();
-            $this->parseTemplate($this->get("template"));
-            $this->outputData = ob_get_contents();
-            ob_end_clean();
-        }
+        $this->parsePageTemplate($this->get("template"));
         if (!$this->isCacheable()) $this->setHeader("Cache-Control", "no-cache, must-revalidate");
         if (!$this->isHeader("Content-Type")) $this->setHeader("Content-Type", "text/html; charset=utf-8");
         if (!$this->isHeader("Page-Modified")) $this->setHeader("Page-Modified", $this->getModified(true));
@@ -592,10 +581,36 @@ class YellowPage {
             $this->error(404);
         }
         if ($this->isExisting("pageClean")) $this->outputData = null;
+        foreach ($this->yellow->plugins->plugins as $key=>$value) {
+            if (method_exists($value["obj"], "onParsePageOutput")) {
+                $output = $value["obj"]->onParsePageOutput($this, $this->outputData);
+                if (!is_null($output)) $this->outputData = $output;
+            }
+        }
     }
     
-    // Parse template
-    public function parseTemplate($name) {
+    // Parse page template
+    public function parsePageTemplate($name) {
+        $this->outputData = null;
+        if (!$this->isError()) {
+            foreach ($this->yellow->plugins->plugins as $key=>$value) {
+                if (method_exists($value["obj"], "onParsePageTemplate")) {
+                    $value["obj"]->onParsePageTemplate($this, $name);
+                } elseif (method_exists($value["obj"], "onParsePage")) {    //TODO: remove later, old event handler
+                    $value["obj"]->onParsePage();
+                }
+            }
+        }
+        if (is_null($this->outputData)) {
+            ob_start();
+            $this->includePageTemplate($name);
+            $this->outputData = ob_get_contents();
+            ob_end_clean();
+        }
+    }
+    
+    // Include page template
+    public function includePageTemplate($name) {
         $fileNameTemplate = $this->yellow->config->get("templateDir").$this->yellow->lookup->normaliseName($name).".html";
         if (is_file($fileNameTemplate)) {
             $this->setLastModified(filemtime($fileNameTemplate));
@@ -607,8 +622,8 @@ class YellowPage {
         }
     }
     
-    // Parse snippet
-    public function parseSnippet($name) {
+    // Include page snippet
+    public function includePageSnippet($name) {
         $fileNameSnippet = $this->yellow->config->get("snippetDir").$this->yellow->lookup->normaliseName($name).".php";
         if (is_file($fileNameSnippet)) {
             $this->setLastModified(filemtime($fileNameSnippet));
@@ -687,13 +702,13 @@ class YellowPage {
         return $sizeMax ? substrb($text, 0, $sizeMax) : $text;
     }
     
-    // Return parent page of current page, null if none
+    // Return parent page, null if none
     public function getParent() {
         $parentLocation = $this->yellow->pages->getParentLocation($this->location);
         return $this->yellow->pages->find($parentLocation);
     }
     
-    // Return top-level page for current page, null if none
+    // Return top-level parent page, null if none
     public function getParentTop($homeFailback = true) {
         $parentTopLocation = $this->yellow->pages->getParentTopLocation($this->location);
         if (!$this->yellow->pages->find($parentTopLocation) && $homeFailback) {
@@ -702,28 +717,28 @@ class YellowPage {
         return $this->yellow->pages->find($parentTopLocation);
     }
     
-    // Return page collection with pages on the same level as current page
+    // Return page collection with pages on the same level
     public function getSiblings($showInvisible = false) {
         $parentLocation = $this->yellow->pages->getParentLocation($this->location);
         return $this->yellow->pages->getChildren($parentLocation, $showInvisible);
     }
     
-    // Return page collection with child pages of current page
+    // Return page collection with child pages
     public function getChildren($showInvisible = false) {
         return $this->yellow->pages->getChildren($this->location, $showInvisible);
     }
 
-    // Return page collection with sub pages of current page
+    // Return page collection with sub pages
     public function getChildrenRecursive($showInvisible = false, $levelMax = 0) {
         return $this->yellow->pages->getChildrenRecursive($this->location, $showInvisible, $levelMax);
     }
     
-    // Set page collection with additional pages for current page
+    // Set page collection with additional pages
     public function setPages($pages) {
         $this->pageCollection = $pages;
     }
 
-    // Return page collection with additional pages for current page
+    // Return page collection with additional pages
     public function getPages() {
         return $this->pageCollection;
     }
@@ -753,11 +768,14 @@ class YellowPage {
         return $this->yellow->lookup->normaliseUrl($this->scheme, $this->address, $this->base, $this->location);
     }
     
-    // Return page extra HTML data
+    // Return page extra data
     public function getExtra($name) {
         $output = "";
         foreach ($this->yellow->plugins->plugins as $key=>$value) {
-            if (method_exists($value["obj"], "onExtra")) {
+            if (method_exists($value["obj"], "onParsePageExtra")) {
+                $outputPlugin = $value["obj"]->onParsePageExtra($this, $name);
+                if (!is_null($outputPlugin)) $output .= $outputPlugin;
+            } elseif (method_exists($value["obj"], "onExtra")) {    //TODO: remove later, old event handler
                 $outputPlugin = $value["obj"]->onExtra($name);
                 if (!is_null($outputPlugin)) $output .= $outputPlugin;
             }
@@ -781,28 +799,7 @@ class YellowPage {
                 $output .= "<link rel=\"apple-touch-icon\" type=\"$contentType\" href=\"".htmlspecialchars($location)."\" />\n";
             }
         }
-        return $this->normaliseExtra($output);
-    }
-    
-    // Normalise page extra HTML data
-    public function normaliseExtra($text) {
-        $outputScript = $outputStylesheet = $outputOther = $locations = array();
-        foreach ($this->yellow->toolbox->getTextLines($text) as $line) {
-            if (preg_match("/^<script (.*?)src=\"([^\"]+)\"(.*?)><\/script>$/i", $line, $matches)) {
-                if (is_null($locations[$matches[2]])) {
-                    $locations[$matches[2]] = $matches[2];
-                    array_push($outputScript, $line);
-                }
-            } elseif (preg_match("/^<link rel=\"stylesheet\"(.*?)href=\"([^\"]+)\"(.*?)>$/i", $line, $matches)) {
-                if (is_null($locations[$matches[2]])) {
-                    $locations[$matches[2]] = $matches[2];
-                    array_push($outputStylesheet, $line);
-                }
-            } else {
-                array_push($outputOther, $line);
-            }
-        }
-        return implode($outputScript).implode($outputStylesheet).implode($outputOther);
+        return $output;
     }
     
     // Set page response output
@@ -880,7 +877,7 @@ class YellowPage {
         return $this->visible;
     }
 
-    // Check if page is within current request
+    // Check if page is within current HTTP request
     public function isActive() {
         return $this->active;
     }
@@ -1546,7 +1543,7 @@ class YellowThemes {
             if (defined("DEBUG") && DEBUG>=3) echo "YellowThemes::load file:$entry<br/>\n";
             $this->modified = max($this->modified, filemtime($entry));
             $name = $this->yellow->lookup->normaliseName(basename($entry), true, true);
-            $this->register($name, "", "");
+            if (substru($name, 0, 7)!="bundle-") $this->register($name, "", "");
         }
         $callback = function ($a, $b) {
             return $a["priority"] - $b["priority"];
@@ -2295,7 +2292,7 @@ class YellowLookup {
         return $visible;
     }
     
-    // Check if location is within current request
+    // Check if location is within current HTTP request
     public function isActiveLocation($location, $currentLocation) {
         if ($this->isFileLocation($location)) {
             $active = $currentLocation==$location;
@@ -2994,7 +2991,7 @@ class YellowToolbox {
     }
     
     // Detect image dimensions and type for gif/jpg/png/svg
-    public function detectImageInfo($fileName) {
+    public function detectImageInformation($fileName) {
         $width = $height = 0;
         $type = "";
         $fileHandle = @fopen($fileName, "rb");

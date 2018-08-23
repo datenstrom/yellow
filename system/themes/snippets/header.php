@@ -1,12 +1,12 @@
 <!DOCTYPE html><html lang="<?php echo $yellow->page->getHtml("language") ?>">
 <head>
+<title><?php echo $yellow->page->getHtml("titleHeader") ?></title>
 <meta charset="utf-8" />
 <meta name="description" content="<?php echo $yellow->page->getHtml("description") ?>" />
 <meta name="keywords" content="<?php echo $yellow->page->getHtml("keywords") ?>" />
 <meta name="author" content="<?php echo $yellow->page->getHtml("author") ?>" />
 <meta name="generator" content="Datenstrom Yellow" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title><?php echo $yellow->page->getHtml("titleHeader") ?></title>
 <?php echo $yellow->page->getExtra("header") ?>
 </head>
 <body>

@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowImage {
-    const VERSION = "0.7.3";
+    const VERSION = "0.7.4";
     public $yellow;             //access to API
     public $graphicsLibrary;    //graphics library support? (boolean)
 
@@ -18,7 +18,7 @@ class YellowImage {
         $this->graphicsLibrary = $this->isGraphicsLibrary();
     }
 
-    // Handle page content parsing of custom block
+    // Handle page content of custom block
     public function onParseContentBlock($page, $name, $text, $shortcut) {
         $output = null;
         if ($name=="image" && $shortcut) {
@@ -31,7 +31,7 @@ class YellowImage {
                 if (empty($alt)) $alt = $this->yellow->config->get("imageAlt");
                 if (empty($width)) $width = "100%";
                 if (empty($height)) $height = $width;
-                list($src, $width, $height) = $this->getImageInfo($this->yellow->config->get("imageDir").$name, $width, $height);
+                list($src, $width, $height) = $this->getImageInformation($this->yellow->config->get("imageDir").$name, $width, $height);
             } else {
                 if (empty($alt)) $alt = $this->yellow->config->get("imageAlt");
                 $src = $this->yellow->lookup->normaliseUrl("", "", "", $name);
@@ -71,9 +71,9 @@ class YellowImage {
     }
 
     // Return image info, create thumbnail on demand
-    public function getImageInfo($fileName, $widthOutput, $heightOutput) {
+    public function getImageInformation($fileName, $widthOutput, $heightOutput) {
         $fileNameShort = substru($fileName, strlenu($this->yellow->config->get("imageDir")));
-        list($widthInput, $heightInput, $type) = $this->yellow->toolbox->detectImageInfo($fileName);
+        list($widthInput, $heightInput, $type) = $this->yellow->toolbox->detectImageInformation($fileName);
         $widthOutput = $this->convertValueAndUnit($widthOutput, $widthInput);
         $heightOutput = $this->convertValueAndUnit($heightOutput, $heightInput);
         if (($widthInput==$widthOutput && $heightInput==$heightOutput) || $type=="svg") {
@@ -94,7 +94,7 @@ class YellowImage {
                 }
             }
             $src = $this->yellow->config->get("serverBase").$this->yellow->config->get("imageThumbnailLocation").$fileNameThumb;
-            list($width, $height) = $this->yellow->toolbox->detectImageInfo($fileNameOutput);
+            list($width, $height) = $this->yellow->toolbox->detectImageInformation($fileNameOutput);
         }
         return array($src, $width, $height);
     }

@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowUpdate {
-    const VERSION = "0.7.16";
+    const VERSION = "0.7.17";
     public $yellow;                 //access to API
     public $updates;                //number of updates
     
@@ -39,67 +39,6 @@ class YellowUpdate {
                 $fileDataNew .= ucfirst($key).": $value\n";
             }
             if ($fileData!=$fileDataNew) $this->yellow->toolbox->createFile($fileNameConfig, $fileDataNew);
-        }
-        if ($update) {  //TODO: remove later, converts old theme
-            $path = $this->yellow->config->get("themeDir");
-            foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.css$/", true, false) as $entry) {
-                $fileNameAsset = $this->yellow->config->get("assetDir").basename($entry);
-                if (!is_file($fileNameAsset)) {
-                    $fileData = $this->yellow->toolbox->readFile($entry);
-                    $fileData = preg_replace("#url\(assets/(.*?)\)#", "url($1)", $fileData);
-                    $this->yellow->toolbox->createFile($fileNameAsset, $fileData);
-                }
-                $this->yellow->toolbox->deleteFile($entry, $this->yellow->config->get("trashDir"));
-                $_GET["clean-url"] = "theme-has-been-updated";
-            }
-        }
-        if ($update) {  //TODO: remove later, converts old error page
-            $fileName = $this->yellow->config->get("configDir")."page-error-500.txt";
-            if (is_file($fileName)) {
-                $fileData = $this->yellow->toolbox->readFile($fileName);
-                $fileDataNew = preg_replace("/@pageerror/", "[yellow error]", $fileData);
-                if ($fileData!=$fileDataNew) $this->yellow->toolbox->createFile($fileName, $fileDataNew);
-            }
-        }
-        if ($update) {  //TODO: remove later, converts new blog page
-            $fileName = $this->yellow->config->get("configDir")."page-new-blog.txt";
-            if (is_file($fileName)) {
-                $fileData = $this->yellow->toolbox->readFile($fileName);
-                $fileDataNew = $this->yellow->toolbox->setMetaData($fileData, "template", "blog");
-                if ($fileData!=$fileDataNew) $this->yellow->toolbox->createFile($fileName, $fileDataNew);
-            }
-        }
-        if ($update) {  //TODO: remove later, converts new wiki page
-            $fileName = $this->yellow->config->get("configDir")."page-new-wiki.txt";
-            if (is_file($fileName)) {
-                $fileData = $this->yellow->toolbox->readFile($fileName);
-                $fileDataNew = $this->yellow->toolbox->setMetaData($fileData, "template", "wiki");
-                if ($fileData!=$fileDataNew) $this->yellow->toolbox->createFile($fileName, $fileDataNew);
-            }
-        }
-        if ($update) {  //TODO: remove later, converts template settings
-            $valueDefault = $this->yellow->config->get("template");
-            foreach ($this->yellow->pages->index(true, true) as $page) {
-                preg_match("/^.*\/(.+?)$/", dirname($page->fileName), $matches);
-                $value = $this->yellow->lookup->normaliseName($matches[1], true, false, true);
-                if (!is_file($this->yellow->config->get("templateDir").$value.".html")) $value = $valueDefault;
-                $pageTemplate = $this->yellow->toolbox->getMetaData($page->rawData, "template");
-                $pagePublished = $this->yellow->toolbox->getMetaData($page->rawData, "published");
-                if (empty($pagePublished) && $value=="blog") $value = $valueDefault;
-                if (empty($pageTemplate) && $value!=$valueDefault) {
-                    $rawDataNew = $this->yellow->toolbox->setMetaData($page->rawData, "template", $value);
-                    if ($page->rawData!=$rawDataNew) $this->yellow->toolbox->createFile($page->fileName, $rawDataNew);
-                }
-            }
-            foreach ($this->yellow->pages->index(true, true)->filter("template", "blogpages") as $page) {
-                $rawDataNew = $this->yellow->toolbox->setMetaData($page->rawData, "templateNew", "blog");
-                if ($page->rawData!=$rawDataNew) $this->yellow->toolbox->createFile($page->fileName, $rawDataNew);
-            }
-            foreach ($this->yellow->pages->index(true, true)->filter("template", "wikipages") as $page) {
-                $rawDataNew = $this->yellow->toolbox->setMetaData($page->rawData, "templateNew", "wiki");
-                if ($page->rawData!=$rawDataNew) $this->yellow->toolbox->createFile($page->fileName, $rawDataNew);
-            }
-            $this->yellow->pages = new YellowPages($this->yellow);
         }
     }
     
