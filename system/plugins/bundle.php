@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowBundle {
-    const VERSION = "0.7.1";
+    const VERSION = "0.7.2";
     public $yellow;         //access to API
 
     // Handle initialisation
@@ -96,7 +96,7 @@ class YellowBundle {
             $this->yellow->toolbox->timerStart($time);
             $id = substru(md5(implode($fileNames).$base), 0, 10);
             $fileNameBundle = $this->yellow->config->get("assetDir")."bundle-$id.min.$type";;
-            $locationBundle = $base.$this->yellow->config->get("assetLocation")."bundle-$id.min.$type";;
+            $locationBundle = $base.$this->yellow->config->get("assetLocation")."bundle-$id.min.$type";
             if ($type=="css") {
                 $data[$locationBundle] = "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"".htmlspecialchars($locationBundle)."\" />\n";
             } else {
@@ -110,6 +110,10 @@ class YellowBundle {
                     if(!empty($fileDataNew)) $fileDataNew .= "\n\n";
                     $fileDataNew .= "/* ".basename($fileName)." */\n";
                     $fileDataNew .= $fileData;
+                }
+                if (defined("DEBUG") && DEBUG>=2) {
+                    if(!empty($fileDataNew)) $fileDataNew .= "\n\n";
+                    $fileDataNew .= "/* YellowBundle::processBundle file:$fileNameBundle <- ".$this->yellow->page->fileName." */";
                 }
                 if (!$this->yellow->toolbox->createFile($fileNameBundle, $fileDataNew) ||
                     !$this->yellow->toolbox->modifyFile($fileNameBundle, $modified)) {
@@ -146,7 +150,6 @@ class YellowBundle {
     
     // Process bundle, minify data
     public function processBundleMinify($scheme, $address, $base, $fileData, $fileName, $type) {
-       
         $minifier = $type=="css" ? new MinifyCss() : new MinifyJavaScript();
         if (preg_match("/\.min/", $fileName)) $minifier = new MinifyBasic();
         $minifier->add($fileData);
