@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowBundle {
-    const VERSION = "0.7.2";
+    const VERSION = "0.7.3";
     public $yellow;         //access to API
 
     // Handle initialisation
@@ -89,10 +89,12 @@ class YellowBundle {
             $location = substru($key, strlenu($base));
             $fileName = $this->yellow->lookup->findFileFromSystem($location);
             $modified = max($modified, $this->yellow->toolbox->getFileModified($fileName));
-            if (is_readable($fileName)) array_push($fileNames, $fileName);
-            unset($data[$key]);
+            if (is_readable($fileName)) {
+                array_push($fileNames, $fileName);
+                unset($data[$key]);
+            }
         }
-        if (count($fileNames)>1) {
+        if (!empty($fileNames)) {
             $this->yellow->toolbox->timerStart($time);
             $id = substru(md5(implode($fileNames).$base), 0, 10);
             $fileNameBundle = $this->yellow->config->get("assetDir")."bundle-$id.min.$type";;
