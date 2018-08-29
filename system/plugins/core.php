@@ -2991,20 +2991,21 @@ class YellowToolbox {
     }
     
     // Detect image dimensions and type for gif/jpg/png/svg
-    public function detectImageInformation($fileName) {
+    public function detectImageInformation($fileName, $fileType = "") {
         $width = $height = 0;
         $type = "";
         $fileHandle = @fopen($fileName, "rb");
         if ($fileHandle) {
-            if (substru(strtoloweru($fileName), -3)=="gif") {
+            if(empty($fileType)) $fileType = $this->getFileType($fileName);
+            if ($fileType=="gif") {
                 $dataSignature = fread($fileHandle, 6);
                 $dataHeader = fread($fileHandle, 7);
                 if (!feof($fileHandle) && ($dataSignature=="GIF87a" || $dataSignature=="GIF89a")) {
                     $width = (ord($dataHeader[1])<<8) + ord($dataHeader[0]);
                     $height = (ord($dataHeader[3])<<8) + ord($dataHeader[2]);
-                    $type = "gif";
+                    $type = $fileType;
                 }
-            } elseif (substru(strtoloweru($fileName), -3)=="jpg") {
+            } elseif ($fileType=="jpg") {
                 $dataBufferSizeMax = filesize($fileName);
                 $dataBufferSize = min($dataBufferSizeMax, 4096);
                 if ($dataBufferSize) $dataBuffer = fread($fileHandle, $dataBufferSize);
@@ -3015,7 +3016,7 @@ class YellowToolbox {
                         if ($dataBuffer[$pos+1]=="\xc0" || $dataBuffer[$pos+1]=="\xc2") {
                             $width = (ord($dataBuffer[$pos+7])<<8) + ord($dataBuffer[$pos+8]);
                             $height = (ord($dataBuffer[$pos+5])<<8) + ord($dataBuffer[$pos+6]);
-                            $type = "jpg";
+                            $type = $fileType;
                             break;
                         }
                         $length = (ord($dataBuffer[$pos+2])<<8) + ord($dataBuffer[$pos+3]) + 2;
@@ -3032,15 +3033,15 @@ class YellowToolbox {
                         }
                     }
                 }
-            } elseif (substru(strtoloweru($fileName), -3)=="png") {
+            } elseif ($fileType=="png") {
                 $dataSignature = fread($fileHandle, 8);
                 $dataHeader = fread($fileHandle, 16);
                 if (!feof($fileHandle) && $dataSignature=="\x89PNG\r\n\x1a\n") {
                     $width = (ord($dataHeader[10])<<8) + ord($dataHeader[11]);
                     $height = (ord($dataHeader[14])<<8) + ord($dataHeader[15]);
-                    $type = "png";
+                    $type = $fileType;
                 }
-            } elseif (substru(strtoloweru($fileName), -3)=="svg") {
+            } elseif ($fileType=="svg") {
                 $dataBufferSizeMax = filesize($fileName);
                 $dataBufferSize = min($dataBufferSizeMax, 4096);
                 if ($dataBufferSize) $dataBuffer = fread($fileHandle, $dataBufferSize);
@@ -3049,7 +3050,7 @@ class YellowToolbox {
                     $dataBuffer = ($pos = strposu($dataBuffer, ">")) ? substru($dataBuffer, 0, $pos) : $dataBuffer;
                     if (preg_match("/ width=\"(\d+)\"/", $dataBuffer, $matches)) $width = $matches[1];
                     if (preg_match("/ height=\"(\d+)\"/", $dataBuffer, $matches)) $height = $matches[1];
-                    $type = "svg";
+                    $type = $fileType;
                 }
             }
             fclose($fileHandle);

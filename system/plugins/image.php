@@ -1,20 +1,23 @@
 <?php
 // Image plugin, https://github.com/datenstrom/yellow-plugins/tree/master/image
-// Copyright (c) 2013-2017 Datenstrom, https://datenstrom.se
+// Copyright (c) 2013-2018 Datenstrom, https://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 class YellowImage {
-    const VERSION = "0.7.4";
+    const VERSION = "0.7.5";
     public $yellow;             //access to API
     public $graphicsLibrary;    //graphics library support? (boolean)
 
     // Handle initialisation
     public function onLoad($yellow) {
         $this->yellow = $yellow;
+        $this->yellow->config->setDefault("imageAlt", "Image");
+        $this->yellow->config->setDefault("imageUploadWidthMax", "1280");
+        $this->yellow->config->setDefault("imageUploadHeightMax", "1280");
+        $this->yellow->config->setDefault("imageUploadJpgQuality", "80");
         $this->yellow->config->setDefault("imageThumbnailLocation", "/media/thumbnails/");
         $this->yellow->config->setDefault("imageThumbnailDir", "media/thumbnails/");
-        $this->yellow->config->setDefault("imageThumbnailJpgQuality", 80);
-        $this->yellow->config->setDefault("imageAlt", "Image");
+        $this->yellow->config->setDefault("imageThumbnailJpgQuality", "80");
         $this->graphicsLibrary = $this->isGraphicsLibrary();
     }
 
@@ -44,6 +47,25 @@ class YellowImage {
             $output .= " />";
         }
         return $output;
+    }
+    
+    // Handle media file changes
+    public function onEditMediaFile($file, $action) {
+        if ($action=="upload" && $this->graphicsLibrary) {
+            $fileName = $file->fileName;
+            $fileType = $this->yellow->toolbox->getFileType($file->get("fileNameShort"));
+            list($widthInput, $heightInput, $type) = $this->yellow->toolbox->detectImageInformation($fileName, $fileType);
+            $widthMax = $this->yellow->config->get("imageUploadWidthMax");
+            $heightMax = $this->yellow->config->get("imageUploadHeightMax");
+            if (($widthInput>$widthMax || $heightInput>$heightMax) && ($type=="gif" || $type=="jpg" || $type=="png")) {
+                list($widthOutput, $heightOutput) = $this->getImageDimensionsFit($widthInput, $heightInput, $widthMax, $heightMax);
+                $image = $this->loadImage($fileName, $type);
+                $image = $this->resizeImage($image, $widthInput, $heightInput, $widthOutput, $heightOutput);
+                if (!$this->saveImage($image, $fileName, $type, $this->yellow->config->get("imageUploadJpgQuality"))) {
+                    $file->error(500, "Can't write file '$fileName'!");
+                }
+            }
+        }
     }
     
     // Handle command
@@ -88,7 +110,7 @@ class YellowImage {
             if ($this->isFileNotUpdated($fileName, $fileNameOutput)) {
                 $image = $this->loadImage($fileName, $type);
                 $image = $this->resizeImage($image, $widthInput, $heightInput, $widthOutput, $heightOutput);
-                if (!$this->saveImage($image, $fileNameOutput, $type) ||
+                if (!$this->saveImage($image, $fileNameOutput, $type, $this->yellow->config->get("imageThumbnailJpgQuality")) ||
                     !$this->yellow->toolbox->modifyFile($fileNameOutput, $this->yellow->toolbox->getFileModified($fileName))) {
                     $this->yellow->page->error(500, "Can't write file '$fileNameOutput'!");
                 }
@@ -97,6 +119,17 @@ class YellowImage {
             list($width, $height) = $this->yellow->toolbox->detectImageInformation($fileNameOutput);
         }
         return array($src, $width, $height);
+    }
+    
+    // Return image dimensions that fit, scale proportional
+    public function getImageDimensionsFit($widthInput, $heightInput, $widthMax, $heightMax) {
+        $widthOutput = $widthMax;
+        $heightOutput = $widthMax * ($heightInput / $widthInput);
+        if ($heightOutput>$heightMax) {
+            $widthOutput = $widthOutput * ($heightMax / $heightOutput);
+            $heightOutput = $heightOutput * ($heightMax / $heightOutput);
+        }
+        return array(intval($widthOutput), intval($heightOutput));
     }
 
     // Load image from file
@@ -111,11 +144,11 @@ class YellowImage {
     }
     
     // Save image to file
-    public function saveImage($image, $fileName, $type) {
+    public function saveImage($image, $fileName, $type, $quality) {
         $ok = false;
         switch ($type) {
             case "gif": $ok = @imagegif($image, $fileName); break;
-            case "jpg": $ok = @imagejpeg($image, $fileName, $this->yellow->config->get("imageThumbnailJpgQuality")); break;
+            case "jpg": $ok = @imagejpeg($image, $fileName, $quality); break;
             case "png": $ok = @imagepng($image, $fileName); break;
         }
         return $ok;
