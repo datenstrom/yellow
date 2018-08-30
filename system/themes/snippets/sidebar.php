@@ -3,7 +3,7 @@
 <?php $page = $yellow->page->getParentTop(true) ?>
 <?php $pages = $page->getChildren(!$page->isVisible()) ?>
 <?php $yellow->page->setLastModified($pages->getModified()) ?>
-<div class="sidebar">
+<div class="sidebar" role="complementary">
 <div class="navigation-sidebar">
 <p><?php echo $page->getHtml("titleNavigation") ?></p>
 <ul>
@@ -17,7 +17,7 @@
 <?php $page = $yellow->page->getPage("sidebar") ?>
 <?php $page->setPage("main", $yellow->page) ?>
 <?php $yellow->page->setLastModified($page->getModified()) ?>
-<div class="sidebar">
+<div class="sidebar" role="complementary">
 <?php echo $page->getContent() ?>
 </div>
 <?php endif ?>

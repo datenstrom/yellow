@@ -1,6 +1,6 @@
 <?php list($name, $pages) = $yellow->getSnippetArgs() ?>
 <?php if($pages->isPagination()): ?>
-<div class="pagination">
+<div class="pagination" role="navigation">
 <?php if($pages->getPaginationPrevious()): ?>
 <a class="previous" href="<?php echo $pages->getPaginationPrevious() ?>"><?php echo $yellow->text->getHtml("paginationPrevious") ?></a>
 <?php endif ?>
