@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowEdit {
-    const VERSION = "0.7.28";
+    const VERSION = "0.7.29";
     public $yellow;         //access to API
     public $response;       //web response
     public $users;          //user accounts
@@ -556,7 +556,7 @@ class YellowEdit {
                 if ($updates==0) {
                     foreach ($dataCurrent as $key=>$value) {
                         if (!is_null($dataModified[$key]) && !is_null($dataLatest[$key])) {
-                            $rawData = $this->yellow->text->getTextHtml("editVersionUpdateModified", $this->response->language)." - <a href=\"#\" data-action=\"update\" data-status=\"update\" data-args=\"".$this->yellow->toolbox->normaliseArgs("option:force/feature:$key")."\">".$this->yellow->text->getTextHtml("editVersionUpdateForce", $this->response->language)."</a><br />\n";
+                            $rawData = $this->yellow->text->getTextHtml("editVersionUpdateModified", $this->response->language)." - <a href=\"#\" data-action=\"update\" data-status=\"update\" data-args=\"".$this->yellow->toolbox->normaliseArgs("feature:$key/option:force")."\">".$this->yellow->text->getTextHtml("editVersionUpdateForce", $this->response->language)."</a><br />\n";
                             $rawData = preg_replace("/@software/i", htmlspecialchars("$key $dataLatest[$key]"), $rawData);
                             $this->response->rawDataOutput .= $rawData;
                         }
@@ -579,9 +579,9 @@ class YellowEdit {
     public function processRequestUpdate($scheme, $address, $base, $location, $fileName) {
         $statusCode = 0;
         if ($this->yellow->plugins->isExisting("update") && $this->response->isUserWebmaster()) {
-            $option = trim($_REQUEST["option"]);
             $feature = trim($_REQUEST["feature"]);
-            $statusCode = $this->yellow->command("update", $option, $feature);
+            $option = trim($_REQUEST["option"]);
+            $statusCode = $this->yellow->command("update", $feature, $option);
             if ($statusCode==200) {
                 $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
                 $statusCode = $this->yellow->sendStatus(303, $location);

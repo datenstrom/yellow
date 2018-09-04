@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowUpdate {
-    const VERSION = "0.7.17";
+    const VERSION = "0.7.18";
     public $yellow;                 //access to API
     public $updates;                //number of updates
     
@@ -57,16 +57,21 @@ class YellowUpdate {
     public function onCommand($args) {
         list($command) = $args;
         switch ($command) {
-            case "clean":   $statusCode = $this->cleanCommand($args); break;
-            case "update":  $statusCode = $this->updateCommand($args); break;
-            default:        $statusCode = $this->processCommandInstallationPending($args); break;
+            case "clean":       $statusCode = $this->cleanCommand($args); break;
+            case "install":     $statusCode = $this->installCommand($args); break;
+            case "uninstall":   $statusCode = $this->uninstallCommand($args); break;
+            case "update":      $statusCode = $this->updateCommand($args); break;
+            default:            $statusCode = $this->processCommandInstallationPending($args); break;
         }
         return $statusCode;
     }
     
     // Handle command help
     public function onCommandHelp() {
-        return "update [option feature]";
+        $help .= "install [feature]\n";
+        $help .= "uninstall [feature]\n";
+        $help .= "update [feature]\n";
+        return $help;
     }
     
     // Clean downloads
@@ -84,54 +89,136 @@ class YellowUpdate {
         return $statusCode;
     }
     
-    // Update website
-    public function updateCommand($args) {
-        list($command, $option, $feature) = $args;
-        if (empty($option) || $option=="normal" || $option=="force") {
-            $force = $option=="force";
-            list($statusCode, $data) = $this->detectSoftware($force, $feature);
-            if ($statusCode!=200 || !empty($data)) {
-                $this->updates = 0;
-                if ($statusCode==200) $statusCode = $this->downloadSoftware($data);
-                if ($statusCode==200) $statusCode = $this->updateSoftware($force);
-                if ($statusCode>=400) echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
-                echo "Yellow $command: Website ".($statusCode!=200 ? "not " : "")."updated";
-                echo ", $this->updates update".($this->updates!=1 ? "s" : "")." installed\n";
-            } else {
-                echo "Your website is up to date\n";
-            }
+    // Install feature
+    public function installCommand($args) {
+        list($command, $features) = $this->getCommandFeatures($args);
+        if (!empty($features)) {
+            $this->updates = 0;
+            list($statusCode, $data) = $this->getInstallInformation($features);
+            if ($statusCode==200) $statusCode = $this->downloadSoftware($data);
+            if ($statusCode==200) $statusCode = $this->updateSoftware();
+            if ($statusCode>=400) echo "ERROR installing files: ".$this->yellow->page->get("pageError")."\n";
+            echo "Yellow $command: Website ".($statusCode!=200 ? "not " : "")."updated";
+            echo ", $this->updates feature".($this->updates!=1 ? "s" : "")." installed\n";
         } else {
-            $statusCode = 400;
-            echo "Yellow $command: Invalid arguments\n";
+            $statusCode = $this->showSoftware();
         }
         return $statusCode;
     }
     
-    // Detect software
-    public function detectSoftware($force, $feature) {
+    // Uninstall feature
+    public function uninstallCommand($args) {
+        list($command, $features) = $this->getCommandFeatures($args);
+        if (!empty($features)) {
+            $this->updates = 0;
+            list($statusCode, $data) = $this->getUninstallInformation($features, "YellowCore, YellowUpdate");
+            if ($statusCode==200) $statusCode = $this->removeSoftware($data);
+            if ($statusCode>=400) echo "ERROR uninstalling files: ".$this->yellow->page->get("pageError")."\n";
+            echo "Yellow $command: Website ".($statusCode!=200 ? "not " : "")."updated";
+            echo ", $this->updates feature".($this->updates!=1 ? "s" : "")." uninstalled\n";
+        } else {
+            $statusCode = $this->showSoftware();
+        }
+        return $statusCode;
+    }
+    
+    // Update website
+    public function updateCommand($args) {
+        list($command, $features, $force) = $this->getCommandFeatures($args);
+        list($statusCode, $data) = $this->getUpdateInformation($features, $force);
+        if ($statusCode!=200 || !empty($data)) {
+            $this->updates = 0;
+            if ($statusCode==200) $statusCode = $this->downloadSoftware($data);
+            if ($statusCode==200) $statusCode = $this->updateSoftware($force);
+            if ($statusCode>=400) echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
+            echo "Yellow $command: Website ".($statusCode!=200 ? "not " : "")."updated";
+            echo ", $this->updates update".($this->updates!=1 ? "s" : "")." installed\n";
+        } else {
+            echo "Your website is up to date\n";
+        }
+        return $statusCode;
+    }
+
+    // Return install information
+    public function getInstallInformation($features) {
+        $data = array();
+        list($statusCodeCurrent, $dataCurrent) = $this->getSoftwareVersion();
+        list($statusCodeLatest, $dataLatest) = $this->getSoftwareVersion(true, true);
+        $statusCode = max($statusCodeCurrent, $statusCodeLatest);
+        foreach ($features as $feature) {
+            $found = false;
+            foreach ($dataLatest as $key=>$value) {
+                if (strtoloweru($key)==strtoloweru($feature)) {
+                    $data[$key] = $dataLatest[$key];
+                    $found = true;
+                    break;
+                }
+            }
+            if (!$found) {
+                $statusCode = 500;
+                $this->yellow->page->error($statusCode, "Can't find feature '$feature'!");
+            }
+        }
+        return array($statusCode, $data);
+    }
+
+    // Return uninstall information
+    public function getUninstallInformation($features, $featuresProtected) {
+        $data = array();
+        list($statusCodeCurrent, $dataCurrent) = $this->getSoftwareVersion();
+        list($statusCodeLatest, $dataLatest) = $this->getSoftwareVersion(true, true);
+        list($statusCodeFiles, $dataFiles) = $this->getSoftwareFiles();
+        $statusCode = max($statusCodeCurrent, $statusCodeLatest, $statusCodeFiles);
+        foreach ($features as $feature) {
+            $found = false;
+            foreach ($dataCurrent as $key=>$value) {
+                if (strtoloweru($key)==strtoloweru($feature) && !is_null($dataLatest[$key]) && !is_null($dataFiles[$key])) {
+                    $data[$key] = $dataFiles[$key];
+                    $found = true;
+                    break;
+                }
+            }
+            if (!$found) {
+                $statusCode = 500;
+                $this->yellow->page->error($statusCode, "Can't find feature '$feature'!");
+            }
+        }
+        $protected = preg_split("/\s*,\s*/", $featuresProtected);
+        foreach ($data as $key=>$value) {
+            if (in_array($key, $protected)) unset($data[$key]);
+        }
+        return array($statusCode, $data);
+    }
+
+    // Return update information
+    public function getUpdateInformation($features, $force) {
         $data = array();
         list($statusCodeCurrent, $dataCurrent) = $this->getSoftwareVersion();
         list($statusCodeLatest, $dataLatest) = $this->getSoftwareVersion(true, true);
         list($statusCodeModified, $dataModified) = $this->getSoftwareModified();
         $statusCode = max($statusCodeCurrent, $statusCodeLatest, $statusCodeModified);
-        if (empty($feature)) {
+        if (empty($features)) {
             foreach ($dataCurrent as $key=>$value) {
                 list($version) = explode(",", $dataLatest[$key]);
                 if (strnatcasecmp($dataCurrent[$key], $version)<0) $data[$key] = $dataLatest[$key];
                 if (!is_null($dataModified[$key]) && !empty($version) && $force) $data[$key] = $dataLatest[$key];
             }
         } else {
-            foreach ($dataCurrent as $key=>$value) {
-                list($version) = explode(",", $dataLatest[$key]);
-                if (strtoloweru($key)==strtoloweru($feature) && !empty($version)) {
-                    $data[$key] = $dataLatest[$key];
-                    $dataModified = array_intersect_key($dataModified, $data);
-                    break;
+            foreach ($features as $feature) {
+                $found = false;
+                foreach ($dataCurrent as $key=>$value) {
+                    list($version) = explode(",", $dataLatest[$key]);
+                    if (strtoloweru($key)==strtoloweru($feature) && !empty($version)) {
+                        $data[$key] = $dataLatest[$key];
+                        $dataModified = array_intersect_key($dataModified, $data);
+                        $found = true;
+                        break;
+                    }
                 }
-            }
-            if (empty($data)) {
-                $statusCode = 500;
-                $this->yellow->page->error($statusCode, "Can't find feature '$feature'!");
+                if (!$found) {
+                    $statusCode = 500;
+                    $this->yellow->page->error($statusCode, "Can't find feature '$feature'!");
+                }
             }
         }
         if ($statusCode==200) {
@@ -145,6 +232,17 @@ class YellowUpdate {
             }
         }
         return array($statusCode, $data);
+    }
+    
+    // Show software features
+    public function showSoftware() {
+        list($statusCode, $dataLatest) = $this->getSoftwareVersion(true, true);
+        foreach ($dataLatest as $key=>$value) {
+            list($version, $url, $description) = explode(",", $value);
+            echo "$key: $description\n";
+        }
+        if ($statusCode!=200) echo "ERROR checking features: ".$this->yellow->page->get("pageError")."\n";
+        return $statusCode;
     }
     
     // Download software
@@ -378,6 +476,35 @@ class YellowUpdate {
         return $statusCode;
     }
     
+    // Remove software
+    public function removeSoftware($data) {
+        $statusCode = 200;
+        if (function_exists("opcache_reset")) opcache_reset();
+        foreach ($data as $key=>$value) {
+            foreach (preg_split("/\s*,\s*/", $value) as $fileName) {
+                $statusCode = max($statusCode, $this->removeSoftwareFile($fileName, $key));
+            }
+            ++$this->updates;
+        }
+        return $statusCode;
+    }
+    
+    // Remove software file
+    public function removeSoftwareFile($fileName, $software) {
+        $statusCode = 200;
+        $fileName = $this->yellow->toolbox->normaliseTokens($fileName);
+        if ($this->yellow->lookup->isValidFile($fileName) && !empty($software)) {
+            if (!$this->yellow->toolbox->deleteFile($fileName, $this->yellow->config->get("trashDir"))) {
+                $statusCode = 500;
+                $this->yellow->page->error($statusCode, "Can't delete file '$fileName'!");
+            }
+            if (defined("DEBUG") && DEBUG>=2) {
+                echo "YellowUpdate::removeSoftwareFile file:$fileName action:delete<br/>\n";
+            }
+        }
+        return $statusCode;
+    }
+    
     // Process command to install pending software
     public function processCommandInstallationPending($args) {
         $statusCode = 0;
@@ -560,6 +687,28 @@ class YellowUpdate {
         }
         return array($statusCode, $data);
     }
+    
+    // Return software files
+    public function getSoftwareFiles() {
+        $data = array();
+        $urlPlugins = $this->yellow->config->get("updatePluginsUrl")."/raw/master/".$this->yellow->config->get("updateResourceFile");
+        $urlThemes = $this->yellow->config->get("updateThemesUrl")."/raw/master/".$this->yellow->config->get("updateResourceFile");
+        list($statusCodePlugins, $fileDataPlugins) = $this->getSoftwareFile($urlPlugins);
+        list($statusCodeThemes, $fileDataThemes) = $this->getSoftwareFile($urlThemes);
+        $statusCode = max($statusCodePlugins, $statusCodeThemes);
+        if ($statusCode==200) {
+            foreach ($this->yellow->toolbox->getTextLines($fileDataPlugins."\n".$fileDataThemes) as $line) {
+                preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
+                if (!empty($matches[1]) && !empty($matches[2])) {
+                    list($software) = explode("/", $matches[1]);
+                    list($fileName, $flags) = explode(",", $matches[2], 2);
+                    if (!is_null($data[$software])) $data[$software] .= ",";
+                    $data[$software] .= $fileName;
+                }
+            }
+        }
+        return array($statusCode, $data);
+    }
 
     // Return software modification
     public function getSoftwareModified() {
@@ -578,10 +727,9 @@ class YellowUpdate {
                     list($fileName, $flags) = explode(",", $matches[2], 2);
                     if ($software!=$softwareNew) {
                         $software = $softwareNew;
-                        list($fileName, $flags) = explode(",", $matches[2], 2);
                         $lastPublished = $this->yellow->toolbox->getFileModified($fileName);
                     }
-                    if ($this->yellow->lookup->isValidFile($fileName) && !is_null($dataCurrent[$software])) {
+                    if (!is_null($dataCurrent[$software])) {
                         $lastModified = $this->yellow->toolbox->getFileModified($fileName);
                         if (preg_match("/update/i", $flags) && preg_match("/careful/i", $flags) && $lastModified!=$lastPublished) {
                             $data[$software] = $dataCurrent[$software];
@@ -618,6 +766,19 @@ class YellowUpdate {
         }
         if (defined("DEBUG") && DEBUG>=2) echo "YellowUpdate::getSoftwareFile status:$statusCode url:$url<br/>\n";
         return array($statusCode, $fileData);
+    }
+    
+    // Return command features
+    public function getCommandFeatures($args) {
+        $command = array_shift($args);
+        $features = array_unique(array_filter($args, "strlen"));
+        foreach ($features as $key=>$value) {
+            if ($value=="force") {
+                $force = true;
+                unset($features[$key]);
+            }
+        }
+        return array($command, $features, $force);
     }
     
     // Check if software pending

@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowCommand {
-    const VERSION = "0.7.9";
+    const VERSION = "0.7.10";
     public $yellow;                     //access to API
     public $files;                      //number of files
     public $links;                      //number of links
@@ -433,7 +433,7 @@ class YellowCommand {
             if (strnatcasecmp($dataCurrent[$key], $dataLatest[$key])>=0) {
                 echo "$key $value\n";
             } else {
-                echo "$key $dataLatest[$key] - Update available\n";
+                echo "$key $value - Update available\n";
             }
         }
         if ($statusCode!=200) echo "ERROR checking updates: ".$this->yellow->page->get("pageError")."\n";
