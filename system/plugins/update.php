@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowUpdate {
-    const VERSION = "0.7.18";
+    const VERSION = "0.7.19";
     public $yellow;                 //access to API
     public $updates;                //number of updates
     
@@ -238,7 +238,7 @@ class YellowUpdate {
     public function showSoftware() {
         list($statusCode, $dataLatest) = $this->getSoftwareVersion(true, true);
         foreach ($dataLatest as $key=>$value) {
-            list($version, $url, $description) = explode(",", $value);
+            list($version, $url, $description) = explode(",", $value, 3);
             echo "$key: $description\n";
         }
         if ($statusCode!=200) echo "ERROR checking features: ".$this->yellow->page->get("pageError")."\n";
