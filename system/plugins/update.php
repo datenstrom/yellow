@@ -515,6 +515,17 @@ class YellowUpdate {
         return $statusCode;
     }
     
+    // Update installation config, disable installation mode
+    public function updateInstallationConfig() {
+        $statusCode = 200;
+        $fileNameConfig = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
+        if(!$this->yellow->config->save($fileNameConfig, array("installationMode" => "0"))) {
+            $statusCode = 500;
+            $this->yellow->page->error($statusCode, "Can't write file '$fileNameConfig'!");
+        }
+        return $statusCode;
+    }
+    
     // Update installation page, convert into requested language
     public function updateInstallationPage($fileName, $name, $language) {
         $statusCode = 200;
@@ -579,6 +590,7 @@ class YellowUpdate {
     public function processCommandInstallationMode() {
         $statusCode = $this->updateInstallationLanguage();
         if ($statusCode==200) $statusCode = $this->updateInstallationFeature("none");
+        if ($statusCode==200) $statusCode = $this->updateInstallationConfig();
         if ($statusCode!=200) echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
         echo "Yellow has ".($statusCode!=200 ? "not " : "")."been installed: Please run command again\n";
         return $statusCode;
@@ -619,6 +631,7 @@ class YellowUpdate {
         $statusCode = $this->updateInstallationLanguage();
         $this->yellow->page->setRequestInformation($scheme, $address, $base, $location, $fileName);
         $this->yellow->page->parseData($this->getRawDataInstallation(), false, $statusCode, $this->yellow->page->get("pageError"));
+        $this->yellow->page->parserSafeMode = false;
         if ($status=="install") {
             $serverVersion = $this->yellow->toolbox->getServerVersion(true);
             $status = $this->checkServerRewrite($scheme, $address, $base, $location, $fileName) ? "ok" : "error";
