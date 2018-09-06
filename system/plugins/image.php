@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowImage {
-    const VERSION = "0.7.5";
+    const VERSION = "0.7.6";
     public $yellow;             //access to API
     public $graphicsLibrary;    //graphics library support? (boolean)
 
@@ -72,14 +72,14 @@ class YellowImage {
     public function onCommand($args) {
         list($command) = $args;
         switch ($command) {
-            case "clean":   $statusCode = $this->cleanCommand($args); break;
+            case "clean":   $statusCode = $this->processCommandClean($args); break;
             default:        $statusCode = 0;
         }
         return $statusCode;
     }
 
-    // Clean thumbnails
-    public function cleanCommand($args) {
+    // Process command to clean thumbnails
+    public function processCommandClean($args) {
         $statusCode = 0;
         list($command, $path) = $args;
         if ($path=="all") {

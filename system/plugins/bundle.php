@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowBundle {
-    const VERSION = "0.7.3";
+    const VERSION = "0.7.4";
     public $yellow;         //access to API
 
     // Handle initialisation
@@ -26,14 +26,14 @@ class YellowBundle {
     public function onCommand($args) {
         list($command) = $args;
         switch ($command) {
-            case "clean":   $statusCode = $this->cleanCommand($args); break;
+            case "clean":   $statusCode = $this->processCommandClean($args); break;
             default:        $statusCode = 0;
         }
         return $statusCode;
     }
     
-    // Clean bundles
-    public function cleanCommand($args) {
+    // Process command to clean bundles
+    public function processCommandClean($args) {
         $statusCode = 0;
         list($command, $path) = $args;
         if ($path=="all") {

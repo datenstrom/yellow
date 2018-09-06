@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowEdit {
-    const VERSION = "0.7.29";
+    const VERSION = "0.7.30";
     public $yellow;         //access to API
     public $response;       //web response
     public $users;          //user accounts
@@ -122,7 +122,7 @@ class YellowEdit {
     public function onCommand($args) {
         list($command) = $args;
         switch ($command) {
-            case "user":    $statusCode = $this->userCommand($args); break;
+            case "user":    $statusCode = $this->processCommandUser($args); break;
             default:        $statusCode = 0;
         }
         return $statusCode;
@@ -133,8 +133,8 @@ class YellowEdit {
         return "user [option email password name]\n";
     }
 
-    // Update user account
-    public function userCommand($args) {
+    // Process command to update user account
+    public function processCommandUser($args) {
         list($command, $option) = $args;
         switch ($option) {
             case "":        $statusCode = $this->userShow($args); break;

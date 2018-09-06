@@ -2977,17 +2977,17 @@ class YellowToolbox {
     
     // Detect web browser language
     public function detectBrowserLanguage($languages, $languageDefault) {
-        $language = $languageDefault;
+        $languageFound = $languageDefault;
         if (isset($_SERVER["HTTP_ACCEPT_LANGUAGE"])) {
             foreach (preg_split("/\s*,\s*/", $_SERVER["HTTP_ACCEPT_LANGUAGE"]) as $string) {
-                $tokens = explode(";", $string);
-                if (in_array($tokens[0], $languages)) {
-                    $language = $tokens[0];
+                list($language) = explode(";", $string);
+                if (in_array($language, $languages)) {
+                    $languageFound = $language;
                     break;
                 }
             }
         }
-        return $language;
+        return $languageFound;
     }
     
     // Detect image dimensions and type for gif/jpg/png/svg

@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowCommand {
-    const VERSION = "0.7.10";
+    const VERSION = "0.7.11";
     public $yellow;                     //access to API
     public $files;                      //number of files
     public $links;                      //number of links
@@ -21,11 +21,11 @@ class YellowCommand {
     public function onCommand($args) {
         list($command) = $args;
         switch ($command) {
-            case "":        $statusCode = $this->helpCommand(); break;
-            case "build":   $statusCode = $this->buildCommand($args); break;
-            case "check":   $statusCode = $this->checkCommand($args); break;
-            case "clean":   $statusCode = $this->cleanCommand($args); break;
-            case "version": $statusCode = $this->versionCommand($args); break;
+            case "":        $statusCode = $this->processCommandHelp(); break;
+            case "build":   $statusCode = $this->processCommandBuild($args); break;
+            case "check":   $statusCode = $this->processCommandCheck($args); break;
+            case "clean":   $statusCode = $this->processCommandClean($args); break;
+            case "version": $statusCode = $this->processCommandVersion($args); break;
             default:        $statusCode = 0;
         }
         return $statusCode;
@@ -40,8 +40,8 @@ class YellowCommand {
         return $help;
     }
     
-    // Show available commands
-    public function helpCommand() {
+    // Process command to show available commands
+    public function processCommandHelp() {
         echo "Datenstrom Yellow ".YellowCore::VERSION."\n";
         $lineCounter = 0;
         foreach ($this->getCommandHelp() as $line) {
@@ -50,8 +50,8 @@ class YellowCommand {
         return 200;
     }
     
-    // Build static website
-    public function buildCommand($args) {
+    // Process command to build static website
+    public function processCommandBuild($args) {
         $statusCode = 0;
         list($command, $path, $location) = $args;
         if (empty($location) || $location[0]=="/") {
@@ -221,8 +221,8 @@ class YellowCommand {
         }
     }
 
-    // Check static files for broken links
-    public function checkCommand($args) {
+    // Process command to check static files for broken links
+    public function processCommandCheck($args) {
         $statusCode = 0;
         list($command, $path, $location) = $args;
         if (empty($location) || $location[0]=="/") {
@@ -243,7 +243,7 @@ class YellowCommand {
         return $statusCode;
     }
     
-    // Check static files
+    // Check static files for broken links
     public function checkStaticFiles($path, $locationFilter) {
         $path = rtrim(empty($path) ? $this->yellow->config->get("staticDir") : $path, "/");
         $this->files = $this->links = 0;
@@ -354,8 +354,8 @@ class YellowCommand {
         }
     }
     
-    // Clean static files
-    public function cleanCommand($args) {
+    // Process command to clean static files
+    public function processCommandClean($args) {
         $statusCode = 0;
         list($command, $path, $location) = $args;
         if (empty($location) || $location[0]=="/") {
@@ -373,7 +373,7 @@ class YellowCommand {
         $statusCode = 200;
         $path = rtrim(empty($path) ? $this->yellow->config->get("staticDir") : $path, "/");
         if (empty($location)) {
-            $statusCode = max($statusCode, $this->commandBroadcast("clean", "all"));
+            $statusCode = max($statusCode, $this->broadcastCommand("clean", "all"));
             $statusCode = max($statusCode, $this->cleanStaticDirectory($path));
         } else {
             if ($this->yellow->lookup->isFileLocation($location)) {
@@ -411,7 +411,7 @@ class YellowCommand {
     }
     
     // Broadcast command to other plugins
-    public function commandBroadcast($args) {
+    public function broadcastCommand($args) {
         $statusCode = 0;
         foreach ($this->yellow->plugins->plugins as $key=>$value) {
             if ($key=="command") continue;
@@ -423,8 +423,8 @@ class YellowCommand {
         return $statusCode;
     }
     
-    // Show software version and updates
-    public function versionCommand($args) {
+    // Process command to show software version and updates
+    public function processCommandVersion($args) {
         $serverVersion = $this->yellow->toolbox->getServerVersion();
         echo "Datenstrom Yellow ".YellowCore::VERSION.", PHP ".PHP_VERSION.", $serverVersion\n";
         list($statusCode, $dataCurrent) = $this->getSoftwareVersion();
