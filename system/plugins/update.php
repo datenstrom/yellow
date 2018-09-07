@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowUpdate {
-    const VERSION = "0.7.20";
+    const VERSION = "0.7.21";
     public $yellow;                 //access to API
     public $updates;                //number of updates
     
@@ -44,12 +44,17 @@ class YellowUpdate {
     
     // Handle request
     public function onRequest($scheme, $address, $base, $location, $fileName) {
-        return $this->processRequest($scheme, $address, $base, $location, $fileName);
+        $statusCode = 0;
+        if ($this->yellow->lookup->isContentFile($fileName) && $this->isSoftwarePending()) {
+            $statusCode = $this->processRequestPending($scheme, $address, $base, $location, $fileName);
+        }
+        return $statusCode;
     }
     
     // Handle command
     public function onCommand($args) {
-        $statusCode = $this->processCommand();
+        $statusCode = 0;
+        if ($this->isSoftwarePending()) $statusCode = $this->processCommandPending();
         if ($statusCode==0) {
             list($command) = $args;
             switch ($command) {
@@ -132,6 +137,24 @@ class YellowUpdate {
             echo ", $this->updates update".($this->updates!=1 ? "s" : "")." installed\n";
         } else {
             echo "Your website is up to date\n";
+        }
+        return $statusCode;
+    }
+    
+    // Process command to update website with pending software
+    public function processCommandPending() {
+        $statusCode = $this->updateSoftware();
+        if ($statusCode!=200) echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
+        echo "Your website has ".($statusCode!=200 ? "not " : "")."been updated: Please run command again\n";
+        return $statusCode;
+    }
+    
+    // Process request to update website with pending software
+    public function processRequestPending($scheme, $address, $base, $location, $fileName) {
+        $statusCode = $this->updateSoftware();
+        if ($statusCode==200) {
+            $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
+            $statusCode = $this->yellow->sendStatus(303, $location);
         }
         return $statusCode;
     }
@@ -231,7 +254,7 @@ class YellowUpdate {
         return array($statusCode, $data);
     }
     
-    // Show software features
+    // Show software
     public function showSoftware() {
         list($statusCode, $dataLatest) = $this->getSoftwareVersion(true, true);
         foreach ($dataLatest as $key=>$value) {
@@ -437,114 +460,6 @@ class YellowUpdate {
         return $statusCode;
     }
     
-    // Update installation language, install best languages
-    public function updateInstallationLanguage() {
-        $statusCode = 200;
-        $path = $this->yellow->config->get("pluginDir")."installation-language.zip";
-        if (is_file($path)) {
-            $zip = new ZipArchive();
-            if ($zip->open($path)===true) {
-                if (defined("DEBUG") && DEBUG>=2) echo "YellowUpdate::updateInstallationLanguage file:$path<br/>\n";
-                $languages = $this->getInstallationLanguages("en, de, fr");
-                if (preg_match("#^(.*\/).*?$#", $zip->getNameIndex(0), $matches)) $pathBase = $matches[1];
-                $fileData = $zip->getFromName($pathBase.$this->yellow->config->get("updateInformationFile"));
-                foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
-                    preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
-                    if (!empty($matches[1]) && !empty($matches[2]) && strposu($matches[1], "/")) {
-                        list($dummy, $entry) = explode("/", $matches[1], 2);
-                        if (preg_match("/^language-(.*)\.txt$/", $entry, $tokens) && !is_null($languages[$tokens[1]])) {
-                            $languages[$tokens[1]] = $entry;
-                        }
-                    }
-                }
-                $languages = array_slice(array_filter($languages, "strlen"), 0, 3);
-                foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
-                    preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
-                    if (lcfirst($matches[1])=="plugin" || lcfirst($matches[1])=="theme") $software = $matches[2];
-                    if (lcfirst($matches[1])=="published") $modified = strtotime($matches[2]);
-                    if (!empty($matches[1]) && !empty($matches[2]) && strposu($matches[1], "/")) {
-                        list($dummy, $entry) = explode("/", $matches[1], 2);
-                        list($fileName) = explode(",", $matches[2], 2);
-                        $fileData = $zip->getFromName($pathBase.$entry);
-                        if (preg_match("/^language.php$/", $entry)) {
-                            $statusCode = $this->updateSoftwareFile($fileName, $fileData, $modified, 0, 0, "create,update", false, $software);
-                        }
-                        if (preg_match("/^language-(.*)\.txt$/", $entry, $tokens) && !is_null($languages[$tokens[1]])) {
-                            $statusCode = $this->updateSoftwareFile($fileName, $fileData, $modified, 0, 0, "create,update", false, $software);
-                        }
-                    }
-                }
-                $zip->close();
-                if ($statusCode==200) {
-                    $this->yellow->text->load($this->yellow->config->get("pluginDir").$this->yellow->config->get("languageFile"), "");
-                }
-                if ($statusCode==200 && !$this->yellow->toolbox->deleteFile($path)) {
-                    $statusCode = 500;
-                    $this->yellow->page->error($statusCode, "Can't delete file '$path'!");
-                }
-            } else {
-                $statusCode = 500;
-                $this->yellow->page->error(500, "Can't open file '$path'!");
-            }
-        }
-        return $statusCode;
-    }
-    
-    // Update installation feature, install requested feature
-    public function updateInstallationFeature($feature) {
-        $statusCode = 200;
-        $path = $this->yellow->config->get("pluginDir");
-        foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.zip$/", true, false) as $entry) {
-            if (preg_match("/^installation-(.*?)\./", basename($entry), $matches)) {
-                if (strtoloweru($matches[1])==strtoloweru($feature)) {
-                    $statusCode = max($statusCode, $this->updateSoftwareArchive($entry));
-                    break;
-                }
-            }
-        }
-        if ($statusCode==200) {
-            foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.zip$/", true, false) as $entry) {
-                if (preg_match("/^installation-(.*?)\./", basename($entry), $matches)) {
-                    if (!$this->yellow->toolbox->deleteFile($entry)) {
-                        $statusCode = 500;
-                        $this->yellow->page->error($statusCode, "Can't delete file '$entry'!");
-                    }
-                }
-            }
-        }
-        return $statusCode;
-    }
-    
-    // Update installation config, disable installation mode
-    public function updateInstallationConfig() {
-        $statusCode = 200;
-        $fileNameConfig = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
-        if(!$this->yellow->config->save($fileNameConfig, array("installationMode" => "0"))) {
-            $statusCode = 500;
-            $this->yellow->page->error($statusCode, "Can't write file '$fileNameConfig'!");
-        }
-        return $statusCode;
-    }
-    
-    // Update installation page, convert into requested language
-    public function updateInstallationPage($fileName, $name, $language) {
-        $statusCode = 200;
-        if ($language!="en") {
-            $titleOld = "Title: ".$this->yellow->text->getText("editInstallation{$name}Title", "en");
-            $titleNew = "Title: ".$this->yellow->text->getText("editInstallation{$name}Title", $language);
-            $rawDataOld = strreplaceu("\\n", "\n", $this->yellow->text->getText("editInstallation{$name}Page", "en"));
-            $rawDataNew = strreplaceu("\\n", "\n", $this->yellow->text->getText("editInstallation{$name}Page", $language));
-            $fileData = strreplaceu("\r\n", "\n", $this->yellow->toolbox->readFile($fileName));
-            $fileData = strreplaceu($titleOld, $titleNew, $fileData);
-            $fileData = strreplaceu($rawDataOld, $rawDataNew, $fileData);
-            if (!$this->yellow->toolbox->createFile($fileName, $fileData)) {
-                $statusCode = 500;
-                $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
-            }
-        }
-        return $statusCode;
-    }
-    
     // Remove software
     public function removeSoftware($data) {
         $statusCode = 200;
@@ -574,205 +489,20 @@ class YellowUpdate {
         }
         return $statusCode;
     }
-
-    // Process command
-    public function processCommand() {
-        $statusCode = 0;
-        if ($this->yellow->config->get("installationMode")) {
-            $statusCode = $this->processCommandInstallationMode();
-        } elseif ($this->isSoftwarePending()) {
-            $statusCode = $this->processCommandInstallationPending();
-        }
-        return $statusCode;
-    }
     
-    // Process command to install website
-    public function processCommandInstallationMode() {
-        $statusCode = $this->updateInstallationLanguage();
-        if ($statusCode==200) $statusCode = $this->updateInstallationFeature("none");
-        if ($statusCode==200) $statusCode = $this->updateInstallationConfig();
-        if ($statusCode!=200) echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
-        echo "Yellow has ".($statusCode!=200 ? "not " : "")."been installed: Please run command again\n";
-        return $statusCode;
-    }
-    
-    // Process command to install pending software
-    public function processCommandInstallationPending() {
-        $statusCode = $this->updateSoftware();
-        if ($statusCode!=200) echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
-        echo "Yellow has ".($statusCode!=200 ? "not " : "")."been updated: Please run command again\n";
-        return $statusCode;
-    }
-    
-    // Process request
-    public function processRequest($scheme, $address, $base, $location, $fileName) {
-        $statusCode = 0;
-        if ($this->yellow->lookup->isContentFile($fileName) && !$this->yellow->isCommandLine()) {
-            if ($this->yellow->config->get("installationMode")) {
-                $statusCode = $this->processRequestInstallationMode($scheme, $address, $base, $location, $fileName);
-            } elseif ($this->isSoftwarePending()) {
-                $statusCode = $this->processRequestInstallationPending($scheme, $address, $base, $location, $fileName);
+    // Return features from commandline arguments
+    public function getCommandFeatures($args) {
+        $command = array_shift($args);
+        $features = array_unique(array_filter($args, "strlen"));
+        foreach ($features as $key=>$value) {
+            if ($value=="force") {
+                $force = true;
+                unset($features[$key]);
             }
         }
-        return $statusCode;
+        return array($command, $features, $force);
     }
 
-    // Process request to install website
-    public function processRequestInstallationMode($scheme, $address, $base, $location, $fileName) {
-        $statusCode = 0;
-        $name = trim(preg_replace("/[^\pL\d\-\. ]/u", "-", $_REQUEST["name"]));
-        $email = trim($_REQUEST["email"]);
-        $password = trim($_REQUEST["password"]);
-        $language = trim($_REQUEST["language"]);
-        $feature = trim($_REQUEST["feature"]);
-        $status = trim($_REQUEST["status"]);
-        $this->yellow->pages->pages["root/"] = array();
-        $this->yellow->page = new YellowPage($this->yellow);
-        $statusCode = $this->updateInstallationLanguage();
-        $this->yellow->page->setRequestInformation($scheme, $address, $base, $location, $fileName);
-        $this->yellow->page->parseData($this->getRawDataInstallation(), false, $statusCode, $this->yellow->page->get("pageError"));
-        $this->yellow->page->parserSafeMode = false;
-        if ($status=="install") {
-            $serverVersion = $this->yellow->toolbox->getServerVersion(true);
-            $status = $this->checkServerRewrite($scheme, $address, $base, $location, $fileName) ? "ok" : "error";
-            if ($status=="error") $this->yellow->page->error(500, "Rewrite module not working on $serverVersion web server!");
-        }
-        if ($status=="ok") {
-            if (!empty($email) && !empty($password) && $this->yellow->plugins->isExisting("edit")) {
-                $fileNameUser = $this->yellow->config->get("configDir").$this->yellow->config->get("editUserFile");
-                $status = $this->yellow->plugins->get("edit")->users->save($fileNameUser, $email, $password, $name, $language) ? "ok" : "error";
-                if ($status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
-            }
-        }
-        if ($status=="ok") {
-            if (!empty($feature)) {
-                $status = $this->updateInstallationFeature($feature)==200 ? "ok" : "error";
-                if ($status=="error") $this->yellow->page->error(500, "Can't install feature '$feature'!");
-            }
-        }
-        if ($status=="ok") {
-            $fileNameHome = $this->yellow->lookup->findFileFromLocation("/");
-            $status = $this->updateInstallationPage($fileNameHome, "Home", $language)==200 ? "ok" : "error";
-            if ($status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameHome'!");
-        }
-        if ($status=="ok") {
-            $fileNameAbout = $this->yellow->lookup->findFileFromLocation("/about/");
-            $status = $this->updateInstallationPage($fileNameAbout, "About", $language)==200 ? "ok" : "error";
-            if ($status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameAbout'!");
-        }
-        if ($status=="ok") {
-            if ($this->yellow->config->get("sitename")=="Yellow") $_REQUEST["sitename"] = $name;
-            $fileNameConfig = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
-            $status = $this->yellow->config->save($fileNameConfig, $this->getConfigData()) ? "done" : "error";
-            if ($status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameConfig'!");
-        }
-        if ($status=="done") {
-            $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
-            $statusCode = $this->yellow->sendStatus(303, $location);
-        } else {
-            $statusCode = $this->yellow->sendPage();
-        }
-        return $statusCode;
-    }
-    
-    // Process request to install pending software
-    public function processRequestInstallationPending($scheme, $address, $base, $location, $fileName) {
-        $statusCode = $this->updateSoftware();
-        if ($statusCode==200) {
-            $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
-            $statusCode = $this->yellow->sendStatus(303, $location);
-        }
-        return $statusCode;
-    }
-    
-    // Check web server rewrite
-    public function checkServerRewrite($scheme, $address, $base, $location, $fileName) {
-        $curlHandle = curl_init();
-        $location = $this->yellow->config->get("assetLocation").$this->yellow->page->get("theme").".css";
-        $url = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
-        curl_setopt($curlHandle, CURLOPT_URL, $url);
-        curl_setopt($curlHandle, CURLOPT_USERAGENT, "Mozilla/5.0 (compatible; YellowCore/".YellowCore::VERSION).")";
-        curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($curlHandle, CURLOPT_CONNECTTIMEOUT, 30);
-        $rawData = curl_exec($curlHandle);
-        $statusCode = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);
-        curl_close($curlHandle);
-        return !empty($rawData) && $statusCode==200;
-    }
-    
-    // Return raw data for installation page
-    public function getRawDataInstallation() {
-        $language = $this->yellow->toolbox->detectBrowserLanguage($this->yellow->text->getLanguages(), $this->yellow->config->get("language"));
-        $fileName = strreplaceu("(.*)", "installation", $this->yellow->config->get("configDir").$this->yellow->config->get("newFile"));
-        $rawData = $this->yellow->toolbox->readFile($fileName);
-        if (empty($rawData)) {
-            $this->yellow->text->setLanguage($language);
-            $rawData = "---\nTitle:".$this->yellow->text->get("editInstallationTitle")."\nLanguage:$language\nNavigation:navigation\n---\n";
-            $rawData .= "<form class=\"installation-form\" action=\"".$this->yellow->page->getLocation(true)."\" method=\"post\">\n";
-            $rawData .= "<p><label for=\"name\">".$this->yellow->text->get("editSignupName")."</label><br /><input class=\"form-control\" type=\"text\" maxlength=\"64\" name=\"name\" id=\"name\" value=\"\"></p>\n";
-            $rawData .= "<p><label for=\"email\">".$this->yellow->text->get("editSignupEmail")."</label><br /><input class=\"form-control\" type=\"text\" maxlength=\"64\" name=\"email\" id=\"email\" value=\"\"></p>\n";
-            $rawData .= "<p><label for=\"password\">".$this->yellow->text->get("editSignupPassword")."</label><br /><input class=\"form-control\" type=\"password\" maxlength=\"64\" name=\"password\" id=\"password\" value=\"\"></p>\n";
-            if (count($this->yellow->text->getLanguages())>1) {
-                $rawData .= "<p>";
-                foreach ($this->yellow->text->getLanguages() as $language) {
-                    $checked = $language==$this->yellow->text->language ? " checked=\"checked\"" : "";
-                    $rawData .= "<label for=\"$language\"><input type=\"radio\" name=\"language\" id=\"$language\" value=\"$language\"$checked> ".$this->yellow->text->getTextHtml("languageDescription", $language)."</label><br />";
-                }
-                $rawData .= "</p>\n";
-            }
-            if (count($this->getInstallationFeatures())>1) {
-                $rawData .= "<p>".$this->yellow->text->get("editInstallationFeature")."<p>";
-                foreach ($this->getInstallationFeatures() as $feature) {
-                    $checked = $feature=="website" ? " checked=\"checked\"" : "";
-                    $rawData .= "<label for=\"$feature\"><input type=\"radio\" name=\"feature\" id=\"$feature\" value=\"$feature\"$checked> ".ucfirst($feature)."</label><br />";
-                }
-                $rawData .= "</p>\n";
-            }
-            $rawData .= "<input class=\"btn\" type=\"submit\" value=\"".$this->yellow->text->get("editOkButton")."\" />\n";
-            $rawData .= "<input type=\"hidden\" name=\"status\" value=\"install\" />\n";
-            $rawData .= "</form>\n";
-        }
-        return $rawData;
-    }
-    
-    // Return configuration data
-    public function getConfigData() {
-        $data = array();
-        foreach ($_REQUEST as $key=>$value) {
-            if (!$this->yellow->config->isExisting($key)) continue;
-            $data[$key] = trim($value);
-        }
-        $data["timezone"] = $this->yellow->toolbox->getTimezone();
-        $data["staticUrl"] = $this->yellow->toolbox->getServerUrl();
-        $data["installationMode"] = "0";
-        return $data;
-    }
-    
-    // Return installation languages
-    public function getInstallationLanguages($languagesDefault) {
-        $data = array();
-        if (isset($_SERVER["HTTP_ACCEPT_LANGUAGE"])) {
-            foreach (preg_split("/\s*,\s*/", $_SERVER["HTTP_ACCEPT_LANGUAGE"]) as $string) {
-                list($language) = explode(";", $string);
-                if (!empty($language)) $data[$language] = "";
-            }
-        }
-        foreach (preg_split("/\s*,\s*/", $languagesDefault) as $language) {
-            if (!empty($language)) $data[$language] = "";
-        }
-        return $data;
-    }
-    
-    // Return installation features
-    public function getInstallationFeatures() {
-        $data = array("website");
-        $path = $this->yellow->config->get("pluginDir");
-        foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.zip$/", true, false, false) as $entry) {
-            if (preg_match("/^installation-(.*?)\./", $entry, $matches) && $matches[1]!="language") array_push($data, $matches[1]);
-        }
-        return $data;
-    }
-    
     // Return software version
     public function getSoftwareVersion($latest = false, $rawFormat = false) {
         $data = array();
@@ -797,29 +527,7 @@ class YellowUpdate {
         }
         return array($statusCode, $data);
     }
-    
-    // Return software files
-    public function getSoftwareFiles() {
-        $data = array();
-        $urlPlugins = $this->yellow->config->get("updatePluginsUrl")."/raw/master/".$this->yellow->config->get("updateResourceFile");
-        $urlThemes = $this->yellow->config->get("updateThemesUrl")."/raw/master/".$this->yellow->config->get("updateResourceFile");
-        list($statusCodePlugins, $fileDataPlugins) = $this->getSoftwareFile($urlPlugins);
-        list($statusCodeThemes, $fileDataThemes) = $this->getSoftwareFile($urlThemes);
-        $statusCode = max($statusCodePlugins, $statusCodeThemes);
-        if ($statusCode==200) {
-            foreach ($this->yellow->toolbox->getTextLines($fileDataPlugins."\n".$fileDataThemes) as $line) {
-                preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
-                if (!empty($matches[1]) && !empty($matches[2])) {
-                    list($software) = explode("/", $matches[1]);
-                    list($fileName) = explode(",", $matches[2], 2);
-                    if (!is_null($data[$software])) $data[$software] .= ",";
-                    $data[$software] .= $fileName;
-                }
-            }
-        }
-        return array($statusCode, $data);
-    }
-
+ 
     // Return software modification
     public function getSoftwareModified() {
         $data = array();
@@ -852,6 +560,28 @@ class YellowUpdate {
         return array($statusCode, $data);
     }
     
+    // Return software files
+    public function getSoftwareFiles() {
+        $data = array();
+        $urlPlugins = $this->yellow->config->get("updatePluginsUrl")."/raw/master/".$this->yellow->config->get("updateResourceFile");
+        $urlThemes = $this->yellow->config->get("updateThemesUrl")."/raw/master/".$this->yellow->config->get("updateResourceFile");
+        list($statusCodePlugins, $fileDataPlugins) = $this->getSoftwareFile($urlPlugins);
+        list($statusCodeThemes, $fileDataThemes) = $this->getSoftwareFile($urlThemes);
+        $statusCode = max($statusCodePlugins, $statusCodeThemes);
+        if ($statusCode==200) {
+            foreach ($this->yellow->toolbox->getTextLines($fileDataPlugins."\n".$fileDataThemes) as $line) {
+                preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
+                if (!empty($matches[1]) && !empty($matches[2])) {
+                    list($software) = explode("/", $matches[1]);
+                    list($fileName) = explode(",", $matches[2], 2);
+                    if (!is_null($data[$software])) $data[$software] .= ",";
+                    $data[$software] .= $fileName;
+                }
+            }
+        }
+        return array($statusCode, $data);
+    }
+
     // Return software file
     public function getSoftwareFile($url) {
         $urlRequest = $url;
@@ -878,19 +608,6 @@ class YellowUpdate {
         return array($statusCode, $fileData);
     }
     
-    // Return command features
-    public function getCommandFeatures($args) {
-        $command = array_shift($args);
-        $features = array_unique(array_filter($args, "strlen"));
-        foreach ($features as $key=>$value) {
-            if ($value=="force") {
-                $force = true;
-                unset($features[$key]);
-            }
-        }
-        return array($command, $features, $force);
-    }
-    
     // Check if software pending
     public function isSoftwarePending() {
         $path = $this->yellow->config->get("pluginDir");
@@ -907,4 +624,4 @@ class YellowUpdate {
     }
 }
     
-$yellow->plugins->register("update", "YellowUpdate", YellowUpdate::VERSION, 1);
+$yellow->plugins->register("update", "YellowUpdate", YellowUpdate::VERSION, 2);

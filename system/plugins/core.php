@@ -77,7 +77,7 @@ class YellowCore {
         $this->config->setDefault("parser", "markdown");
         $this->config->setDefault("parserSafeMode", "0");
         $this->config->setDefault("multiLanguageMode", "0");
-        $this->config->setDefault("installationMode", "0");
+        $this->config->setDefault("setupMode", "0");
     }
     
     public function __destruct() {
@@ -568,16 +568,15 @@ class YellowPage {
         if ($this->yellow->lookup->isNestedLocation($this->location, $this->fileName, true)) {
             $this->error(500, "Folder '".dirname($this->fileName)."' may not contain subfolders!");
         }
-        if ($this->yellow->toolbox->isRequestSelf()) {
-            $serverVersion = $this->yellow->toolbox->getServerVersion(true);
-            $this->error(500, "Rewrite module not working on $serverVersion web server!");
-        }
         if ($this->yellow->getRequestHandler()=="core" && $this->isExisting("redirect") && $this->statusCode==200) {
             $location = $this->yellow->lookup->normaliseLocation($this->get("redirect"), $this->location);
             $location = $this->yellow->lookup->normaliseUrl($this->scheme, $this->address, "", $location);
             $this->clean(301, $location);
         }
         if ($this->yellow->getRequestHandler()=="core" && !$this->isAvailable() && $this->statusCode==200) {
+            $this->error(404);
+        }
+        if ($this->yellow->toolbox->isRequestSelf()) {
             $this->error(404);
         }
         if ($this->isExisting("pageClean")) $this->outputData = null;
