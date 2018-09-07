@@ -243,7 +243,7 @@ class YellowSetup {
             if (!$this->yellow->config->isExisting($key)) continue;
             $data[$key] = trim($value);
         }
-        if ($this->yellow->config->get("sitename")=="Datenstrom Yellow") $data["sitename"] = $name;
+        if ($this->yellow->config->get("sitename")=="Datenstrom Yellow") $data["sitename"] = $_REQUEST["name"];
         $data["timezone"] = $this->yellow->toolbox->getTimezone();
         $data["staticUrl"] = $this->yellow->toolbox->getServerUrl();
         $data["setupMode"] = "0";
