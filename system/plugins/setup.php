@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowSetup {
-    const VERSION = "0.7.1";
+    const VERSION = "0.7.2";
     public $yellow;                 //access to API
     
     // Handle initialisation
@@ -27,9 +27,7 @@ class YellowSetup {
     // Handle command
     public function onCommand($args) {
         $statusCode = 0;
-        if ($this->yellow->config->get("setupMode")) {
-            $statusCode = $this->processCommandSetup();
-        }
+        if ($this->yellow->config->get("setupMode")) $statusCode = $this->processCommandSetup();
         return $statusCode;
     }
     
@@ -169,18 +167,18 @@ class YellowSetup {
         return $statusCode;
     }
     
-    // Update content, convert requested location
+    // Update content
     public function updateContent($language, $name, $location) {
         $statusCode = 200;
         if ($language!="en") {
             $titleOld = "Title: ".$this->yellow->text->getText("setup{$name}Title", "en");
             $titleNew = "Title: ".$this->yellow->text->getText("setup{$name}Title", $language);
-            $rawDataOld = strreplaceu("\\n", "\n", $this->yellow->text->getText("setup{$name}Page", "en"));
-            $rawDataNew = strreplaceu("\\n", "\n", $this->yellow->text->getText("setup{$name}Page", $language));
+            $textOld = strreplaceu("\\n", "\n", $this->yellow->text->getText("setup{$name}Text", "en"));
+            $textNew = strreplaceu("\\n", "\n", $this->yellow->text->getText("setup{$name}Text", $language));
             $fileName = $this->yellow->lookup->findFileFromLocation($location);
             $fileData = strreplaceu("\r\n", "\n", $this->yellow->toolbox->readFile($fileName));
             $fileData = strreplaceu($titleOld, $titleNew, $fileData);
-            $fileData = strreplaceu($rawDataOld, $rawDataNew, $fileData);
+            $fileData = strreplaceu($textOld, $textNew, $fileData);
             if (!$this->yellow->toolbox->createFile($fileName, $fileData)) {
                 $statusCode = 500;
                 $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
