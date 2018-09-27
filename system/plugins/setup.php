@@ -18,7 +18,7 @@ class YellowSetup {
         if ($this->yellow->lookup->isContentFile($fileName) && $this->yellow->config->get("setupMode")) {
             $server = $this->yellow->toolbox->getServerVersion(true);
             $this->checkServerRewrite($scheme, $address, $base, $location, $fileName) || die("Datenstrom Yellow requires $server rewrite module!");
-            $this->checkServerAccess() || die("Datenstrom Yellow requires $server with read/write access!");
+            $this->checkServerAccess() || die("Datenstrom Yellow requires $server read/write access!");
             $statusCode = $this->processRequestSetup($scheme, $address, $base, $location, $fileName);
         }
         return $statusCode;
