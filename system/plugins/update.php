@@ -22,11 +22,11 @@ class YellowUpdate {
     public function onStartup($update) {
         if ($update) { //TODO: remove later, converts old config
             $fileNameConfig = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
-            if ($this->yellow->config->isExisting("parserSafeMode") {
-                $this->yellow->config->save($fileNameConfig, array("safeMode" => $this->yellow->config->get("parserSafeMode"));
+            if ($this->yellow->config->isExisting("parserSafeMode")) {
+                $this->yellow->config->save($fileNameConfig, array("safeMode" => $this->yellow->config->get("parserSafeMode")));
             }
-            if ($this->yellow->config->get("staticDir")=="cache/" {
-                $this->yellow->config->save($fileNameConfig, array("staticDir" => "public/");
+            if ($this->yellow->config->get("staticDir")=="cache/") {
+                $this->yellow->config->save($fileNameConfig, array("staticDir" => "public/"));
             }
         }
         if ($update) {
