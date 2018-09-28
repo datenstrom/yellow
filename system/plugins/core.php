@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowCore {
-    const VERSION = "0.7.6";
+    const VERSION = "0.7.7";
     public $page;           //current page
     public $pages;          //pages from file system
     public $files;          //files from file system
@@ -34,7 +34,8 @@ class YellowCore {
         $this->config->setDefault("staticUrl", "");
         $this->config->setDefault("staticDefaultFile", "index.html");
         $this->config->setDefault("staticErrorFile", "404.html");
-        $this->config->setDefault("staticDir", "cache/");
+        $this->config->setDefault("staticDir", "public/");
+        $this->config->setDefault("cacheDir", "cache/");
         $this->config->setDefault("mediaLocation", "/media/");
         $this->config->setDefault("downloadLocation", "/media/downloads/");
         $this->config->setDefault("imageLocation", "/media/images/");
@@ -75,8 +76,8 @@ class YellowCore {
         $this->config->setDefault("siteicon", "icon");
         $this->config->setDefault("tagline", "");
         $this->config->setDefault("parser", "markdown");
-        $this->config->setDefault("parserSafeMode", "0");
         $this->config->setDefault("multiLanguageMode", "0");
+        $this->config->setDefault("safeMode", "0");
         $this->config->setDefault("setupMode", "0");
     }
     
@@ -152,7 +153,7 @@ class YellowCore {
             }
         }
         if ($statusCode==0) {
-            $fileName = $this->lookup->findFileStatic($location, $fileName, $cacheable && !$this->isCommandLine());
+            $fileName = $this->lookup->findFileFromCache($location, $fileName, $cacheable && !$this->isCommandLine());
             if ($this->lookup->isContentFile($fileName) || !is_readable($fileName)) {
                 $fileName = $this->readPage($scheme, $address, $base, $location, $fileName, $cacheable,
                     max(is_readable($fileName) ? 200 : 404, $this->page->statusCode), $this->page->get("pageError"));
@@ -386,7 +387,7 @@ class YellowPage {
     public $outputData;             //response output
     public $parser;                 //content parser
     public $parserData;             //content data of page
-    public $parserSafeMode;         //page is parsed in safe mode? (boolean)
+    public $safeMode;               //page is parsed in safe mode? (boolean)
     public $available;              //page is available? (boolean)
     public $visible;                //page is visible location? (boolean)
     public $active;                 //page is active location? (boolean)
@@ -416,7 +417,7 @@ class YellowPage {
         $this->rawData = $rawData;
         $this->parser = null;
         $this->parserData = "";
-        $this->parserSafeMode = intval($this->yellow->config->get("parserSafeMode"));
+        $this->safeMode = intval($this->yellow->config->get("safeMode"));
         $this->available = true;
         $this->visible = $this->yellow->lookup->isVisibleLocation($this->location, $this->fileName);
         $this->active = $this->yellow->lookup->isActiveLocation($this->location, $this->yellow->page->location);
@@ -541,7 +542,7 @@ class YellowPage {
                         $output .= htmlspecialchars("$key $value")."<br />\n";
                     }
                     $output .= "</span>\n";
-                    if ($this->parserSafeMode) $this->error(500, "Yellow '$text' is not available in safe mode!");
+                    if ($this->safeMode) $this->error(500, "Yellow '$text' is not available in safe mode!");
                 }
             }
         }
@@ -2086,17 +2087,6 @@ class YellowLookup {
         return $fileName;
     }
     
-    // Return static file if possible
-    public function findFileStatic($location, $fileName, $cacheable) {
-        if ($cacheable) {
-            $location .= $this->yellow->toolbox->getLocationArgs();
-            $fileNameStatic = rtrim($this->yellow->config->get("staticDir"), "/").$location;
-            if (!$this->isFileLocation($location)) $fileNameStatic .= $this->yellow->config->get("staticDefaultFile");
-            if (is_readable($fileNameStatic)) $fileName = $fileNameStatic;
-        }
-        return $fileName;
-    }
-    
     // Return children from location
     public function findChildrenFromLocation($location) {
         $fileNames = array();
@@ -2159,6 +2149,17 @@ class YellowLookup {
             } elseif ($location=="/".$this->yellow->config->get("faviconFile")) {
                 $fileName = $this->yellow->config->get("assetDir").$this->yellow->config->get("siteicon").".png";
             }
+        }
+        return $fileName;
+    }
+    
+    // Return file path from cache if possible
+    public function findFileFromCache($location, $fileName, $cacheable) {
+        if ($cacheable) {
+            $location .= $this->yellow->toolbox->getLocationArgs();
+            $fileNameStatic = rtrim($this->yellow->config->get("cacheDir"), "/").$location;
+            if (!$this->isFileLocation($location)) $fileNameStatic .= $this->yellow->config->get("staticDefaultFile");
+            if (is_readable($fileNameStatic)) $fileName = $fileNameStatic;
         }
         return $fileName;
     }

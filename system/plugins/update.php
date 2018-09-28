@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowUpdate {
-    const VERSION = "0.7.21";
+    const VERSION = "0.7.22";
     public $yellow;                 //access to API
     public $updates;                //number of updates
     
@@ -20,6 +20,15 @@ class YellowUpdate {
     
     // Handle startup
     public function onStartup($update) {
+        if ($update) { //TODO: remove later, converts old config
+            $fileNameConfig = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
+            if ($this->yellow->config->isExisting("parserSafeMode") {
+                $this->yellow->config->save($fileNameConfig, array("safeMode" => $this->yellow->config->get("parserSafeMode"));
+            }
+            if ($this->yellow->config->get("staticDir")=="cache/" {
+                $this->yellow->config->save($fileNameConfig, array("staticDir" => "public/");
+            }
+        }
         if ($update) {
             $fileNameConfig = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
             $fileData = $this->yellow->toolbox->readFile($fileNameConfig);

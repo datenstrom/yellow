@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowSetup {
-    const VERSION = "0.7.2";
+    const VERSION = "0.7.3";
     public $yellow;                 //access to API
     
     // Handle initialisation
@@ -59,7 +59,7 @@ class YellowSetup {
         $statusCode = $this->updateLanguage();
         $this->yellow->page->setRequestInformation($scheme, $address, $base, $location, $fileName);
         $this->yellow->page->parseData($this->getRawDataSetup(), false, $statusCode, $this->yellow->page->get("pageError"));
-        $this->yellow->page->parserSafeMode = false;
+        $this->yellow->page->safeMode = false;
         if ($status=="setup") $status = $this->updateUser($email, $password, $name, $language)==200 ? "ok" : "error";
         if ($status=="ok") $status = $this->updateFeature($feature)==200 ? "ok" : "error";
         if ($status=="ok") $status = $this->updateContent($language, "Home", "/")==200 ? "ok" : "error";

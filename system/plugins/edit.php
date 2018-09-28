@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowEdit {
-    const VERSION = "0.7.30";
+    const VERSION = "0.7.31";
     public $yellow;         //access to API
     public $response;       //web response
     public $users;          //user accounts
@@ -1055,7 +1055,7 @@ class YellowResponse {
             $data["address"] = $this->yellow->page->address;
             $data["base"] = $this->yellow->page->base;
             $data["location"] = $this->yellow->page->location;
-            $data["parserSafeMode"] = $this->yellow->page->parserSafeMode;
+            $data["safeMode"] = $this->yellow->page->safeMode;
         }
         if ($this->action!="none") $data = array_merge($data, $this->getRequestData());
         $data["action"] = $this->action;

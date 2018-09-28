@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowMarkdown {
-    const VERSION = "0.7.1";
+    const VERSION = "0.7.2";
     public $yellow;         //access to API
     
     // Handle initialisation
@@ -3744,10 +3744,10 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser {
         $this->yellow = $yellow;
         $this->page = $page;
         $this->idAttributes = array();
-        $this->no_markup = $page->parserSafeMode;
+        $this->no_markup = $page->safeMode;
         $this->url_filter_func = function($url) use ($yellow, $page) {
             return $yellow->lookup->normaliseLocation($url, $page->location,
-                $page->parserSafeMode && $page->statusCode==200);
+                $page->safeMode && $page->statusCode==200);
         };
         parent::__construct();
     }
