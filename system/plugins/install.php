@@ -1,9 +1,9 @@
 <?php
-// Setup plugin, https://github.com/datenstrom/yellow-plugins/tree/master/setup
+// Install plugin, https://github.com/datenstrom/yellow
 // Copyright (c) 2013-2018 Datenstrom, https://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
-class YellowSetup {
+class YellowInstall {
     const VERSION = "0.7.4";
     public $yellow;                 //access to API
     
@@ -19,21 +19,21 @@ class YellowSetup {
             $server = $this->yellow->toolbox->getServerVersion(true);
             $this->checkServerRewrite($scheme, $address, $base, $location, $fileName) || die("Datenstrom Yellow requires $server rewrite module!");
             $this->checkServerAccess() || die("Datenstrom Yellow requires $server read/write access!");
-            $statusCode = $this->processRequestSetup($scheme, $address, $base, $location, $fileName);
+            $statusCode = $this->processRequestInstall($scheme, $address, $base, $location, $fileName);
         }
         return $statusCode;
     }
     
     // Handle command
     public function onCommand($args) {
-        return $this->processCommandSetup();
+        return $this->processCommandInstall();
     }
     
     // Process command to set up website
-    public function processCommandSetup() {
+    public function processCommandInstall() {
         $statusCode = $this->updateLanguage();
         if ($statusCode==200) $statusCode = $this->updateConfig($this->getConfigData());
-        if ($statusCode==200) $statusCode = $this->removeSetup();
+        if ($statusCode==200) $statusCode = $this->removeInstall();
         if ($statusCode==200) {
             $statusCode = 0;
         } else {
@@ -44,7 +44,7 @@ class YellowSetup {
     }
     
     // Process request to set up website
-    public function processRequestSetup($scheme, $address, $base, $location, $fileName) {
+    public function processRequestInstall($scheme, $address, $base, $location, $fileName) {
         $statusCode = 0;
         $name = trim(preg_replace("/[^\pL\d\-\. ]/u", "-", $_REQUEST["name"]));
         $email = trim($_REQUEST["email"]);
@@ -56,14 +56,14 @@ class YellowSetup {
         $this->yellow->page = new YellowPage($this->yellow);
         $statusCode = $this->updateLanguage();
         $this->yellow->page->setRequestInformation($scheme, $address, $base, $location, $fileName);
-        $this->yellow->page->parseData($this->getRawDataSetup(), false, $statusCode, $this->yellow->page->get("pageError"));
+        $this->yellow->page->parseData($this->getRawDataInstall(), false, $statusCode, $this->yellow->page->get("pageError"));
         $this->yellow->page->safeMode = false;
-        if ($status=="setup") $status = $this->updateUser($email, $password, $name, $language)==200 ? "ok" : "error";
+        if ($status=="install") $status = $this->updateUser($email, $password, $name, $language)==200 ? "ok" : "error";
         if ($status=="ok") $status = $this->updateFeature($feature)==200 ? "ok" : "error";
         if ($status=="ok") $status = $this->updateContent($language, "Home", "/")==200 ? "ok" : "error";
         if ($status=="ok") $status = $this->updateContent($language, "About", "/about/")==200 ? "ok" : "error";
         if ($status=="ok") $status = $this->updateConfig($this->getConfigData()) ? "ok" : "error";
-        if ($status=="ok") $status = $this->removeSetup() ? "done" : "error";
+        if ($status=="ok") $status = $this->removeInstall() ? "done" : "error";
         if ($status=="done") {
             $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
             $statusCode = $this->yellow->sendStatus(303, $location);
@@ -76,11 +76,11 @@ class YellowSetup {
     // Update language
     public function updateLanguage() {
         $statusCode = 200;
-        $path = $this->yellow->config->get("pluginDir")."setup-language.zip";
+        $path = $this->yellow->config->get("pluginDir")."install-language.zip";
         if (is_file($path) && $this->yellow->plugins->isExisting("update")) {
             $zip = new ZipArchive();
             if ($zip->open($path)===true) {
-                if (defined("DEBUG") && DEBUG>=2) echo "YellowSetup::updateLanguage file:$path<br/>\n";
+                if (defined("DEBUG") && DEBUG>=2) echo "YellowInstall::updateLanguage file:$path<br/>\n";
                 $languages = $this->getLanguageData("en, de, fr");
                 if (preg_match("#^(.*\/).*?$#", $zip->getNameIndex(0), $matches)) $pathBase = $matches[1];
                 $fileData = $zip->getFromName($pathBase.$this->yellow->config->get("updateInformationFile"));
@@ -141,7 +141,7 @@ class YellowSetup {
         $path = $this->yellow->config->get("pluginDir");
         if (!empty($feature) && $this->yellow->plugins->isExisting("update")) {
             foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.zip$/", true, false) as $entry) {
-                if (preg_match("/^setup-(.*?)\./", basename($entry), $matches)) {
+                if (preg_match("/^install-(.*?)\./", basename($entry), $matches)) {
                     if (strtoloweru($matches[1])==strtoloweru($feature)) {
                         $statusCode = $this->yellow->plugins->get("update")->updateSoftwareArchive($entry);
                         break;
@@ -156,10 +156,10 @@ class YellowSetup {
     public function updateContent($language, $name, $location) {
         $statusCode = 200;
         if ($language!="en") {
-            $titleOld = "Title: ".$this->yellow->text->getText("setup{$name}Title", "en");
-            $titleNew = "Title: ".$this->yellow->text->getText("setup{$name}Title", $language);
-            $textOld = strreplaceu("\\n", "\n", $this->yellow->text->getText("setup{$name}Text", "en"));
-            $textNew = strreplaceu("\\n", "\n", $this->yellow->text->getText("setup{$name}Text", $language));
+            $titleOld = "Title: ".$this->yellow->text->getText("install{$name}Title", "en");
+            $titleNew = "Title: ".$this->yellow->text->getText("install{$name}Title", $language);
+            $textOld = strreplaceu("\\n", "\n", $this->yellow->text->getText("install{$name}Text", "en"));
+            $textNew = strreplaceu("\\n", "\n", $this->yellow->text->getText("install{$name}Text", $language));
             $fileName = $this->yellow->lookup->findFileFromLocation($location);
             $fileData = strreplaceu("\r\n", "\n", $this->yellow->toolbox->readFile($fileName));
             $fileData = strreplaceu($titleOld, $titleNew, $fileData);
@@ -183,25 +183,25 @@ class YellowSetup {
         return $statusCode;
     }
     
-    // Remove setup
-    public function removeSetup() {
+    // Remove install
+    public function removeInstall() {
         $statusCode = 200;
         if (function_exists("opcache_reset")) opcache_reset();
         $path = $this->yellow->config->get("pluginDir");
         foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.zip$/", true, false) as $entry) {
-            if (preg_match("/^setup-(.*?)\./", basename($entry), $matches)) {
+            if (preg_match("/^install-(.*?)\./", basename($entry), $matches)) {
                 if (!$this->yellow->toolbox->deleteFile($entry)) {
                     $statusCode = 500;
                     $this->yellow->page->error($statusCode, "Can't delete file '$entry'!");
                 }
             }
         }
-        $path = $this->yellow->config->get("pluginDir")."setup.php";
+        $path = $this->yellow->config->get("pluginDir")."install.php";
         if ($statusCode==200 && !$this->yellow->toolbox->deleteFile($path)) {
             $statusCode = 500;
             $this->yellow->page->error($statusCode, "Can't delete file '$path'!");
         }
-        if ($statusCode==200) unset($this->yellow->plugins->plugins["setup"]);
+        if ($statusCode==200) unset($this->yellow->plugins->plugins["install"]);
         return $statusCode;
     }
     
@@ -254,15 +254,15 @@ class YellowSetup {
         return $data;
     }
 
-    // Return raw data for setup page
-    public function getRawDataSetup() {
+    // Return raw data for install page
+    public function getRawDataInstall() {
         $language = $this->yellow->toolbox->detectBrowserLanguage($this->yellow->text->getLanguages(), $this->yellow->config->get("language"));
-        $fileName = strreplaceu("(.*)", "setup", $this->yellow->config->get("configDir").$this->yellow->config->get("newFile"));
+        $fileName = strreplaceu("(.*)", "install", $this->yellow->config->get("configDir").$this->yellow->config->get("newFile"));
         $rawData = $this->yellow->toolbox->readFile($fileName);
         if (empty($rawData)) {
             $this->yellow->text->setLanguage($language);
-            $rawData = "---\nTitle:".$this->yellow->text->get("setupTitle")."\nLanguage:$language\nNavigation:navigation\n---\n";
-            $rawData .= "<form class=\"setup-form\" action=\"".$this->yellow->page->getLocation(true)."\" method=\"post\">\n";
+            $rawData = "---\nTitle:".$this->yellow->text->get("installTitle")."\nLanguage:$language\nNavigation:navigation\n---\n";
+            $rawData .= "<form class=\"install-form\" action=\"".$this->yellow->page->getLocation(true)."\" method=\"post\">\n";
             $rawData .= "<p><label for=\"name\">".$this->yellow->text->get("editSignupName")."</label><br /><input class=\"form-control\" type=\"text\" maxlength=\"64\" name=\"name\" id=\"name\" value=\"\"></p>\n";
             $rawData .= "<p><label for=\"email\">".$this->yellow->text->get("editSignupEmail")."</label><br /><input class=\"form-control\" type=\"text\" maxlength=\"64\" name=\"email\" id=\"email\" value=\"\"></p>\n";
             $rawData .= "<p><label for=\"password\">".$this->yellow->text->get("editSignupPassword")."</label><br /><input class=\"form-control\" type=\"password\" maxlength=\"64\" name=\"password\" id=\"password\" value=\"\"></p>\n";
@@ -274,30 +274,30 @@ class YellowSetup {
                 }
                 $rawData .= "</p>\n";
             }
-            if (count($this->getFeaturesSetup())>1) {
-                $rawData .= "<p>".$this->yellow->text->get("setupFeature")."<p>";
-                foreach ($this->getFeaturesSetup() as $feature) {
+            if (count($this->getFeaturesInstall())>1) {
+                $rawData .= "<p>".$this->yellow->text->get("installFeature")."<p>";
+                foreach ($this->getFeaturesInstall() as $feature) {
                     $checked = $feature=="website" ? " checked=\"checked\"" : "";
                     $rawData .= "<label for=\"$feature\"><input type=\"radio\" name=\"feature\" id=\"$feature\" value=\"$feature\"$checked> ".ucfirst($feature)."</label><br />";
                 }
                 $rawData .= "</p>\n";
             }
             $rawData .= "<input class=\"btn\" type=\"submit\" value=\"".$this->yellow->text->get("editOkButton")."\" />\n";
-            $rawData .= "<input type=\"hidden\" name=\"status\" value=\"setup\" />\n";
+            $rawData .= "<input type=\"hidden\" name=\"status\" value=\"install\" />\n";
             $rawData .= "</form>\n";
         }
         return $rawData;
     }
     
-    // Return features for setup page
-    public function getFeaturesSetup() {
+    // Return features for install page
+    public function getFeaturesInstall() {
         $features = array("website");
         $path = $this->yellow->config->get("pluginDir");
         foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.zip$/", true, false, false) as $entry) {
-            if (preg_match("/^setup-(.*?)\./", $entry, $matches) && $matches[1]!="language") array_push($features, $matches[1]);
+            if (preg_match("/^install-(.*?)\./", $entry, $matches) && $matches[1]!="language") array_push($features, $matches[1]);
         }
         return $features;
     }
 }
     
-$yellow->plugins->register("setup", "YellowSetup", YellowSetup::VERSION, 1);
+$yellow->plugins->register("install", "YellowInstall", YellowInstall::VERSION, 1);
