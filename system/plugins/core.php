@@ -78,7 +78,6 @@ class YellowCore {
         $this->config->setDefault("parser", "markdown");
         $this->config->setDefault("multiLanguageMode", "0");
         $this->config->setDefault("safeMode", "0");
-        $this->config->setDefault("setupMode", "0");
     }
     
     public function __destruct() {

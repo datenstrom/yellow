@@ -1,10 +1,10 @@
 <?php
-// Setup plugin, https://github.com/datenstrom/yellow
+// Setup plugin, https://github.com/datenstrom/yellow-plugins/tree/master/setup
 // Copyright (c) 2013-2018 Datenstrom, https://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 class YellowSetup {
-    const VERSION = "0.7.3";
+    const VERSION = "0.7.4";
     public $yellow;                 //access to API
     
     // Handle initialisation
@@ -15,7 +15,7 @@ class YellowSetup {
     // Handle request
     public function onRequest($scheme, $address, $base, $location, $fileName) {
         $statusCode = 0;
-        if ($this->yellow->lookup->isContentFile($fileName) && $this->yellow->config->get("setupMode")) {
+        if ($this->yellow->lookup->isContentFile($fileName)) {
             $server = $this->yellow->toolbox->getServerVersion(true);
             $this->checkServerRewrite($scheme, $address, $base, $location, $fileName) || die("Datenstrom Yellow requires $server rewrite module!");
             $this->checkServerAccess() || die("Datenstrom Yellow requires $server read/write access!");
@@ -26,16 +26,14 @@ class YellowSetup {
     
     // Handle command
     public function onCommand($args) {
-        $statusCode = 0;
-        if ($this->yellow->config->get("setupMode")) $statusCode = $this->processCommandSetup();
-        return $statusCode;
+        return $this->processCommandSetup();
     }
     
     // Process command to set up website
     public function processCommandSetup() {
         $statusCode = $this->updateLanguage();
-        if ($statusCode==200) $statusCode = $this->updateFeature("none");
-        if ($statusCode==200) $statusCode = $this->updateConfig(array("setupMode" => "0"));
+        if ($statusCode==200) $statusCode = $this->updateConfig($this->getConfigData());
+        if ($statusCode==200) $statusCode = $this->removeSetup();
         if ($statusCode==200) {
             $statusCode = 0;
         } else {
@@ -64,7 +62,8 @@ class YellowSetup {
         if ($status=="ok") $status = $this->updateFeature($feature)==200 ? "ok" : "error";
         if ($status=="ok") $status = $this->updateContent($language, "Home", "/")==200 ? "ok" : "error";
         if ($status=="ok") $status = $this->updateContent($language, "About", "/about/")==200 ? "ok" : "error";
-        if ($status=="ok") $status = $this->updateConfig($this->getConfigData()) ? "done" : "error";
+        if ($status=="ok") $status = $this->updateConfig($this->getConfigData()) ? "ok" : "error";
+        if ($status=="ok") $status = $this->removeSetup() ? "done" : "error";
         if ($status=="done") {
             $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
             $statusCode = $this->yellow->sendStatus(303, $location);
@@ -117,10 +116,6 @@ class YellowSetup {
                 if ($statusCode==200) {
                     $this->yellow->text->load($this->yellow->config->get("pluginDir").$this->yellow->config->get("languageFile"), "");
                 }
-                if ($statusCode==200 && !$this->yellow->toolbox->deleteFile($path)) {
-                    $statusCode = 500;
-                    $this->yellow->page->error($statusCode, "Can't delete file '$path'!");
-                }
             } else {
                 $statusCode = 500;
                 $this->yellow->page->error(500, "Can't open file '$path'!");
@@ -150,16 +145,6 @@ class YellowSetup {
                     if (strtoloweru($matches[1])==strtoloweru($feature)) {
                         $statusCode = $this->yellow->plugins->get("update")->updateSoftwareArchive($entry);
                         break;
-                    }
-                }
-            }
-        }
-        if ($statusCode==200) {
-            foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.zip$/", true, false) as $entry) {
-                if (preg_match("/^setup-(.*?)\./", basename($entry), $matches)) {
-                    if (!$this->yellow->toolbox->deleteFile($entry)) {
-                        $statusCode = 500;
-                        $this->yellow->page->error($statusCode, "Can't delete file '$entry'!");
                     }
                 }
             }
@@ -195,6 +180,28 @@ class YellowSetup {
             $statusCode = 500;
             $this->yellow->page->error($statusCode, "Can't write file '$fileNameConfig'!");
         }
+        return $statusCode;
+    }
+    
+    // Remove setup
+    public function removeSetup() {
+        $statusCode = 200;
+        if (function_exists("opcache_reset")) opcache_reset();
+        $path = $this->yellow->config->get("pluginDir");
+        foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.zip$/", true, false) as $entry) {
+            if (preg_match("/^setup-(.*?)\./", basename($entry), $matches)) {
+                if (!$this->yellow->toolbox->deleteFile($entry)) {
+                    $statusCode = 500;
+                    $this->yellow->page->error($statusCode, "Can't delete file '$entry'!");
+                }
+            }
+        }
+        $path = $this->yellow->config->get("pluginDir")."setup.php";
+        if ($statusCode==200 && !$this->yellow->toolbox->deleteFile($path)) {
+            $statusCode = 500;
+            $this->yellow->page->error($statusCode, "Can't delete file '$path'!");
+        }
+        if ($statusCode==200) unset($this->yellow->plugins->plugins["setup"]);
         return $statusCode;
     }
     
@@ -241,10 +248,9 @@ class YellowSetup {
             if (!$this->yellow->config->isExisting($key)) continue;
             $data[$key] = trim($value);
         }
-        if ($this->yellow->config->get("sitename")=="Datenstrom Yellow") $data["sitename"] = $_REQUEST["name"];
         $data["timezone"] = $this->yellow->toolbox->getTimezone();
         $data["staticUrl"] = $this->yellow->toolbox->getServerUrl();
-        $data["setupMode"] = "0";
+        if ($this->yellow->isCommandLine()) $data["staticUrl"] = getenv("URL");
         return $data;
     }
 
