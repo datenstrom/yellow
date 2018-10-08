@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowImage {
-    const VERSION = "0.7.6";
+    const VERSION = "0.7.7";
     public $yellow;             //access to API
     public $graphicsLibrary;    //graphics library support? (boolean)
 
@@ -63,6 +63,12 @@ class YellowImage {
                 $image = $this->resizeImage($image, $widthInput, $heightInput, $widthOutput, $heightOutput);
                 if (!$this->saveImage($image, $fileName, $type, $this->yellow->config->get("imageUploadJpgQuality"))) {
                     $file->error(500, "Can't write file '$fileName'!");
+                }
+            }
+            if ($this->yellow->config->get("safeMode") && $fileType=="svg") {
+                $output = $this->sanitiseXmlData($this->yellow->toolbox->readFile($fileName));
+                if (empty($output) || !$this->yellow->toolbox->createFile($fileName, $output)) {
+                     $file->error(500, "Can't write file '$fileName'!");
                 }
             }
         }
@@ -186,6 +192,58 @@ class YellowImage {
             if ($unit=="%") $value = $valueBase * $value / 100;
         }
         return intval($value);
+    }
+    
+    // Return sanitised XML data
+    public function sanitiseXmlData($rawData) {
+        $output = "";
+        $elementsHtml = array(
+            "a", "abbr", "acronym", "address", "area", "article", "aside", "audio", "b", "bdi", "bdo", "big", "blink", "blockquote", "body", "br", "button", "canvas", "caption", "center", "cite", "code", "col", "colgroup", "content", "data", "datalist", "dd", "decorator", "del", "details", "dfn", "dir", "div", "dl", "dt", "element", "em", "fieldset", "figcaption", "figure", "font", "footer", "form", "h1", "h2", "h3", "h4", "h5", "h6", "head", "header", "hgroup", "hr", "html", "i", "image", "img", "input", "ins", "kbd", "label", "legend", "li", "main", "map", "mark", "marquee", "menu", "menuitem", "meter", "nav", "nobr", "ol", "optgroup", "option", "output", "p", "pre", "progress", "q", "rp", "rt", "ruby", "s", "samp", "section", "select", "shadow", "small", "source", "spacer", "span", "strike", "strong", "style", "sub", "summary", "sup", "table", "tbody", "td", "template", "textarea", "tfoot", "th", "thead", "time", "tr", "track", "tt", "u", "ul", "var", "video", "wbr");
+        $elementsSvg = array(
+            "svg", "altglyph", "altglyphdef", "altglyphitem", "animatecolor", "animatemotion", "animatetransform", "circle", "clippath", "defs", "desc", "ellipse", "feblend", "fecolormatrix", "fecomponenttransfer", "fecomposite", "feconvolvematrix", "fediffuselighting", "fedisplacementmap", "fedistantlight", "feflood", "fefunca", "fefuncb", "fefuncg", "fefuncr", "fegaussianblur", "femerge", "femergenode", "femorphology", "feoffset", "fepointlight", "fespecularlighting", "fespotlight", "fetile", "feturbulence", "filter", "font", "g", "glyph", "glyphref", "hkern", "image", "line", "lineargradient", "marker", "mask", "metadata", "mpath", "path", "pattern", "polygon", "polyline", "radialgradient", "rect", "stop", "switch", "symbol", "text", "textpath", "title", "tref", "tspan", "use", "view", "vkern");
+        $attributesHtml = array(
+            "accept", "action", "align", "alt", "autocomplete", "background", "bgcolor", "border", "cellpadding", "cellspacing", "checked", "cite", "class", "clear", "color", "cols", "colspan", "coords", "crossorigin", "datetime", "default", "dir", "disabled", "download", "enctype", "face", "for", "headers", "height", "hidden", "high", "href", "hreflang", "id", "integrity", "ismap", "label", "lang", "list", "loop", "low", "max", "maxlength", "media", "method", "min", "multiple", "name", "noshade", "novalidate", "nowrap", "open", "optimum", "pattern", "placeholder", "poster", "preload", "pubdate", "radiogroup", "readonly", "rel", "required", "rev", "reversed", "role", "rows", "rowspan", "spellcheck", "scope", "selected", "shape", "size", "sizes", "span", "srclang", "start", "src", "srcset", "step", "style", "summary", "tabindex", "title", "type", "usemap", "valign", "value", "width", "xmlns");
+        $attributesSvg = array(
+            "accent-height", "accumulate", "additivive", "alignment-baseline", "ascent", "attributename", "attributetype", "azimuth", "basefrequency", "baseline-shift", "begin", "bias", "by", "class", "clip", "clip-path", "clip-rule", "color", "color-interpolation", "color-interpolation-filters", "color-profile", "color-rendering", "cx", "cy", "d", "dx", "dy", "diffuseconstant", "direction", "display", "divisor", "dur", "edgemode", "elevation", "end", "fill", "fill-opacity", "fill-rule", "filter", "flood-color", "flood-opacity", "font-family", "font-size", "font-size-adjust", "font-stretch", "font-style", "font-variant", "font-weight", "fx", "fy", "g1", "g2", "glyph-name", "glyphref", "gradientunits", "gradienttransform", "height", "href", "id", "image-rendering", "in", "in2", "k", "k1", "k2", "k3", "k4", "kerning", "keypoints", "keysplines", "keytimes", "lang", "lengthadjust", "letter-spacing", "kernelmatrix", "kernelunitlength", "lighting-color", "local", "marker-end", "marker-mid", "marker-start", "markerheight", "markerunits", "markerwidth", "maskcontentunits", "maskunits", "max", "mask", "media", "method", "mode", "min", "name", "numoctaves", "offset", "operator", "opacity", "order", "orient", "orientation", "origin", "overflow", "paint-order", "path", "pathlength", "patterncontentunits", "patterntransform", "patternunits", "points", "preservealpha", "preserveaspectratio", "r", "rx", "ry", "radius", "refx", "refy", "repeatcount", "repeatdur", "restart", "result", "rotate", "scale", "seed", "shape-rendering", "specularconstant", "specularexponent", "spreadmethod", "stddeviation", "stitchtiles", "stop-color", "stop-opacity", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke", "stroke-width", "style", "surfacescale", "tabindex", "targetx", "targety", "transform", "text-anchor", "text-decoration", "text-rendering", "textlength", "type", "u1", "u2", "unicode", "values", "viewbox", "visibility", "vert-adv-y", "vert-origin-x", "vert-origin-y", "width", "word-spacing", "wrap", "writing-mode", "xchannelselector", "ychannelselector", "x", "x1", "x2", "xmlns", "y", "y1", "y2", "z", "zoomandpan");
+        $attributesXml = array(
+            "xlink:href", "xml:id", "xml:space");
+        if (!empty($rawData)) {
+            $entityLoader = libxml_disable_entity_loader(true);
+            $internalErrors = libxml_use_internal_errors(true);
+            $document = new DOMDocument();
+            $document->recover = true;
+            if ($document->loadXML($rawData)) {
+                $elementsSafe = array_merge($elementsHtml, $elementsSvg);
+                $attributesSafe = array_merge($attributesHtml, $attributesSvg, $attributesXml);
+                $elements = $document->getElementsByTagName("*");
+                for ($i=$elements->length-1; $i>=0; --$i) {
+                    $element = $elements->item($i);
+                    if (!in_array(strtolower($element->tagName), $elementsSafe)) {
+                        $element->parentNode->removeChild($element);
+                        continue;
+                    }
+                    for ($j=$element->attributes->length-1; $j>=0; --$j) {
+                        $attribute = $element->attributes->item($j);
+                        if (!in_array(strtolower($attribute->name), $attributesSafe) && !preg_match("/^(aria|data)-/i", $attribute->name)) {
+                            $element->removeAttribute($attribute->name);
+                        }
+                    }
+                    $href = $element->getAttribute("href");
+                    if (preg_match("/^\w+:/", $href) && !preg_match("/^(http|https|ftp|mailto):/", $href)) {
+                        $element->setAttribute("href", "error-xss-filter");
+                    }
+                    $href = $element->getAttribute("xlink:href");
+                    if (preg_match("/^\w+:/", $href) && !preg_match("/^(http|https|ftp|mailto):/", $href)) {
+                        $element->setAttribute("xlink:href", "error-xss-filter");
+                    }
+                }
+                $output = $document->saveXML();
+                if (!preg_match("/^<\?xml /", $rawData) && preg_match("/^<\?xml (.*?)>\s*(.*)$/s", $output, $matches)) $output = $matches[2];
+            }
+            libxml_disable_entity_loader($entityLoader);
+            libxml_use_internal_errors($internalErrors);
+        }
+        return $output;
     }
 
     // Check if file needs to be updated

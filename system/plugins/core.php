@@ -2995,7 +2995,7 @@ class YellowToolbox {
         $type = "";
         $fileHandle = @fopen($fileName, "rb");
         if ($fileHandle) {
-            if(empty($fileType)) $fileType = $this->getFileType($fileName);
+            if (empty($fileType)) $fileType = $this->getFileType($fileName);
             if ($fileType=="gif") {
                 $dataSignature = fread($fileHandle, 6);
                 $dataHeader = fread($fileHandle, 7);
@@ -3044,11 +3044,9 @@ class YellowToolbox {
                 $dataBufferSizeMax = filesize($fileName);
                 $dataBufferSize = min($dataBufferSizeMax, 4096);
                 if ($dataBufferSize) $dataBuffer = fread($fileHandle, $dataBufferSize);
-                $dataSignature = substrb($dataBuffer, 0, 5);
-                if (!feof($fileHandle) && $dataSignature=="\x3csvg\x20") {
-                    $dataBuffer = ($pos = strposu($dataBuffer, ">")) ? substru($dataBuffer, 0, $pos) : $dataBuffer;
-                    if (preg_match("/ width=\"(\d+)\"/", $dataBuffer, $matches)) $width = $matches[1];
-                    if (preg_match("/ height=\"(\d+)\"/", $dataBuffer, $matches)) $height = $matches[1];
+                if (!feof($fileHandle) && preg_match("/<svg (.*?)>/", $dataBuffer, $matches)) {
+                    if (preg_match("/ width=\"(\d+)\"/", $matches[1], $tokens)) $width = $tokens[1];
+                    if (preg_match("/ height=\"(\d+)\"/", $matches[1], $tokens)) $height = $tokens[1];
                     $type = $fileType;
                 }
             }
