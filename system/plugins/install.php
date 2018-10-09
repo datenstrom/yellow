@@ -5,6 +5,7 @@
 
 class YellowInstall {
     const VERSION = "0.7.4";
+    const PRIORITY = "1";
     public $yellow;                 //access to API
     
     // Handle initialisation
@@ -299,5 +300,3 @@ class YellowInstall {
         return $features;
     }
 }
-    
-$yellow->plugins->register("install", "YellowInstall", YellowInstall::VERSION, 1);

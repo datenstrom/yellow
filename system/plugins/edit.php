@@ -1775,5 +1775,3 @@ class YellowMerge {
         return !$conflict ? $output : null;
     }
 }
-
-$yellow->plugins->register("edit", "YellowEdit", YellowEdit::VERSION);

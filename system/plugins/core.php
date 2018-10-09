@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowCore {
-    const VERSION = "0.7.7";
+    const VERSION = "0.7.8";
     public $page;           //current page
     public $pages;          //pages from file system
     public $files;          //files from file system
@@ -1468,25 +1468,26 @@ class YellowPlugins {
             $this->modified = max($this->modified, filemtime($entry));
             global $yellow;
             require_once($entry);
+            $name = $this->yellow->lookup->normaliseName(basename($entry), true, true, true);
+            $this->register($name, "Yellow".ucfirst($name));
         }
         $callback = function ($a, $b) {
             return $a["priority"] - $b["priority"];
         };
         uasort($this->plugins, $callback);
         foreach ($this->plugins as $key=>$value) {
-            $this->plugins[$key]["obj"] = new $value["plugin"];
-            if (method_exists($this->plugins[$key]["obj"], "onLoad")) $this->plugins[$key]["obj"]->onLoad($yellow);
+            if (method_exists($this->plugins[$key]["obj"], "onLoad")) $this->plugins[$key]["obj"]->onLoad($this->yellow);
         }
     }
     
     // Register plugin
-    public function register($name, $plugin, $version, $priority = 0) {
-        if (!$this->isExisting($name)) {
-            if ($priority==0) $priority = count($this->plugins) + 10;
+    public function register($name, $plugin, $obsoleteVersion = 0, $obsoletePriority = 0) {
+        if (!$this->isExisting($name) && class_exists($plugin)) {
             $this->plugins[$name] = array();
+            $this->plugins[$name]["obj"] = new $plugin;
             $this->plugins[$name]["plugin"] = $plugin;
-            $this->plugins[$name]["version"] = $version;
-            $this->plugins[$name]["priority"] = $priority;
+            $this->plugins[$name]["version"] = defined("$plugin::VERSION") ? $plugin::VERSION : 0;
+            $this->plugins[$name]["priority"] = defined("$plugin::PRIORITY") ? $plugin::PRIORITY : count($this->plugins) + 10;
         }
     }
     
@@ -1537,31 +1538,32 @@ class YellowThemes {
             $this->modified = max($this->modified, filemtime($entry));
             global $yellow;
             require_once($entry);
+            $name = $this->yellow->lookup->normaliseName(basename($entry), true, true, true);
+            $this->register($name, "YellowTheme".ucfirst($name));
         }
         foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.css$/", true, false) as $entry) {
             if (defined("DEBUG") && DEBUG>=3) echo "YellowThemes::load file:$entry<br/>\n";
             $this->modified = max($this->modified, filemtime($entry));
-            $name = $this->yellow->lookup->normaliseName(basename($entry), true, true);
-            if (substru($name, 0, 7)!="bundle-") $this->register($name, "", "");
+            $name = $this->yellow->lookup->normaliseName(basename($entry), true, true, true);
+            if (substru($name, 0, 7)!="bundle-") $this->register($name, "stdClass");
         }
         $callback = function ($a, $b) {
             return $a["priority"] - $b["priority"];
         };
         uasort($this->themes, $callback);
         foreach ($this->themes as $key=>$value) {
-            $this->themes[$key]["obj"] = empty($value["theme"]) ? new stdClass : new $value["theme"];
-            if (method_exists($this->themes[$key]["obj"], "onLoad")) $this->themes[$key]["obj"]->onLoad($yellow);
+            if (method_exists($this->themes[$key]["obj"], "onLoad")) $this->themes[$key]["obj"]->onLoad($this->yellow);
         }
     }
     
     // Register theme
-    public function register($name, $theme, $version, $priority = 0) {
-        if (!$this->isExisting($name)) {
-            if ($priority==0) $priority = count($this->themes) + 10;
+    public function register($name, $theme, $obsoleteVersion = 0, $obsoletePriority = 0) {
+        if (!$this->isExisting($name) && class_exists($theme)) {
             $this->themes[$name] = array();
+            $this->themes[$name]["obj"] = new $theme;
             $this->themes[$name]["theme"] = $theme;
-            $this->themes[$name]["version"] = $version;
-            $this->themes[$name]["priority"] = $priority;
+            $this->themes[$name]["version"] = defined("$theme::VERSION") ? $theme::VERSION : 0;
+            $this->themes[$name]["priority"] = defined("$theme::PRIORITY") ? $theme::PRIORITY : count($this->themes) + 10;
         }
     }
     

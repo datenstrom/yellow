@@ -578,5 +578,3 @@ class YellowCommand {
         return $statusCode;
     }
 }
-    
-$yellow->plugins->register("command", "YellowCommand", YellowCommand::VERSION);

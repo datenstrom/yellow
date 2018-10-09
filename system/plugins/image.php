@@ -257,5 +257,3 @@ class YellowImage {
             ((imagetypes()&(IMG_GIF|IMG_JPG|IMG_PNG))==(IMG_GIF|IMG_JPG|IMG_PNG));
     }
 }
-
-$yellow->plugins->register("image", "YellowImage", YellowImage::VERSION);

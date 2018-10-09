@@ -1935,5 +1935,3 @@ class MinifyBasic extends Minify {
         return $this->restoreExtractedData($content);
     }
 }
-
-$yellow->plugins->register("bundle", "YellowBundle", YellowBundle::VERSION);

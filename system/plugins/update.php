@@ -5,6 +5,7 @@
 
 class YellowUpdate {
     const VERSION = "0.7.22";
+    const PRIORITY = "2";
     public $yellow;                 //access to API
     public $updates;                //number of updates
     
@@ -632,5 +633,3 @@ class YellowUpdate {
         return !is_null($data[$software]);
     }
 }
-    
-$yellow->plugins->register("update", "YellowUpdate", YellowUpdate::VERSION, 2);

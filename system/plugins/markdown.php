@@ -3863,6 +3863,3 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser {
         return $this->hashPart($output);
     }
 }
-
-$yellow->plugins->register("markdown", "YellowMarkdown", YellowMarkdown::VERSION);
-
