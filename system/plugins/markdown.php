@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowMarkdown {
-    const VERSION = "0.7.2";
+    const VERSION = "0.7.3";
     public $yellow;         //access to API
     
     // Handle initialisation
@@ -3752,56 +3752,48 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser {
         parent::__construct();
     }
 
-    // Return unique id attribute
-    public function getIdAttribute($text) {
-        $text = $this->yellow->lookup->normaliseName($text, true, false, true);
-        $text = trim(preg_replace("/-+/", "-", $text), "-");
-        if (is_null($this->idAttributes[$text])) {
-            $this->idAttributes[$text] = $text;
-            $attr = " id=\"$text\"";
-        }
-        return $attr;
-    }
-    
     // Handle links
     public function doAutoLinks($text) {
         $text = preg_replace_callback("/<(\w+:[^\'\">\s]+)>/", array(&$this, "_doAutoLinks_url_callback"), $text);
         $text = preg_replace_callback("/<([\w\+\-\.]+@[\w\-\.]+)>/", array(&$this, "_doAutoLinks_email_callback"), $text);
-        $text = preg_replace_callback("/\[\-\-(.*?)\-\-\]/", array(&$this, "_doAutoLinks_comment_callback"), $text);
-        $text = preg_replace_callback("/\[(\w+)(.*?)\]/", array(&$this, "_doAutoLinks_shortcut_callback"), $text);
-        $text = preg_replace_callback("/\:([\w\+\-\_]+)\:/", array(&$this, "_doAutoLinks_shortcode_callback"), $text);
+        $text = preg_replace_callback("/^\s*\[(\w+)(.*?)\]\s*$/", array(&$this, "_doAutoLinks_shortcutBlock_callback"), $text);
+        $text = preg_replace_callback("/\[(\w+)(.*?)\]/", array(&$this, "_doAutoLinks_shortcutInline_callback"), $text);
+        $text = preg_replace_callback("/\[\-\-(.*?)\-\-\]/", array(&$this, "_doAutoLinks_shortcutComment_callback"), $text);
+        $text = preg_replace_callback("/\:([\w\+\-\_]+)\:/", array(&$this, "_doAutoLinks_shortcutSymbol_callback"), $text);
         $text = preg_replace_callback("/((http|https|ftp):\/\/\S+[^\'\"\,\.\;\:\s]+)/", array(&$this, "_doAutoLinks_url_callback"), $text);
         $text = preg_replace_callback("/([\w\+\-\.]+@[\w\-\.]+\.[\w]{2,4})/", array(&$this, "_doAutoLinks_email_callback"), $text);
         return $text;
     }
     
-    // Handle comments
-    public function _doAutoLinks_comment_callback($matches) {
-        $text = $matches[1];
-        $output = "<!--".htmlspecialchars($text, ENT_NOQUOTES)."-->";
-        if ($text[0]=="-") $output = "";
+    // Handle shortcuts, block style
+    public function _doAutoLinks_shortcutBlock_callback($matches) {
+        $output = $this->page->parseContentShortcut($matches[1], trim($matches[2]), "block");
+        return is_null($output) ? $matches[0] : $this->hashBlock($output);
+    }
+    
+    // Handle shortcuts, inline style
+    public function _doAutoLinks_shortcutInline_callback($matches) {
+        $output = $this->page->parseContentShortcut($matches[1], trim($matches[2]), "inline");
+        return is_null($output) ? $matches[0] : $this->hashPart($output);
+    }
+    
+    // Handle shortcuts, comment style
+    public function _doAutoLinks_shortcutComment_callback($matches) {
+        $output = "<!--".htmlspecialchars($matches[1], ENT_NOQUOTES)."-->";
         return $this->hashBlock($output);
     }
     
-    // Handle shortcuts
-    public function _doAutoLinks_shortcut_callback($matches) {
-        $output = $this->page->parseContentBlock($matches[1], trim($matches[2]), true);
-        if (is_null($output)) $output = htmlspecialchars($matches[0], ENT_NOQUOTES);
-        return substr($output, 0, 4)=="<div" ? $this->hashBlock(trim($output)) : $this->hashPart(trim($output));
-    }
-
-    // Handle shortcodes
-    public function _doAutoLinks_shortcode_callback($matches) {
-        $output = $this->page->parseContentBlock("", $matches[1], true);
-        if (is_null($output)) $output = htmlspecialchars($matches[0], ENT_NOQUOTES);
-        return $this->hashPart($output);
+    // Handle shortcuts, symbol style
+    public function _doAutoLinks_shortcutSymbol_callback($matches) {
+        $output = $this->page->parseContentShortcut("", $matches[1], "symbol");
+        return is_null($output) ? $matches[0] : $this->hashPart($output);
     }
     
     // Handle fenced code blocks
     public function _doFencedCodeBlocks_callback($matches) {
         $text = $matches[4];
         $name = empty($matches[2]) ? "" : "$matches[2] $matches[3]";
-        $output = $this->page->parseContentBlock($name, $text, false);
+        $output = $this->page->parseContentShortcut($name, $text, "code");
         if (is_null($output)) {
             $attr = $this->doExtraAttributes("pre", ".$matches[2] $matches[3]");
             $output = "<pre$attr><code>".htmlspecialchars($text, ENT_NOQUOTES)."</code></pre>";
@@ -3861,5 +3853,16 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser {
         $output .= $attr;
         $output .= $this->empty_element_suffix;
         return $this->hashPart($output);
+    }
+    
+    // Return unique id attribute
+    public function getIdAttribute($text) {
+        $text = $this->yellow->lookup->normaliseName($text, true, false, true);
+        $text = trim(preg_replace("/-+/", "-", $text), "-");
+        if (is_null($this->idAttributes[$text])) {
+            $this->idAttributes[$text] = $text;
+            $attr = " id=\"$text\"";
+        }
+        return $attr;
     }
 }

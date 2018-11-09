@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowBundle {
-    const VERSION = "0.7.4";
+    const VERSION = "0.7.5";
     public $yellow;         //access to API
 
     // Handle initialisation
@@ -109,12 +109,12 @@ class YellowBundle {
                     $fileData = $this->yellow->toolbox->readFile($fileName);
                     $fileData = $this->processBundleConvert($scheme, $address, $base, $fileData, $fileName, $type);
                     $fileData = $this->processBundleMinify($scheme, $address, $base, $fileData, $fileName, $type);
-                    if(!empty($fileDataNew)) $fileDataNew .= "\n\n";
+                    if (!empty($fileDataNew)) $fileDataNew .= "\n\n";
                     $fileDataNew .= "/* ".basename($fileName)." */\n";
                     $fileDataNew .= $fileData;
                 }
                 if (defined("DEBUG") && DEBUG>=2) {
-                    if(!empty($fileDataNew)) $fileDataNew .= "\n\n";
+                    if (!empty($fileDataNew)) $fileDataNew .= "\n\n";
                     $fileDataNew .= "/* YellowBundle::processBundle file:$fileNameBundle <- ".$this->yellow->page->fileName." */";
                 }
                 if (!$this->yellow->toolbox->createFile($fileNameBundle, $fileDataNew) ||

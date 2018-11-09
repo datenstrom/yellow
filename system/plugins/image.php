@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowImage {
-    const VERSION = "0.7.7";
+    const VERSION = "0.7.8";
     public $yellow;             //access to API
     public $graphicsLibrary;    //graphics library support? (boolean)
 
@@ -21,10 +21,10 @@ class YellowImage {
         $this->graphicsLibrary = $this->isGraphicsLibrary();
     }
 
-    // Handle page content of custom block
-    public function onParseContentBlock($page, $name, $text, $shortcut) {
+    // Handle page content of shortcut
+    public function onParseContentShortcut($page, $name, $text, $type) {
         $output = null;
-        if ($name=="image" && $shortcut) {
+        if ($name=="image" && $type=="inline") {
             if (!$this->graphicsLibrary) {
                 $this->yellow->page->error(500, "Plugin 'image' requires GD library with gif/jpg/png support!");
                 return $output;

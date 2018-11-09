@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowCore {
-    const VERSION = "0.7.8";
+    const VERSION = "0.7.9";
     public $page;           //current page
     public $pages;          //pages from file system
     public $files;          //files from file system
@@ -57,15 +57,15 @@ class YellowCore {
         $this->config->setDefault("contentRootDir", "default/");
         $this->config->setDefault("contentHomeDir", "home/");
         $this->config->setDefault("contentPagination", "page");
-        $this->config->setDefault("contentDefaultFile", "page.txt");
-        $this->config->setDefault("contentExtension", ".txt");
+        $this->config->setDefault("contentDefaultFile", "page.md");
+        $this->config->setDefault("contentExtension", ".md");
         $this->config->setDefault("configExtension", ".ini");
         $this->config->setDefault("downloadExtension", ".download");
         $this->config->setDefault("configFile", "config.ini");
         $this->config->setDefault("textFile", "text.ini");
+        $this->config->setDefault("errorFile", "page-error-(.*).md");
+        $this->config->setDefault("newFile", "page-new-(.*).md");
         $this->config->setDefault("languageFile", "language-(.*).txt");
-        $this->config->setDefault("errorFile", "page-error-(.*).txt");
-        $this->config->setDefault("newFile", "page-new-(.*).txt");
         $this->config->setDefault("robotsFile", "robots.txt");
         $this->config->setDefault("faviconFile", "favicon.ico");
         $this->config->setDefault("serverUrl", "");
@@ -520,17 +520,20 @@ class YellowPage {
         }
     }
     
-    // Parse page content block
-    public function parseContentBlock($name, $text, $shortcut) {
+    // Parse page content shortcut
+    public function parseContentShortcut($name, $text, $type) {
         $output = null;
         foreach ($this->yellow->plugins->plugins as $key=>$value) {
-            if (method_exists($value["obj"], "onParseContentBlock")) {
-                $output = $value["obj"]->onParseContentBlock($this, $name, $text, $shortcut);
+            if (method_exists($value["obj"], "onParseContentShortcut")) {
+                $output = $value["obj"]->onParseContentShortcut($this, $name, $text, $type);
+                if (!is_null($output)) break;
+            } else if (method_exists($value["obj"], "onParseContentBlock")) { //TODO: remove later, old event handler
+                $output = $value["obj"]->onParseContentBlock($this, $name, $text, true);
                 if (!is_null($output)) break;
             }
         }
         if (is_null($output)) {
-            if ($name=="yellow" && $shortcut) {
+            if ($name=="yellow" && $type=="inline") {
                 $output = "Datenstrom Yellow ".YellowCore::VERSION;
                 if ($text=="error") $output = $this->get("pageError");
                 if ($text=="version") {
@@ -545,7 +548,7 @@ class YellowPage {
                 }
             }
         }
-        if (defined("DEBUG") && DEBUG>=3 && !empty($name)) echo "YellowPage::parseContentBlock name:$name shortcut:$shortcut<br/>\n";
+        if (defined("DEBUG") && DEBUG>=3 && !empty($name)) echo "YellowPage::parseContentShortcut name:$name type:$type<br/>\n";
         return $output;
     }
     
@@ -708,9 +711,9 @@ class YellowPage {
     }
     
     // Return top-level parent page, null if none
-    public function getParentTop($homeFailback = true) {
+    public function getParentTop($homeFallback = false) {
         $parentTopLocation = $this->yellow->pages->getParentTopLocation($this->location);
-        if (!$this->yellow->pages->find($parentTopLocation) && $homeFailback) {
+        if (!$this->yellow->pages->find($parentTopLocation) && $homeFallback) {
             $parentTopLocation = $this->yellow->pages->getHomeLocation($this->location);
         }
         return $this->yellow->pages->find($parentTopLocation);
@@ -1481,7 +1484,7 @@ class YellowPlugins {
     }
     
     // Register plugin
-    public function register($name, $plugin, $obsoleteVersion = 0, $obsoletePriority = 0) {
+    public function register($name, $plugin, $obsoleteVersion = 0, $obsoletePriority = 0) { //TODO: remove obsolete arguments later
         if (!$this->isExisting($name) && class_exists($plugin)) {
             $this->plugins[$name] = array();
             $this->plugins[$name]["obj"] = new $plugin;
@@ -1557,7 +1560,7 @@ class YellowThemes {
     }
     
     // Register theme
-    public function register($name, $theme, $obsoleteVersion = 0, $obsoletePriority = 0) {
+    public function register($name, $theme, $obsoleteVersion = 0, $obsoletePriority = 0) { //TODO: remove obsolete arguments later
         if (!$this->isExisting($name) && class_exists($theme)) {
             $this->themes[$name] = array();
             $this->themes[$name]["obj"] = new $theme;
@@ -2057,37 +2060,6 @@ class YellowLookup {
         return $includePath ? "$path/$token" : $token;
     }
     
-    // Return new file
-    public function findFileNew($location, $filePrefix = "") {
-        $fileName = $this->findFileFromLocation($location);
-        if (!empty($filePrefix) && !empty($fileName)) {
-            preg_match("/^([\d\-\_\.]*)(.*)$/", $filePrefix, $matches);
-            $filePrefix = empty($matches[1]) ? "" : $matches[1]."-";
-            $fileText = $this->normaliseName(basename($fileName), true, true);
-            if (preg_match("/^[\d\-\_\.]*$/", $fileText) && !empty($filePrefix)) $filePrefix = "";
-            $fileName = dirname($fileName)."/".$filePrefix.$fileText.$this->yellow->config->get("contentExtension");
-        }
-        if (!is_dir(dirname($fileName))) {
-            $tokens = explode("/", $fileName);
-            for ($i=0; $i<count($tokens)-1; ++$i) {
-                if (!is_dir($path.$tokens[$i])) {
-                    if (!preg_match("/^[\d\-\_\.]+(.*)$/", $tokens[$i])) {
-                        $number = 1;
-                        foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^[\d\-\_\.]+(.*)$/", true, true, false) as $entry) {
-                            if ($number!=1 && $number!=intval($entry)) break;
-                            $number = intval($entry)+1;
-                        }
-                        $tokens[$i] = "$number-".$tokens[$i];
-                    }
-                    $tokens[$i] = $this->normaliseName($tokens[$i], false, false, true);
-                }
-                $path .= $tokens[$i]."/";
-            }
-            $fileName = $path.$tokens[$i];
-        }
-        return $fileName;
-    }
-    
     // Return children from location
     public function findChildrenFromLocation($location) {
         $fileNames = array();
@@ -2178,6 +2150,13 @@ class YellowLookup {
         if ($removePrefix && preg_match("/^[\d\-\_\.]+(.*)$/", $text, $matches) && !empty($matches[1])) $text = $matches[1];
         if ($filterStrict) $text = strtoloweru($text);
         return preg_replace("/[^\pL\d\-\_]/u", "-", $text);
+    }
+    
+    // Normalise prefix
+    public function normalisePrefix($text) {
+        if (preg_match("/^([\d\-\_\.]*)(.*)$/", $text, $matches)) $prefix = $matches[1];
+        if (!empty($prefix) && !preg_match("/[\-\_\.]$/", $prefix)) $prefix .= "-";
+        return $prefix;
     }
     
     // Normalise array, make keys with same upper/lower case
@@ -2574,6 +2553,7 @@ class YellowToolbox {
             "js" => "application/javascript",
             "json" => "application/json",
             "jpg" => "image/jpeg",
+            "md" => "text/markdown",
             "png" => "image/png",
             "svg" => "image/svg+xml",
             "txt" => "text/plain",
@@ -2700,6 +2680,11 @@ class YellowToolbox {
         return @rename($fileNameSource, $fileNameDestination);
     }
     
+    // Rename directory
+    public function renameDirectory($pathSource, $pathDestination, $mkdir = false) {
+        return $pathSource==$pathDestination || $this->renameFile($pathSource, $pathDestination, $mkdir);
+    }
+
     // Delete file
     public function deleteFile($fileName, $pathTrash = "") {
         clearstatcache();

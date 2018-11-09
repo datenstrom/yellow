@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowEdit {
-    const VERSION = "0.7.31";
+    const VERSION = "0.7.32";
     public $yellow;         //access to API
     public $response;       //web response
     public $users;          //user accounts
@@ -89,10 +89,10 @@ class YellowEdit {
         }
     }
     
-    // Handle page content of custom block
-    public function onParseContentBlock($page, $name, $text, $shortcut) {
+    // Handle page content of shortcut
+    public function onParseContentShortcut($page, $name, $text, $type) {
         $output = null;
-        if ($name=="edit" && $shortcut) {
+        if ($name=="edit" && $type=="inline") {
             $editText = "$name $text";
             if (substru($text, 0, 2)=="- ") $editText = trim(substru($text, 2));
             $output = "<a href=\"".$page->get("pageEdit")."\">".htmlspecialchars($editText)."</a>";
@@ -643,7 +643,8 @@ class YellowEdit {
             $this->response->rawDataEdit = $_REQUEST["rawdatasource"];
             $this->response->rawDataEndOfLine = $_REQUEST["rawdataendofline"];
             $rawData = $_REQUEST["rawdataedit"];
-            $page = $this->response->getPageNew($scheme, $address, $base, $location, $fileName, $rawData, $this->response->getEndOfLine());
+            $page = $this->response->getPageNew($scheme, $address, $base, $location, $fileName,
+                $rawData, $this->response->getEndOfLine());
             if (!$page->isError()) {
                 if ($this->yellow->toolbox->createFile($page->fileName, $page->rawData, true)) {
                     $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $page->location);
@@ -671,13 +672,24 @@ class YellowEdit {
             $page = $this->response->getPageEdit($scheme, $address, $base, $location, $fileName,
                 $this->response->rawDataSource, $this->response->rawDataEdit, $rawDataFile, $this->response->rawDataEndOfLine);
             if (!$page->isError()) {
-                if ($this->yellow->toolbox->renameFile($fileName, $page->fileName, true) &&
+                if ($this->yellow->lookup->isFileLocation($location)) {
+                    if ($this->yellow->toolbox->renameFile($fileName, $page->fileName, true) &&
                         $this->yellow->toolbox->createFile($page->fileName, $page->rawData)) {
-                    $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $page->location);
-                    $statusCode = $this->yellow->sendStatus(303, $location);
+                        $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $page->location);
+                        $statusCode = $this->yellow->sendStatus(303, $location);
+                    } else {
+                        $this->yellow->page->error(500, "Can't write file '$page->fileName'!");
+                        $statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
+                    }
                 } else {
-                    $this->yellow->page->error(500, "Can't write file '$page->fileName'!");
-                    $statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
+                    if ($this->yellow->toolbox->renameDirectory(dirname($fileName), dirname($page->fileName), true) &&
+                        $this->yellow->toolbox->createFile($page->fileName, $page->rawData)) {
+                        $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $page->location);
+                        $statusCode = $this->yellow->sendStatus(303, $location);
+                    } else {
+                        $this->yellow->page->error(500, "Can't write file '$page->fileName'!");
+                        $statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
+                    }
                 }
             } else {
                 $this->yellow->page->error(500, $page->get("pageError"));
@@ -938,21 +950,21 @@ class YellowResponse {
         $page->setRequestInformation($scheme, $address, $base, $location, $fileName);
         $page->parseData($this->normaliseLines($rawData, $endOfLine), false, 0);
         $this->editContentFile($page, "create");
-        if ($this->yellow->lookup->isFileLocation($location) || $this->yellow->pages->find($page->location)) {
+        if ($this->yellow->pages->find($page->location)) {
             $page->location = $this->getPageNewLocation($page->rawData, $page->location, $page->get("pageNewLocation"));
-            $page->fileName = $this->yellow->lookup->findFileNew($page->location, $page->get("published"));
+            $page->fileName = $this->getPageNewFile($page->location, $page->fileName, $page->get("published"));
             while ($this->yellow->pages->find($page->location) || empty($page->fileName)) {
                 $rawData = $this->yellow->toolbox->setMetaData($page->rawData, "title", $this->getTitleNext($page->rawData));
                 $page->rawData = $this->normaliseLines($rawData, $endOfLine);
                 $page->location = $this->getPageNewLocation($page->rawData, $page->location, $page->get("pageNewLocation"));
-                $page->fileName = $this->yellow->lookup->findFileNew($page->location, $page->get("published"));
+                $page->fileName = $this->getPageNewFile($page->location, $page->fileName, $page->get("published"));
                 if (++$pageCounter>999) break;
             }
             if ($this->yellow->pages->find($page->location) || empty($page->fileName)) {
                 $page->error(500, "Page '".$page->get("title")."' is not possible!");
             }
         } else {
-            $page->fileName = $this->yellow->lookup->findFileNew($page->location);
+            $page->fileName = $this->getPageNewFile($page->location);
         }
         if ($this->plugin->getUserRestrictions($this->userEmail, $page->location, $page->fileName)) {
             $page->error(500, "Page '".$page->get("title")."' is restricted!");
@@ -969,26 +981,20 @@ class YellowResponse {
             $this->normaliseLines($rawDataEdit, $endOfLine),
             $this->normaliseLines($rawDataFile, $endOfLine));
         $page->parseData($this->normaliseLines($rawData, $endOfLine), false, 0);
+        $pageSource = new YellowPage($this->yellow);
+        $pageSource->setRequestInformation($scheme, $address, $base, $location, $fileName);
+        $pageSource->parseData($this->normaliseLines($rawDataSource, $endOfLine), false, 0);
         $this->editContentFile($page, "edit");
-        if (empty($page->rawData)) $page->error(500, "Page has been modified by someone else!");
-        if ($this->yellow->lookup->isFileLocation($location) && !$page->isError()) {
-            $pageSource = new YellowPage($this->yellow);
-            $pageSource->setRequestInformation($scheme, $address, $base, $location, $fileName);
-            $pageSource->parseData($this->normaliseLines($rawDataSource, $endOfLine), false, 0);
-            if (substrb($pageSource->rawData, 0, $pageSource->metaDataOffsetBytes) !=
-               substrb($page->rawData, 0, $page->metaDataOffsetBytes)) {
-                $page->location = $this->getPageNewLocation($page->rawData, $page->location, $page->get("pageNewLocation"));
-                $page->fileName = $this->yellow->lookup->findFileNew($page->location, $page->get("published"));
-                if ($page->location!=$pageSource->location) {
-                    if (!$this->yellow->lookup->isFileLocation($page->location) || empty($page->fileName)) {
-                        $page->error(500, "Page '".$page->get("title")."' is not possible!");
-                    } elseif ($this->yellow->pages->find($page->location)) {
-                        $page->error(500, "Page '".$page->get("title")."' already exists!");
-                    }
-                }
+        if ($this->isMetaModified($pageSource, $page) && $page->location!=$this->yellow->pages->getHomeLocation($page->location)) {
+            $page->location = $this->getPageNewLocation($page->rawData, $page->location, $page->get("pageNewLocation"), true);
+            $page->fileName = $this->getPageNewFile($page->location, $page->fileName, $page->get("published"));
+            if ($page->location!=$pageSource->location && ($this->yellow->pages->find($page->location) || empty($page->fileName))) {
+                $page->error(500, "Page '".$page->get("title")."' is not possible!");
             }
         }
-        if ($this->plugin->getUserRestrictions($this->userEmail, $page->location, $page->fileName)) {
+        if (empty($page->rawData)) $page->error(500, "Page has been modified by someone else!");
+        if ($this->plugin->getUserRestrictions($this->userEmail, $page->location, $page->fileName) ||
+            $this->plugin->getUserRestrictions($this->userEmail, $pageSource->location, $pageSource->fileName)) {
             $page->error(500, "Page '".$page->get("title")."' is restricted!");
         }
         return $page;
@@ -1175,7 +1181,7 @@ class YellowResponse {
     }
     
     // Return location for new/modified page
-    public function getPageNewLocation($rawData, $pageLocation, $pageNewLocation) {
+    public function getPageNewLocation($rawData, $pageLocation, $pageNewLocation, $pageMatchLocation = false) {
         $location = empty($pageNewLocation) ? "@title" : $pageNewLocation;
         $location = preg_replace("/@title/i", $this->getPageNewTitle($rawData), $location);
         $location = preg_replace("/@timestamp/i", $this->getPageNewData($rawData, "published", true, "U"), $location);
@@ -1186,7 +1192,14 @@ class YellowResponse {
         $location = preg_replace("/@tag/i", $this->getPageNewData($rawData, "tag", true), $location);
         $location = preg_replace("/@author/i", $this->getPageNewData($rawData, "author", true), $location);
         if (!preg_match("/^\//", $location)) {
-            $location = $this->yellow->lookup->getDirectoryLocation($pageLocation).$location;
+            if ($this->yellow->lookup->isFileLocation($pageLocation) || !$pageMatchLocation) {
+                $location = $this->yellow->lookup->getDirectoryLocation($pageLocation).$location;
+            } else {
+                $location = $this->yellow->lookup->getDirectoryLocation(rtrim($pageLocation, "/")).$location;
+            }
+        }
+        if ($pageMatchLocation) {
+            $location = rtrim($location, "/").($this->yellow->lookup->isFileLocation($pageLocation) ? "" : "/");
         }
         return $location;
     }
@@ -1209,7 +1222,63 @@ class YellowResponse {
         $value = $this->yellow->lookup->normaliseName($value, true, false, true);
         return trim(preg_replace("/-+/", "-", $value), "-");
     }
-
+    
+    // Return file name for new/modified page
+    public function getPageNewFile($location, $pageFileName = "", $pagePrefix = "") {
+        $fileName = $this->yellow->lookup->findFileFromLocation($location);
+        if (!empty($fileName)) {
+            if (!is_dir(dirname($fileName))) {
+                $path = "";
+                $tokens = explode("/", $fileName);
+                for ($i=0; $i<count($tokens)-1; ++$i) {
+                    if (!is_dir($path.$tokens[$i])) {
+                        if (!preg_match("/^[\d\-\_\.]+(.*)$/", $tokens[$i])) {
+                            $number = 1;
+                            foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^[\d\-\_\.]+(.*)$/", true, true, false) as $entry) {
+                                if ($number!=1 && $number!=intval($entry)) break;
+                                $number = intval($entry)+1;
+                            }
+                            $tokens[$i] = "$number-".$tokens[$i];
+                        }
+                        $tokens[$i] = $this->yellow->lookup->normaliseName($tokens[$i], false, false, true);
+                    }
+                    $path .= $tokens[$i]."/";
+                }
+                $fileName = $path.$tokens[$i];
+                $pageFileName = empty($pageFileName) ? $fileName : $pageFileName;
+            }
+            $prefix = $this->getPageNewPrefix($location, $pageFileName, $pagePrefix);
+            if ($this->yellow->lookup->isFileLocation($location)) {
+                preg_match("#^(.*)\/(.+?)$#", $fileName, $matches);
+                $path = $matches[1];
+                $text = $this->yellow->lookup->normaliseName($matches[2], true, true);
+                if (preg_match("/^[\d\-\_\.]*$/", $text)) $prefix = "";
+                $fileName = $path."/".$prefix.$text.$this->yellow->config->get("contentExtension");
+            } else {
+                preg_match("#^(.*)\/(.+?)$#", dirname($fileName), $matches);
+                $path = $matches[1];
+                $text = $this->yellow->lookup->normaliseName($matches[2], true, false);
+                if (preg_match("/^[\d\-\_\.]*$/", $text)) $prefix = "";
+                $fileName = $path."/".$prefix.$text."/".$this->yellow->config->get("contentDefaultFile");
+            }
+        }
+        return $fileName;
+    }
+    
+    // Return prefix for new/modified page
+    public function getPageNewPrefix($location, $pageFileName, $pagePrefix) {
+        if (empty($pagePrefix)) {
+            if ($this->yellow->lookup->isFileLocation($location)) {
+                preg_match("#^(.*)\/(.+?)$#", $pageFileName, $matches);
+                $pagePrefix = $matches[2];
+            } else {
+                preg_match("#^(.*)\/(.+?)$#", dirname($pageFileName), $matches);
+                $pagePrefix = $matches[2];
+            }
+        }
+        return $this->yellow->lookup->normalisePrefix($pagePrefix, true);
+    }
+    
     // Return location for new file
     public function getFileNewLocation($fileNameShort, $pageLocation, $fileNewLocation) {
         $location = empty($fileNewLocation) ? $this->yellow->config->get("editUploadNewLocation") : $fileNewLocation;
@@ -1240,14 +1309,6 @@ class YellowResponse {
         return strtoloweru(trim($parentTopLocation, "/"));
     }
     
-    // Return next title
-    public function getTitleNext($rawData) {
-        preg_match("/^(.*?)(\d*)$/", $this->yellow->toolbox->getMetaData($rawData, "title"), $matches);
-        $titleText = $matches[1];
-        $titleNumber = strempty($matches[2]) ? " 2" : $matches[2]+1;
-        return $titleText.$titleNumber;
-    }
-    
     // Return next file name
     public function getFileNext($fileNameShort) {
         preg_match("/^(.*?)(\d*)(\..*?)?$/", $fileNameShort, $matches);
@@ -1256,7 +1317,15 @@ class YellowResponse {
         $fileExtension = $matches[3];
         return $fileText.$fileNumber.$fileExtension;
     }
-
+    
+    // Return next title
+    public function getTitleNext($rawData) {
+        preg_match("/^(.*?)(\d*)$/", $this->yellow->toolbox->getMetaData($rawData, "title"), $matches);
+        $titleText = $matches[1];
+        $titleNumber = strempty($matches[2]) ? " 2" : $matches[2]+1;
+        return $titleText.$titleNumber;
+    }
+    
     // Normalise text lines, convert line endings
     public function normaliseLines($text, $endOfLine = "lf") {
         if ($endOfLine=="lf") {
@@ -1337,6 +1406,12 @@ class YellowResponse {
         }
     }
     
+    // Check if meta data has been modified
+    public function isMetaModified($pageSource, $pageOther) {
+        return substrb($pageSource->rawData, 0, $pageSource->metaDataOffsetBytes) !=
+            substrb($pageOther->rawData, 0, $pageOther->metaDataOffsetBytes);
+    }
+    
     // Check if active
     public function isActive() {
         return $this->active;
@@ -1347,14 +1422,14 @@ class YellowResponse {
         return !empty($this->userEmail);
     }
     
-    // Check if user has restrictions
-    public function isUserRestrictions() {
-        return empty($this->userEmail) || $this->userRestrictions;
-    }
-    
     // Check if user is webmaster
     public function isUserWebmaster() {
         return !empty($this->userEmail) && $this->userEmail==$this->yellow->config->get("email");
+    }
+    
+    // Check if user has restrictions
+    public function isUserRestrictions() {
+        return empty($this->userEmail) || $this->userRestrictions;
     }
     
     // Check if login has restrictions

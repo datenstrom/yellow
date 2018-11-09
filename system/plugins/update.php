@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowUpdate {
-    const VERSION = "0.7.22";
+    const VERSION = "0.7.23";
     const PRIORITY = "2";
     public $yellow;                 //access to API
     public $updates;                //number of updates
@@ -28,6 +28,32 @@ class YellowUpdate {
             }
             if ($this->yellow->config->get("staticDir")=="cache/") {
                 $this->yellow->config->save($fileNameConfig, array("staticDir" => "public/"));
+            }
+        }
+        if ($update) {  //TODO: remove later, converts old Markdown extension
+            $fileNameConfig = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
+            $fileNameError = $this->yellow->config->get("configDir")."system-error.log";
+            if ($this->yellow->config->get("contentDefaultFile")=="page.txt") {
+                $config = array("contentDefaultFile" => "page.md", "contentExtension" => ".md",
+                    "errorFile" => "page-error-(.*).md", "newFile" => "page-new-(.*).md");
+                $this->yellow->config->save($fileNameConfig, $config);
+                $path = $this->yellow->config->get("contentDir");
+                foreach ($this->yellow->toolbox->getDirectoryEntriesRecursive($path, "/^.*\.txt$/", true, false) as $entry) {
+                    if (!$this->yellow->toolbox->renameFile($entry, str_replace(".txt", ".md", $entry))) {
+                        $fileDataError .= "ERROR renaming file '$entry'!\n";
+                    }
+                }
+                $path = $this->yellow->config->get("configDir");
+                foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.txt$/", true, false) as $entry) {
+                    if (basename($entry) == $this->yellow->config->get("robotsFile")) continue;
+                    if (!$this->yellow->toolbox->renameFile($entry, str_replace(".txt", ".md", $entry))) {
+                        $fileDataError .= "ERROR renaming file '$entry!'\n";
+                    }
+                }
+                if (!empty($fileDataError)) {
+                    $this->yellow->toolbox->createFile($fileNameError, $fileDataError);
+                }
+                $_GET["clean-url"] = "system-updated";
             }
         }
         if ($update) {
