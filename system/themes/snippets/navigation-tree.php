@@ -7,7 +7,7 @@
 <ul>
 <?php foreach($pages as $page): ?>
 <?php $children = $page->getChildren() ?>
-<li><a<?php echo $page->isActive() ? " class=\"active\"" : "" ?> href="<?php echo $page->getLocation(true) ?>"><?php echo $page->getHtml("titleNavigation") ?></a><?php if($children->count()) { echo "\n"; $yellow->snippet($name, $children, $level+1); } ?></li>
+<li><a<?php echo $page->isActive() ? " class=\"active\" aria-current=\"page\"" : "" ?> href="<?php echo $page->getLocation(true) ?>"><?php echo $page->getHtml("titleNavigation") ?></a><?php if($children->count()) { echo "\n"; $yellow->snippet($name, $children, $level+1); } ?></li>
 <?php endforeach ?>
 </ul>
 <?php if(!$level): ?>
