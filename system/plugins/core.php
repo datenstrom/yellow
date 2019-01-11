@@ -1,6 +1,6 @@
 <?php
 // Core plugin, https://github.com/datenstrom/yellow-plugins/tree/master/core
-// Copyright (c) 2013-2018 Datenstrom, https://datenstrom.se
+// Copyright (c) 2013-2019 Datenstrom, https://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 class YellowCore {
@@ -66,8 +66,6 @@ class YellowCore {
         $this->config->setDefault("errorFile", "page-error-(.*).md");
         $this->config->setDefault("newFile", "page-new-(.*).md");
         $this->config->setDefault("languageFile", "language-(.*).txt");
-        $this->config->setDefault("robotsFile", "robots.txt");
-        $this->config->setDefault("faviconFile", "favicon.ico");
         $this->config->setDefault("serverUrl", "");
         $this->config->setDefault("startupUpdate", "none");
         $this->config->setDefault("template", "default");
@@ -2117,10 +2115,6 @@ class YellowLookup {
                 $fileName = $this->yellow->config->get("pluginDir").substru($location, $pluginLocationLength);
             } elseif (substru($location, 0, $themeLocationLength)==$this->yellow->config->get("themeLocation")) {
                 $fileName = $this->yellow->config->get("themeDir").substru($location, $themeLocationLength);
-            } elseif ($location=="/".$this->yellow->config->get("robotsFile")) {
-                $fileName = $this->yellow->config->get("configDir").$this->yellow->config->get("robotsFile");
-            } elseif ($location=="/".$this->yellow->config->get("faviconFile")) {
-                $fileName = $this->yellow->config->get("assetDir").$this->yellow->config->get("siteicon").".png";
             }
         }
         return $fileName;

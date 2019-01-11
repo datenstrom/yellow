@@ -1,10 +1,10 @@
 <?php
 // Update plugin, https://github.com/datenstrom/yellow-plugins/tree/master/update
-// Copyright (c) 2013-2018 Datenstrom, https://datenstrom.se
+// Copyright (c) 2013-2019 Datenstrom, https://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 class YellowUpdate {
-    const VERSION = "0.7.23";
+    const VERSION = "0.7.24";
     const PRIORITY = "2";
     public $yellow;                 //access to API
     public $updates;                //number of updates
@@ -30,6 +30,18 @@ class YellowUpdate {
                 $this->yellow->config->save($fileNameConfig, array("staticDir" => "public/"));
             }
         }
+        if (true) {  //TODO: remove later, converts old robots file
+            $fileNameRobots = $this->yellow->config->get("configDir")."robots.txt";
+            $fileNameError = $this->yellow->config->get("configDir")."system-error.log";
+            if (is_file($fileNameRobots)) {
+                if (!$this->yellow->toolbox->renameFile($fileNameRobots, "./robots.txt")) {
+                    $fileDataError .= "ERROR renaming file '$fileNameRobots'!\n";
+                }
+                if (!empty($fileDataError)) {
+                    $this->yellow->toolbox->createFile($fileNameError, $fileDataError);
+                }
+            }
+        }
         if ($update) {  //TODO: remove later, converts old Markdown extension
             $fileNameConfig = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
             $fileNameError = $this->yellow->config->get("configDir")."system-error.log";
@@ -45,7 +57,6 @@ class YellowUpdate {
                 }
                 $path = $this->yellow->config->get("configDir");
                 foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.txt$/", true, false) as $entry) {
-                    if (basename($entry) == $this->yellow->config->get("robotsFile")) continue;
                     if (!$this->yellow->toolbox->renameFile($entry, str_replace(".txt", ".md", $entry))) {
                         $fileDataError .= "ERROR renaming file '$entry!'\n";
                     }
