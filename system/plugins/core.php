@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowCore {
-    const VERSION = "0.7.9";
+    const VERSION = "0.7.10";
     public $page;           //current page
     public $pages;          //pages from file system
     public $files;          //files from file system
