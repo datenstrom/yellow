@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowUpdate {
-    const VERSION = "0.7.24";
+    const VERSION = "0.7.25";
     const PRIORITY = "2";
     public $yellow;                 //access to API
     public $updates;                //number of updates
@@ -30,7 +30,7 @@ class YellowUpdate {
                 $this->yellow->config->save($fileNameConfig, array("staticDir" => "public/"));
             }
         }
-        if (true) {  //TODO: remove later, converts old robots file
+        if ($update) {  //TODO: remove later, converts old robots file
             $fileNameRobots = $this->yellow->config->get("configDir")."robots.txt";
             $fileNameError = $this->yellow->config->get("configDir")."system-error.log";
             if (is_file($fileNameRobots)) {
