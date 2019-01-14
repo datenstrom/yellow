@@ -1,10 +1,10 @@
 <?php
 // Bundle plugin, https://github.com/datenstrom/yellow-plugins/tree/master/bundle
-// Copyright (c) 2013-2018 Datenstrom, https://datenstrom.se
+// Copyright (c) 2013-2019 Datenstrom, https://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 class YellowBundle {
-    const VERSION = "0.7.5";
+    const VERSION = "0.7.6";
     public $yellow;         //access to API
 
     // Handle initialisation
@@ -117,6 +117,7 @@ class YellowBundle {
                     if (!empty($fileDataNew)) $fileDataNew .= "\n\n";
                     $fileDataNew .= "/* YellowBundle::processBundle file:$fileNameBundle <- ".$this->yellow->page->fileName." */";
                 }
+                if (is_file($fileNameBundle)) $this->yellow->toolbox->deleteFile($fileNameBundle);
                 if (!$this->yellow->toolbox->createFile($fileNameBundle, $fileDataNew) ||
                     !$this->yellow->toolbox->modifyFile($fileNameBundle, $modified)) {
                     $this->yellow->page->error(500, "Can't write file '$fileNameBundle'!");

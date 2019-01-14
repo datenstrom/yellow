@@ -1,10 +1,10 @@
 <?php
 // Image plugin, https://github.com/datenstrom/yellow-plugins/tree/master/image
-// Copyright (c) 2013-2018 Datenstrom, https://datenstrom.se
+// Copyright (c) 2013-2019 Datenstrom, https://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 class YellowImage {
-    const VERSION = "0.7.8";
+    const VERSION = "0.7.9";
     public $yellow;             //access to API
     public $graphicsLibrary;    //graphics library support? (boolean)
 
@@ -116,6 +116,7 @@ class YellowImage {
             if ($this->isFileNotUpdated($fileName, $fileNameOutput)) {
                 $image = $this->loadImage($fileName, $type);
                 $image = $this->resizeImage($image, $widthInput, $heightInput, $widthOutput, $heightOutput);
+                if (is_file($fileNameOutput)) $this->yellow->toolbox->deleteFile($fileNameOutput);
                 if (!$this->saveImage($image, $fileNameOutput, $type, $this->yellow->config->get("imageThumbnailJpgQuality")) ||
                     !$this->yellow->toolbox->modifyFile($fileNameOutput, $this->yellow->toolbox->getFileModified($fileName))) {
                     $this->yellow->page->error(500, "Can't write file '$fileNameOutput'!");

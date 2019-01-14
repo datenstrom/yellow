@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowCommand {
-    const VERSION = "0.7.12";
+    const VERSION = "0.7.13";
     public $yellow;                     //access to API
     public $files;                      //number of files
     public $links;                      //number of links
@@ -170,6 +170,7 @@ class YellowCommand {
             $modified = time();
         }
         $fileName = $this->getStaticFile($path, $location, $statusCode);
+        if (is_file($fileName)) $this->yellow->toolbox->deleteFile($fileName);
         if (!$this->yellow->toolbox->createFile($fileName, $fileData, true) ||
             !$this->yellow->toolbox->modifyFile($fileName, $modified)) {
             $statusCode = 500;
@@ -184,6 +185,7 @@ class YellowCommand {
         $statusCode = 200;
         $modified = $this->yellow->toolbox->getFileModified($this->yellow->page->fileName);
         $fileName = $this->getStaticFile($path, $location, $statusCode);
+        if (is_file($fileName)) $this->yellow->toolbox->deleteFile($fileName);
         if (!$this->yellow->toolbox->copyFile($this->yellow->page->fileName, $fileName, true) ||
             !$this->yellow->toolbox->modifyFile($fileName, $modified)) {
             $statusCode = 500;
