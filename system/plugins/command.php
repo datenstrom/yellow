@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowCommand {
-    const VERSION = "0.7.13";
+    const VERSION = "0.7.14";
     public $yellow;                     //access to API
     public $files;                      //number of files
     public $links;                      //number of links
@@ -25,6 +25,7 @@ class YellowCommand {
             case "build":   $statusCode = $this->processCommandBuild($args); break;
             case "check":   $statusCode = $this->processCommandCheck($args); break;
             case "clean":   $statusCode = $this->processCommandClean($args); break;
+            case "serve":   $statusCode = $this->processCommandServe($args); break;
             case "version": $statusCode = $this->processCommandVersion($args); break;
             default:        $statusCode = 0;
         }
@@ -36,16 +37,17 @@ class YellowCommand {
         $help .= "build [directory location]\n";
         $help .= "check [directory location]\n";
         $help .= "clean [directory location]\n";
+        $help .= "serve [url]\n";
         $help .= "version\n";
         return $help;
     }
     
     // Process command to show available commands
     public function processCommandHelp() {
-        echo "Datenstrom Yellow ".YellowCore::VERSION."\n";
+        echo "Datenstrom Yellow is for people who make websites.\n";
         $lineCounter = 0;
         foreach ($this->getCommandHelp() as $line) {
-            echo(++$lineCounter>1 ? "        " : "Syntax: ")."yellow.php $line\n";
+            echo(++$lineCounter>1 ? "        " : "Syntax: ")."php yellow.php $line\n";
         }
         return 200;
     }
@@ -424,6 +426,24 @@ class YellowCommand {
                 $statusCode = $value["obj"]->onCommand(func_get_args());
                 if ($statusCode!=0) break;
             }
+        }
+        return $statusCode;
+    }
+
+    // Process command to start built-in web server
+    public function processCommandServe($args) {
+        list($command, $url) = $args;
+        if (empty($url)) $url = "http://localhost:8000";
+        list($scheme, $address, $base) = $this->yellow->lookup->getUrlInformation($url);
+        if ($scheme=="http" && !empty($address)) {
+            if (!preg_match("/\:\d+$/", $address)) $address .= ":8000";
+            echo "Starting built-in web server on $scheme://$address\n";
+            echo "Press Ctrl-C to quit...\n";
+            system("php -S $address yellow.php", $returnStatus);
+            $statusCode = $returnStatus!=0 ? 500 : 200;
+        } else {
+            $statusCode = 400;
+            echo "Yellow $command: Invalid arguments\n";
         }
         return $statusCode;
     }
