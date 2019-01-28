@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowUpdate {
-    const VERSION = "0.7.25";
+    const VERSION = "0.7.26";
     const PRIORITY = "2";
     public $yellow;                 //access to API
     public $updates;                //number of updates
@@ -65,6 +65,30 @@ class YellowUpdate {
                     $this->yellow->toolbox->createFile($fileNameError, $fileDataError);
                 }
                 $_GET["clean-url"] = "system-updated";
+            }
+        }
+        if ($update) {  //TODO: remove later, converts old error/new pages
+            $fileNameConfig = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
+            $fileNameError = $this->yellow->config->get("configDir")."system-error.log";
+            $path = $this->yellow->config->get("configDir");
+            if (count($this->yellow->toolbox->getDirectoryEntries($path, "/.*/", false, false))>3) {
+                $regex = "/^page-error-(.*)\.md$/";
+                foreach ($this->yellow->toolbox->getDirectoryEntries($path, $regex, true, false) as $entry) {
+                    if (!$this->yellow->toolbox->deleteFile($entry, $this->yellow->config->get("trashDir"))) {
+                        $fileDataError .= "ERROR deleting file '$entry'!\n";
+                    }
+                }
+                $regex = "/^page-new-(.*)\.md$/";
+                $pathDestination = $this->yellow->config->get("contentDir").$this->yellow->config->get("contentSharedDir");
+                foreach ($this->yellow->toolbox->getDirectoryEntries($path, $regex, true, false) as $entry) {
+                    if (!$this->yellow->toolbox->renameFile($entry, str_replace($path, $pathDestination, $entry), true)) {
+                        $fileDataError .= "ERROR renaming file '$entry'!\n";
+                    }
+                }
+                $this->updateSoftwareMultiLanguage("shared-pages");
+                if (!empty($fileDataError)) {
+                    $this->yellow->toolbox->createFile($fileNameError, $fileDataError);
+                }
             }
         }
         if ($update) {

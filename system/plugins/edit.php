@@ -1,10 +1,10 @@
 <?php
 // Edit plugin, https://github.com/datenstrom/yellow-plugins/tree/master/edit
-// Copyright (c) 2013-2018 Datenstrom, https://datenstrom.se
+// Copyright (c) 2013-2019 Datenstrom, https://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 class YellowEdit {
-    const VERSION = "0.7.32";
+    const VERSION = "0.7.33";
     public $yellow;         //access to API
     public $response;       //web response
     public $users;          //user accounts
@@ -80,7 +80,7 @@ class YellowEdit {
                 if (empty($this->response->rawDataSource)) $this->response->rawDataSource = $page->rawData;
                 if (empty($this->response->rawDataEdit)) $this->response->rawDataEdit = $page->rawData;
                 if (empty($this->response->rawDataEndOfLine)) $this->response->rawDataEndOfLine = $this->response->getEndOfLine($page->rawData);
-                if ($page->statusCode==434) $this->response->rawDataEdit = $this->response->getRawDataNew($page->location);
+                if ($page->statusCode==434) $this->response->rawDataEdit = $this->response->getRawDataNew($page, true);
             }
             if (empty($this->response->language)) $this->response->language = $page->get("language");
             if (empty($this->response->action)) $this->response->action = $this->response->isUser() ? "none" : "login";
@@ -109,7 +109,7 @@ class YellowEdit {
             $output .= "<script type=\"text/javascript\" data-bundle=\"none\" src=\"{$pluginLocation}edit.js\"></script>\n";
             $output .= "<script type=\"text/javascript\">\n";
             $output .= "// <![CDATA[\n";
-            $output .= "yellow.page = ".json_encode($this->response->getPageData()).";\n";
+            $output .= "yellow.page = ".json_encode($this->response->getPageData($page)).";\n";
             $output .= "yellow.config = ".json_encode($this->response->getConfigData()).";\n";
             $output .= "yellow.text = ".json_encode($this->response->getTextData()).";\n";
             $output .= "// ]]>\n";
@@ -260,6 +260,7 @@ class YellowEdit {
                 case "remove":      $statusCode = $this->processRequestRemove($scheme, $address, $base, $location, $fileName); break;
             }
         }
+        if ($statusCode==0) $statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
         $this->checkUserFailed($scheme, $address, $base, $location, $fileName);
         return $statusCode;
     }
@@ -1048,13 +1049,13 @@ class YellowResponse {
     }
 
     // Return page data including status information
-    public function getPageData() {
+    public function getPageData($page) {
         $data = array();
         if ($this->isUser()) {
             $data["title"] = $this->yellow->toolbox->getMetaData($this->rawDataEdit, "title");
             $data["rawDataSource"] = $this->rawDataSource;
             $data["rawDataEdit"] = $this->rawDataEdit;
-            $data["rawDataNew"] = $this->getRawDataNew();
+            $data["rawDataNew"] = $this->getRawDataNew($page);
             $data["rawDataOutput"] = strval($this->rawDataOutput);
             $data["rawDataEndOfLine"] = $this->rawDataEndOfLine;
             $data["scheme"] = $this->yellow->page->scheme;
@@ -1155,27 +1156,36 @@ class YellowResponse {
     }
     
     // Return raw data for new page
-    public function getRawDataNew($location = "") {
-        foreach ($this->yellow->pages->path($this->yellow->page->location)->reverse() as $page) {
-            if ($page->isExisting("templateNew")) {
-                $name = $this->yellow->lookup->normaliseName($page->get("templateNew"));
-                $fileName = strreplaceu("(.*)", $name, $this->yellow->config->get("configDir").$this->yellow->config->get("newFile"));
+    public function getRawDataNew($page, $customTitle = false) {
+        foreach ($this->yellow->pages->path($page->location)->reverse() as $ancestor) {
+            if ($ancestor->isExisting("templateNew")) {
+                $name = $this->yellow->lookup->normaliseName($ancestor->get("templateNew"));
+                $location = $this->yellow->pages->getHomeLocation($page->location).$this->yellow->config->get("contentSharedDir");
+                $fileName = $this->yellow->lookup->findFileFromLocation($location, true).$this->yellow->config->get("newFile");
+                $fileName = strreplaceu("(.*)", $name, $fileName);
                 if (is_file($fileName)) break;
             }
         }
         if (!is_file($fileName)) {
             $name = $this->yellow->lookup->normaliseName($this->yellow->config->get("template"));
-            $fileName = strreplaceu("(.*)", $name, $this->yellow->config->get("configDir").$this->yellow->config->get("newFile"));
+            $location = $this->yellow->pages->getHomeLocation($page->location).$this->yellow->config->get("contentSharedDir");
+            $fileName = $this->yellow->lookup->findFileFromLocation($location, true).$this->yellow->config->get("newFile");
+            $fileName = strreplaceu("(.*)", $name, $fileName);
         }
-        $rawData = $this->yellow->toolbox->readFile($fileName);
-        $rawData = preg_replace("/@timestamp/i", time(), $rawData);
-        $rawData = preg_replace("/@datetime/i", date("Y-m-d H:i:s"), $rawData);
-        $rawData = preg_replace("/@date/i", date("Y-m-d"), $rawData);
-        $rawData = preg_replace("/@usershort/i", strtok($this->plugin->users->getName($this->userEmail), " "), $rawData);
-        $rawData = preg_replace("/@username/i", $this->plugin->users->getName($this->userEmail), $rawData);
-        $rawData = preg_replace("/@userlanguage/i", $this->plugin->users->getLanguage($this->userEmail), $rawData);
-        if (!empty($location)) {
-            $rawData = $this->yellow->toolbox->setMetaData($rawData, "title", $this->yellow->toolbox->createTextTitle($location));
+        if (is_file($fileName)) {
+            $rawData = $this->yellow->toolbox->readFile($fileName);
+            $rawData = preg_replace("/@timestamp/i", time(), $rawData);
+            $rawData = preg_replace("/@datetime/i", date("Y-m-d H:i:s"), $rawData);
+            $rawData = preg_replace("/@date/i", date("Y-m-d"), $rawData);
+            $rawData = preg_replace("/@usershort/i", strtok($this->plugin->users->getName($this->userEmail), " "), $rawData);
+            $rawData = preg_replace("/@username/i", $this->plugin->users->getName($this->userEmail), $rawData);
+            $rawData = preg_replace("/@userlanguage/i", $this->plugin->users->getLanguage($this->userEmail), $rawData);
+        } else {
+            $rawData = "---\nTitle: Page\n---\n";
+        }
+        if ($customTitle) {
+            $title = $this->yellow->toolbox->createTextTitle($page->location);
+            $rawData = $this->yellow->toolbox->setMetaData($rawData, "title", $title);
         }
         return $rawData;
     }

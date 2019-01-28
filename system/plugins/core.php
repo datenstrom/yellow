@@ -64,7 +64,6 @@ class YellowCore {
         $this->config->setDefault("downloadExtension", ".download");
         $this->config->setDefault("configFile", "config.ini");
         $this->config->setDefault("textFile", "text.ini");
-        $this->config->setDefault("errorFile", "page-error-(.*).md");
         $this->config->setDefault("newFile", "page-new-(.*).md");
         $this->config->setDefault("languageFile", "language-(.*).txt");
         $this->config->setDefault("serverUrl", "");
@@ -180,11 +179,15 @@ class YellowCore {
     // Read page
     public function readPage($scheme, $address, $base, $location, $fileName, $cacheable, $statusCode, $pageError) {
         if ($statusCode>=400) {
+            $language = $this->lookup->findLanguageFromFile($fileName, $this->config->get("language"));
+            if ($this->text->isExisting("error${statusCode}Title", $language)) {
+                $rawData = "---\nTitle:".$this->text->getText("error${statusCode}Title", $language)."\n";
+                $rawData .= "Template:error\nLanguage:$language\n---\n".$this->text->getText("error${statusCode}Text", $language);
+            } else {
+                $rawData = "---\nTitle:".$this->toolbox->getHttpStatusFormatted($statusCode, true)."\n";
+                $rawData .= "Template:error\nLanguage:en\n---\n";
+            }
             $cacheable = false;
-            $fileName = $this->config->get("configDir").$this->config->get("errorFile");
-            $fileName = strreplaceu("(.*)", $statusCode, $fileName);
-            $rawData = $this->toolbox->readFile($fileName);
-            if (empty($rawData)) $rawData = "---\nTitle:".$this->toolbox->getHttpStatusFormatted($statusCode, true)."\n---\n";
         } else {
             $rawData = $this->toolbox->readFile($fileName);
         }
