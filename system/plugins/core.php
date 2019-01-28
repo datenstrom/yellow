@@ -56,6 +56,7 @@ class YellowCore {
         $this->config->setDefault("contentDir", "content/");
         $this->config->setDefault("contentRootDir", "default/");
         $this->config->setDefault("contentHomeDir", "home/");
+        $this->config->setDefault("contentSharedDir", "shared/");
         $this->config->setDefault("contentPagination", "page");
         $this->config->setDefault("contentDefaultFile", "page.md");
         $this->config->setDefault("contentExtension", ".md");
@@ -415,7 +416,7 @@ class YellowPage {
         $this->parser = null;
         $this->parserData = "";
         $this->safeMode = intval($this->yellow->config->get("safeMode"));
-        $this->available = true;
+        $this->available = $this->yellow->lookup->isAvailableLocation($this->location, $this->fileName);
         $this->visible = $this->yellow->lookup->isVisibleLocation($this->location, $this->fileName);
         $this->active = $this->yellow->lookup->isActiveLocation($this->location, $this->yellow->page->location);
         $this->cacheable = $cacheable;
@@ -2245,6 +2246,17 @@ class YellowLookup {
             if (count($this->yellow->toolbox->getDirectoryEntries($path, "/.*/", true, true, false))) $nested = true;
         }
         return $nested;
+    }
+    
+    // Check if location is available
+    public function isAvailableLocation($location, $fileName) {
+        $available = true;
+        $pathBase = $this->yellow->config->get("contentDir");
+        if (substru($fileName, 0, strlenu($pathBase))==$pathBase) {
+            $sharedLocation = $this->yellow->pages->getHomeLocation($location).$this->yellow->config->get("contentSharedDir");
+            if (substru($location, 0, strlenu($sharedLocation))==$sharedLocation) $available = false;
+        }
+        return $available;
     }
     
     // Check if location is visible
