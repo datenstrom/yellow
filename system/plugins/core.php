@@ -185,7 +185,7 @@ class YellowCore {
                 $rawData .= "Template:error\nLanguage:$language\n---\n".$this->text->getText("error${statusCode}Text", $language);
             } else {
                 $rawData = "---\nTitle:".$this->toolbox->getHttpStatusFormatted($statusCode, true)."\n";
-                $rawData .= "Template:error\nLanguage:en\n---\n";
+                $rawData .= "Template:error\nLanguage:en\n---\n[yellow error]";
             }
             $cacheable = false;
         } else {
