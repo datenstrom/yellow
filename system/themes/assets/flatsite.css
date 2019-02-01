@@ -1,5 +1,5 @@
 /* Flatsite theme, https://github.com/datenstrom/yellow-themes/tree/master/flatsite */
-/* Copyright (c) 2013-2018 Datenstrom, https://datenstrom.se */
+/* Copyright (c) 2013-2019 Datenstrom, https://datenstrom.se */
 /* This file may be used and distributed under the terms of the public license. */
 
 html, body, div, form, pre, span, tr, th, td, img {
@@ -210,19 +210,25 @@ a:hover {
 .header .sitename {
     display: block;
     float: left;
+    margin-top: 0.25em;
+    margin-bottom: 1em;
 }
 .header .sitename h1 {
-    margin: 0;
+    margin:0;
+    font-size: 1em;
+    font-weight: 300;
 }
 .header .sitename h1 a {
     color: #111;
     text-decoration: none;
 }
-.header .sitename h2 {
+.header .sitename h1 a:hover {
+    color: #07d;
+    text-decoration: underline;
+}
+.header .sitename p {
     margin-top: 0;
-    color: #717171;
-    font-size: 1em;
-    font-weight: 300;
+    color: #111;
 }
 
 /* Navigation */
@@ -230,10 +236,7 @@ a:hover {
 .navigation {
     display: block;
     float: right;
-}
-.navigation {
-    margin-top: 0.9em;
-    margin-bottom: 0.9em;
+    margin-bottom: 1em;
     line-height: 2;
 }
 .navigation a {
@@ -250,10 +253,7 @@ a:hover {
 .navigation-tree {
     display: block;
     float: right;
-}
-.navigation-tree {
-    margin-top: 0.9em;
-    margin-bottom: 0.9em;
+    margin-bottom: 1em;
     line-height: 2;
 }
 .navigation-tree a {
@@ -296,7 +296,7 @@ a:hover {
     clear: both;
 }
 .navigation-search {
-    padding-bottom: 1em;
+    padding-bottom: 0.75em;
 }
 .navigation-search .search-form {
     position: relative;
@@ -337,7 +337,7 @@ a:hover {
 /* Footer */
 
 .footer {
-    margin-top: 2em;
+    margin-top: 1em;
 }
 .footer .siteinfo a {
     color: #07d;
@@ -505,13 +505,10 @@ a:hover {
         margin: 0.5em;
         font-size: 0.9em;
     }
-    .header .sitename h1,
     .content h1,
     .content h2 {
         font-size: 1.3em;
     }
-    .header .sitename h1,
-    .header .sitename h2,
     .footer,
     .page {
         margin: 0;
@@ -522,8 +519,9 @@ a:hover {
     .navigation-tree {
         float: none;
     }
-    .navigation {
-        margin-top: 0.5em;
+    .header .sitename,
+    .navigation,
+    .navigation-tree {
         margin-bottom: 0.5em;
     }
     .navigation-search {

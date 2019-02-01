@@ -1,10 +1,10 @@
 <?php list($name, $pages) = $yellow->getSnippetArgs() ?>
-<?php if($pages->isPagination()): ?>
+<?php if ($pages->isPagination()): ?>
 <div class="pagination" role="navigation">
-<?php if($pages->getPaginationPrevious()): ?>
+<?php if ($pages->getPaginationPrevious()): ?>
 <a class="previous" href="<?php echo $pages->getPaginationPrevious() ?>"><?php echo $yellow->text->getHtml("paginationPrevious") ?></a>
 <?php endif ?>
-<?php if($pages->getPaginationNext()): ?>
+<?php if ($pages->getPaginationNext()): ?>
 <a class="next" href="<?php echo $pages->getPaginationNext() ?>"><?php echo $yellow->text->getHtml("paginationNext") ?></a>
 <?php endif ?>
 </div>

@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowUpdate {
-    const VERSION = "0.7.26";
+    const VERSION = "0.8.1";
     const PRIORITY = "2";
     public $yellow;                 //access to API
     public $updates;                //number of updates
@@ -28,6 +28,12 @@ class YellowUpdate {
             }
             if ($this->yellow->config->get("staticDir")=="cache/") {
                 $this->yellow->config->save($fileNameConfig, array("staticDir" => "public/"));
+            }
+            if ($this->yellow->config->isExisting("tagline")) {
+                $fileNameHeader = $this->yellow->config->get("contentDir").$this->yellow->config->get("contentSharedDir");
+                $fileNameHeader .= "header".$this->yellow->config->get("contentExtension");
+                $fileDataHeader = "---\nTitle: Header\nStatus: hidden\n---\n".$this->yellow->config->get("tagline");
+                if (!is_file($fileNameHeader)) $this->yellow->toolbox->createFile($fileNameHeader, $fileDataHeader, true);
             }
         }
         if ($update) {  //TODO: remove later, converts old robots file

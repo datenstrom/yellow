@@ -10,16 +10,17 @@
 <?php echo $yellow->page->getExtra("header") ?>
 </head>
 <body>
-<?php $yellow->page->set("pageClass", "page") ?>
-<?php $yellow->page->set("pageClass", $yellow->page->get("pageClass")." template-".$yellow->page->get("template")) ?>
-<?php if($yellow->page->get("navigation")=="navigation-sidebar") $yellow->page->setPage("sidebar", $yellow->page); ?>
-<?php if($page = $yellow->pages->find($yellow->lookup->getDirectoryLocation($yellow->page->location).$yellow->page->get("sidebar"))) $yellow->page->setPage("sidebar", $page) ?>
-<?php if($yellow->page->isPage("sidebar")) $yellow->page->set("pageClass", $yellow->page->get("pageClass")." with-sidebar") ?>
+<?php if ($page = $yellow->pages->shared($yellow->page->location, false, $yellow->page->get("header"))) $yellow->page->setPage("header", $page) ?>
+<?php if ($page = $yellow->pages->shared($yellow->page->location, false, $yellow->page->get("footer"))) $yellow->page->setPage("footer", $page) ?>
+<?php if ($page = $yellow->pages->shared($yellow->page->location, false, $yellow->page->get("sidebar"))) $yellow->page->setPage("sidebar", $page) ?>
+<?php if ($yellow->page->get("navigation")=="navigation-sidebar") $yellow->page->setPage("navigation-sidebar", $yellow->page->getParentTop(true)) ?>
+<?php $yellow->page->set("pageClass", "page template-".$yellow->page->get("template")) ?>
+<?php if (!$yellow->page->isError() && ($yellow->page->isPage("sidebar") || $yellow->page->isPage("navigation-sidebar"))) $yellow->page->set("pageClass", $yellow->page->get("pageClass")." with-sidebar") ?>
 <div class="<?php echo $yellow->page->getHtml("pageClass") ?>">
 <div class="header" role="banner">
 <div class="sitename">
-<h1><a href="<?php echo $yellow->page->base."/" ?>"><i class="sitename-logo"></i><?php echo $yellow->page->getHtml("sitename") ?></a></h1>
-<?php if($yellow->page->isExisting("tagline")): ?><h2><?php echo $yellow->page->getHtml("tagline") ?></h2><?php endif ?>
+<h1><a href="<?php echo $yellow->page->getBase(true)."/" ?>"><i class="sitename-logo"></i><?php echo $yellow->page->getHtml("sitename") ?></a></h1>
+<?php if ($yellow->page->isPage("header")) echo $yellow->page->getPage("header")->getContent() ?>
 </div>
 <div class="sitename-banner"></div>
 <?php $yellow->snippet($yellow->page->get("navigation")) ?>

@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowCore {
-    const VERSION = "0.7.10";
+    const VERSION = "0.8.1";
     public $page;           //current page
     public $pages;          //pages from file system
     public $files;          //files from file system
@@ -70,9 +70,10 @@ class YellowCore {
         $this->config->setDefault("startupUpdate", "none");
         $this->config->setDefault("template", "default");
         $this->config->setDefault("navigation", "navigation");
+        $this->config->setDefault("header", "header");
+        $this->config->setDefault("footer", "footer");
         $this->config->setDefault("sidebar", "sidebar");
         $this->config->setDefault("siteicon", "icon");
-        $this->config->setDefault("tagline", "");
         $this->config->setDefault("parser", "markdown");
         $this->config->setDefault("multiLanguageMode", "0");
         $this->config->setDefault("safeMode", "0");
@@ -444,7 +445,7 @@ class YellowPage {
             $this->set("title", $this->yellow->toolbox->createTextTitle($this->location));
             $this->set("language", $this->yellow->lookup->findLanguageFromFile($this->fileName, $this->yellow->config->get("language")));
             $this->set("modified", date("Y-m-d H:i:s", $this->yellow->toolbox->getFileModified($this->fileName)));
-            $this->parseMetaRaw(array("theme", "template", "sitename", "siteicon", "tagline", "author", "navigation", "sidebar", "parser"));
+            $this->parseMetaRaw(array("theme", "template", "sitename", "siteicon", "author", "navigation", "header", "footer", "sidebar", "parser"));
             $titleHeader = ($this->location==$this->yellow->pages->getHomeLocation($this->location)) ?
                 $this->get("sitename") : $this->get("title")." - ".$this->get("sitename");
             if (!$this->isExisting("titleContent")) $this->set("titleContent", $this->get("title"));
@@ -834,9 +835,10 @@ class YellowPage {
     
     // Return last modification date, Unix time or HTTP format
     public function getLastModified($httpFormat = false) {
-        $modified = max($this->lastModified, $this->getModified(), $this->yellow->config->getModified(),
-            $this->yellow->text->getModified(), $this->yellow->plugins->getModified());
-        return $httpFormat ? $this->yellow->toolbox->getHttpDateFormatted($modified) : $modified;
+        $lastModified = max($this->lastModified, $this->getModified(), $this->pageCollection->getModified(),
+            $this->yellow->config->getModified(), $this->yellow->text->getModified(), $this->yellow->plugins->getModified());
+        foreach ($this->pageRelations as $page) $lastModified = max($lastModified, $page->getModified());
+        return $httpFormat ? $this->yellow->toolbox->getHttpDateFormatted($lastModified) : $lastModified;
     }
     
     // Return page status code, number or HTTP format
@@ -1245,6 +1247,18 @@ class YellowPages {
             if ($home && $home->location!=$page->location) $pages->prepend($home);
         }
         return $pages;
+    }
+    
+    // Return page with shared content, null if not found
+    public function shared($location, $absoluteLocation = false, $name = "shared") {
+        if ($absoluteLocation) $location = substru($location, strlenu($this->yellow->page->base));
+        $locationShared = $this->yellow->lookup->getDirectoryLocation($location);
+        $page = $this->find($locationShared.$name);
+        if ($page==null) {
+            $locationShared = $this->getHomeLocation($location).$this->yellow->config->get("contentSharedDir");
+            $page = $this->find($locationShared.$name);
+        }
+        return $page;
     }
     
     // Return page collection with multiple languages
