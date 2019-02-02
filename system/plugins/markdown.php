@@ -1,10 +1,10 @@
 <?php
 // Markdown plugin, https://github.com/datenstrom/yellow-plugins/tree/master/markdown
-// Copyright (c) 2013-2018 Datenstrom, https://datenstrom.se
+// Copyright (c) 2013-2019 Datenstrom, https://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 class YellowMarkdown {
-    const VERSION = "0.7.3";
+    const VERSION = "0.8.1";
     public $yellow;         //access to API
     
     // Handle initialisation
@@ -3733,7 +3733,7 @@ class MarkdownExtraParser extends MarkdownParser {
 }
 
 // Markdown extra parser extensions
-// Copyright (c) 2013-2018 Datenstrom
+// Copyright (c) 2013-2019 Datenstrom
 
 class YellowMarkdownExtraParser extends MarkdownExtraParser {
     public $yellow;             //access to API

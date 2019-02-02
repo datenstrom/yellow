@@ -1,10 +1,10 @@
 <?php
 // Install plugin, https://github.com/datenstrom/yellow
-// Copyright (c) 2013-2018 Datenstrom, https://datenstrom.se
+// Copyright (c) 2013-2019 Datenstrom, https://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 class YellowInstall {
-    const VERSION = "0.7.4";
+    const VERSION = "0.8.1";
     const PRIORITY = "1";
     public $yellow;                 //access to API
     
@@ -63,6 +63,7 @@ class YellowInstall {
         if ($status=="ok") $status = $this->updateFeature($feature)==200 ? "ok" : "error";
         if ($status=="ok") $status = $this->updateContent($language, "Home", "/")==200 ? "ok" : "error";
         if ($status=="ok") $status = $this->updateContent($language, "About", "/about/")==200 ? "ok" : "error";
+        if ($status=="ok") $status = $this->updateContent($language, "Footer", "/shared/footer")==200 ? "ok" : "error";
         if ($status=="ok") $status = $this->updateConfig($this->getConfigData()) ? "ok" : "error";
         if ($status=="ok") $status = $this->removeInstall() ? "done" : "error";
         if ($status=="done") {

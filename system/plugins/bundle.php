@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowBundle {
-    const VERSION = "0.7.6";
+    const VERSION = "0.8.1";
     public $yellow;         //access to API
 
     // Handle initialisation

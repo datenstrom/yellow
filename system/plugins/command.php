@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowCommand {
-    const VERSION = "0.7.14";
+    const VERSION = "0.8.1";
     public $yellow;                     //access to API
     public $files;                      //number of files
     public $links;                      //number of links
