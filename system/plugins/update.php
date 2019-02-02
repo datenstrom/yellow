@@ -29,19 +29,13 @@ class YellowUpdate {
             if ($this->yellow->config->get("staticDir")=="cache/") {
                 $this->yellow->config->save($fileNameConfig, array("staticDir" => "public/"));
             }
-            if ($this->yellow->config->isExisting("tagline")) {
-                $fileNameHeader = $this->yellow->config->get("contentDir").$this->yellow->config->get("contentSharedDir");
-                $fileNameHeader .= "header".$this->yellow->config->get("contentExtension");
-                $fileDataHeader = "---\nTitle: Header\nStatus: hidden\n---\n".$this->yellow->config->get("tagline");
-                if (!is_file($fileNameHeader)) $this->yellow->toolbox->createFile($fileNameHeader, $fileDataHeader, true);
-            }
         }
         if ($update) {  //TODO: remove later, converts old robots file
             $fileNameRobots = $this->yellow->config->get("configDir")."robots.txt";
             $fileNameError = $this->yellow->config->get("configDir")."system-error.log";
             if (is_file($fileNameRobots)) {
                 if (!$this->yellow->toolbox->renameFile($fileNameRobots, "./robots.txt")) {
-                    $fileDataError .= "ERROR renaming file '$fileNameRobots'!\n";
+                    $fileDataError .= "ERROR moving file '$fileNameRobots'!\n";
                 }
                 if (!empty($fileDataError)) {
                     $this->yellow->toolbox->createFile($fileNameError, $fileDataError);
@@ -73,22 +67,36 @@ class YellowUpdate {
                 $_GET["clean-url"] = "system-updated";
             }
         }
-        if ($update) {  //TODO: remove later, converts old error/new pages
-            $fileNameConfig = $this->yellow->config->get("configDir").$this->yellow->config->get("configFile");
+        if ($update) {  //TODO: remove later, updates shared pages
             $fileNameError = $this->yellow->config->get("configDir")."system-error.log";
-            $path = $this->yellow->config->get("configDir");
-            if (count($this->yellow->toolbox->getDirectoryEntries($path, "/.*/", false, false))>3) {
+            $pathConfig = $this->yellow->config->get("configDir");
+            $pathShared = $this->yellow->config->get("contentDir").$this->yellow->config->get("contentSharedDir");
+            if (count($this->yellow->toolbox->getDirectoryEntries($pathConfig, "/.*/", false, false))>3) {
                 $regex = "/^page-error-(.*)\.md$/";
-                foreach ($this->yellow->toolbox->getDirectoryEntries($path, $regex, true, false) as $entry) {
+                foreach ($this->yellow->toolbox->getDirectoryEntries($pathConfig, $regex, true, false) as $entry) {
                     if (!$this->yellow->toolbox->deleteFile($entry, $this->yellow->config->get("trashDir"))) {
                         $fileDataError .= "ERROR deleting file '$entry'!\n";
                     }
                 }
                 $regex = "/^page-new-(.*)\.md$/";
-                $pathDestination = $this->yellow->config->get("contentDir").$this->yellow->config->get("contentSharedDir");
-                foreach ($this->yellow->toolbox->getDirectoryEntries($path, $regex, true, false) as $entry) {
-                    if (!$this->yellow->toolbox->renameFile($entry, str_replace($path, $pathDestination, $entry), true)) {
-                        $fileDataError .= "ERROR renaming file '$entry'!\n";
+                foreach ($this->yellow->toolbox->getDirectoryEntries($pathConfig, $regex, true, false) as $entry) {
+                    if (!$this->yellow->toolbox->renameFile($entry, str_replace($pathConfig, $pathShared, $entry), true)) {
+                        $fileDataError .= "ERROR moving file '$entry'!\n";
+                    }
+                }
+                $fileNameHeader = $pathShared."header.md";
+                if (!is_file($fileNameHeader) && $this->yellow->config->isExisting("tagline")) {
+                    $fileDataHeader = "---\nTitle: Header\nStatus: hidden\n---\n".$this->yellow->config->get("tagline");
+                    if (!$this->yellow->toolbox->createFile($fileNameHeader, $fileDataHeader, true)) {
+                        $fileDataError .= "ERROR writing file '$fileNameHeader'!\n";
+                    }
+                }
+                $fileNameFooter = $pathShared."footer.md";
+                if (!is_file($fileNameFooter)) {
+                    $fileDataFooter = "---\nTitle: Footer\nStatus: hidden\n---\n";
+                    $fileDataFooter .= $this->yellow->text->getText("InstallFooterText", $this->yellow->config->get("language"));
+                    if (!$this->yellow->toolbox->createFile($fileNameFooter, $fileDataFooter, true)) {
+                        $fileDataError .= "ERROR writing file '$fileNameFooter'!\n";
                     }
                 }
                 $this->updateSoftwareMultiLanguage("shared-pages");
