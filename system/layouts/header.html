@@ -1,0 +1,27 @@
+<!DOCTYPE html><html lang="<?php echo $this->yellow->page->getHtml("language") ?>">
+<head>
+<title><?php echo $this->yellow->page->getHtml("titleHeader") ?></title>
+<meta charset="utf-8" />
+<meta name="description" content="<?php echo $this->yellow->page->getHtml("description") ?>" />
+<meta name="keywords" content="<?php echo $this->yellow->page->getHtml("keywords") ?>" />
+<meta name="author" content="<?php echo $this->yellow->page->getHtml("author") ?>" />
+<meta name="generator" content="Datenstrom Yellow" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<?php echo $this->yellow->page->getExtra("header") ?>
+</head>
+<body>
+<?php if ($page = $this->yellow->content->shared($this->yellow->page->location, false, $this->yellow->page->get("header"))) $this->yellow->page->setPage("header", $page) ?>
+<?php if ($page = $this->yellow->content->shared($this->yellow->page->location, false, $this->yellow->page->get("footer"))) $this->yellow->page->setPage("footer", $page) ?>
+<?php if ($page = $this->yellow->content->shared($this->yellow->page->location, false, $this->yellow->page->get("sidebar"))) $this->yellow->page->setPage("sidebar", $page) ?>
+<?php if ($this->yellow->page->get("navigation")=="navigation-sidebar") $this->yellow->page->setPage("navigation-sidebar", $this->yellow->page->getParentTop(true)) ?>
+<?php $this->yellow->page->set("pageClass", "page layout-".$this->yellow->page->get("layout")) ?>
+<?php if (!$this->yellow->page->isError() && ($this->yellow->page->isPage("sidebar") || $this->yellow->page->isPage("navigation-sidebar"))) $this->yellow->page->set("pageClass", $this->yellow->page->get("pageClass")." with-sidebar") ?>
+<div class="<?php echo $this->yellow->page->getHtml("pageClass") ?>">
+<div class="header" role="banner">
+<div class="sitename">
+<h1><a href="<?php echo $this->yellow->page->getBase(true)."/" ?>"><i class="sitename-logo"></i><?php echo $this->yellow->page->getHtml("sitename") ?></a></h1>
+<?php if ($this->yellow->page->isPage("header")) echo $this->yellow->page->getPage("header")->getContent() ?>
+</div>
+<div class="sitename-banner"></div>
+<?php $this->yellow->layout($this->yellow->page->get("navigation")) ?>
+</div>

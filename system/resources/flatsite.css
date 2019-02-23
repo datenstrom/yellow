@@ -1,0 +1,541 @@
+/* Flatsite extension, https://github.com/datenstrom/yellow-extensions/tree/master/themes/flatsite */
+/* Copyright (c) 2013-2019 Datenstrom, https://datenstrom.se */
+/* This file may be used and distributed under the terms of the public license. */
+
+html, body, div, form, pre, span, tr, th, td, img {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    vertical-align: baseline;
+}
+@font-face {
+    font-family: "Open Sans";
+    font-style: normal;
+    font-weight: 300;
+    src: url(opensans-light.woff) format("woff");
+}
+@font-face {
+    font-family: "Open Sans";
+    font-style: normal;
+    font-weight: 400;
+    src: url(opensans-regular.woff) format("woff");
+}
+@font-face {
+    font-family: "Open Sans";
+    font-style: normal;
+    font-weight: 700;
+    src: url(opensans-bold.woff) format("woff");
+}
+body {
+    margin: 1em;
+    background-color: #fff;
+    color: #717171;
+    font-family: "Open Sans", Helvetica, sans-serif;
+    font-size: 1em;
+    font-weight: 300;
+    line-height: 1.5;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: #111;
+    font-weight: normal;
+}
+h1 {
+    font-size: 2em;
+}
+hr {
+    height: 1px;
+    background: #ddd;
+    border: 0;
+}
+strong {
+    font-weight: bold;
+}
+code {
+    font-size: 1.1em;
+}
+a {
+    color: #07d;
+    text-decoration: none;
+}
+a:hover {
+    color: #07d;
+    text-decoration: underline;
+}
+
+/* Content */
+
+.content h1:first-child,
+.content > *:first-child {
+    margin-top: 0;
+}
+.content h1 a {
+    color: #111;
+}
+.content h1 a:hover {
+    color: #111;
+    text-decoration: none;
+}
+.content img {
+    max-width: 100%;
+    height: auto;
+}
+.content form {
+    margin: 1em 0;
+}
+.content table {
+    border-spacing: 0;
+    border-collapse: collapse;
+}
+.content th {
+    text-align: left;
+    padding: 0.3em;
+}
+.content td {
+    text-align: left;
+    padding: 0.3em;
+    border-top: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+}
+.content blockquote {
+    margin-left: 0;
+    padding-left: 1em;
+    border-left: 0.5em solid #0a0;
+}
+.content blockquote blockquote {
+    margin-left: -1.5em;
+    border-left: 0.5em solid #fb0;
+}
+.content blockquote blockquote blockquote {
+    border-color: #d00;
+}
+.content code,
+.content pre {
+    font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    font-size: 90%;
+}
+.content code {
+    padding: 0.15em 0.4em;
+    margin: 0;
+    background-color: #f7f7f7;
+    border-radius: 3px;
+}
+.content pre > code {
+    padding: 0;
+    margin: 0;
+    white-space: pre;
+    background: transparent;
+    border: 0;
+    font-size: inherit;
+}
+.content pre {
+    padding: 1em;
+    overflow: auto;
+    line-height: 1.45;
+    background-color: #f7f7f7;
+    border-radius: 3px;
+}
+.content .flexible {
+    position: relative;
+    padding-top: 0;
+    padding-bottom: 56.25%;
+}
+.content .flexible iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+.content .stretchable ul {
+    margin: 0 -0.5em;
+    padding: 0;
+    list-style: none;
+    text-align: center;
+}
+.content .stretchable li {
+    margin: 0;
+    padding: 1em 0;
+    display: inline-block;
+    text-align: center;
+    vertical-align: top;
+}
+.content .stretchable a {
+    color: #717171;
+    text-decoration: none;
+}
+.content .task-list-item {
+    list-style-type: none;
+}
+.content .task-list-item input {
+    margin: 0 0.2em 0.25em -1.75em;
+    vertical-align: middle;
+}
+.content .toc {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.content .entry-links .previous {
+    margin-right: 1em;
+}
+.content .pagination .previous {
+    margin-right: 1em;
+}
+.content .pagination {
+    margin: 1em 0;
+}
+.content .left {
+    float: left;
+    margin: 0 1em 0 0;
+}
+.content .center {
+    display: block;
+    margin: 0 auto;
+}
+.content .right {
+    float: right;
+    margin: 0 0 0 1em;
+}
+.content .rounded {
+    border-radius: 4px;
+}
+
+/* Header */
+
+.header .sitename {
+    display: block;
+    float: left;
+    margin-top: 0.25em;
+    margin-bottom: 1em;
+}
+.header .sitename h1 {
+    margin:0;
+    font-size: 1em;
+    font-weight: 300;
+}
+.header .sitename h1 a {
+    color: #111;
+    text-decoration: none;
+}
+.header .sitename h1 a:hover {
+    color: #07d;
+    text-decoration: underline;
+}
+.header .sitename p {
+    margin-top: 0;
+    color: #111;
+}
+
+/* Navigation */
+
+.navigation {
+    display: block;
+    float: right;
+    margin-bottom: 1em;
+    line-height: 2;
+}
+.navigation a {
+    padding: 0 0.3em;
+}
+.navigation ul {
+    margin: 0 -0.3em;
+    padding: 0;
+    list-style: none;
+}
+.navigation li {
+    display: inline;
+}
+.navigation-tree {
+    display: block;
+    float: right;
+    margin-bottom: 1em;
+    line-height: 2;
+}
+.navigation-tree a {
+    padding: 0 0.3em;
+}
+.navigation-tree ul {
+    margin: 0 -0.3em;
+    padding: 0;
+    list-style: none;
+}
+.navigation-tree li {
+    display: inline;
+}
+.navigation-tree ul li {
+    display: inline-block;
+    position: relative;
+    cursor: pointer;
+    margin: 0;
+}
+.navigation-tree ul li ul {
+    padding: 0.3em;
+    position: absolute;
+    width: 13em;
+    background: #fff;
+    z-index: 100;
+    display: none;
+}
+.navigation-tree ul li ul {
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.2);
+}
+.navigation-tree ul li ul li {
+    display: block;
+}
+.navigation-tree > ul > li:hover > ul {
+    display: block;
+}
+.navigation-banner {
+    clear: both;
+}
+.navigation-search {
+    padding-bottom: 0.75em;
+}
+.navigation-search .search-form {
+    position: relative;
+}
+.navigation-search .search-text {
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+}
+.navigation-search .search-text {
+    padding: 0.5em;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    width: 100%;
+    box-sizing: border-box;
+}
+.navigation-search .search-text {
+    background-color: #fff;
+    background-image: linear-gradient(to bottom, #fff, #fff);
+}
+.navigation-search .search-button {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+.navigation-search .search-button {
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+}
+.navigation-search .search-button {
+    margin: 5px;
+    padding: 0.3em;
+    border: none;
+    background-color: transparent;
+}
+
+/* Footer */
+
+.footer {
+    margin-top: 1em;
+}
+.footer .siteinfo a {
+    color: #07d;
+}
+.footer .siteinfo a:hover {
+    color: #07d;
+    text-decoration: underline;
+}
+.footer .siteinfo a.language img {
+    vertical-align: middle;
+    margin-top: -5px;
+    margin-right: 0.75em;
+}
+.footer .siteinfo-left {
+    float: left;
+}
+.footer .siteinfo-right {
+    float: right;
+}
+.footer .siteinfo-banner {
+    clear: both;
+}
+
+/* Sidebar */
+
+.with-sidebar .main {
+    margin-right: 15em;
+}
+.with-sidebar .sidebar {
+    float: right;
+    width: 13em;
+    margin-top: 3.2em;
+    padding: 2px;
+    overflow: hidden;
+    text-align: right;
+}
+.with-sidebar .sidebar ul {
+    padding: 0;
+    list-style: none;
+}
+.with-sidebar .sidebar .search-form input {
+    width: 100%;
+    box-sizing: border-box;
+}
+.with-sidebar .content:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+/* Forms and buttons */
+
+.form-control {
+    margin: 0;
+    padding: 2px 4px;
+    display: inline-block;
+    min-width: 7em;
+    background-color: #fff;
+    color: #555;
+    background-image: linear-gradient(to bottom, #fff, #fff);
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-family: inherit;
+    font-weight: normal;
+    line-height: normal;
+}
+.btn {
+    margin: 0;
+    padding: 4px 22px;
+    display: inline-block;
+    min-width: 7em;
+    background-color: #eaeaea;
+    color: #333333;
+    background-image: linear-gradient(to bottom, #f8f8f8, #e1e1e1);
+    border: 1px solid #bbb;
+    border-color: #c1c1c1 #c1c1c1 #aaaaaa;
+    border-radius: 4px;
+    outline-offset: -2px;
+    font-size: 0.9em;
+    font-family: inherit;
+    font-weight: normal;
+    line-height: 1;
+    text-align: center;
+    text-decoration: none;
+    box-sizing: border-box;
+}
+.btn:hover,
+.btn:focus,
+.btn:active {
+    color: #333333;
+    background-image: none;
+    text-decoration: none;
+}
+.btn:active {
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Misc */
+
+.layout-default .content img.screenshot {
+    margin: 0 -0.5em;
+}
+.layout-language .content div.language {
+    font-size: 1.2em;
+    text-align: left;
+    width: 9em;
+    margin: 0 auto;
+}
+.layout-language .content div.language p {
+    margin: 1.5em 0em;
+}
+.layout-language .content div.language img {
+    vertical-align: middle;
+    margin-top: -5px;
+    margin-right: 1.5em;
+}
+.hljs-meta,
+.hljs-keyword,
+.hljs-literal {
+    color: #b0b;
+}
+.hljs-attr,
+.hljs-attribute,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-selector-pseudo {
+    color: #b0b;
+}
+.hljs-type,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-params {
+    color: #b0b;
+}
+.hljs-string {
+    color: #717171;
+}
+.hljs-symbol,
+.hljs-bullet,
+.hljs-link,
+.hljs-number {
+    color: #717171;
+}
+
+/* Responsive and print */
+
+.page {
+    margin: 0 auto;
+    max-width: 1000px;
+}
+
+@media screen and (min-width: 62em) {
+    body {
+        width: 60em;
+        margin: 1em auto;
+    }
+    .page {
+        margin: 0;
+        max-width: none;
+    }
+}
+@media screen and (max-width: 32em) {
+    body {
+        margin: 0.5em;
+        font-size: 0.9em;
+    }
+    .content h1,
+    .content h2 {
+        font-size: 1.3em;
+    }
+    .footer,
+    .page {
+        margin: 0;
+        padding: 0;
+    }
+    .header .sitename,
+    .navigation,
+    .navigation-tree {
+        float: none;
+    }
+    .header .sitename,
+    .navigation,
+    .navigation-tree {
+        margin-bottom: 0.5em;
+    }
+    .navigation-search {
+        padding-bottom: 1em;
+    }
+    .with-sidebar .main {
+        margin-right: 0;
+    }
+    .with-sidebar .sidebar {
+        display: none;
+    }
+}
+@media print {
+    .page {
+        border: none !important;
+    }
+}

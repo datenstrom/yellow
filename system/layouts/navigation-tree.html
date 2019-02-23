@@ -1,0 +1,16 @@
+<?php list($name, $pages, $level) = $this->yellow->getLayoutArgs() ?>
+<?php if (!$pages) $pages = $this->yellow->content->top() ?>
+<?php $this->yellow->page->setLastModified($pages->getModified()) ?>
+<?php if (!$level): ?>
+<div class="navigation-tree" role="navigation">
+<?php endif ?>
+<ul>
+<?php foreach ($pages as $page): ?>
+<?php $children = $page->getChildren() ?>
+<li><a<?php echo $page->isActive() ? " class=\"active\" aria-current=\"page\"" : "" ?> href="<?php echo $page->getLocation(true) ?>"><?php echo $page->getHtml("titleNavigation") ?></a><?php if ($children->count()) { echo "\n"; $this->yellow->layout($name, $children, $level+1); } ?></li>
+<?php endforeach ?>
+</ul>
+<?php if (!$level): ?>
+</div>
+<div class="navigation-banner"></div>
+<?php endif ?>

@@ -1,0 +1,553 @@
+/* Edit extension, https://github.com/datenstrom/yellow-extensions/tree/master/features/edit */
+/* Copyright (c) 2013-2019 Datenstrom, https://datenstrom.se */
+/* This file may be used and distributed under the terms of the public license. */
+
+.yellow-bar {
+    position: relative;
+    line-height: 2em;
+    margin-bottom: 10px;
+}
+.yellow-bar-left {
+    display: block;
+    float: left;
+}
+.yellow-bar-right {
+    display: block;
+    float: right;
+}
+.yellow-bar-right a {
+    margin-left: 1em;
+}
+.yellow-bar-right #yellow-pane-create-link {
+    padding: 0 0.5em;
+}
+.yellow-bar-right #yellow-pane-delete-link {
+    padding: 0 0.5em;
+}
+.yellow-bar-banner {
+    clear: both;
+}
+.yellow-body-modal-open {
+    overflow: hidden;
+}
+.yellow-pane {
+    position: absolute;
+    display: none;
+    z-index: 100;
+    padding: 10px;
+    background-color: #fff;
+    color: #000;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.2);
+}
+.yellow-pane h1 {
+    color: #000;
+    font-size: 2em;
+    margin: 0 1em;
+}
+.yellow-pane p {
+    margin: 0.5em;
+}
+.yellow-pane .yellow-status {
+    margin-bottom: 1em;
+}
+.yellow-pane .yellow-fields {
+    width: 15em;
+    text-align: left;
+    margin: 0 auto;
+}
+.yellow-pane .yellow-form-control {
+    width: 15em;
+    box-sizing: border-box;
+}
+.yellow-pane .yellow-fields .yellow-btn {
+    width: 15em;
+    margin: 1em 0 0.5em 0;
+}
+.yellow-pane .yellow-buttons .yellow-btn {
+    width: 15em;
+    margin: 0.5em 0;
+}
+.yellow-close {
+    position: absolute;
+    top: 0.8em;
+    right: 1em;
+    cursor: pointer;
+    font-size: 0.9em;
+    color: #bbb;
+    text-decoration: none;
+}
+.yellow-close:hover {
+    color: #000;
+    text-decoration: none;
+}
+.yellow-arrow {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+.yellow-arrow:after,
+.yellow-arrow:before {
+    position: absolute;
+    pointer-events: none;
+    bottom: 100%;
+    height: 0;
+    width: 0;
+    border: solid transparent;
+    content: "";
+}
+.yellow-arrow:after {
+    border-color: rgba(255, 255, 255, 0);
+    border-bottom-color: #fff;
+    border-width: 10px;
+    margin-left: -10px;
+}
+.yellow-arrow:before {
+    border-color: rgba(187, 187, 187, 0);
+    border-bottom-color: #bbb;
+    border-width: 11px;
+    margin-left: -11px;
+}
+.yellow-popup {
+    position: absolute;
+    display: none;
+    z-index: 200;
+    padding: 10px 0;
+    background-color: #fff;
+    color: #000;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.2);
+}
+.yellow-dropdown {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.yellow-dropdown span {
+    display: block;
+    margin: 0;
+    padding: 0.25em 1em;
+}
+.yellow-dropdown a {
+    display: block;
+    padding: 0.2em 1em;
+    text-decoration: none;
+}
+.yellow-dropdown a:hover {
+    color: #fff;
+    background-color: #18e;
+    text-decoration: none;
+}
+.yellow-dropdown-menu a {
+    color: #000;
+}
+.yellow-toolbar {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.yellow-toolbar-left {
+    display: inline-block;
+    float: left;
+}
+.yellow-toolbar-right {
+    display: inline-block;
+    float: right;
+}
+.yellow-toolbar-banner {
+    clear: both;
+}
+.yellow-toolbar li {
+    display: inline-block;
+    vertical-align: top;
+}
+.yellow-toolbar a {
+    display: inline-block;
+    padding: 6px 16px;
+    text-decoration: none;
+    background-color: #fff;
+    color: #000;
+    font-size: 0.9em;
+    font-weight: normal;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+}
+.yellow-toolbar a:hover {
+    background-color: #18e;
+    background-image: none;
+    border-color: #18e;
+    color: #fff;
+    text-decoration: none;
+}
+.yellow-toolbar-left a {
+    margin-right: 4px;
+    margin-bottom: 10px;
+}
+.yellow-toolbar-right a {
+    margin-left: 4px;
+    margin-bottom: 10px;
+}
+.yellow-toolbar .yellow-icon {
+    font-size: 0.9em;
+    min-width: 1em;
+    text-align: center;
+}
+.yellow-toolbar .yellow-toolbar-btn {
+    padding: 6px 10px;
+    min-width: 4em;
+    text-align: center;
+}
+.yellow-toolbar .yellow-toolbar-btn-edit {
+    background-color: #29f;
+    border-color: #29f;
+    color: #fff;
+}
+.yellow-toolbar .yellow-toolbar-btn-create {
+    background-color: #29f;
+    border-color: #29f;
+    color: #fff;
+}
+.yellow-toolbar .yellow-toolbar-btn-delete {
+    background-color: #e55;
+    border-color: #e55;
+    color: #fff;
+}
+.yellow-toolbar .yellow-toolbar-btn-delete:hover {
+    background-color: #d44;
+    border-color: #d44;
+}
+.yellow-toolbar .yellow-toolbar-btn-separator {
+    visibility: hidden;
+    padding: 6px;
+}
+.yellow-toolbar .yellow-toolbar-checked {
+    background-color: #666;
+    border-color: #666;
+    color: #fff;
+}
+.yellow-toolbar-tooltip {
+    position: relative;
+}
+.yellow-toolbar-tooltip::after,
+.yellow-toolbar-tooltip::before {
+    position: absolute;
+    z-index: 300;
+    display: none;
+    pointer-events: none;
+}
+.yellow-toolbar-tooltip::after {
+    padding: 2px 9px;
+    font-weight: normal;
+    font-size: 0.9em;
+    text-align: center;
+    white-space: nowrap;
+    content: attr(aria-label);
+    background-color: #111;
+    color: #ddd;
+    border-radius: 3px;
+    top: 100%;
+    right: 50%;
+    margin-top: 6px;
+    transform: translateX(50%);
+}
+.yellow-toolbar-tooltip::before {
+    width: 0;
+    height: 0;
+    content: "";
+    border: 4px solid transparent;
+    top: auto;
+    right: 50%;
+    bottom: -6px;
+    margin-right: -4px;
+    border-bottom-color: #111;
+}
+.yellow-toolbar-tooltip:hover::before,
+.yellow-toolbar-tooltip:hover::after {
+    display: inline-block;
+}
+.yellow-toolbar-selected.yellow-toolbar-tooltip::before,
+.yellow-toolbar-selected.yellow-toolbar-tooltip::after {
+    display: none;
+}
+.yellow-form-control {
+    margin: 0;
+    padding: 2px 4px;
+    display: inline-block;
+    background-color: #fff;
+    color: #000;
+    background-image: linear-gradient(to bottom, #fff, #fff);
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-family: inherit;
+    font-weight: normal;
+    line-height: normal;
+}
+.yellow-btn {
+    margin: 0;
+    padding: 4px 22px;
+    display: inline-block;
+    min-width: 8em;
+    background-color: #eaeaea;
+    color: #333333;
+    background-image: linear-gradient(to bottom, #f8f8f8, #e1e1e1);
+    border: 1px solid #bbb;
+    border-color: #c1c1c1 #c1c1c1 #aaaaaa;
+    border-radius: 4px;
+    outline-offset: -2px;
+    font-size: 0.9em;
+    font-family: inherit;
+    font-weight: normal;
+    line-height: 1;
+    text-align: center;
+    text-decoration: none;
+    box-sizing: border-box;
+}
+.yellow-btn:hover,
+.yellow-btn:focus,
+.yellow-btn:active {
+    color: #333333;
+    background-image: none;
+    text-decoration: none;
+}
+.yellow-btn:active {
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Specific panes */
+
+#yellow-pane-login,
+#yellow-pane-signup,
+#yellow-pane-forgot,
+#yellow-pane-recover,
+#yellow-pane-settings,
+#yellow-pane-version,
+#yellow-pane-quit {
+    text-align: center;
+}
+#yellow-pane-edit-toolbar-title {
+    margin: -5px 0 0 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+#yellow-pane-edit-text {
+    padding: 0 2px;
+    outline: none;
+    resize: none;
+    border: none;
+}
+#yellow-pane-edit-preview {
+    padding: 0;
+    overflow: auto;
+}
+#yellow-pane-edit-preview h1 {
+    margin: 0.67em 0;
+}
+#yellow-pane-edit-preview p {
+    margin: 1em 0;
+}
+#yellow-pane-edit-preview .content {
+    margin: 0;
+    padding: 0;
+}
+#yellow-pane-user {
+    padding: 10px 0;
+}
+
+/* Specific popups */
+
+#yellow-popup-format,
+#yellow-popup-heading,
+#yellow-popup-list {
+    width: 16em;
+}
+#yellow-popup-format a,
+#yellow-popup-heading a {
+    padding: 0.25em 16px;
+}
+#yellow-popup-format #yellow-popup-format-h1,
+#yellow-popup-heading #yellow-popup-heading-h1 {
+    font-size: 2em;
+    font-weight: bold;
+}
+#yellow-popup-format #yellow-popup-format-h2,
+#yellow-popup-heading #yellow-popup-heading-h2 {
+    font-size: 1.6em;
+    font-weight: bold;
+}
+#yellow-popup-format #yellow-popup-format-h3,
+#yellow-popup-heading #yellow-popup-heading-h3 {
+    font-size: 1.3em;
+    font-weight: bold;
+}
+#yellow-popup-format #yellow-popup-format-quote {
+    font-style: italic;
+}
+#yellow-popup-format #yellow-popup-format-pre {
+    font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    font-size: 0.9em;
+    line-height: 1.8;
+}
+#yellow-popup-emojiawesome {
+    padding: 10px;
+    width: 14em;
+}
+#yellow-popup-emojiawesome a {
+    padding: 0.2em;
+}
+#yellow-popup-emojiawesome .yellow-dropdown li {
+    display: inline-block;
+}
+#yellow-popup-fontawesome {
+    padding: 10px;
+    width: 13em;
+}
+#yellow-popup-fontawesome a {
+    padding: 0.18em 0.3em;
+    min-width: 1em;
+    text-align: center;
+}
+#yellow-popup-fontawesome .yellow-dropdown li {
+    display: inline-block;
+}
+
+/* Icons */
+
+@font-face {
+    font-family: "Edit";
+    font-weight: normal;
+    font-style: normal;
+    src: url("edit.woff") format("woff");
+}
+.yellow-icon {
+    display: inline-block;
+    font-family: Edit;
+    font-style: normal;
+    font-weight: normal;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+.yellow-spin {
+    -webkit-animation: yellow-spin 1s infinite steps(16);
+    animation: yellow-spin 1s infinite steps(16);
+}
+@-webkit-keyframes yellow-spin {
+    0% {
+        -webkit-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+    100% {
+        -webkit-transform: rotate(359deg);
+        transform: rotate(359deg);
+    }
+}
+@keyframes yellow-spin {
+    0% {
+        -webkit-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+    100% {
+        -webkit-transform: rotate(359deg);
+        transform: rotate(359deg);
+    }
+}
+
+.yellow-icon-preview:before {
+    content: "\f100";
+}
+.yellow-icon-format:before {
+    content: "\f101";
+}
+.yellow-icon-paragraph:before {
+    content: "\f101";
+}
+.yellow-icon-heading:before {
+    content: "\f102";
+}
+.yellow-icon-h1:before {
+    content: "\f103";
+}
+.yellow-icon-h2:before {
+    content: "\f104";
+}
+.yellow-icon-h3:before {
+    content: "\f105";
+}
+.yellow-icon-bold:before {
+    content: "\f106";
+}
+.yellow-icon-italic:before {
+    content: "\f0f7";
+}
+.yellow-icon-strikethrough:before {
+    content: "\f108";
+}
+.yellow-icon-quote:before {
+    content: "\f109";
+}
+.yellow-icon-code:before {
+    content: "\f10a";
+}
+.yellow-icon-pre:before {
+    content: "\f10a";
+}
+.yellow-icon-link:before {
+    content: "\f10b";
+}
+.yellow-icon-file:before {
+    content: "\f10c";
+}
+.yellow-icon-list:before {
+    content: "\f10d";
+}
+.yellow-icon-ul:before {
+    content: "\f10d";
+}
+.yellow-icon-ol:before {
+    content: "\f10e";
+}
+.yellow-icon-tl:before {
+    content: "\f10f";
+}
+.yellow-icon-hr:before {
+    content: "\f110";
+}
+.yellow-icon-table:before {
+    content: "\f111";
+}
+.yellow-icon-emojiawesome:before {
+    content: "\f112";
+}
+.yellow-icon-fontawesome:before {
+    content: "\f113";
+}
+.yellow-icon-draft:before {
+    content: "\f114";
+}
+.yellow-icon-undo:before {
+    content: "\f115";
+}
+.yellow-icon-redo:before {
+    content: "\f116";
+}
+.yellow-icon-spinner:before {
+    content: "\f200";
+}
+.yellow-icon-search:before {
+    content: "\f201";
+}
+.yellow-icon-close:before {
+    content: "\f202";
+}
+.yellow-icon-help:before {
+    content: "\f203";
+}
+.yellow-icon-markdown:before {
+    content: "\f203";
+}
+.yellow-icon-logo:before {
+    content: "\f8ff";
+}
