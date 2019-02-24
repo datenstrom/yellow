@@ -93,7 +93,8 @@ class YellowInstall {
                     preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
                     if (!empty($matches[1]) && !empty($matches[2]) && strposu($matches[1], "/")) {
                         list($dummy, $entry) = explode("/", $matches[1], 2);
-                        $language = array_pop(explode(",", $matches[2]));
+                        $flags = explode(",", $matches[2]);
+                        $language = array_pop($flags);
                         if (preg_match("/^(.*)\.php$/", basename($entry), $tokens) && in_array($language, $languages)) {
                             $languagesFound[$language] = $tokens[1];
                         }
