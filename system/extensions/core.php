@@ -39,6 +39,13 @@ class YellowCore {
         $this->system->setDefault("email", "webmaster");
         $this->system->setDefault("language", "en");
         $this->system->setDefault("timezone", "UTC");
+        $this->system->setDefault("layout", "default");
+        $this->system->setDefault("theme", "default");
+        $this->system->setDefault("parser", "markdown");
+        $this->system->setDefault("navigation", "navigation");
+        $this->system->setDefault("header", "header");
+        $this->system->setDefault("footer", "footer");
+        $this->system->setDefault("sidebar", "sidebar");
         $this->system->setDefault("staticUrl", "");
         $this->system->setDefault("staticDefaultFile", "index.html");
         $this->system->setDefault("staticErrorFile", "404.html");
@@ -68,17 +75,10 @@ class YellowCore {
         $this->system->setDefault("downloadExtension", ".download");
         $this->system->setDefault("systemFile", "system.ini");
         $this->system->setDefault("textFile", "text.ini");
-        $this->system->setDefault("serverUrl", "");
-        $this->system->setDefault("layout", "default");
-        $this->system->setDefault("theme", "default");
-        $this->system->setDefault("parser", "markdown");
-        $this->system->setDefault("navigation", "navigation");
-        $this->system->setDefault("header", "header");
-        $this->system->setDefault("footer", "footer");
-        $this->system->setDefault("sidebar", "sidebar");
-        $this->system->setDefault("startupUpdate", "none");
-        $this->system->setDefault("multiLanguageMode", "0");
         $this->system->setDefault("safeMode", "0");
+        $this->system->setDefault("multiLanguageMode", "0");
+        $this->system->setDefault("startupUpdate", "none");
+        $this->system->setDefault("serverUrl", "");
     }
     
     public function __destruct() {
@@ -375,8 +375,8 @@ class YellowCore {
             $this->system->save("system/settings/system.ini", array("startupUpdate" => "update"));
             if (!empty($fileDataError)) $this->toolbox->createFile($fileNameError, $fileDataError);
             @header($this->toolbox->getHttpStatusFormatted(empty($fileDataError) ? 200 : 500));
-            die(empty($fileDataError) ? "System folder has been updated. Please try again.\n" :
-                "System folder has not been updated. See errors in file '$fileNameError'!\n");
+            die(empty($fileDataError) ? "System has been updated. Please update your website one more time.\n" :
+                "System has not been updated. Please check errors in file '$fileNameError'!\n");
         }
     }
     

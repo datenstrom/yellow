@@ -88,7 +88,8 @@ class YellowInstall {
                 $languagesFound = array();
                 foreach ($languages as $language) $languagesFound[$language] = "";
                 if (preg_match("#^(.*\/).*?$#", $zip->getNameIndex(0), $matches)) $pathBase = $matches[1];
-                $fileData = $zip->getFromName($pathBase.$this->yellow->system->get("updateInformationFile"));
+                $fileData = $zip->getFromName($pathBase.$this->yellow->system->get("updateExtensionFile"));
+                if (empty($fileData)) $fileData = $zip->getFromName($pathBase.$this->yellow->system->get("updateInformationFile")); //TODO: remove later, for backwards compatibility
                 foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
                     preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
                     if (!empty($matches[1]) && !empty($matches[2]) && strposu($matches[1], "/")) {

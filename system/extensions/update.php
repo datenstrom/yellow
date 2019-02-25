@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowUpdate {
-    const VERSION = "0.8.2";
+    const VERSION = "0.8.3";
     const TYPE = "feature";
     const PRIORITY = "2";
     public $yellow;                 //access to API
@@ -15,6 +15,7 @@ class YellowUpdate {
         $this->yellow = $yellow;
         $this->yellow->system->setDefault("updateExtensionUrl", "https://github.com/datenstrom/yellow-extensions");
         $this->yellow->system->setDefault("updateInformationFile", "update.ini");
+        $this->yellow->system->setDefault("updateExtensionFile", "extension.ini");
         $this->yellow->system->setDefault("updateVersionFile", "version.ini");
         $this->yellow->system->setDefault("updateWaffleFile", "waffle.ini");
     }
@@ -161,22 +162,29 @@ class YellowUpdate {
         if ($update) {
             $fileName = $this->yellow->system->get("settingDir").$this->yellow->system->get("systemFile");
             $fileData = $this->yellow->toolbox->readFile($fileName);
-            $fileDataNew = "";
-            $settingsDefaults = new YellowDataCollection();
-            $settingsDefaults->exchangeArray($this->yellow->system->settingsDefaults->getArrayCopy());
+            $fileDataHeader = $fileDataSettings = $fileDataFooter = "";
+            $settings = new YellowDataCollection();
+            $settings->exchangeArray($this->yellow->system->settingsDefaults->getArrayCopy());
             foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
                 preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
-                if (!empty($matches[1]) && !is_null($settingsDefaults[$matches[1]])) unset($settingsDefaults[$matches[1]]);
-                if (!empty($matches[1]) && $matches[1][0]!="#" && is_null($this->yellow->system->settingsDefaults[$matches[1]])) {
-                    $fileDataNew .= "# $line";
-                } else {
-                    $fileDataNew .= $line;
+                if (empty($fileDataHeader) && preg_match("/^\#/", $line)) {
+                    $fileDataHeader = $line;
+                } elseif (!empty($matches[1]) && !is_null($settings[$matches[1]])) {
+                    $settings[$matches[1]] = $matches[2];
+                } elseif (!empty($matches[1]) && $matches[1][0]!="#") {
+                    $fileDataFooter .= "# $line";
+                } elseif (!empty($matches[1])) {
+                    $fileDataFooter .= $line;
                 }
             }
-            unset($settingsDefaults["systemFile"]);
-            foreach ($settingsDefaults as $key=>$value) {
-                $fileDataNew .= ucfirst($key).": $value\n";
+            unset($settings["systemFile"]);
+            foreach ($settings as $key=>$value) {
+                $fileDataSettings .= ucfirst($key).(strempty($value) ? ":\n" : ": $value\n");
+                if ($key=="updateWaffleFile") $fileDataSettings .= "\n";
             }
+            if (!empty($fileDataHeader)) $fileDataHeader .= "\n";
+            if (!empty($fileDataFooter)) $fileDataSettings .= "\n";
+            $fileDataNew = $fileDataHeader.$fileDataSettings.$fileDataFooter;
             if ($fileData!=$fileDataNew) $this->yellow->toolbox->createFile($fileName, $fileDataNew);
         }
     }
@@ -466,7 +474,8 @@ class YellowUpdate {
         if ($zip->open($path)===true) {
             if (defined("DEBUG") && DEBUG>=2) echo "YellowUpdate::updateExtensionArchive file:$path<br/>\n";
             if (preg_match("#^(.*\/).*?$#", $zip->getNameIndex(0), $matches)) $pathBase = $matches[1];
-            $fileData = $zip->getFromName($pathBase.$this->yellow->system->get("updateInformationFile"));
+            $fileData = $zip->getFromName($pathBase.$this->yellow->system->get("updateExtensionFile"));
+            if (empty($fileData)) $fileData = $zip->getFromName($pathBase.$this->yellow->system->get("updateInformationFile")); //TODO: remove later, for backwards compatibility
             foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
                 preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
                 if (!empty($matches[1]) && !empty($matches[2])) {
