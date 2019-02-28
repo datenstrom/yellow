@@ -13,4 +13,10 @@ Contributing guidelines
 2. Chose a simple solution, imagine what the user wants to do.
 3. Send a pull request, use the coding style of existing files.
 
+## How to add a feature
+
+1. [Start with the example extension](https://github.com/schulle4u/yellow-extension-example).
+2. Create a new repository, update code and documentation.
+3. Add a link to the Yellow extensions repository, send a pull request.
+
 Your feedback and help is much appreciated. :+1:
