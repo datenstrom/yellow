@@ -17,6 +17,6 @@ Contributing guidelines
 
 1. [Start with the example extension](https://github.com/schulle4u/yellow-extension-example).
 2. Create a new repository, update code and documentation.
-3. Add a link to the Yellow extensions repository, send a pull request.
+3. Publish it, add a link to the Datenstrom Yellow extensions.
 
 Your feedback and help is much appreciated. :+1:
