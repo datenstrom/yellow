@@ -7,16 +7,16 @@ Contributing guidelines
 2. Describe your problem, sometimes there are different solutions.
 3. Add a lot of details, the more we know the better we can help.
 
-## How to fix a problem
+## How to improve something
 
 1. [Make sure it works in the developer kit](https://github.com/datenstrom/yellow-developers).
 2. Chose a simple solution, imagine what the user wants to do.
-3. Send a pull request, use the coding style of existing files.
+3. Send a pull request, use the style of existing files.
 
-## How to add a feature
+## How to add something
 
 1. [Start with the example extension](https://github.com/schulle4u/yellow-extension-example).
 2. Create a new repository, update code and documentation.
-3. Publish it, add a link to the Datenstrom Yellow extensions.
+3. Publish it, add a link to the existing extensions.
 
 Your feedback and help is much appreciated. :+1:
