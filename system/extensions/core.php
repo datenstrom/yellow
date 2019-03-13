@@ -2976,7 +2976,7 @@ class YellowToolbox {
                 $dataBufferSizeMax = filesize($fileName);
                 $dataBufferSize = min($dataBufferSizeMax, 4096);
                 if ($dataBufferSize) $dataBuffer = fread($fileHandle, $dataBufferSize);
-                if (!feof($fileHandle) && preg_match("/<svg\s(.*?)>/s", $dataBuffer, $matches)) {
+                if (!feof($fileHandle) && preg_match("/<svg(\s.*?)>/s", $dataBuffer, $matches)) {
                     if (preg_match("/\swidth=\"(\d+)\"/s", $matches[1], $tokens)) $width = $tokens[1];
                     if (preg_match("/\sheight=\"(\d+)\"/s", $matches[1], $tokens)) $height = $tokens[1];
                     $type = $fileType;
