@@ -4,8 +4,9 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowCommand {
-    const VERSION = "0.8.2";
+    const VERSION = "0.8.3";
     const TYPE = "feature";
+    const PRIORITY = "3";
     public $yellow;                     //access to API
     public $files;                      //number of files
     public $links;                      //number of links
@@ -440,10 +441,8 @@ class YellowCommand {
     public function broadcastCommand($args) {
         $statusCode = 0;
         foreach ($this->yellow->extensions->extensions as $key=>$value) {
-            if ($key=="command") continue;
-            if (method_exists($value["obj"], "onCommand")) {
-                $statusCode = $value["obj"]->onCommand(func_get_args());
-                if ($statusCode!=0) break;
+            if (method_exists($value["obj"], "onCommand") && $key!="command") {
+                $statusCode = max($statusCode, $value["obj"]->onCommand(func_get_args()));
             }
         }
         return $statusCode;
@@ -456,7 +455,7 @@ class YellowCommand {
         list($scheme, $address, $base) = $this->yellow->lookup->getUrlInformation($url);
         if ($scheme=="http" && !empty($address)) {
             if (!preg_match("/\:\d+$/", $address)) $address .= ":8000";
-            echo "Starting built-in web server on $scheme://$address\n";
+            echo "Starting built-in web server on $scheme://$address/\n";
             echo "Press Ctrl-C to quit...\n";
             system("php -S $address yellow.php", $returnStatus);
             $statusCode = $returnStatus!=0 ? 500 : 200;

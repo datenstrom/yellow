@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowEdit {
-    const VERSION = "0.8.2";
+    const VERSION = "0.8.3";
     const TYPE = "feature";
     public $yellow;         //access to API
     public $response;       //web response
@@ -29,34 +29,10 @@ class YellowEdit {
         $this->yellow->system->setDefault("editUserHashCost", "10");
         $this->yellow->system->setDefault("editUserHome", "/");
         $this->yellow->system->setDefault("editNewFile", "page-new-(.*).md");
-        $this->yellow->system->setDefault("editLoginRestrictions", "0");
+        $this->yellow->system->setDefault("editLoginRestriction", "0");
         $this->yellow->system->setDefault("editLoginSessionTimeout", "2592000");
         $this->yellow->system->setDefault("editBruteForceProtection", "25");
         $this->users->load($this->yellow->system->get("settingDir").$this->yellow->system->get("editUserFile"));
-    }
-
-    // Handle startup
-    public function onStartup($update) {
-        if ($update) {
-            $fileNameUser = $this->yellow->system->get("settingDir").$this->yellow->system->get("editUserFile");
-            $fileData = $this->yellow->toolbox->readFile($fileNameUser);
-            foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
-                preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
-                if (!empty($matches[1]) && !empty($matches[2]) && $matches[1][0]!="#") {
-                    list($hash, $name, $language, $status, $stamp, $modified, $errors, $pending, $home) = explode(",", $matches[2]);
-                    if ($status!="active" && $status!="inactive") {
-                        unset($this->users->users[$matches[1]]);
-                        continue;
-                    }
-                    $pending = "none";
-                    $this->users->set($matches[1], $hash, $name, $language, $status, $stamp, $modified, $errors, $pending, $home);
-                    $fileDataNew .= "$matches[1]: $hash,$name,$language,$status,$stamp,$modified,$errors,$pending,$home\n";
-                } else {
-                    $fileDataNew .= $line;
-                }
-            }
-            if ($fileData!=$fileDataNew) $this->yellow->toolbox->createFile($fileNameUser, $fileDataNew);
-        }
     }
     
     // Handle request
@@ -133,6 +109,30 @@ class YellowEdit {
         return "user [option email password name]\n";
     }
 
+    // Handle update
+    public function onUpdate($action) {
+        if ($action=="update") {
+            $fileNameUser = $this->yellow->system->get("settingDir").$this->yellow->system->get("editUserFile");
+            $fileData = $this->yellow->toolbox->readFile($fileNameUser);
+            foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
+                preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
+                if (!empty($matches[1]) && !empty($matches[2]) && $matches[1][0]!="#") {
+                    list($hash, $name, $language, $status, $stamp, $modified, $errors, $pending, $home) = explode(",", $matches[2]);
+                    if ($status!="active" && $status!="inactive") {
+                        unset($this->users->users[$matches[1]]);
+                        continue;
+                    }
+                    $pending = "none";
+                    $this->users->set($matches[1], $hash, $name, $language, $status, $stamp, $modified, $errors, $pending, $home);
+                    $fileDataNew .= "$matches[1]: $hash,$name,$language,$status,$stamp,$modified,$errors,$pending,$home\n";
+                } else {
+                    $fileDataNew .= $line;
+                }
+            }
+            if ($fileData!=$fileDataNew) $this->yellow->toolbox->createFile($fileNameUser, $fileDataNew);
+        }
+    }
+    
     // Process command to update user account
     public function processCommandUser($args) {
         list($command, $option) = $args;
@@ -276,7 +276,7 @@ class YellowEdit {
                 $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
                 $statusCode = $this->yellow->sendStatus(301, $location);
             } else {
-                $this->yellow->page->error($this->response->isUserRestrictions() ? 404 : 434);
+                $this->yellow->page->error($this->response->isUserRestriction() ? 404 : 434);
                 $statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
             }
         }
@@ -325,7 +325,7 @@ class YellowEdit {
         $consent = trim($_REQUEST["consent"]);
         if (empty($name) || empty($email) || empty($password) || empty($consent)) $this->response->status = "incomplete";
         if ($this->response->status=="ok") $this->response->status = $this->getUserAccount($email, $password, $this->response->action);
-        if ($this->response->status=="ok" && $this->response->isLoginRestrictions()) $this->response->status = "next";
+        if ($this->response->status=="ok" && $this->response->isLoginRestriction()) $this->response->status = "next";
         if ($this->response->status=="ok" && $this->users->isTaken($email)) $this->response->status = "next";
         if ($this->response->status=="ok") {
             $fileNameUser = $this->yellow->system->get("settingDir").$this->yellow->system->get("editUserFile");
@@ -639,7 +639,7 @@ class YellowEdit {
     // Process request to create page
     public function processRequestCreate($scheme, $address, $base, $location, $fileName) {
         $statusCode = 0;
-        if (!$this->response->isUserRestrictions() && !empty($_REQUEST["rawdataedit"])) {
+        if (!$this->response->isUserRestriction() && !empty($_REQUEST["rawdataedit"])) {
             $this->response->rawDataSource = $_REQUEST["rawdatasource"];
             $this->response->rawDataEdit = $_REQUEST["rawdatasource"];
             $this->response->rawDataEndOfLine = $_REQUEST["rawdataendofline"];
@@ -665,7 +665,7 @@ class YellowEdit {
     // Process request to edit page
     public function processRequestEdit($scheme, $address, $base, $location, $fileName) {
         $statusCode = 0;
-        if (!$this->response->isUserRestrictions() && !empty($_REQUEST["rawdataedit"])) {
+        if (!$this->response->isUserRestriction() && !empty($_REQUEST["rawdataedit"])) {
             $this->response->rawDataSource = $_REQUEST["rawdatasource"];
             $this->response->rawDataEdit = $_REQUEST["rawdataedit"];
             $this->response->rawDataEndOfLine = $_REQUEST["rawdataendofline"];
@@ -703,7 +703,7 @@ class YellowEdit {
     // Process request to delete page
     public function processRequestDelete($scheme, $address, $base, $location, $fileName) {
         $statusCode = 0;
-        if (!$this->response->isUserRestrictions() && is_file($fileName)) {
+        if (!$this->response->isUserRestriction() && is_file($fileName)) {
             $this->response->rawDataSource = $_REQUEST["rawdatasource"];
             $this->response->rawDataEdit = $_REQUEST["rawdatasource"];
             $this->response->rawDataEndOfLine = $_REQUEST["rawdataendofline"];
@@ -756,7 +756,7 @@ class YellowEdit {
         $fileSizeMax = $this->yellow->toolbox->getNumberBytes(ini_get("upload_max_filesize"));
         $extension = strtoloweru(($pos = strrposu($fileNameShort, ".")) ? substru($fileNameShort, $pos) : "");
         $extensions = preg_split("/\s*,\s*/", $this->yellow->system->get("editUploadExtensions"));
-        if (!$this->response->isUserRestrictions() && is_uploaded_file($fileNameTemp) &&
+        if (!$this->response->isUserRestriction() && is_uploaded_file($fileNameTemp) &&
            filesize($fileNameTemp)<=$fileSizeMax && in_array($extension, $extensions)) {
             $file = $this->response->getFileUpload($scheme, $address, $base, $location, $fileNameTemp, $fileNameShort);
             if (!$file->isError() && $this->yellow->toolbox->copyFile($fileNameTemp, $file->fileName, true)) {
@@ -787,7 +787,7 @@ class YellowEdit {
                 if ($this->users->checkAuthLogin($email, $password)) {
                     $this->response->createCookies($scheme, $address, $base, $email);
                     $this->response->userEmail = $email;
-                    $this->response->userRestrictions = $this->getUserRestrictions($email, $location, $fileName);
+                    $this->response->userRestriction = $this->getUserRestriction($email, $location, $fileName);
                     $this->response->language = $this->getUserLanguage($email);
                 } else {
                     $this->response->userFailedError = "login";
@@ -797,7 +797,7 @@ class YellowEdit {
             } elseif (isset($_COOKIE["authtoken"]) && isset($_COOKIE["csrftoken"])) {
                 if ($this->users->checkAuthToken($_COOKIE["authtoken"], $_COOKIE["csrftoken"], $_POST["csrftoken"], $_REQUEST["action"]=="")) {
                     $this->response->userEmail = $email = $this->users->getAuthEmail($_COOKIE["authtoken"]);
-                    $this->response->userRestrictions = $this->getUserRestrictions($email, $location, $fileName);
+                    $this->response->userRestriction = $this->getUserRestriction($email, $location, $fileName);
                     $this->response->language = $this->getUserLanguage($email);
                 } else {
                     $this->response->userFailedError = "auth";
@@ -892,20 +892,20 @@ class YellowEdit {
         return $status;
     }
     
-    // Return user restrictions
-    public function getUserRestrictions($email, $location, $fileName) {
-        $userRestrictions = null;
+    // Return user restriction
+    public function getUserRestriction($email, $location, $fileName) {
+        $userRestriction = null;
         foreach ($this->yellow->extensions->extensions as $key=>$value) {
-            if (method_exists($value["obj"], "onEditUserRestrictions")) {
-                $userRestrictions = $value["obj"]->onEditUserRestrictions($email, $location, $fileName, $this->users);
-                if (!is_null($userRestrictions)) break;
+            if (method_exists($value["obj"], "onEditUserRestriction")) {
+                $userRestriction = $value["obj"]->onEditUserRestriction($email, $location, $fileName, $this->users);
+                if (!is_null($userRestriction)) break;
             }
         }
-        if (is_null($userRestrictions)) {
-            $userRestrictions = substru($location, 0, strlenu($this->users->getHome($email)))!=$this->users->getHome($email);
-            $userRestrictions |= empty($fileName) || strlenu(dirname($fileName))>128 || strlenu(basename($fileName))>128;
+        if (is_null($userRestriction)) {
+            $userRestriction = substru($location, 0, strlenu($this->users->getHome($email)))!=$this->users->getHome($email);
+            $userRestriction |= empty($fileName) || strlenu(dirname($fileName))>128 || strlenu(basename($fileName))>128;
         }
-        return $userRestrictions;
+        return $userRestriction;
     }
     
     // Return user language
@@ -928,7 +928,7 @@ class YellowResponse {
     public $extension;          //access to extension
     public $active;             //location is active? (boolean)
     public $userEmail;          //user email
-    public $userRestrictions;   //user can change page? (boolean)
+    public $userRestriction;    //user with restriction? (boolean)
     public $userFailedError;    //error of failed authentication
     public $userFailedEmail;    //email of failed authentication
     public $userFailedExpire;   //expiration time of failed authentication
@@ -967,7 +967,7 @@ class YellowResponse {
         } else {
             $page->fileName = $this->getPageNewFile($page->location);
         }
-        if ($this->extension->getUserRestrictions($this->userEmail, $page->location, $page->fileName)) {
+        if ($this->extension->getUserRestriction($this->userEmail, $page->location, $page->fileName)) {
             $page->error(500, "Page '".$page->get("title")."' is restricted!");
         }
         return $page;
@@ -994,8 +994,8 @@ class YellowResponse {
             }
         }
         if (empty($page->rawData)) $page->error(500, "Page has been modified by someone else!");
-        if ($this->extension->getUserRestrictions($this->userEmail, $page->location, $page->fileName) ||
-            $this->extension->getUserRestrictions($this->userEmail, $pageSource->location, $pageSource->fileName)) {
+        if ($this->extension->getUserRestriction($this->userEmail, $page->location, $page->fileName) ||
+            $this->extension->getUserRestriction($this->userEmail, $pageSource->location, $pageSource->fileName)) {
             $page->error(500, "Page '".$page->get("title")."' is restricted!");
         }
         return $page;
@@ -1007,7 +1007,7 @@ class YellowResponse {
         $page->setRequestInformation($scheme, $address, $base, $location, $fileName);
         $page->parseData($this->normaliseLines($rawData, $endOfLine), false, 0);
         $this->editContentFile($page, "delete");
-        if ($this->extension->getUserRestrictions($this->userEmail, $page->location, $page->fileName)) {
+        if ($this->extension->getUserRestriction($this->userEmail, $page->location, $page->fileName)) {
             $page->error(500, "Page '".$page->get("title")."' is restricted!");
         }
         return $page;
@@ -1080,7 +1080,7 @@ class YellowResponse {
             $data["userLanguage"] = $this->extension->users->getLanguage($this->userEmail);
             $data["userStatus"] = $this->extension->users->getStatus($this->userEmail);
             $data["userHome"] = $this->extension->users->getHome($this->userEmail);
-            $data["userRestrictions"] = intval($this->isUserRestrictions());
+            $data["userRestriction"] = intval($this->isUserRestriction());
             $data["userWebmaster"] = intval($this->isUserWebmaster());
             $data["serverScheme"] = $this->yellow->system->get("serverScheme");
             $data["serverAddress"] = $this->yellow->system->get("serverAddress");
@@ -1103,7 +1103,7 @@ class YellowResponse {
         } else {
             $data["editLoginEmail"] = $this->yellow->page->get("editLoginEmail");
             $data["editLoginPassword"] = $this->yellow->page->get("editLoginPassword");
-            $data["editLoginRestrictions"] = intval($this->isLoginRestrictions());
+            $data["editLoginRestriction"] = intval($this->isLoginRestriction());
         }
         if (defined("DEBUG") && DEBUG>=1) $data["debug"] = DEBUG;
         return $data;
@@ -1437,14 +1437,14 @@ class YellowResponse {
         return !empty($this->userEmail) && $this->userEmail==$this->yellow->system->get("email");
     }
     
-    // Check if user has restrictions
-    public function isUserRestrictions() {
-        return empty($this->userEmail) || $this->userRestrictions;
+    // Check if user with restriction
+    public function isUserRestriction() {
+        return empty($this->userEmail) || $this->userRestriction;
     }
     
-    // Check if login has restrictions
-    public function isLoginRestrictions() {
-        return $this->yellow->system->get("editLoginRestrictions");
+    // Check if login with restriction
+    public function isLoginRestriction() {
+        return $this->yellow->system->get("editLoginRestriction");
     }
 }
 

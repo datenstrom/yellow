@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowCore {
-    const VERSION = "0.8.2";
+    const VERSION = "0.8.3";
     const TYPE = "feature";
     public $page;           //current page
     public $content;        //content files from file system
@@ -75,9 +75,9 @@ class YellowCore {
         $this->system->setDefault("downloadExtension", ".download");
         $this->system->setDefault("systemFile", "system.ini");
         $this->system->setDefault("textFile", "text.ini");
+        $this->system->setDefault("logFile", "yellow.log");
         $this->system->setDefault("safeMode", "0");
         $this->system->setDefault("multiLanguageMode", "0");
-        $this->system->setDefault("startupUpdate", "none");
         $this->system->setDefault("serverUrl", "");
     }
     
@@ -87,9 +87,9 @@ class YellowCore {
     
     // Handle initialisation
     public function load() {
-        if (defined("DEBUG") && DEBUG>=2) {
+        if (defined("DEBUG") && DEBUG>=3) {
             $serverVersion = $this->toolbox->getServerVersion();
-            echo "Datenstrom Yellow ".YellowCore::VERSION.", PHP ".PHP_VERSION.", $serverVersion<br/>\n";
+            echo "YellowCore::load Datenstrom Yellow ".YellowCore::VERSION.", PHP ".PHP_VERSION.", $serverVersion<br/>\n";
         }
         $this->toolbox->timerStart($time);
         $this->system->load($this->system->get("settingDir").$this->system->get("systemFile"));
@@ -295,13 +295,11 @@ class YellowCore {
     // Handle startup
     public function startup() {
         $this->updateFileSystem(); //TODO: remove later, for backwards compatibility
-        $tokens = explode(",", $this->system->get("startupUpdate"));
         foreach ($this->extensions->extensions as $key=>$value) {
-            if (method_exists($value["obj"], "onStartup")) $value["obj"]->onStartup(in_array($key, $tokens));
+            if (method_exists($value["obj"], "onStartup")) $value["obj"]->onStartup();
         }
-        if ($this->system->get("startupUpdate")!="none") {
-            $fileName = $this->system->get("settingDir").$this->system->get("systemFile");
-            $this->system->save($fileName, array("startupUpdate" => "none"));
+        foreach ($this->extensions->extensions as $key=>$value) {
+            if (method_exists($value["obj"], "onUpdate")) $value["obj"]->onUpdate("startup");
         }
     }
     
@@ -317,7 +315,8 @@ class YellowCore {
         $fileData = $fileDataNew = $this->toolbox->readFile("yellow.php");
         $fileDataNew = str_replace("system/plugins/core.php", "system/extensions/core.php", $fileData);
         if (is_dir("system/config/") || is_dir("system/themes/") || is_dir("system/plugins/") || $fileData!=$fileDataNew) {
-            $fileNameError = "system/settings/system-error.log";
+            $statusCode = 200;
+            $this->log("info", "Update file system");
             if (is_dir("system/config/")) {
                 foreach ($this->toolbox->getDirectoryEntriesRecursive("system/config/", "/.*/", true, false) as $entry) {
                     $entryNew = str_replace("system/config/", "system/settings/", $entry);
@@ -325,7 +324,8 @@ class YellowCore {
                     if (!is_file($entryNew)) $this->toolbox->copyFile($entry, $entryNew, true);
                 }
                 if (!$this->toolbox->deleteDirectory("system/config/", "system/trash/")) {
-                    $fileDataError .= "ERROR deleting folder 'system/config/'!\n";
+                    $statusCode = 500;
+                    $this->log("error", "Can't delete folder 'system/config/'!");
                 }
             }
             if (is_dir("system/themes/")) {
@@ -350,7 +350,8 @@ class YellowCore {
                     if (!is_file($entryNew)) $this->toolbox->copyFile($entry, $entryNew, true);
                 }
                 if (!$this->toolbox->deleteDirectory("system/themes/", "system/trash/")) {
-                    $fileDataError .= "ERROR deleting folder 'system/themes/'!\n";
+                    $statusCode = 500;
+                    $this->log("error", "Can't delete folder 'system/themes/'!");
                 }
             }
             if (is_dir("system/plugins/")) {
@@ -359,12 +360,14 @@ class YellowCore {
                     if (!is_file($entryNew)) $this->toolbox->copyFile($entry, $entryNew, true);
                 }
                 if (!$this->toolbox->deleteDirectory("system/plugins/", "system/trash/")) {
-                    $fileDataError .= "ERROR deleting folder 'system/plugins/'!\n";
+                    $statusCode = 500;
+                    $this->log("error", "Can't delete folder 'system/plugins/'!");
                 }
             }
             if (function_exists("opcache_reset")) opcache_reset();
             if ($fileData!=$fileDataNew && !$this->toolbox->createFile("yellow.php", $fileDataNew)) {
-                $fileDataError .= "ERROR writing file 'yellow.php'!\n";
+                $statusCode = 500;
+                $this->log("error", "Can't write file 'yellow.php'!");
             }
             foreach ($this->toolbox->getDirectoryEntries("system/extensions/", "/^.*\.php$/", true, false) as $entry) {
                 $fileData = $fileDataNew = $this->toolbox->readFile($entry);
@@ -372,18 +375,32 @@ class YellowCore {
                 if (preg_match("/^core\.php$/", basename($entry))) continue;
                 if ($fileData!=$fileDataNew) $this->toolbox->createFile($entry, $fileDataNew);
             }
-            $this->system->save("system/settings/system.ini", array("startupUpdate" => "update"));
-            if (!empty($fileDataError)) $this->toolbox->createFile($fileNameError, $fileDataError);
-            @header($this->toolbox->getHttpStatusFormatted(empty($fileDataError) ? 200 : 500));
-            die(empty($fileDataError) ? "System has been updated. Please update your website one more time.\n" :
-                "System has not been updated. Please check errors in file '$fileNameError'!\n");
+            $this->system->save("system/settings/system.ini", array("updateNotification" => "update/update"));
+            @header($this->toolbox->getHttpStatusFormatted($statusCode));
+            die($statusCode==200 ? "System has been updated. Please update your website one more time.\n" :
+                "System has not been updated. Please check errors in file 'system/extensions/yellow.log'!\n");
+        }
+    }
+    
+    // Handle logging
+    public function log($action, $message) {
+        $statusCode = 0;
+        foreach ($this->extensions->extensions as $key=>$value) {
+            if (method_exists($value["obj"], "onLog")) {
+                $statusCode = $value["obj"]->onLog($action, $message);
+                if ($statusCode!=0) break;
+            }
+        }
+        if ($statusCode==0) {
+            $line = date("Y-m-d H:i:s")." ".trim($action)." ".trim($message)."\n";
+            $this->toolbox->appendFile($this->system->get("extensionDir").$this->system->get("logFile"), $line);
         }
     }
     
     // Include layout
     public function layout($name, $args = null) {
         $this->lookup->layoutArgs = func_get_args();
-        $this->page->includePageLayout($name);
+        $this->page->includeLayout($name);
     }
 
     public function snippet($name, $args = null) {  //TODO: remove later, for backwards compatibility
@@ -565,9 +582,9 @@ class YellowPage {
     public function parseContent($sizeMax = 0) {
         if (!is_object($this->parser)) {
             if ($this->yellow->extensions->isExisting($this->get("parser"))) {
-                $extension = $this->yellow->extensions->extensions[$this->get("parser")];
-                if (method_exists($extension["obj"], "onParseContentRaw")) {
-                    $this->parser = $extension["obj"];
+                $value = $this->yellow->extensions->extensions[$this->get("parser")];
+                if (method_exists($value["obj"], "onParseContentRaw")) {
+                    $this->parser = $value["obj"];
                     $this->parserData = $this->getContent(true, $sizeMax);
                     $this->parserData = preg_replace("/@pageRead/i", $this->get("pageRead"), $this->parserData);
                     $this->parserData = preg_replace("/@pageEdit/i", $this->get("pageEdit"), $this->parserData);
@@ -681,22 +698,24 @@ class YellowPage {
         }
         if (is_null($this->outputData)) {
             ob_start();
-            $this->includePageLayout($name);
+            $this->includeLayout($name);
             $this->outputData = ob_get_contents();
             ob_end_clean();
         }
     }
     
     // Include page layout
-    public function includePageLayout($name) {
+    public function includeLayout($name) {
         $fileNameLayoutBasic = $this->yellow->system->get("layoutDir").$this->yellow->lookup->normaliseName($name).".html";
         $fileNameLayoutTheme = $this->yellow->system->get("layoutDir").
             $this->yellow->lookup->normaliseName($name)."-".$this->yellow->lookup->normaliseName($this->get("theme")).".html";
         if (is_file($fileNameLayoutTheme)) {
+            if (defined("DEBUG") && DEBUG>=2) echo "YellowPage::includeLayout file:$fileNameLayoutTheme<br>\n";
             $this->setLastModified(filemtime($fileNameLayoutTheme));
             global $yellow; //TODO: remove later, for backwards compatibility
             require($fileNameLayoutTheme);
         } elseif (is_file($fileNameLayoutBasic)) {
+            if (defined("DEBUG") && DEBUG>=2) echo "YellowPage::includeLayout file:$fileNameLayoutBasic<br>\n";
             $this->setLastModified(filemtime($fileNameLayoutBasic));
             global $yellow; //TODO: remove later, for backwards compatibility
             require($fileNameLayoutBasic);
@@ -2596,6 +2615,26 @@ class YellowToolbox {
             clearstatcache(true, $fileName);
             if (flock($fileHandle, LOCK_EX)) {
                 ftruncate($fileHandle, 0);
+                fwrite($fileHandle, $fileData);
+                flock($fileHandle, LOCK_UN);
+            }
+            fclose($fileHandle);
+            $ok = true;
+        }
+        return $ok;
+    }
+    
+    // Append file
+    public function appendFile($fileName, $fileData, $mkdir = false) {
+        $ok = false;
+        if ($mkdir) {
+            $path = dirname($fileName);
+            if (!empty($path) && !is_dir($path)) @mkdir($path, 0777, true);
+        }
+        $fileHandle = @fopen($fileName, "ab");
+        if ($fileHandle) {
+            clearstatcache(true, $fileName);
+            if (flock($fileHandle, LOCK_EX)) {
                 fwrite($fileHandle, $fileData);
                 flock($fileHandle, LOCK_UN);
             }

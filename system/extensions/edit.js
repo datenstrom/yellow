@@ -331,7 +331,7 @@ yellow.edit = {
         var showFields = paneStatus!="next" && paneStatus!="done";
         switch (paneId) {
             case "yellow-pane-login":
-                if (yellow.system.editLoginRestrictions) {
+                if (yellow.system.editLoginRestriction) {
                     yellow.toolbox.setVisible(document.getElementById("yellow-pane-login-signup"), false);
                 }
                 break;
@@ -389,12 +389,12 @@ yellow.edit = {
                         yellow.toolbox.setVisible(document.getElementById("yellow-pane-edit-toolbar-title"), false);
                         this.updateToolbar(0, "yellow-toolbar-checked");
                     }
-                    if (yellow.system.userRestrictions) {
+                    if (yellow.system.userRestriction) {
                         yellow.toolbox.setVisible(document.getElementById("yellow-pane-edit-send"), false);
                         document.getElementById("yellow-pane-edit-text").readOnly = true;
                     }
                 }
-                if (!yellow.system.userRestrictions) {
+                if (!yellow.system.userRestriction) {
                     var key, className;
                     switch (this.getAction(paneId, paneAction)) {
                         case "create":    key = "CreateButton"; className = "yellow-toolbar-btn yellow-toolbar-btn-create"; break;
@@ -556,7 +556,7 @@ yellow.edit = {
         if (yellow.system.debug) console.log("yellow.edit.processToolbar status:"+status);
         var elementText = document.getElementById("yellow-pane-edit-text");
         var elementPreview = document.getElementById("yellow-pane-edit-preview");
-        if (!yellow.system.userRestrictions && this.paneAction!="delete" && !yellow.toolbox.isVisible(elementPreview)) {
+        if (!yellow.system.userRestriction && this.paneAction!="delete" && !yellow.toolbox.isVisible(elementPreview)) {
             switch (status) {
                 case "h1":              yellow.editor.setMarkdown(elementText, "# ", "insert-multiline-block", true); break;
                 case "h2":              yellow.editor.setMarkdown(elementText, "## ", "insert-multiline-block", true); break;
@@ -581,7 +581,7 @@ yellow.edit = {
             }
         }
         if (status=="preview") this.showPreview(elementText, elementPreview);
-        if (status=="save" && !yellow.system.userRestrictions && this.paneAction!="delete") this.action("send");
+        if (status=="save" && !yellow.system.userRestriction && this.paneAction!="delete") this.action("send");
         if (status=="help") window.open(this.getText("HelpUrl", "yellow"), "_blank");
         if (status=="markdown") window.open(this.getText("MarkdownUrl", "yellow"), "_blank");
         if (status=="format" || status=="heading" || status=="list" || status=="emojiawesome" || status=="fontawesome") {

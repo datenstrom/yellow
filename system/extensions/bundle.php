@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowBundle {
-    const VERSION = "0.8.2";
+    const VERSION = "0.8.3";
     const TYPE = "feature";
     public $yellow;         //access to API
 
@@ -96,7 +96,6 @@ class YellowBundle {
             }
         }
         if (!empty($fileNames)) {
-            $this->yellow->toolbox->timerStart($time);
             $id = substru(md5(implode($fileNames).$base), 0, 10);
             $fileNameBundle = $this->yellow->system->get("resourceDir")."bundle-$id.min.$type";;
             $locationBundle = $base.$this->yellow->system->get("resourceLocation")."bundle-$id.min.$type";
@@ -124,10 +123,7 @@ class YellowBundle {
                     $this->yellow->page->error(500, "Can't write file '$fileNameBundle'!");
                 }
             }
-            $this->yellow->toolbox->timerStop($time);
-            if (defined("DEBUG") && DEBUG>=2) {
-                $data["debug"] = "YellowBundle::processBundle file:$fileNameBundle time:$time ms<br/>\n";
-            }
+            if (defined("DEBUG") && DEBUG>=2) $data["debug"] = "YellowBundle::processBundle file:$fileNameBundle<br/>\n";
         }
         return $data;
     }
