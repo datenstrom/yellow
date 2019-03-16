@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowInstall {
-    const VERSION = "0.8.3";
+    const VERSION = "0.8.4";
     const TYPE = "feature";
     const PRIORITY = "1";
     public $yellow;                 //access to API
@@ -112,9 +112,6 @@ class YellowInstall {
                     preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
                     if (!empty($matches[1]) && !empty($matches[2]) && strposu($matches[1], "/")) {
                         list($dummy, $entry) = explode(",", $matches[2], 3);
-                        if (ctype_upper($matches[1][0])) {  //TODO: remove later, converts old format
-                            list($dummy, $entry) = explode("/", $matches[1], 2);
-                        }
                         $flags = explode(",", $matches[2]);
                         $language = array_pop($flags);
                         if (preg_match("/^(.*)\.php$/", basename($entry), $tokens) && in_array($language, $languages)) {
@@ -130,18 +127,12 @@ class YellowInstall {
                     if (!empty($matches[1]) && !empty($matches[2]) && strposu($matches[1], "/")) {
                         $fileName = $matches[1];
                         list($dummy, $entry) = explode(",", $matches[2], 3);
-                        if (ctype_upper($matches[1][0])) {  //TODO: remove later, converts old format
-                            list($dummy, $entry) = explode("/", $matches[1], 2);
-                            list($fileName) = explode(",", $matches[2], 2);
-                        }
                         $fileData = $zip->getFromName($pathBase.basename($entry));
-                        if (preg_match("/^(.*).php$/", basename($entry), $tokens) && in_array($tokens[1], $languagesFound)) {
-                            $statusCode = $this->yellow->extensions->get("update")->updateExtensionFile($fileName, $fileData,
-                                $modified, 0, 0, "create,update", false, $extension);
+                        if (preg_match("/^(.*).php$/", basename($entry), $tokens) && in_array($tokens[1], $languagesFound) && !is_file($fileName)) {
+                            $statusCode = $this->yellow->extensions->get("update")->updateExtensionFile($fileName, $fileData, $modified, 0, 0, "create", false, $extension);
                         }
-                        if (preg_match("/^(.*)-language\.txt$/", basename($entry), $tokens) && in_array($tokens[1], $languagesFound)) {
-                            $statusCode = $this->yellow->extensions->get("update")->updateExtensionFile($fileName, $fileData,
-                                $modified, 0, 0, "create,update", false, $extension);
+                        if (preg_match("/^(.*)-language\.txt$/", basename($entry), $tokens) && in_array($tokens[1], $languagesFound) && !is_file($fileName)) {
+                            $statusCode = $this->yellow->extensions->get("update")->updateExtensionFile($fileName, $fileData, $modified, 0, 0, "create", false, $extension);
                             $this->yellow->log($statusCode==200 ? "info" : "error", "Install language '".ucfirst($tokens[1])."'");
                         }
                         if ($statusCode!=200) break;
