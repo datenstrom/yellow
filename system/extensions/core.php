@@ -296,6 +296,7 @@ class YellowCore {
     public function startup() {
         $this->updateFileSystem(); //TODO: remove later, for backwards compatibility
         foreach ($this->extensions->extensions as $key=>$value) {
+            if ($key=="edit") continue; //TODO: remove later, for backwards compatibility
             if (method_exists($value["obj"], "onStartup")) $value["obj"]->onStartup();
         }
         foreach ($this->extensions->extensions as $key=>$value) {
