@@ -182,10 +182,10 @@ class YellowCore {
             $language = $this->lookup->findLanguageFromFile($fileName, $this->system->get("language"));
             if ($this->text->isExisting("error${statusCode}Title", $language)) {
                 $rawData = "---\nTitle:".$this->text->getText("error${statusCode}Title", $language)."\n";
-                $rawData .= "Layout:error\nLanguage:$language\n---\n".$this->text->getText("error${statusCode}Text", $language);
+                $rawData .= "Layout:error\nSidebar:none\nLanguage:$language\n---\n".$this->text->getText("error${statusCode}Text", $language);
             } else {
                 $rawData = "---\nTitle:".$this->toolbox->getHttpStatusFormatted($statusCode, true)."\n";
-                $rawData .= "Layout:error\nLanguage:en\n---\n[yellow error]";
+                $rawData .= "Layout:error\nSidebar:none\nLanguage:en\n---\n[yellow error]";
             }
             $cacheable = false;
         } else {
@@ -707,19 +707,19 @@ class YellowPage {
     
     // Include page layout
     public function includeLayout($name) {
-        $fileNameLayoutBasic = $this->yellow->system->get("layoutDir").$this->yellow->lookup->normaliseName($name).".html";
+        $fileNameLayoutNormal = $this->yellow->system->get("layoutDir").$this->yellow->lookup->normaliseName($name).".html";
         $fileNameLayoutTheme = $this->yellow->system->get("layoutDir").
-            $this->yellow->lookup->normaliseName($name)."-".$this->yellow->lookup->normaliseName($this->get("theme")).".html";
+            $this->yellow->lookup->normaliseName($this->get("theme"))."-".$this->yellow->lookup->normaliseName($name).".html";
         if (is_file($fileNameLayoutTheme)) {
             if (defined("DEBUG") && DEBUG>=2) echo "YellowPage::includeLayout file:$fileNameLayoutTheme<br>\n";
             $this->setLastModified(filemtime($fileNameLayoutTheme));
             global $yellow; //TODO: remove later, for backwards compatibility
             require($fileNameLayoutTheme);
-        } elseif (is_file($fileNameLayoutBasic)) {
-            if (defined("DEBUG") && DEBUG>=2) echo "YellowPage::includeLayout file:$fileNameLayoutBasic<br>\n";
-            $this->setLastModified(filemtime($fileNameLayoutBasic));
+        } elseif (is_file($fileNameLayoutNormal)) {
+            if (defined("DEBUG") && DEBUG>=2) echo "YellowPage::includeLayout file:$fileNameLayoutNormal<br>\n";
+            $this->setLastModified(filemtime($fileNameLayoutNormal));
             global $yellow; //TODO: remove later, for backwards compatibility
-            require($fileNameLayoutBasic);
+            require($fileNameLayoutNormal);
         } else {
             $this->error(500, "Layout '$name' does not exist!");
             echo "Layout error<br/>\n";
@@ -883,13 +883,6 @@ class YellowPage {
                 $locationScript = $this->yellow->system->get("serverBase").
                     $this->yellow->system->get("resourceLocation").$this->yellow->lookup->normaliseName($this->get("theme")).".js";
                 $output .= "<script type=\"text/javascript\" src=\"$locationScript\"></script>\n";
-            }
-            $fileNameIcon = $this->yellow->system->get("resourceDir").$this->yellow->lookup->normaliseName($this->get("theme"))."-icon.png";
-            if (is_file($fileNameIcon)) {
-                $locationIcon = $this->yellow->system->get("serverBase").
-                    $this->yellow->system->get("resourceLocation").$this->yellow->lookup->normaliseName($this->get("theme"))."-icon.png";
-                $contentType = $this->yellow->toolbox->getMimeContentType($locationIcon);
-                $output .= "<link rel=\"icon\" type=\"$contentType\" href=\"$locationIcon\" />\n";
             }
         }
         return $output;
@@ -1337,18 +1330,6 @@ class YellowContent {
         return $pages;
     }
     
-    // Return page with shared content, null if not found
-    public function shared($location, $absoluteLocation = false, $name = "shared") {
-        if ($absoluteLocation) $location = substru($location, strlenu($this->yellow->page->base));
-        $locationShared = $this->yellow->lookup->getDirectoryLocation($location);
-        $page = $this->find($locationShared.$name);
-        if ($page==null) {
-            $locationShared = $this->getHomeLocation($location).$this->yellow->system->get("contentSharedDir");
-            $page = $this->find($locationShared.$name);
-        }
-        return $page;
-    }
-    
     // Return page collection with multiple languages
     public function multi($location, $absoluteLocation = false, $showInvisible = false) {
         $pages = new YellowPageCollection($this->yellow);
@@ -1362,6 +1343,18 @@ class YellowContent {
             }
         }
         return $pages;
+    }
+    
+    // Return page with shared content, null if not found
+    public function shared($name, $argumentObsolete = null, $nameObsolete = null) {
+        $name = !empty($nameObsolete) ? $nameObsolete : $name; //TODO: remove later, for backwards compatibility
+        $location = $this->yellow->lookup->getDirectoryLocation($this->yellow->page->location).$name;
+        $page = $this->find($location);
+        if ($page==null) {
+            $location = $this->getHomeLocation($this->yellow->page->location).$this->yellow->system->get("contentSharedDir").$name;
+            $page = $this->find($location);
+        }
+        return $page;
     }
     
     // Return page collection that's empty
@@ -1784,6 +1777,11 @@ class YellowText {
         return $output;
     }
     
+    // Return text settings modification date, Unix time or HTTP format
+    public function getModified($httpFormat = false) {
+        return $httpFormat ? $this->yellow->toolbox->getHttpDateFormatted($this->modified) : $this->modified;
+    }
+
     // Return languages
     public function getLanguages() {
         $languages = array();
@@ -1793,11 +1791,6 @@ class YellowText {
         return $languages;
     }
     
-    // Return text settings modification date, Unix time or HTTP format
-    public function getModified($httpFormat = false) {
-        return $httpFormat ? $this->yellow->toolbox->getHttpDateFormatted($this->modified) : $this->modified;
-    }
-
     // Normalise date into known format
     public function normaliseDate($text) {
         if (preg_match("/^\d+\-\d+$/", $text)) {
@@ -3112,6 +3105,17 @@ class YellowExtensions {
     public function getModified($httpFormat = false) {
         return $httpFormat ? $this->yellow->toolbox->getHttpDateFormatted($this->modified) : $this->modified;
     }
+
+    // Return extensions
+    public function getExtensions($type = "") {
+        $extensions = array();
+        foreach ($this->extensions as $key=>$value) {
+            if (empty($type) || $value["type"]==$type) {
+                array_push($extensions, $key);
+            }
+        }
+        return $extensions;
+    }
     
     // Check if extension exists
     public function isExisting($name) {
@@ -3126,7 +3130,7 @@ class YellowPages {   //TODO: remove later, for backwards compatibility
     public function index($showInvisible = false, $multiLanguage = false, $levelMax = 0) { return $this->yellow->content->index($showInvisible, $multiLanguage, $levelMax); }
     public function top($showInvisible = false) { return $this->yellow->content->top($showInvisible); }
     public function path($location, $absoluteLocation = false) { return $this->yellow->content->path($location, $absoluteLocation); }
-    public function shared($location, $absoluteLocation = false, $name = "shared") { return $this->yellow->content->shared($location, $absoluteLocation, $name); }
+    public function shared($name, $argumentObsolete = null, $nameObsolete = null) { return $this->yellow->content->shared($name, $argumentObsolete, $nameObsolete); }
     public function multi($location, $absoluteLocation = false, $showInvisible = false) { return $this->yellow->content->multi($location, $absoluteLocation, $showInvisible); }
     public function clean() { return $this->yellow->content->clean(); }
     public function getHomeLocation($location) { return $this->yellow->content->getHomeLocation($location); }

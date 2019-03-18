@@ -1019,9 +1019,8 @@ class YellowResponse {
         $page->setRequestInformation($scheme, $address, $base, $location, $fileName);
         $page->parseData($this->normaliseLines($rawData, $endOfLine), false, 200);
         $this->yellow->text->setLanguage($page->get("language"));
-        $page->set("pageClass", "page-preview");
-        $page->set("pageClass", $page->get("pageClass")." layout-".$page->get("layout"));
-        $output = "<div class=\"".$page->getHtml("pageClass")."\"><div class=\"content\">";
+        $class = "page-preview layout-".$page->get("layout");
+        $output = "<div class=\"".htmlspecialchars($class)."\"><div class=\"content\">";
         if ($this->yellow->system->get("editToolbarButtons")!="none") $output .= "<h1>".$page->getHtml("titleContent")."</h1>\n";
         $output .= $page->getContent();
         $output .= "</div></div>";

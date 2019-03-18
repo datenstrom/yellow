@@ -12,19 +12,19 @@ html, body, div, form, pre, span, tr, th, td, img {
     font-family: "Open Sans";
     font-style: normal;
     font-weight: 300;
-    src: url(opensans-light.woff) format("woff");
+    src: url(stockholm-opensans-light.woff) format("woff");
 }
 @font-face {
     font-family: "Open Sans";
     font-style: normal;
     font-weight: 400;
-    src: url(opensans-regular.woff) format("woff");
+    src: url(stockholm-opensans-regular.woff) format("woff");
 }
 @font-face {
     font-family: "Open Sans";
     font-style: normal;
     font-weight: 700;
-    src: url(opensans-bold.woff) format("woff");
+    src: url(stockholm-opensans-bold.woff) format("woff");
 }
 body {
     margin: 1em;

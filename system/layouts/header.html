@@ -7,16 +7,17 @@
 <meta name="author" content="<?php echo $this->yellow->page->getHtml("author") ?>" />
 <meta name="generator" content="Datenstrom Yellow" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<?php $resourceLocation = $this->yellow->system->get("serverBase").$this->yellow->system->get("resourceLocation") ?>
+<link rel="icon" type="image/png" href="<?php echo $resourceLocation.$this->yellow->page->getHtml("theme")."-icon.png" ?>" />
 <?php echo $this->yellow->page->getExtra("header") ?>
 </head>
 <body>
-<?php if ($page = $this->yellow->content->shared($this->yellow->page->location, false, $this->yellow->page->get("header"))) $this->yellow->page->setPage("header", $page) ?>
-<?php if ($page = $this->yellow->content->shared($this->yellow->page->location, false, $this->yellow->page->get("footer"))) $this->yellow->page->setPage("footer", $page) ?>
-<?php if ($page = $this->yellow->content->shared($this->yellow->page->location, false, $this->yellow->page->get("sidebar"))) $this->yellow->page->setPage("sidebar", $page) ?>
-<?php if ($this->yellow->page->get("navigation")=="navigation-sidebar") $this->yellow->page->setPage("navigation-sidebar", $this->yellow->page->getParentTop(true)) ?>
-<?php $this->yellow->page->set("pageClass", "page layout-".$this->yellow->page->get("layout")) ?>
-<?php if (!$this->yellow->page->isError() && ($this->yellow->page->isPage("sidebar") || $this->yellow->page->isPage("navigation-sidebar"))) $this->yellow->page->set("pageClass", $this->yellow->page->get("pageClass")." with-sidebar") ?>
-<div class="<?php echo $this->yellow->page->getHtml("pageClass") ?>">
+<?php if ($page = $this->yellow->content->shared($this->yellow->page->get("header"))) $this->yellow->page->setPage("header", $page) ?>
+<?php if ($page = $this->yellow->content->shared($this->yellow->page->get("footer"))) $this->yellow->page->setPage("footer", $page) ?>
+<?php if ($page = $this->yellow->content->shared($this->yellow->page->get("sidebar"))) $this->yellow->page->setPage("sidebar", $page) ?>
+<?php if ($this->yellow->page->get("navigation")=="navigation-sidebar") $this->yellow->page->setPage("navigation-sidebar", $this->yellow->page) ?>
+<?php $class = "page layout-".$this->yellow->page->get("layout").($this->yellow->page->isPage("sidebar") || $this->yellow->page->isPage("navigation-sidebar") ? " with-sidebar" : "") ?>
+<div class="<?php echo htmlspecialchars($class) ?>">
 <div class="header" role="banner">
 <div class="sitename">
 <h1><a href="<?php echo $this->yellow->page->getBase(true)."/" ?>"><i class="sitename-logo"></i><?php echo $this->yellow->page->getHtml("sitename") ?></a></h1>

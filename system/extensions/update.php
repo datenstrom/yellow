@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowUpdate {
-    const VERSION = "0.8.4";
+    const VERSION = "0.8.5";
     const TYPE = "feature";
     const PRIORITY = "2";
     public $yellow;                 //access to API
@@ -75,6 +75,21 @@ class YellowUpdate {
                     if ($fileData!=$fileDataNew && !$this->yellow->toolbox->createFile($entry, $fileDataNew)) {
                         $this->yellow->log("error", "Can't write file '$entry'!");
                     }
+                }
+            }
+        }
+        if ($action=="update") {  //TODO: remove later, converts old header layout
+            $fileName = $this->yellow->system->get("layoutDir")."header.html";
+            $fileData = $this->yellow->toolbox->readFile($fileName);
+            $pos = strposu($fileData, "<\x3Fphp echo \$this->yellow->page->getExtra");
+            if ($pos && strposu($fileData, "<link rel=\"icon\"")===false) {
+                $fileDataNew = substru($fileData, 0, $pos);
+                $fileDataNew .= "<\x3Fphp \$resourceLocation = \$this->yellow->system->get(\"serverBase\").\$this->yellow->system->get(\"resourceLocation\") \x3F>\n";
+                $fileDataNew .= "<link rel=\"icon\" type=\"image/png\" href=\"<\x3Fphp echo \$resourceLocation.\$this->yellow->page->getHtml(\"theme\").\"-icon.png\" \x3F>\" />\n";
+                $fileDataNew .= substru($fileData, $pos);
+                $fileDataNew = str_replace("content->shared(\$this->yellow->page->location, false, ", "content->shared(", $fileDataNew);
+                if ($fileData!=$fileDataNew && !$this->yellow->toolbox->createFile($fileName, $fileDataNew)) {
+                    $this->yellow->log("error", "Can't write file '$fileName'!");
                 }
             }
         }
