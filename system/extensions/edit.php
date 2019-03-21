@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowEdit {
-    const VERSION = "0.8.3";
+    const VERSION = "0.8.4";
     const TYPE = "feature";
     public $yellow;         //access to API
     public $response;       //web response
@@ -14,9 +14,9 @@ class YellowEdit {
     // Handle initialisation
     public function onLoad($yellow) {
         $this->yellow = $yellow;
-        $this->response = new YellowResponse($yellow);
-        $this->users = new YellowUsers($yellow);
-        $this->merge = new YellowMerge($yellow);
+        $this->response = new YellowEditResponse($yellow);
+        $this->users = new YellowEditUsers($yellow);
+        $this->merge = new YellowEditMerge($yellow);
         $this->yellow->system->setDefault("editLocation", "/edit/");
         $this->yellow->system->setDefault("editUploadNewLocation", "/media/@group/@filename");
         $this->yellow->system->setDefault("editUploadExtensions", ".gif, .jpg, .pdf, .png, .svg, .tgz, .zip");
@@ -923,7 +923,7 @@ class YellowEdit {
     }
 }
     
-class YellowResponse {
+class YellowEditResponse {
     public $yellow;             //access to API
     public $extension;          //access to extension
     public $active;             //location is active? (boolean)
@@ -1132,7 +1132,7 @@ class YellowResponse {
             $toolbarButtons = $this->yellow->system->get("editToolbarButtons");
             if ($toolbarButtons=="auto") {
                 $toolbarButtons = "";
-                if ($this->yellow->extensions->isExisting("markdown")) $toolbarButtons = "preview, format, bold, italic, code, list, link, file";
+                if ($this->yellow->extensions->isExisting("markdown")) $toolbarButtons = "preview, format, bold, italic, strikethrough, code, list, link, file";
                 if ($this->yellow->extensions->isExisting("emojiawesome")) $toolbarButtons .= ", emojiawesome";
                 if ($this->yellow->extensions->isExisting("fontawesome")) $toolbarButtons .= ", fontawesome";
                 if ($this->yellow->extensions->isExisting("draft")) $toolbarButtons .= ", draft";
@@ -1447,7 +1447,7 @@ class YellowResponse {
     }
 }
 
-class YellowUsers {
+class YellowEditUsers {
     public $yellow;     //access to API
     public $users;      //registered users
     
@@ -1458,7 +1458,7 @@ class YellowUsers {
 
     // Load users from file
     public function load($fileName) {
-        if (defined("DEBUG") && DEBUG>=2) echo "YellowUsers::load file:$fileName<br/>\n";
+        if (defined("DEBUG") && DEBUG>=2) echo "YellowEditUsers::load file:$fileName<br/>\n";
         $fileData = $this->yellow->toolbox->readFile($fileName);
         foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
             if (preg_match("/^\#/", $line)) continue;
@@ -1466,7 +1466,7 @@ class YellowUsers {
             if (!empty($matches[1]) && !empty($matches[2])) {
                 list($hash, $name, $language, $status, $stamp, $modified, $errors, $pending, $home) = explode(",", $matches[2]);
                 $this->set($matches[1], $hash, $name, $language, $status, $stamp, $modified, $errors, $pending, $home);
-                if (defined("DEBUG") && DEBUG>=3) echo "YellowUsers::load email:$matches[1]<br/>\n";
+                if (defined("DEBUG") && DEBUG>=3) echo "YellowEditUsers::load email:$matches[1]<br/>\n";
             }
         }
     }
@@ -1694,7 +1694,7 @@ class YellowUsers {
     }
 }
     
-class YellowMerge {
+class YellowEditMerge {
     public $yellow;     //access to API
     const ADD = "+";    //merge types
     const MODIFY = "*";
@@ -1735,36 +1735,36 @@ class YellowMerge {
             --$otherEnd;
         }
         for ($pos=0; $pos<$textStart; ++$pos) {
-            array_push($diff, array(YellowMerge::SAME, $textSource[$pos], false));
+            array_push($diff, array(YellowEditMerge::SAME, $textSource[$pos], false));
         }
         $lcs = $this->buildDiffLCS($textSource, $textOther, $textStart, $sourceEnd-$textStart, $otherEnd-$textStart);
         for ($x=0,$y=0,$xEnd=$otherEnd-$textStart,$yEnd=$sourceEnd-$textStart; $x<$xEnd || $y<$yEnd;) {
             $max = $lcs[$y][$x];
             if ($y<$yEnd && $lcs[$y+1][$x]==$max) {
-                array_push($diff, array(YellowMerge::REMOVE, $textSource[$textStart+$y], false));
+                array_push($diff, array(YellowEditMerge::REMOVE, $textSource[$textStart+$y], false));
                 if ($lastRemove==-1) $lastRemove = count($diff)-1;
                 ++$y;
                 continue;
             }
             if ($x<$xEnd && $lcs[$y][$x+1]==$max) {
-                if ($lastRemove==-1 || $diff[$lastRemove][0]!=YellowMerge::REMOVE) {
-                    array_push($diff, array(YellowMerge::ADD, $textOther[$textStart+$x], false));
+                if ($lastRemove==-1 || $diff[$lastRemove][0]!=YellowEditMerge::REMOVE) {
+                    array_push($diff, array(YellowEditMerge::ADD, $textOther[$textStart+$x], false));
                     $lastRemove = -1;
                 } else {
-                    $diff[$lastRemove] = array(YellowMerge::MODIFY, $textOther[$textStart+$x], false);
+                    $diff[$lastRemove] = array(YellowEditMerge::MODIFY, $textOther[$textStart+$x], false);
                     ++$lastRemove;
                     if (count($diff)==$lastRemove) $lastRemove = -1;
                 }
                 ++$x;
                 continue;
             }
-            array_push($diff, array(YellowMerge::SAME, $textSource[$textStart+$y], false));
+            array_push($diff, array(YellowEditMerge::SAME, $textSource[$textStart+$y], false));
             $lastRemove = -1;
             ++$x;
             ++$y;
         }
         for ($pos=$sourceEnd;$pos<$sourceSize; ++$pos) {
-            array_push($diff, array(YellowMerge::SAME, $textSource[$pos], false));
+            array_push($diff, array(YellowEditMerge::SAME, $textSource[$pos], false));
         }
         return $diff;
     }
@@ -1791,27 +1791,27 @@ class YellowMerge {
         while ($posMine<count($diffMine) && $posYours<count($diffYours)) {
             $typeMine = $diffMine[$posMine][0];
             $typeYours = $diffYours[$posYours][0];
-            if ($typeMine==YellowMerge::SAME) {
+            if ($typeMine==YellowEditMerge::SAME) {
                 array_push($diff, $diffYours[$posYours]);
-            } elseif ($typeYours==YellowMerge::SAME) {
+            } elseif ($typeYours==YellowEditMerge::SAME) {
                 array_push($diff, $diffMine[$posMine]);
-            } elseif ($typeMine==YellowMerge::ADD && $typeYours==YellowMerge::ADD) {
+            } elseif ($typeMine==YellowEditMerge::ADD && $typeYours==YellowEditMerge::ADD) {
                 $this->mergeConflict($diff, $diffMine[$posMine], $diffYours[$posYours], false);
-            } elseif ($typeMine==YellowMerge::MODIFY && $typeYours==YellowMerge::MODIFY) {
+            } elseif ($typeMine==YellowEditMerge::MODIFY && $typeYours==YellowEditMerge::MODIFY) {
                 $this->mergeConflict($diff, $diffMine[$posMine], $diffYours[$posYours], false);
-            } elseif ($typeMine==YellowMerge::REMOVE && $typeYours==YellowMerge::REMOVE) {
+            } elseif ($typeMine==YellowEditMerge::REMOVE && $typeYours==YellowEditMerge::REMOVE) {
                 array_push($diff, $diffMine[$posMine]);
-            } elseif ($typeMine==YellowMerge::ADD) {
+            } elseif ($typeMine==YellowEditMerge::ADD) {
                 array_push($diff, $diffMine[$posMine]);
-            } elseif ($typeYours==YellowMerge::ADD) {
+            } elseif ($typeYours==YellowEditMerge::ADD) {
                 array_push($diff, $diffYours[$posYours]);
             } else {
                 $this->mergeConflict($diff, $diffMine[$posMine], $diffYours[$posYours], true);
             }
-            if (defined("DEBUG") && DEBUG>=2) echo "YellowMerge::mergeDiff $typeMine $typeYours pos:$posMine\t$posYours<br/>\n";
-            if ($typeMine==YellowMerge::ADD || $typeYours==YellowMerge::ADD) {
-                if ($typeMine==YellowMerge::ADD) ++$posMine;
-                if ($typeYours==YellowMerge::ADD) ++$posYours;
+            if (defined("DEBUG") && DEBUG>=2) echo "YellowEditMerge::mergeDiff $typeMine $typeYours pos:$posMine\t$posYours<br/>\n";
+            if ($typeMine==YellowEditMerge::ADD || $typeYours==YellowEditMerge::ADD) {
+                if ($typeMine==YellowEditMerge::ADD) ++$posMine;
+                if ($typeYours==YellowEditMerge::ADD) ++$posYours;
             } else {
                 ++$posMine;
                 ++$posYours;
@@ -1821,13 +1821,13 @@ class YellowMerge {
             array_push($diff, $diffMine[$posMine]);
             $typeMine = $diffMine[$posMine][0];
             $typeYours = " ";
-            if (defined("DEBUG") && DEBUG>=2) echo "YellowMerge::mergeDiff $typeMine $typeYours pos:$posMine\t$posYours<br/>\n";
+            if (defined("DEBUG") && DEBUG>=2) echo "YellowEditMerge::mergeDiff $typeMine $typeYours pos:$posMine\t$posYours<br/>\n";
         }
         for (;$posYours<count($diffYours); ++$posYours) {
             array_push($diff, $diffYours[$posYours]);
             $typeYours = $diffYours[$posYours][0];
             $typeMine = " ";
-            if (defined("DEBUG") && DEBUG>=2) echo "YellowMerge::mergeDiff $typeMine $typeYours pos:$posMine\t$posYours<br/>\n";
+            if (defined("DEBUG") && DEBUG>=2) echo "YellowEditMerge::mergeDiff $typeMine $typeYours pos:$posMine\t$posYours<br/>\n";
         }
         return $diff;
     }
@@ -1847,7 +1847,7 @@ class YellowMerge {
         $output = "";
         if (!$showDiff) {
             for ($i=0; $i<count($diff); ++$i) {
-                if ($diff[$i][0]!=YellowMerge::REMOVE) $output .= $diff[$i][1];
+                if ($diff[$i][0]!=YellowEditMerge::REMOVE) $output .= $diff[$i][1];
                 $conflict |= $diff[$i][2];
             }
         } else {

@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowMarkdown {
-    const VERSION = "0.8.2";
+    const VERSION = "0.8.4";
     const TYPE = "feature";
     public $yellow;         //access to API
     
@@ -3750,8 +3750,29 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser {
             return $yellow->lookup->normaliseLocation($url, $page->location,
                 $page->safeMode && $page->statusCode==200);
         };
+        $this->span_gamut += array("doStrikethrough" => 55);
+        $this->escape_chars .= "~";
         parent::__construct();
     }
+
+    // Handle striketrough
+	public function doStrikethrough($text) {
+        $parts = preg_split("/(?<![~])(~~)(?![~])/", $text, null, PREG_SPLIT_DELIM_CAPTURE);
+        if (count($parts)>3) {
+            $text = "";
+            $open = false;
+            foreach ($parts as $part) {
+                if ($part=="~~") {
+                    $text .= $open ? "</del>" : "<del>";
+                    $open = !$open;
+                } else {
+                    $text .= $part;
+                }
+            }
+            if ($open) $text .= "</del>";
+        }
+		return $text;
+	}
 
     // Handle links
     public function doAutoLinks($text) {
@@ -3761,7 +3782,7 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser {
         $text = preg_replace_callback("/\[(\w+)(.*?)\]/", array(&$this, "_doAutoLinks_shortcutInline_callback"), $text);
         $text = preg_replace_callback("/\[\-\-(.*?)\-\-\]/", array(&$this, "_doAutoLinks_shortcutComment_callback"), $text);
         $text = preg_replace_callback("/\:([\w\+\-\_]+)\:/", array(&$this, "_doAutoLinks_shortcutSymbol_callback"), $text);
-        $text = preg_replace_callback("/((http|https|ftp):\/\/\S+[^\'\"\,\.\;\:\s]+)/", array(&$this, "_doAutoLinks_url_callback"), $text);
+        $text = preg_replace_callback("/((http|https|ftp):\/\/\S+[^\'\"\,\.\;\:\*\~\s]+)/", array(&$this, "_doAutoLinks_url_callback"), $text);
         $text = preg_replace_callback("/([\w\+\-\.]+@[\w\-\.]+\.[\w]{2,4})/", array(&$this, "_doAutoLinks_email_callback"), $text);
         return $text;
     }
@@ -3838,17 +3859,14 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser {
     
     // Handle inline images
     public function _doImages_inline_callback($matches) {
-        $width = $height = 0;
         $src = $matches[3]=="" ? $matches[4] : $matches[3];
         if (!preg_match("/^\w+:/", $src)) {
-            list($width, $height) = $this->yellow->toolbox->detectImageInformation($this->yellow->system->get("imageDir").$src);
             $src = $this->yellow->system->get("serverBase").$this->yellow->system->get("imageLocation").$src;
         }
         $alt = $matches[2];
         $title = $matches[7]=="" ? $matches[2] : $matches[7];
         $attr = $this->doExtraAttributes("img", $dummy =& $matches[8]);
         $output = "<img src=\"".$this->encodeURLAttribute($src)."\"";
-        if ($width && $height) $output .= " width=\"$width\" height=\"$height\"";
         if (!empty($alt)) $output .= " alt=\"".$this->encodeAttribute($alt)."\"";
         if (!empty($title)) $output .= " title=\"".$this->encodeAttribute($title)."\"";
         $output .= $attr;
@@ -3856,6 +3874,29 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser {
         return $this->hashPart($output);
     }
     
+    // Handle lists, task list
+	public function _processListItems_callback($matches) {
+        $attr = "";
+		$item = $matches[4];
+		$leadingLine = $matches[1];
+		$tailingLine = $matches[5];
+		if ($leadingLine || $tailingLine || preg_match('/\n{2,}/', $item))
+		{
+			$item = $matches[2].str_repeat(' ', strlen($matches[3])).$item;
+			$item = $this->runBlockGamut($this->outdent($item)."\n");
+		} else {
+			$item = $this->doLists($this->outdent($item));
+			$item = $this->formParagraphs($item, false);
+            $token = substr($item, 0, 4);
+            if ($token=="[ ] " || $token=="[x] ") {
+                $attr = " class=\"task-list-item\"";
+                $item = ($token=='[ ] ' ? "<input type=\"checkbox\" disabled=\"disabled\" /> " :
+                    "<input type=\"checkbox\" disabled=\"disabled\" checked=\"checked\" /> ").substr($item, 4);
+            }
+		}
+		return "<li$attr>".$item."</li>\n";
+	}
+
     // Return unique id attribute
     public function getIdAttribute($text) {
         $text = $this->yellow->lookup->normaliseName($text, true, false, true);

@@ -638,6 +638,7 @@ yellow.edit = {
                 "<ul class=\"yellow-dropdown yellow-dropdown-menu\">"+
                 "<li><a href=\"#\" id=\"yellow-popup-list-ul\" data-action=\"toolbar\" data-status=\"ul\">"+this.getText("ToolbarUl")+"</a></li>"+
                 "<li><a href=\"#\" id=\"yellow-popup-list-ol\" data-action=\"toolbar\" data-status=\"ol\">"+this.getText("ToolbarOl")+"</a></li>"+
+                "<li><a href=\"#\" id=\"yellow-popup-list-tl\" data-action=\"toolbar\" data-status=\"tl\">"+this.getText("ToolbarTl")+"</a></li>"+
                 "</ul>";
                 break;
             case "yellow-popup-emojiawesome":
