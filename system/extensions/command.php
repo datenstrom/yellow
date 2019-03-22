@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowCommand {
-    const VERSION = "0.8.3";
+    const VERSION = "0.8.4";
     const TYPE = "feature";
     const PRIORITY = "3";
     public $yellow;                     //access to API
@@ -102,15 +102,21 @@ class YellowCommand {
         $statusCode = empty($locationFilter) ? $this->cleanStaticFiles($path, $locationFilter) : 200;
         $staticUrl = $this->yellow->system->get("staticUrl");
         list($scheme, $address, $base) = $this->yellow->lookup->getUrlInformation($staticUrl);
-        foreach ($this->getContentLocations() as $location) {
+        $locations = $this->getContentLocations();
+        $filesEstimated = count($locations);
+        foreach ($locations as $location) {
+            echo "\rBuilding static website ".$this->getProgressPercent($this->files, $filesEstimated, 5, 60)."%... ";
             if (!preg_match("#^$base$locationFilter#", "$base$location")) continue;
             $statusCode = max($statusCode, $this->buildStaticFile($path, $location, true));
         }
         foreach ($this->locationsArgs as $location) {
+            echo "\rBuilding static website ".$this->getProgressPercent($this->files, $filesEstimated, 5, 60)."%... ";
             if (!preg_match("#^$base$locationFilter#", "$base$location")) continue;
             $statusCode = max($statusCode, $this->buildStaticFile($path, $location, true));
         }
+        $filesEstimated = $this->files + count($this->locationsArgs) + count($this->locationsArgsPagination);
         foreach ($this->locationsArgsPagination as $location) {
+            echo "\rBuilding static website ".$this->getProgressPercent($this->files, $filesEstimated, 5, 95)."%... ";
             if (!preg_match("#^$base$locationFilter#", "$base$location")) continue;
             if (substru($location, -1)!=$this->yellow->toolbox->getLocationArgsSeparator()) {
                 $statusCode = max($statusCode, $this->buildStaticFile($path, $location, false, true));
@@ -133,6 +139,7 @@ class YellowCommand {
             }
             $statusCode = max($statusCode, $this->buildStaticFile($path, "/error/", false, false, true));
         }
+        echo "\rBuilding static website 100%... done\n";
         return $statusCode;
     }
     
@@ -160,7 +167,7 @@ class YellowCommand {
         if ($statusCode>=200) ++$this->files;
         if ($statusCode>=400) {
             ++$this->errors;
-            echo "ERROR building location '$location', ".$this->yellow->page->getStatusCode(true)."\n";
+            echo "\rERROR building location '$location', ".$this->yellow->page->getStatusCode(true)."\n";
         }
         if (defined("DEBUG") && DEBUG>=1) echo "YellowCommand::buildStaticFile status:$statusCode location:$location<br/>\n";
         return $statusCode;
@@ -330,27 +337,30 @@ class YellowCommand {
     // Analyse link status
     public function analyseStatus($path, $links) {
         $statusCode = 200;
-        $broken = $redirect = $data = array();
+        $remote = $broken = $redirect = $data = array();
         $staticUrl = $this->yellow->system->get("staticUrl");
         $staticUrlLength = strlenu(rtrim($staticUrl, "/"));
         list($scheme, $address, $base) = $this->yellow->lookup->getUrlInformation($staticUrl);
         $staticLocations = $this->getContentLocations(true);
-        uksort($links, "strnatcasecmp");
         foreach ($links as $url=>$value) {
-            if (defined("DEBUG") && DEBUG>=1) echo "YellowCommand::analyseStatus url:$url\n";
             if (preg_match("#^$staticUrl#", $url)) {
                 $location = substru($url, $staticUrlLength);
                 $fileName = $path.substru($url, $staticUrlLength);
                 if (is_readable($fileName)) continue;
                 if (in_array($location, $staticLocations)) continue;
             }
-            if (preg_match("/^(http|https):/", $url)) {
-                $referer = "$scheme://$address$base".(($pos = strposu($value, ",")) ? substru($value, 0, $pos) : $value);
-                $statusCodeUrl = $this->getLinkStatus($url, $referer);
-                if ($statusCodeUrl!=200) {
-                    $statusCode = max($statusCode, $statusCodeUrl);
-                    $data[$url] = "$statusCodeUrl,$value";
-                }
+            if (preg_match("/^(http|https):/", $url)) $remote[$url] = $value;
+        }
+        $remoteNow = 0;
+        uksort($remote, "strnatcasecmp");
+        foreach ($remote as $url=>$value) {
+            echo "\rChecking static website ".$this->getProgressPercent(++$remoteNow, count($remote), 5, 95)."%... ";
+            if (defined("DEBUG") && DEBUG>=1) echo "YellowCommand::analyseStatus url:$url\n";
+            $referer = "$scheme://$address$base".(($pos = strposu($value, ",")) ? substru($value, 0, $pos) : $value);
+            $statusCodeUrl = $this->getLinkStatus($url, $referer);
+            if ($statusCodeUrl!=200) {
+                $statusCode = max($statusCode, $statusCodeUrl);
+                $data[$url] = "$statusCodeUrl,$value";
             }
         }
         foreach ($data as $url=>$value) {
@@ -365,6 +375,7 @@ class YellowCommand {
                 }
             }
         }
+        echo "\rChecking static website 100%... done\n";
         return array($statusCode, $broken, $redirect);
     }
 
@@ -513,6 +524,14 @@ class YellowCommand {
     // Return human readable status
     public function getStatusFormatted($statusCode) {
         return $this->yellow->toolbox->getHttpStatusFormatted($statusCode, true);
+    }
+    
+    // Return progress in percent
+    public function getProgressPercent($now, $total, $increments, $max)
+    {
+        $percent = intval(($max / $total) * $now);
+        if ($increments>1) $percent = intval($percent / $increments) * $increments;
+        return min($max, $percent);
     }
     
     // Return static file
