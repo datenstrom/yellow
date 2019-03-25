@@ -3756,7 +3756,7 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser {
     }
 
     // Handle striketrough
-	public function doStrikethrough($text) {
+    public function doStrikethrough($text) {
         $parts = preg_split("/(?<![~])(~~)(?![~])/", $text, null, PREG_SPLIT_DELIM_CAPTURE);
         if (count($parts)>3) {
             $text = "";
@@ -3771,8 +3771,8 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser {
             }
             if ($open) $text .= "</del>";
         }
-		return $text;
-	}
+        return $text;
+    }
 
     // Handle links
     public function doAutoLinks($text) {
@@ -3875,27 +3875,27 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser {
     }
     
     // Handle lists, task list
-	public function _processListItems_callback($matches) {
+    public function _processListItems_callback($matches) {
         $attr = "";
-		$item = $matches[4];
-		$leadingLine = $matches[1];
-		$tailingLine = $matches[5];
-		if ($leadingLine || $tailingLine || preg_match('/\n{2,}/', $item))
-		{
-			$item = $matches[2].str_repeat(' ', strlen($matches[3])).$item;
-			$item = $this->runBlockGamut($this->outdent($item)."\n");
-		} else {
-			$item = $this->doLists($this->outdent($item));
-			$item = $this->formParagraphs($item, false);
+        $item = $matches[4];
+        $leadingLine = $matches[1];
+        $tailingLine = $matches[5];
+        if ($leadingLine || $tailingLine || preg_match('/\n{2,}/', $item))
+        {
+            $item = $matches[2].str_repeat(' ', strlen($matches[3])).$item;
+            $item = $this->runBlockGamut($this->outdent($item)."\n");
+        } else {
+            $item = $this->doLists($this->outdent($item));
+            $item = $this->formParagraphs($item, false);
             $token = substr($item, 0, 4);
             if ($token=="[ ] " || $token=="[x] ") {
                 $attr = " class=\"task-list-item\"";
                 $item = ($token=='[ ] ' ? "<input type=\"checkbox\" disabled=\"disabled\" /> " :
                     "<input type=\"checkbox\" disabled=\"disabled\" checked=\"checked\" /> ").substr($item, 4);
             }
-		}
-		return "<li$attr>".$item."</li>\n";
-	}
+        }
+        return "<li$attr>".$item."</li>\n";
+    }
 
     // Return unique id attribute
     public function getIdAttribute($text) {
