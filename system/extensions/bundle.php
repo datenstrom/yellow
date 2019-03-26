@@ -4,14 +4,13 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowBundle {
-    const VERSION = "0.8.3";
+    const VERSION = "0.8.4";
     const TYPE = "feature";
     public $yellow;         //access to API
 
     // Handle initialisation
     public function onLoad($yellow) {
         $this->yellow = $yellow;
-        $this->yellow->system->setDefault("bundleAndMinify", "1");
     }
     
     // Handle page output data
@@ -69,7 +68,7 @@ class YellowBundle {
                 array_push($dataOther, $line);
             }
         }
-        if ($this->yellow->system->get("bundleAndMinify")) {
+        if (!defined("DEBUG") || DEBUG==0) {
             $dataCss = $this->processBundle($dataCss, "css");
             $dataScript = $this->processBundle($dataScript, "js");
         }
@@ -113,17 +112,12 @@ class YellowBundle {
                     $fileDataNew .= "/* ".basename($fileName)." */\n";
                     $fileDataNew .= $fileData;
                 }
-                if (defined("DEBUG") && DEBUG>=2) {
-                    if (!empty($fileDataNew)) $fileDataNew .= "\n\n";
-                    $fileDataNew .= "/* YellowBundle::processBundle file:$fileNameBundle <- ".$this->yellow->page->fileName." */";
-                }
                 if (is_file($fileNameBundle)) $this->yellow->toolbox->deleteFile($fileNameBundle);
                 if (!$this->yellow->toolbox->createFile($fileNameBundle, $fileDataNew) ||
                     !$this->yellow->toolbox->modifyFile($fileNameBundle, $modified)) {
                     $this->yellow->page->error(500, "Can't write file '$fileNameBundle'!");
                 }
             }
-            if (defined("DEBUG") && DEBUG>=2) $data["debug"] = "YellowBundle::processBundle file:$fileNameBundle<br/>\n";
         }
         return $data;
     }
