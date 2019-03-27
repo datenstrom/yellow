@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowEdit {
-    const VERSION = "0.8.4";
+    const VERSION = "0.8.5";
     const TYPE = "feature";
     public $yellow;         //access to API
     public $response;       //web response
@@ -161,6 +161,7 @@ class YellowEdit {
         $status = "ok";
         list($command, $option, $email, $password, $name) = $args;
         if (empty($email) || empty($password)) $status = $this->response->status = "incomplete";
+        if (empty($name)) $name = $this->yellow->system->get("sitename");
         if ($status=="ok") $status = $this->getUserAccount($email, $password, "add");
         if ($status=="ok" && $this->users->isTaken($email)) $status = "taken";
         switch ($status) {
@@ -173,6 +174,7 @@ class YellowEdit {
             $fileNameUser = $this->yellow->system->get("settingDir").$this->yellow->system->get("editUserFile");
             $status = $this->users->save($fileNameUser, $email, $password, $name, "", "active") ? "ok" : "error";
             if ($status=="error") echo "ERROR updating settings: Can't write file '$fileNameUser'!\n";
+            $this->yellow->log($status=="ok" ? "info" : "error", "Add user '".strtok($name, " ")."'");
         }
         if ($status=="ok") {
             $algorithm = $this->yellow->system->get("editUserHashAlgorithm");
@@ -210,7 +212,9 @@ class YellowEdit {
     public function userRemove($args) {
         $status = "ok";
         list($command, $option, $email) = $args;
+        $name = $this->users->getName($email);
         if (empty($email)) $status = $this->response->status = "invalid";
+        if (empty($name)) $name = $this->yellow->system->get("sitename");
         if ($status=="ok") $status = $this->getUserAccount($email, "", "remove");
         if ($status=="ok" && !$this->users->isExisting($email)) $status = "unknown";
         switch ($status) {
@@ -221,6 +225,7 @@ class YellowEdit {
             $fileNameUser = $this->yellow->system->get("settingDir").$this->yellow->system->get("editUserFile");
             $status = $this->users->remove($fileNameUser, $email) ? "ok" : "error";
             if ($status=="error") echo "ERROR updating settings: Can't write file '$fileNameUser'!\n";
+            $this->yellow->log($status=="ok" ? "info" : "error", "Remove user '".strtok($name, " ")."'");
         }
         $statusCode = $status=="ok" ? 200 : 500;
         echo "Yellow $command: User account ".($statusCode!=200 ? "not " : "")."removed\n";
@@ -374,6 +379,7 @@ class YellowEdit {
             $fileNameUser = $this->yellow->system->get("settingDir").$this->yellow->system->get("editUserFile");
             $this->response->status = $this->users->save($fileNameUser, $email, "", "", "", "active") ? "ok" : "error";
             if ($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
+            $this->yellow->log($status=="ok" ? "info" : "error", "Add user '".strtok($this->users->getName($email), " ")."'");
         }
         if ($this->response->status=="ok") {
             $this->response->status = $this->response->sendMail($scheme, $address, $base, $email, "welcome") ? "done" : "error";
@@ -618,6 +624,7 @@ class YellowEdit {
             $fileNameUser = $this->yellow->system->get("settingDir").$this->yellow->system->get("editUserFile");
             $this->response->status = $this->users->save($fileNameUser, $email, "", "", "", "removed") ? "ok" : "error";
             if ($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
+            $this->yellow->log($status=="ok" ? "info" : "error", "Remove user '".strtok($this->users->getName($email), " ")."'");
         }
         if ($this->response->status=="ok") {
             $this->response->status = $this->response->sendMail($scheme, $address, $base, $email, "goodbye") ? "ok" : "error";
@@ -1132,11 +1139,11 @@ class YellowEditResponse {
             $toolbarButtons = $this->yellow->system->get("editToolbarButtons");
             if ($toolbarButtons=="auto") {
                 $toolbarButtons = "";
-                if ($this->yellow->extensions->isExisting("markdown")) $toolbarButtons = "preview, format, bold, italic, strikethrough, code, list, link, file";
+                if ($this->yellow->extensions->isExisting("markdown")) $toolbarButtons = "format, bold, italic, strikethrough, code, list, link, file";
                 if ($this->yellow->extensions->isExisting("emojiawesome")) $toolbarButtons .= ", emojiawesome";
                 if ($this->yellow->extensions->isExisting("fontawesome")) $toolbarButtons .= ", fontawesome";
                 if ($this->yellow->extensions->isExisting("draft")) $toolbarButtons .= ", draft";
-                if ($this->yellow->extensions->isExisting("markdown")) $toolbarButtons .= ", markdown";
+                if ($this->yellow->extensions->isExisting("markdown")) $toolbarButtons .= ", preview, markdown";
             }
         } else {
             $toolbarButtons = $this->yellow->system->get("{$name}ToolbarButtons");
@@ -1518,7 +1525,8 @@ class YellowEditUsers {
         $fileData = $this->yellow->toolbox->readFile($fileName);
         foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
             preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
-            if (!empty($matches[1]) && !empty($matches[2]) && $matches[1]!=$email) $fileDataNew .= $line;
+            if (!empty($matches[1]) && $matches[1]==$email) continue;
+            $fileDataNew .= $line;
         }
         return $this->yellow->toolbox->createFile($fileName, $fileDataNew);
     }

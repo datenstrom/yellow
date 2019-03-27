@@ -757,7 +757,7 @@ class YellowPage {
     }
 
     // Return page setting as language specific date format, relative to today
-    public function getDateRelative($key, $format = "", $daysLimit = 0) {
+    public function getDateRelative($key, $format = "", $daysLimit = 30) {
         if (!empty($format)) {
             $format = $this->yellow->text->get($format);
         } else {
@@ -767,7 +767,7 @@ class YellowPage {
     }
     
     // Return page setting as language specific date format, relative to today, HTML encoded
-    public function getDateRelativeHtml($key, $format = "", $daysLimit = 0) {
+    public function getDateRelativeHtml($key, $format = "", $daysLimit = 30) {
         return htmlspecialchars($this->getDateRelative($key, $format, $daysLimit));
     }
 
@@ -1754,8 +1754,8 @@ class YellowText {
     public function getDateRelative($timestamp, $format, $daysLimit) {
         $timeDifference = time() - $timestamp;
         $days = abs(intval($timeDifference / 86400));
+        $tokens = preg_split("/\s*,\s*/", $this->get($timeDifference>=0 ? "datePast" : "dateFuture"));
         if ($days<=$daysLimit || $daysLimit==0) {
-            $tokens = preg_split("/\s*,\s*/", $this->get($timeDifference>=0 ? "datePast" : "dateFuture"));
             if ($days==0) {
                 $output = $tokens[0];
             } elseif ($days==1) {
@@ -1772,7 +1772,7 @@ class YellowText {
                 $output = preg_replace("/@x/i", intval($days/365.25), $tokens[6]);
             }
         } else {
-            $output = $this->getDateFormatted($timestamp, $format);
+            $output = preg_replace("/@x/i", $this->getDateFormatted($timestamp, $format), $tokens[7]);
         }
         return $output;
     }

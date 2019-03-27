@@ -154,6 +154,7 @@ class YellowInstall {
     public function updateUser($email, $password, $name, $language) {
         $statusCode = 200;
         if (!empty($email) && !empty($password) && $this->yellow->extensions->isExisting("edit")) {
+            if (empty($name)) $name = $this->yellow->system->get("sitename");
             $fileNameUser = $this->yellow->system->get("settingDir").$this->yellow->system->get("editUserFile");
             if (!$this->yellow->extensions->get("edit")->users->save($fileNameUser, $email, $password, $name, $language)) {
                 $statusCode = 500;
@@ -304,7 +305,7 @@ class YellowInstall {
             $rawData .= "<p>".$this->yellow->text->get("installExtension")."<p>";
             foreach ($this->getExtensionsInstall() as $extension) {
                 $checked = $extension=="website" ? " checked=\"checked\"" : "";
-                $rawData .= "<label for=\"$extension\"><input type=\"radio\" name=\"extension\" id=\"$extension\" value=\"$extension\"$checked> ".ucfirst($extension)."</label><br />";
+                $rawData .= "<label for=\"$extension\"><input type=\"radio\" name=\"extension\" id=\"$extension\" value=\"$extension\"$checked> ".$this->yellow->text->getHtml("installExtension".ucfirst($extension))."</label><br />";
             }
             $rawData .= "</p>\n";
         }
