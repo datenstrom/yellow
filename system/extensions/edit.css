@@ -18,10 +18,10 @@
 .yellow-bar-right a {
     margin-left: 1em;
 }
-.yellow-bar-right #yellow-pane-create-link {
+.yellow-bar-right #yellow-bar-create {
     padding: 0 0.5em;
 }
-.yellow-bar-right #yellow-pane-delete-link {
+.yellow-bar-right #yellow-bar-delete {
     padding: 0 0.5em;
 }
 .yellow-bar-banner {
@@ -322,9 +322,10 @@
 #yellow-pane-signup,
 #yellow-pane-forgot,
 #yellow-pane-recover,
-#yellow-pane-settings,
-#yellow-pane-version,
-#yellow-pane-quit {
+#yellow-pane-quit,
+#yellow-pane-about,
+#yellow-pane-account,
+#yellow-pane-information {
     text-align: center;
 }
 #yellow-pane-edit-toolbar-title {
@@ -353,7 +354,7 @@
     margin: 0;
     padding: 0;
 }
-#yellow-pane-user {
+#yellow-pane-menu {
     padding: 10px 0;
 }
 
