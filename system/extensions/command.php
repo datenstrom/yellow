@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowCommand {
-    const VERSION = "0.8.4";
+    const VERSION = "0.8.5";
     const TYPE = "feature";
     const PRIORITY = "3";
     public $yellow;                     //access to API
@@ -134,7 +134,7 @@ class YellowCommand {
             foreach ($this->getSystemLocations() as $location) {
                 $statusCode = max($statusCode, $this->buildStaticFile($path, $location));
             }
-            foreach ($this->getExtraLocations() as $location) {
+            foreach ($this->getExtraLocations($path) as $location) {
                 $statusCode = max($statusCode, $this->buildStaticFile($path, $location));
             }
             $statusCode = max($statusCode, $this->buildStaticFile($path, "/error/", false, false, true));
@@ -607,9 +607,10 @@ class YellowCommand {
     }
 
     // Return extra locations
-    public function getExtraLocations() {
+    public function getExtraLocations($path) {
         $locations = array();
-        $pathIgnore = "(".$this->yellow->system->get("staticDir")."|".
+        $pathIgnore = "($path/|".
+            $this->yellow->system->get("staticDir")."|".
             $this->yellow->system->get("cacheDir")."|".
             $this->yellow->system->get("contentDir")."|".
             $this->yellow->system->get("mediaDir")."|".
