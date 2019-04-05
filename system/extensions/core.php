@@ -1389,9 +1389,9 @@ class YellowContent {
         foreach ($this->scanLocation($location) as $page) {
             if ($page->isAvailable() && ($page->isVisible() || $showInvisible)) {
                 if (!$this->yellow->lookup->isRootLocation($page->location) && is_readable($page->fileName)) $pages->append($page);
-                if (!$this->yellow->lookup->isFileLocation($page->location) && $levelMax!=0) {
-                    $pages->merge($this->getChildrenRecursive($page->location, $showInvisible, $levelMax));
-                }
+            }
+            if (!$this->yellow->lookup->isFileLocation($page->location) && $levelMax!=0) {
+                $pages->merge($this->getChildrenRecursive($page->location, $showInvisible, $levelMax));
             }
         }
         return $pages;
@@ -1517,9 +1517,9 @@ class YellowMedia {
         foreach ($this->scanLocation($location) as $file) {
             if ($file->isAvailable() && ($file->isVisible() || $showInvisible)) {
                 if ($this->yellow->lookup->isFileLocation($file->location)) $files->append($file);
-                if (!$this->yellow->lookup->isFileLocation($file->location) && $levelMax!=0) {
-                    $files->merge($this->getChildrenRecursive($file->location, $showInvisible, $levelMax));
-                }
+            }
+            if (!$this->yellow->lookup->isFileLocation($file->location) && $levelMax!=0) {
+                $files->merge($this->getChildrenRecursive($file->location, $showInvisible, $levelMax));
             }
         }
         return $files;
