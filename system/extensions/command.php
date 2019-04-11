@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowCommand {
-    const VERSION = "0.8.5";
+    const VERSION = "0.8.6";
     const TYPE = "feature";
     const PRIORITY = "3";
     public $yellow;                     //access to API
@@ -263,12 +263,13 @@ class YellowCommand {
                 $statusCode = $this->checkStaticFiles($path, $location);
             } else {
                 $statusCode = 500;
-                $this->files = $this->links = 0;
+                $this->links = 0;
+                $this->errors = 1;
                 $fileName = $this->yellow->system->get("settingDir").$this->yellow->system->get("systemFile");
                 echo "ERROR checking files: Please configure StaticUrl in file '$fileName'!\n";
             }
-            echo "Yellow $command: $this->files file".($this->files!=1 ? "s" : "");
-            echo ", $this->links link".($this->links!=1 ? "s" : "")."\n";
+            echo "Yellow $command: $this->links link".($this->links!=1 ? "s" : "");
+            echo ", $this->errors error".($this->errors!=1 ? "s" : "")."\n";
         } else {
             $statusCode = 400;
             echo "Yellow $command: Invalid arguments\n";
@@ -279,7 +280,7 @@ class YellowCommand {
     // Check static files for broken links
     public function checkStaticFiles($path, $locationFilter) {
         $path = rtrim(empty($path) ? $this->yellow->system->get("staticDir") : $path, "/");
-        $this->files = $this->links = 0;
+        $this->links = $this->errors = 0;
         $regex = "/^[^.]+$|".$this->yellow->system->get("staticDefaultFile")."$/";
         $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($path, $regex, false, false);
         list($statusCodeFiles, $links) = $this->analyseLinks($path, $locationFilter, $fileNames);
@@ -319,16 +320,17 @@ class YellowCommand {
                             if (defined("DEBUG") && DEBUG>=2) echo "YellowCommand::analyseLinks detected url:$url<br/>\n";
                         }
                     }
-                    ++$this->files;
                     if (defined("DEBUG") && DEBUG>=1) echo "YellowCommand::analyseLinks location:$locationSource<br/>\n";
                 } else {
                     $statusCode = 500;
+                    ++$this->errors;
                     echo "ERROR reading files: Can't read file '$fileName'!\n";
                 }
             }
             $this->links = count($links);
         } else {
             $statusCode = 500;
+            ++$this->errors;
             echo "ERROR reading files: Can't find files in directory '$path'!\n";
         }
         return array($statusCode, $links);
@@ -373,6 +375,7 @@ class YellowCommand {
                 } else {
                     $broken["$scheme://$address$base$location -> $url - ".$this->getStatusFormatted($statusCodeUrl)] = $statusCodeUrl;
                 }
+                ++$this->errors;
             }
         }
         echo "\rChecking static website 100%... done\n";

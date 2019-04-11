@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowEdit {
-    const VERSION = "0.8.6";
+    const VERSION = "0.8.7";
     const TYPE = "feature";
     public $yellow;         //access to API
     public $response;       //web response
@@ -23,12 +23,12 @@ class YellowEdit {
         $this->yellow->system->setDefault("editKeyboardShortcuts", "ctrl+b bold, ctrl+i italic, ctrl+k strikethrough, ctrl+e code, ctrl+s save, ctrl+alt+p preview");
         $this->yellow->system->setDefault("editToolbarButtons", "auto");
         $this->yellow->system->setDefault("editEndOfLine", "auto");
+        $this->yellow->system->setDefault("editNewFile", "page-new-(.*).md");
         $this->yellow->system->setDefault("editUserFile", "user.ini");
         $this->yellow->system->setDefault("editUserPasswordMinLength", "8");
         $this->yellow->system->setDefault("editUserHashAlgorithm", "bcrypt");
         $this->yellow->system->setDefault("editUserHashCost", "10");
         $this->yellow->system->setDefault("editUserHome", "/");
-        $this->yellow->system->setDefault("editNewFile", "page-new-(.*).md");
         $this->yellow->system->setDefault("editLoginRestriction", "0");
         $this->yellow->system->setDefault("editLoginSessionTimeout", "2592000");
         $this->yellow->system->setDefault("editBruteForceProtection", "25");
@@ -1146,7 +1146,7 @@ class YellowEditResponse {
             $toolbarButtons = $this->yellow->system->get("editToolbarButtons");
             if ($toolbarButtons=="auto") {
                 $toolbarButtons = "";
-                if ($this->yellow->extensions->isExisting("markdown")) $toolbarButtons = "format, bold, italic, strikethrough, code, list, link, file";
+                if ($this->yellow->extensions->isExisting("markdown")) $toolbarButtons = "format, bold, italic, strikethrough, code, separator, list, link, file";
                 if ($this->yellow->extensions->isExisting("emojiawesome")) $toolbarButtons .= ", emojiawesome";
                 if ($this->yellow->extensions->isExisting("fontawesome")) $toolbarButtons .= ", fontawesome";
                 if ($this->yellow->extensions->isExisting("draft")) $toolbarButtons .= ", draft";
