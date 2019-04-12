@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowUpdate {
-    const VERSION = "0.8.5";
+    const VERSION = "0.8.7";
     const TYPE = "feature";
     const PRIORITY = "2";
     public $yellow;                 //access to API
@@ -14,7 +14,6 @@ class YellowUpdate {
     public function onLoad($yellow) {
         $this->yellow = $yellow;
         $this->yellow->system->setDefault("updateExtensionUrl", "https://github.com/datenstrom/yellow-extensions");
-        $this->yellow->system->setDefault("updateInformationFile", "update.ini");
         $this->yellow->system->setDefault("updateExtensionFile", "extension.ini");
         $this->yellow->system->setDefault("updateVersionFile", "version.ini");
         $this->yellow->system->setDefault("updateWaffleFile", "waffle.ini");
@@ -57,159 +56,6 @@ class YellowUpdate {
 
     // Handle update
     public function onUpdate($action) {
-        if ($action=="update") {  //TODO: remove later, converts old API in layouts
-            if ($this->yellow->system->isExisting("templateDir")) {
-                $path = $this->yellow->system->get("layoutDir");
-                foreach ($this->yellow->toolbox->getDirectoryEntriesRecursive($path, "/^.*\.html$/", true, false) as $entry) {
-                    $fileData = $fileDataNew = $this->yellow->toolbox->readFile($entry);
-                    $fileDataNew = str_replace("\$yellow->", "\$this->yellow->", $fileDataNew);
-                    $fileDataNew = str_replace("yellow->config->", "yellow->system->", $fileDataNew);
-                    $fileDataNew = str_replace("yellow->pages->", "yellow->content->", $fileDataNew);
-                    $fileDataNew = str_replace("yellow->files->", "yellow->media->", $fileDataNew);
-                    $fileDataNew = str_replace("yellow->plugins->", "yellow->extensions->", $fileDataNew);
-                    $fileDataNew = str_replace("yellow->themes->", "yellow->extensions->", $fileDataNew);
-                    $fileDataNew = str_replace("yellow->snippet(", "yellow->layout(", $fileDataNew);
-                    $fileDataNew = str_replace("yellow->getSnippetArgs(", "yellow->getLayoutArgs(", $fileDataNew);
-                    $fileDataNew = str_replace("\"template\"", "\"layout\"", $fileDataNew);
-                    $fileDataNew = str_replace("\"page template-\"", "\"page layout-\"", $fileDataNew);
-                    if ($fileData!=$fileDataNew && !$this->yellow->toolbox->createFile($entry, $fileDataNew)) {
-                        $this->yellow->log("error", "Can't write file '$entry'!");
-                    }
-                }
-            }
-        }
-        if ($action=="update") {  //TODO: remove later, converts old header layout
-            $fileName = $this->yellow->system->get("layoutDir")."header.html";
-            $fileData = $this->yellow->toolbox->readFile($fileName);
-            $pos = strposu($fileData, "<\x3Fphp echo \$this->yellow->page->getExtra");
-            if ($pos && strposu($fileData, "<link rel=\"icon\"")===false) {
-                $fileDataNew = substru($fileData, 0, $pos);
-                $fileDataNew .= "<\x3Fphp \$resourceLocation = \$this->yellow->system->get(\"serverBase\").\$this->yellow->system->get(\"resourceLocation\") \x3F>\n";
-                $fileDataNew .= "<link rel=\"icon\" type=\"image/png\" href=\"<\x3Fphp echo \$resourceLocation.\$this->yellow->page->getHtml(\"theme\").\"-icon.png\" \x3F>\" />\n";
-                $fileDataNew .= substru($fileData, $pos);
-                $fileDataNew = str_replace("content->shared(\$this->yellow->page->location, false, ", "content->shared(", $fileDataNew);
-                if ($fileData!=$fileDataNew && !$this->yellow->toolbox->createFile($fileName, $fileDataNew)) {
-                    $this->yellow->log("error", "Can't write file '$fileName'!");
-                }
-            }
-        }
-        if ($action=="update") {  //TODO: remove later, converts old website icon
-            if ($this->yellow->system->isExisting("siteicon")) {
-                $theme = $this->yellow->system->get("theme");
-                $fileName = $this->yellow->system->get("resourceDir")."icon.png";
-                $fileNameNew = $this->yellow->system->get("resourceDir").$this->yellow->lookup->normaliseName($theme)."-icon.png";
-                if (is_file($fileName) && !$this->yellow->toolbox->renameFile($fileName, $fileNameNew)) {
-                    $this->yellow->log("error", "Can't rename file '$fileName'!");
-                }
-            }
-        }
-        if ($action=="update") {  //TODO: remove later, converts old language files
-            if ($this->yellow->system->isExisting("languageFile")) {
-                $path = $this->yellow->system->get("extensionDir");
-                foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.txt$/", true, false) as $entry) {
-                    preg_match("/^language-(.*)\.txt$/", basename($entry), $matches);
-                    $languageName = $this->getLanguageName($matches[1]);
-                    if (!empty($languageName)) {
-                        $entryNew = $path.$languageName."-language.txt";
-                        if (!$this->yellow->toolbox->renameFile($entry, $entryNew)) {
-                            $this->yellow->log("error", "Can't rename file '$entry'!");
-                        }
-                        $fileNameNew = $path.$languageName.".php";
-                        $fileDataNew = "<?php\n\nclass Yellow".ucfirst($languageName)." {\nconst VERSION = \"0.8.2\";\nconst TYPE = \"language\";\n}\n";
-                        if (!$this->yellow->toolbox->createFile($fileNameNew, $fileDataNew)) {
-                            $this->yellow->log("error", "Can't write file '$fileNameNew'!");
-                        }
-                    }
-                }
-                $fileName = $this->yellow->system->get("extensionDir")."language.php";
-                if (is_file($fileName) && !$this->yellow->toolbox->deleteFile($fileName, $this->yellow->system->get("trashDir"))) {
-                    $this->yellow->log("error", "Can't delete file '$fileName'!");
-                }
-            }
-        }
-        if ($action=="update") {  //TODO: remove later, converts old Markdown files
-            if ($this->yellow->system->get("contentDefaultFile")=="page.txt") {
-                $settings = array("contentDefaultFile" => "page.md", "contentExtension" => ".md", "editNewFile" => "page-new-(.*).md");
-                $fileName = $this->yellow->system->get("settingDir").$this->yellow->system->get("systemFile");
-                if (!$this->yellow->system->save($fileName, $settings)) {
-                    $this->yellow->log("error", "Can't write file '$fileName'!");
-                }
-                $path = $this->yellow->system->get("contentDir");
-                foreach ($this->yellow->toolbox->getDirectoryEntriesRecursive($path, "/^.*\.txt$/", true, false) as $entry) {
-                    if (!$this->yellow->toolbox->renameFile($entry, str_replace(".txt", ".md", $entry))) {
-                        $this->yellow->log("error", "Can't rename file '$entry'!");
-                    }
-                }
-                $path = $this->yellow->system->get("settingDir");
-                foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.txt$/", true, false) as $entry) {
-                    if (!$this->yellow->toolbox->renameFile($entry, str_replace(".txt", ".md", $entry))) {
-                        $this->yellow->log("error", "Can't rename file '$entry'!");
-                    }
-                }
-                $_GET["clean-url"] = "system-updated";
-            }
-        }
-        if ($action=="update") {  //TODO: remove later, converts old template setting
-            if ($this->yellow->system->isExisting("template")) {
-                $path = $this->yellow->system->get("contentDir");
-                foreach ($this->yellow->toolbox->getDirectoryEntriesRecursive($path, "/^.*\.md$/", true, false) as $entry) {
-                    $fileData = $fileDataNew = $this->yellow->toolbox->readFile($entry);
-                    $fileDataNew = preg_replace("/Template:/i", "Layout:", $fileDataNew);
-                    $fileDataNew = preg_replace("/TemplateNew:/i", "LayoutNew:", $fileDataNew);
-                    if ($fileData!=$fileDataNew && !$this->yellow->toolbox->createFile($entry, $fileDataNew)) {
-                        $this->yellow->log("error", "Can't write file '$entry'!");
-                    }
-                }
-                $_GET["clean-url"] = "system-updated";
-            }
-        }
-        if ($action=="update") {  //TODO: remove later, updates shared pages
-            $pathSetting = $this->yellow->system->get("settingDir");
-            $pathShared = $this->yellow->system->get("contentDir").$this->yellow->system->get("contentSharedDir");
-            if (count($this->yellow->toolbox->getDirectoryEntries($pathSetting, "/.*/", false, false))>3) {
-                $regex = "/^page-error-(.*)\.md$/";
-                foreach ($this->yellow->toolbox->getDirectoryEntries($pathSetting, $regex, true, false) as $entry) {
-                    if (!$this->yellow->toolbox->deleteFile($entry, $this->yellow->system->get("trashDir"))) {
-                        $this->yellow->log("error", "Can't delete file '$entry'!");
-                    }
-                }
-                $regex = "/^page-new-(.*)\.md$/";
-                foreach ($this->yellow->toolbox->getDirectoryEntries($pathSetting, $regex, true, false) as $entry) {
-                    if (!$this->yellow->toolbox->renameFile($entry, str_replace($pathSetting, $pathShared, $entry), true)) {
-                        $this->yellow->log("error", "Can't move file '$entry'!");
-                    }
-                }
-                $fileNameHeader = $pathShared."header.md";
-                if (!is_file($fileNameHeader) && $this->yellow->system->isExisting("tagline")) {
-                    $fileDataHeader = "---\nTitle: Header\nStatus: hidden\n---\n".$this->yellow->system->get("tagline");
-                    if (!$this->yellow->toolbox->createFile($fileNameHeader, $fileDataHeader, true)) {
-                        $this->yellow->log("error", "Can't write file '$fileNameHeader'!");
-                    }
-                }
-                $fileNameFooter = $pathShared."footer.md";
-                if (!is_file($fileNameFooter)) {
-                    $fileDataFooter = "---\nTitle: Footer\nStatus: hidden\n---\n";
-                    $fileDataFooter .= $this->yellow->text->getText("InstallFooterText", $this->yellow->system->get("language"));
-                    if (!$this->yellow->toolbox->createFile($fileNameFooter, $fileDataFooter, true)) {
-                        $this->yellow->log("error", "Can't write file '$fileNameFooter'!");
-                    }
-                }
-                $this->updateContentMultiLanguage("shared-pages");
-            }
-        }
-        if ($action=="update") {  //TODO: remove later, converts old editor setting
-            if ($this->yellow->system->isExisting("editLoginRestrictions")) {
-                $editLoginRestriction = $this->yellow->system->get("editLoginRestrictions");
-                $fileName = $this->yellow->system->get("settingDir").$this->yellow->system->get("systemFile");
-                $this->yellow->system->save($fileName, array("editLoginRestriction" => $editLoginRestriction));
-            }
-        }
-        if ($action=="startup") {  //TODO: remove later, converts old startup setting
-            if ($this->yellow->system->isExisting("startupUpdate")) {
-                $fileName = $this->yellow->system->get("settingDir").$this->yellow->system->get("systemFile");
-                $this->yellow->system->save($fileName, array("startupUpdate"=>"none", "updateNotification" => "update/update"));
-            }
-        }
         if ($action=="startup") {
             if ($this->yellow->system->get("updateNotification")!="none") {
                 foreach (explode(",", $this->yellow->system->get("updateNotification")) as $token) {
@@ -521,7 +367,6 @@ class YellowUpdate {
             if (defined("DEBUG") && DEBUG>=2) echo "YellowUpdate::updateExtensionArchive file:$path<br/>\n";
             if (preg_match("#^(.*\/).*?$#", $zip->getNameIndex(0), $matches)) $pathBase = $matches[1];
             $fileData = $zip->getFromName($pathBase.$this->yellow->system->get("updateExtensionFile"));
-            if (empty($fileData)) $fileData = $zip->getFromName($pathBase.$this->yellow->system->get("updateInformationFile")); //TODO: remove later, for backwards compatibility
             foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
                 preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
                 if (!empty($matches[1]) && !empty($matches[2]) && strposu($matches[1], "/")) {
@@ -542,8 +387,6 @@ class YellowUpdate {
             foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
                 preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
                 if (lcfirst($matches[1])=="extension") $extension = lcfirst($matches[2]);
-                if (lcfirst($matches[1])=="plugin") $extension = lcfirst(substru($matches[2], 6)); //TODO: remove later, for backwards compatibility
-                if (lcfirst($matches[1])=="theme") $extension = lcfirst(substru($matches[2], 11)); //TODO: remove later, for backwards compatibility
                 if (lcfirst($matches[1])=="version") $version = lcfirst($matches[2]);
                 if (lcfirst($matches[1])=="published") $modified = strtotime($matches[2]);
                 if (!empty($matches[1]) && !empty($matches[2]) && strposu($matches[1], "/")) {
@@ -791,19 +634,6 @@ class YellowUpdate {
         }
         if (defined("DEBUG") && DEBUG>=2) echo "YellowUpdate::getExtensionFile status:$statusCode url:$url<br/>\n";
         return array($statusCode, $fileData);
-    }
-    
-    // Return human readable language name, TODO: remove later, for backwards compatibility
-    public function getLanguageName($language) {
-        $languageName = "";
-        $languageNames = array("bn" => "bengali", "cs" => "czech", "da" => "danish", "de" => "german",
-            "en" => "english", "es" => "spanish", "fr" => "french", "hu" => "hungarian", "id" => "indonesian",
-            "it" => "italian", "ja" => "japanese", "ko" => "korean", "nl" => "dutch", "pl" => "polish",
-            "pt" => "portuguese", "ru" => "russian", "sk" => "slovenian", "sv" => "swedish", "zh-CN" => "chinese");
-        if (array_key_exists($language, $languageNames)) {
-            $languageName = $languageNames[$language];
-        }
-        return $languageName;
     }
 
     // Check if extension pending

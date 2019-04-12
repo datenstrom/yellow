@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowCore {
-    const VERSION = "0.8.3";
+    const VERSION = "0.8.4";
     const TYPE = "feature";
     public $page;           //current page
     public $content;        //content files from file system
@@ -14,11 +14,6 @@ class YellowCore {
     public $lookup;         //location and file lookup
     public $toolbox;        //toolbox with helpers
     public $extensions;     //features and themes
-    public $pages;          //TODO: remove later, for backwards compatibility
-    public $files;          //TODO: remove later, for backwards compatibility
-    public $config;         //TODO: remove later, for backwards compatibility
-    public $plugins;        //TODO: remove later, for backwards compatibility
-    public $themes;         //TODO: remove later, for backwards compatibility
 
     public function __construct() {
         $this->page = new YellowPage($this);
@@ -29,11 +24,6 @@ class YellowCore {
         $this->lookup = new YellowLookup($this);
         $this->toolbox = new YellowToolbox();
         $this->extensions = new YellowExtensions($this);
-        $this->pages = new YellowPages($this);
-        $this->files = new YellowFiles($this);
-        $this->config = new YellowConfig($this);
-        $this->plugins = new YellowPlugins($this);
-        $this->themes = new YellowThemes($this);
         $this->system->setDefault("sitename", "Yellow");
         $this->system->setDefault("author", "Yellow");
         $this->system->setDefault("email", "webmaster");
@@ -294,9 +284,7 @@ class YellowCore {
     
     // Handle startup
     public function startup() {
-        $this->updateFileSystem(); //TODO: remove later, for backwards compatibility
         foreach ($this->extensions->extensions as $key=>$value) {
-            if ($key=="edit") continue; //TODO: remove later, for backwards compatibility
             if (method_exists($value["obj"], "onStartup")) $value["obj"]->onStartup();
         }
         foreach ($this->extensions->extensions as $key=>$value) {
@@ -308,78 +296,6 @@ class YellowCore {
     public function shutdown() {
         foreach ($this->extensions->extensions as $key=>$value) {
             if (method_exists($value["obj"], "onShutdown")) $value["obj"]->onShutdown();
-        }
-    }
-    
-    // Update file system, TODO: remove later, for backwards compatibility
-    public function updateFileSystem() {
-        $fileData = $fileDataNew = $this->toolbox->readFile("yellow.php");
-        $fileDataNew = str_replace("system/plugins/core.php", "system/extensions/core.php", $fileData);
-        if (is_dir("system/config/") || is_dir("system/themes/") || is_dir("system/plugins/") || $fileData!=$fileDataNew) {
-            $statusCode = 200;
-            $this->log("info", "Update file system");
-            if (is_dir("system/config/")) {
-                foreach ($this->toolbox->getDirectoryEntriesRecursive("system/config/", "/.*/", true, false) as $entry) {
-                    $entryNew = str_replace("system/config/", "system/settings/", $entry);
-                    $entryNew = str_replace("config.ini", "system.ini", $entryNew);
-                    if (!is_file($entryNew)) $this->toolbox->copyFile($entry, $entryNew, true);
-                }
-                if (!$this->toolbox->deleteDirectory("system/config/", "system/trash/")) {
-                    $statusCode = 500;
-                    $this->log("error", "Can't delete folder 'system/config/'!");
-                }
-            }
-            if (is_dir("system/themes/")) {
-                $pathTemplates = "system/themes/templates/";
-                foreach ($this->toolbox->getDirectoryEntriesRecursive($pathTemplates, "/.*/", true, false) as $entry) {
-                    $entryNew = str_replace($pathTemplates, "system/layouts/", $entry);
-                    if (!is_file($entryNew)) $this->toolbox->copyFile($entry, $entryNew, true);
-                }
-                $pathSnippets = "system/themes/snippets/";
-                foreach ($this->toolbox->getDirectoryEntriesRecursive($pathSnippets, "/.*/", true, false) as $entry) {
-                    $entryNew = str_replace($pathSnippets, "system/layouts/", $entry);
-                    $entryNew = str_replace(".php", ".html", $entryNew);
-                    if (!is_file($entryNew)) $this->toolbox->copyFile($entry, $entryNew, true);
-                }
-                $pathAssets = "system/themes/assets/";
-                foreach ($this->toolbox->getDirectoryEntriesRecursive($pathAssets, "/.*/", true, false) as $entry) {
-                    if (preg_match("/\.php$/", $entry)) {
-                        $entryNew = str_replace($pathAssets, "system/extensions/", $entry);
-                    } else {
-                        $entryNew = str_replace($pathAssets, "system/resources/", $entry);
-                    }
-                    if (!is_file($entryNew)) $this->toolbox->copyFile($entry, $entryNew, true);
-                }
-                if (!$this->toolbox->deleteDirectory("system/themes/", "system/trash/")) {
-                    $statusCode = 500;
-                    $this->log("error", "Can't delete folder 'system/themes/'!");
-                }
-            }
-            if (is_dir("system/plugins/")) {
-                foreach ($this->toolbox->getDirectoryEntriesRecursive("system/plugins/", "/.*/", true, false) as $entry) {
-                    $entryNew = str_replace("system/plugins/", "system/extensions/", $entry);
-                    if (!is_file($entryNew)) $this->toolbox->copyFile($entry, $entryNew, true);
-                }
-                if (!$this->toolbox->deleteDirectory("system/plugins/", "system/trash/")) {
-                    $statusCode = 500;
-                    $this->log("error", "Can't delete folder 'system/plugins/'!");
-                }
-            }
-            if (function_exists("opcache_reset")) opcache_reset();
-            if ($fileData!=$fileDataNew && !$this->toolbox->createFile("yellow.php", $fileDataNew)) {
-                $statusCode = 500;
-                $this->log("error", "Can't write file 'yellow.php'!");
-            }
-            foreach ($this->toolbox->getDirectoryEntries("system/extensions/", "/^.*\.php$/", true, false) as $entry) {
-                $fileData = $fileDataNew = $this->toolbox->readFile($entry);
-                $fileDataNew = str_replace("class YellowTheme", "class Yellow", $fileData);
-                if (preg_match("/^core\.php$/", basename($entry))) continue;
-                if ($fileData!=$fileDataNew) $this->toolbox->createFile($entry, $fileDataNew);
-            }
-            $this->system->save("system/settings/system.ini", array("updateNotification" => "update/update"));
-            @header($this->toolbox->getHttpStatusFormatted($statusCode));
-            die($statusCode==200 ? "System has been updated. Please update your website one more time.\n" :
-                "System has not been updated. Please check errors in file 'system/extensions/yellow.log'!\n");
         }
     }
     
@@ -404,19 +320,11 @@ class YellowCore {
         $this->page->includeLayout($name);
     }
 
-    public function snippet($name, $args = null) {  //TODO: remove later, for backwards compatibility
-        $this->layout($name, $args);
-    }
-    
     // Return layout arguments
     public function getLayoutArgs() {
         return $this->lookup->layoutArgs;
     }
 
-    public function getSnippetArgs() {   //TODO: remove later, for backwards compatibility
-        return $this->getLayoutArgs();
-    }
-    
     // Return request information
     public function getRequestInformation($scheme = "", $address = "", $base = "") {
         if (empty($scheme) && empty($address) && empty($base)) {
@@ -618,9 +526,6 @@ class YellowPage {
             if (method_exists($value["obj"], "onParseContentShortcut")) {
                 $output = $value["obj"]->onParseContentShortcut($this, $name, $text, $type);
                 if (!is_null($output)) break;
-            } else if (method_exists($value["obj"], "onParseContentBlock")) { //TODO: remove later, for backwards compatibility
-                $output = $value["obj"]->onParseContentBlock($this, $name, $text, true);
-                if (!is_null($output)) break;
             }
         }
         if (is_null($output)) {
@@ -690,10 +595,6 @@ class YellowPage {
             foreach ($this->yellow->extensions->extensions as $key=>$value) {
                 if (method_exists($value["obj"], "onParsePageLayout")) {
                     $value["obj"]->onParsePageLayout($this, $name);
-                } elseif (method_exists($value["obj"], "onParsePageTemplate")) { //TODO: remove later, for backwards compatibility
-                    $value["obj"]->onParsePageTemplate($this, $name);
-                } elseif (method_exists($value["obj"], "onParsePage")) {    //TODO: remove later, for backwards compatibility
-                    $value["obj"]->onParsePage();
                 }
             }
         }
@@ -713,12 +614,10 @@ class YellowPage {
         if (is_file($fileNameLayoutTheme)) {
             if (defined("DEBUG") && DEBUG>=2) echo "YellowPage::includeLayout file:$fileNameLayoutTheme<br>\n";
             $this->setLastModified(filemtime($fileNameLayoutTheme));
-            global $yellow; //TODO: remove later, for backwards compatibility
             require($fileNameLayoutTheme);
         } elseif (is_file($fileNameLayoutNormal)) {
             if (defined("DEBUG") && DEBUG>=2) echo "YellowPage::includeLayout file:$fileNameLayoutNormal<br>\n";
             $this->setLastModified(filemtime($fileNameLayoutNormal));
-            global $yellow; //TODO: remove later, for backwards compatibility
             require($fileNameLayoutNormal);
         } else {
             $this->error(500, "Layout '$name' does not exist!");
@@ -865,9 +764,6 @@ class YellowPage {
         foreach ($this->yellow->extensions->extensions as $key=>$value) {
             if (method_exists($value["obj"], "onParsePageExtra")) {
                 $outputExtension = $value["obj"]->onParsePageExtra($this, $name);
-                if (!is_null($outputExtension)) $output .= $outputExtension;
-            } elseif (method_exists($value["obj"], "onExtra")) {    //TODO: remove later, for backwards compatibility
-                $outputExtension = $value["obj"]->onExtra($name);
                 if (!is_null($outputExtension)) $output .= $outputExtension;
             }
         }
@@ -1346,8 +1242,7 @@ class YellowContent {
     }
     
     // Return page with shared content, null if not found
-    public function shared($name, $argumentObsolete = null, $nameObsolete = null) {
-        $name = !empty($nameObsolete) ? $nameObsolete : $name; //TODO: remove later, for backwards compatibility
+    public function shared($name) {
         $location = $this->yellow->lookup->getDirectoryLocation($this->yellow->page->location).$name;
         $page = $this->find($location);
         if ($page==null) {
@@ -3046,12 +2941,7 @@ class YellowExtensions {
     public function load($path) {
         foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.php$/", true, false) as $entry) {
             if (defined("DEBUG") && DEBUG>=3) echo "YellowExtensions::load file:$entry<br/>\n";
-            if (preg_match("/^core\.php$/", basename($entry)) && class_exists("YellowCore")) { //TODO: remove later, for backwards compatibility
-                $this->register("core", "YellowCore");
-                continue;
-            }
             $this->modified = max($this->modified, filemtime($entry));
-            global $yellow; //TODO: remove later, for backwards compatibility
             require_once($entry);
             $name = $this->yellow->lookup->normaliseName(basename($entry), true, true);
             $this->register(lcfirst($name), "Yellow".ucfirst($name));
@@ -3063,13 +2953,6 @@ class YellowExtensions {
         foreach ($this->extensions as $key=>$value) {
             if (method_exists($this->extensions[$key]["obj"], "onLoad")) $this->extensions[$key]["obj"]->onLoad($this->yellow);
         }
-        $this->yellow->system->set("pluginLocation", "/media/extensions/"); //TODO: remove later, for backwards compatibility
-        $this->yellow->system->set("themeLocation", "/media/extensions/");
-        $this->yellow->system->set("assetLocation", "/media/resources/");
-        $this->yellow->system->set("pluginDir", "system/extensions/");
-        $this->yellow->system->set("themeDir", "system/extensions/");
-        $this->yellow->system->set("assetDir", "system/resources/");
-        $this->yellow->system->set("configDir", "system/settings/");
     }
     
     // Register extension
@@ -3121,66 +3004,6 @@ class YellowExtensions {
     public function isExisting($name) {
         return !is_null($this->extensions[$name]);
     }
-}
-    
-class YellowPages {   //TODO: remove later, for backwards compatibility
-    public $yellow;
-    public function __construct($yellow) { $this->yellow = $yellow; }
-    public function find($location, $absoluteLocation = false) { return $this->yellow->content->find($location, $absoluteLocation); }
-    public function index($showInvisible = false, $multiLanguage = false, $levelMax = 0) { return $this->yellow->content->index($showInvisible, $multiLanguage, $levelMax); }
-    public function top($showInvisible = false) { return $this->yellow->content->top($showInvisible); }
-    public function path($location, $absoluteLocation = false) { return $this->yellow->content->path($location, $absoluteLocation); }
-    public function shared($name, $argumentObsolete = null, $nameObsolete = null) { return $this->yellow->content->shared($name, $argumentObsolete, $nameObsolete); }
-    public function multi($location, $absoluteLocation = false, $showInvisible = false) { return $this->yellow->content->multi($location, $absoluteLocation, $showInvisible); }
-    public function clean() { return $this->yellow->content->clean(); }
-    public function getHomeLocation($location) { return $this->yellow->content->getHomeLocation($location); }
-}
-    
-class YellowFiles {   //TODO: remove later, for backwards compatibility
-    public $yellow;
-    public function __construct($yellow) { $this->yellow = $yellow; }
-    public function find($location, $absoluteLocation = false) { return $this->yellow->media->find($location, $absoluteLocation); }
-    public function index($showInvisible = false, $multiPass = false, $levelMax = 0) { return $this->yellow->media->index($showInvisible, $multiPass, $levelMax); }
-    public function clean() { return $this->yellow->media->clean(); }
-    public function getHomeLocation($location) { return $this->yellow->media->getHomeLocation($location); }
-}
-
-class YellowConfig {   //TODO: remove later, for backwards compatibility
-    public $yellow;
-    public function __construct($yellow) { $this->yellow = $yellow; }
-    public function load($fileName) { $this->yellow->system->load($fileName); }
-    public function save($fileName, $config) { return $this->yellow->system->save($fileName, $config); }
-    public function setDefault($key, $value) { $this->yellow->system->setDefault($key, $value); }
-    public function set($key, $value) { $this->yellow->system->set($key, $value); }
-    public function get($key) { return $this->yellow->system->get($key); }
-    public function getHtml($key) { return $this->yellow->system->getHtml($key); }
-    public function getData($filterStart = "", $filterEnd = "") { return $this->yellow->system->getData($filterStart, $filterEnd); }
-    public function getModified($httpFormat = false) { return $this->yellow->system->getModified($httpFormat); }
-    public function isExisting($key) { return $this->yellow->system->isExisting($key); }
-}
-    
-class YellowPlugins {   //TODO: remove later, for backwards compatibility
-    public $yellow;
-    public $plugins;
-    public function __construct($yellow) { $this->yellow = $yellow; $this->plugins = array(); }
-    public function load($path = "") { $this->yellow->extensions->load($this->yellow->system->get("extensionDir")); }
-    public function register($name, $plugin, $obsoleteVersion = 0, $obsoletePriority = 0) { }
-    public function get($name) { return $this->yellow->extensions->get($name); }
-    public function getData() { return $this->yellow->extensions->getData(); }
-    public function getModified($httpFormat = false) { return $this->yellow->extensions->getModified($httpFormat); }
-    public function isExisting($name) { return $this->yellow->extensions->isExisting($name); }
-}
-
-class YellowThemes {   //TODO: remove later, for backwards compatibility
-    public $yellow;
-    public $themes;
-    public function __construct($yellow) { $this->yellow = $yellow; $this->themes = array(); }
-    public function load($path = "") { $this->yellow->extensions->load($this->yellow->system->get("extensionDir")); }
-    public function register($name, $theme, $obsoleteVersion = 0, $obsoletePriority = 0) { }
-    public function get($name) { return $this->yellow->extensions->get($name); }
-    public function getData() { return $this->yellow->extensions->getData(); }
-    public function getModified($httpFormat = false) { return $this->yellow->extensions->getModified($httpFormat); }
-    public function isExisting($name) { return $this->yellow->extensions->isExisting($name); }
 }
 
 // Unicode support for PHP
