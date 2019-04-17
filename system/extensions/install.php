@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowInstall {
-    const VERSION = "0.8.5";
+    const VERSION = "0.8.6";
     const TYPE = "feature";
     const PRIORITY = "1";
     public $yellow;                 //access to API
@@ -66,6 +66,9 @@ class YellowInstall {
         if ($status=="ok") $status = $this->updateContent($language, "Home", "/")==200 ? "ok" : "error";
         if ($status=="ok") $status = $this->updateContent($language, "About", "/about/")==200 ? "ok" : "error";
         if ($status=="ok") $status = $this->updateContent($language, "Footer", "/shared/footer")==200 ? "ok" : "error";
+        if ($status=="ok") $status = $this->updateContent($language, "Default", "/shared/page-new-default")==200 ? "ok" : "error";
+        if ($status=="ok") $status = $this->updateContent($language, "Blog", "/shared/page-new-blog")==200 ? "ok" : "error";
+        if ($status=="ok") $status = $this->updateContent($language, "Wiki", "/shared/page-new-wiki")==200 ? "ok" : "error";
         if ($status=="ok") $status = $this->updateSettings($this->getSystemData())==200 ? "ok" : "error";
         if ($status=="ok") $status = $this->removeFiles()==200 ? "done" : "error";
         if ($status=="done") {
@@ -186,17 +189,19 @@ class YellowInstall {
     public function updateContent($language, $name, $location) {
         $statusCode = 200;
         if ($language!="en") {
-            $titleOld = "Title: ".$this->yellow->text->getText("install{$name}Title", "en");
-            $titleNew = "Title: ".$this->yellow->text->getText("install{$name}Title", $language);
-            $textOld = strreplaceu("\\n", "\n", $this->yellow->text->getText("install{$name}Text", "en"));
-            $textNew = strreplaceu("\\n", "\n", $this->yellow->text->getText("install{$name}Text", $language));
             $fileName = $this->yellow->lookup->findFileFromLocation($location);
             $fileData = strreplaceu("\r\n", "\n", $this->yellow->toolbox->readFile($fileName));
-            $fileData = strreplaceu($titleOld, $titleNew, $fileData);
-            $fileData = strreplaceu($textOld, $textNew, $fileData);
-            if (!$this->yellow->toolbox->createFile($fileName, $fileData)) {
-                $statusCode = 500;
-                $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
+            if (!empty($fileData)) {
+                $titleOld = "Title: ".$this->yellow->text->getText("install{$name}Title", "en");
+                $titleNew = "Title: ".$this->yellow->text->getText("install{$name}Title", $language);
+                $textOld = strreplaceu("\\n", "\n", $this->yellow->text->getText("install{$name}Text", "en"));
+                $textNew = strreplaceu("\\n", "\n", $this->yellow->text->getText("install{$name}Text", $language));
+                if ($name!="Footer") $fileData = strreplaceu($titleOld, $titleNew, $fileData);
+                $fileData = strreplaceu($textOld, $textNew, $fileData);
+                if (!$this->yellow->toolbox->createFile($fileName, $fileData)) {
+                    $statusCode = 500;
+                    $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
+                }
             }
         }
         return $statusCode;
