@@ -188,20 +188,18 @@ class YellowInstall {
     // Update content
     public function updateContent($language, $name, $location) {
         $statusCode = 200;
-        if ($language!="en") {
-            $fileName = $this->yellow->lookup->findFileFromLocation($location);
-            $fileData = strreplaceu("\r\n", "\n", $this->yellow->toolbox->readFile($fileName));
-            if (!empty($fileData)) {
-                $titleOld = "Title: ".$this->yellow->text->getText("install{$name}Title", "en");
-                $titleNew = "Title: ".$this->yellow->text->getText("install{$name}Title", $language);
-                $textOld = strreplaceu("\\n", "\n", $this->yellow->text->getText("install{$name}Text", "en"));
-                $textNew = strreplaceu("\\n", "\n", $this->yellow->text->getText("install{$name}Text", $language));
-                if ($name!="Footer") $fileData = strreplaceu($titleOld, $titleNew, $fileData);
-                $fileData = strreplaceu($textOld, $textNew, $fileData);
-                if (!$this->yellow->toolbox->createFile($fileName, $fileData)) {
-                    $statusCode = 500;
-                    $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
-                }
+        $fileName = $this->yellow->lookup->findFileFromLocation($location);
+        $fileData = strreplaceu("\r\n", "\n", $this->yellow->toolbox->readFile($fileName));
+        if (!empty($fileData) && $language!="en") {
+            $titleOld = "Title: ".$this->yellow->text->getText("install{$name}Title", "en");
+            $titleNew = "Title: ".$this->yellow->text->getText("install{$name}Title", $language);
+            $textOld = strreplaceu("\\n", "\n", $this->yellow->text->getText("install{$name}Text", "en"));
+            $textNew = strreplaceu("\\n", "\n", $this->yellow->text->getText("install{$name}Text", $language));
+            if ($name!="Footer") $fileData = strreplaceu($titleOld, $titleNew, $fileData);
+            $fileData = strreplaceu($textOld, $textNew, $fileData);
+            if (!$this->yellow->toolbox->createFile($fileName, $fileData)) {
+                $statusCode = 500;
+                $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
             }
         }
         return $statusCode;
