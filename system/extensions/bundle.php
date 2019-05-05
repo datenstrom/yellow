@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowBundle {
-    const VERSION = "0.8.4";
+    const VERSION = "0.8.5";
     const TYPE = "feature";
     public $yellow;         //access to API
 
@@ -106,6 +106,7 @@ class YellowBundle {
             if ($this->yellow->toolbox->getFileModified($fileNameBundle)!=$modified) {
                 foreach ($fileNames as $fileName) {
                     $fileData = $this->yellow->toolbox->readFile($fileName);
+                    if (substrb($fileData, 0, 3)=="\xEF\xBB\xBF") $fileData = substrb($fileData, 3);
                     $fileData = $this->processBundleConvert($scheme, $address, $base, $fileData, $fileName, $type);
                     $fileData = $this->processBundleMinify($scheme, $address, $base, $fileData, $fileName, $type);
                     if (!empty($fileDataNew)) $fileDataNew .= "\n\n";
