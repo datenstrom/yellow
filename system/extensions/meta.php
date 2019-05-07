@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowMeta {
-    const VERSION = "0.8.7";
+    const VERSION = "0.8.8";
     const TYPE = "feature";
     public $yellow;         //access to API
     
@@ -39,7 +39,9 @@ class YellowMeta {
         $output = null;
         if ($name=="header" && !$page->isError()) {
             list($imageUrl, $imageAlt) = $this->getImageInformation($page);
+            $locale = $this->yellow->text->getText("languageLocale", $page->get("language"));
             $output .= "<meta property=\"og:url\" content=\"".htmlspecialchars($page->getUrl().$this->yellow->toolbox->getLocationArgs())."\" />\n";
+            $output .= "<meta property=\"og:locale\" content=\"".htmlspecialchars($locale)."\" />\n";
             $output .= "<meta property=\"og:type\" content=\"website\" />\n";
             $output .= "<meta property=\"og:title\" content=\"".$page->getHtml("title")."\" />\n";
             $output .= "<meta property=\"og:site_name\" content=\"".$page->getHtml("sitename")."\" />\n";
@@ -54,7 +56,7 @@ class YellowMeta {
     public function onParsePageOutput($page, $text) {
         $output = null;
         if ($text && preg_match("/^(.*)<html(.*?)>(.*)$/s", $text, $matches)) {
-            $output = $matches[1]."<html prefix=\"og: http://ogp.me/ns#\"".$matches[2].">".$matches[3];
+            $output = $matches[1]."<html".$matches[2]." prefix=\"og: http://ogp.me/ns#\">".$matches[3];
         }
         return $output;
     }
