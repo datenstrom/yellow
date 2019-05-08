@@ -27,8 +27,8 @@ class YellowCore {
         $this->system->setDefault("sitename", "Yellow");
         $this->system->setDefault("author", "Yellow");
         $this->system->setDefault("email", "webmaster");
-        $this->system->setDefault("language", "en");
         $this->system->setDefault("timezone", "UTC");
+        $this->system->setDefault("language", "en");
         $this->system->setDefault("layout", "default");
         $this->system->setDefault("theme", "default");
         $this->system->setDefault("parser", "markdown");
@@ -512,9 +512,6 @@ class YellowPage {
             if (!$this->isExisting("description")) {
                 $this->set("description", $this->yellow->toolbox->createTextDescription($this->parserData, 150));
             }
-            if (!$this->isExisting("keywords")) {
-                $this->set("keywords", $this->yellow->toolbox->createTextKeywords($this->get("title"), 10));
-            }
             if (defined("DEBUG") && DEBUG>=3) echo "YellowPage::parseContent location:".$this->location."<br/>\n";
         }
     }
@@ -984,9 +981,8 @@ class YellowPageCollection extends ArrayObject {
     // Sort page collection by settings similarity
     public function similar($page, $ascendingOrder = false) {
         $location = $page->location;
-        $keywords = $this->yellow->toolbox->createTextKeywords($page->get("title"));
-        $keywords .= ",".$page->get("tag").",".$page->get("author");
-        $tokens = array_unique(array_filter(preg_split("/\s*,\s*/", $keywords), "strlen"));
+        $keywords = strtoloweru($page->get("title").",".$page->get("tag").",".$page->get("author"));
+        $tokens = array_unique(array_filter(preg_split("/[,\s\(\)\+\-]/", $keywords), "strlen"));
         if (!empty($tokens)) {
             $array = array();
             foreach ($this->getArrayCopy() as $page) {
@@ -2703,16 +2699,6 @@ class YellowToolbox {
             }
         }
         return $output;
-    }
-    
-    // Create keywords from text string
-    public function createTextKeywords($text, $keywordsMax = 0) {
-        $tokens = array_unique(preg_split("/[,\s\(\)\+\-]/", strtoloweru($text)));
-        foreach ($tokens as $key=>$value) {
-            if (strlenu($value)<3) unset($tokens[$key]);
-        }
-        if ($keywordsMax) $tokens = array_slice($tokens, 0, $keywordsMax);
-        return implode(", ", $tokens);
     }
     
     // Create title from text string
