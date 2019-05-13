@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowUpdate {
-    const VERSION = "0.8.7";
+    const VERSION = "0.8.8";
     const TYPE = "feature";
     const PRIORITY = "2";
     public $yellow;                 //access to API
@@ -375,13 +375,6 @@ class YellowUpdate {
                         $lastPublished = filemtime($fileName);
                         break;
                     }
-                    if (ctype_upper($matches[1][0])) {  //TODO: remove later, converts old format
-                        list($fileName) = explode(",", $matches[2], 2);
-                        if (is_file($fileName)) {
-                            $lastPublished = filemtime($fileName);
-                            break;
-                        }
-                    }
                 }
             }
             foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
@@ -392,10 +385,6 @@ class YellowUpdate {
                 if (!empty($matches[1]) && !empty($matches[2]) && strposu($matches[1], "/")) {
                     $fileName = $matches[1];
                     list($dummy, $entry, $flags) = explode(",", $matches[2], 3);
-                    if (ctype_upper($matches[1][0])) {  //TODO: remove later, converts old format
-                        list($dummy, $entry) = explode("/", $matches[1], 2);
-                        list($fileName, $flags) = explode(",", $matches[2], 2);
-                    }
                     $fileData = $zip->getFromName($pathBase.basename($entry));
                     $lastModified = $this->yellow->toolbox->getFileModified($fileName);
                     $statusCode = $this->updateExtensionFile($fileName, $fileData, $modified, $lastModified, $lastPublished, $flags, $force, $extension);
@@ -563,10 +552,6 @@ class YellowUpdate {
                 if (!empty($matches[1]) && !empty($matches[2])) {
                     $fileName = $matches[1];
                     list($extension) = explode(",", lcfirst($matches[2]), 3);
-                    if (ctype_upper($matches[1][0])) {  //TODO: remove later, converts old format
-                        list($extension) = explode("/", lcfirst($matches[1]));
-                        list($fileName) = explode(",", $matches[2], 2);
-                    }
                     if (!is_null($data[$extension])) $data[$extension] .= ",";
                     $data[$extension] .= $fileName;
                 }
@@ -587,10 +572,6 @@ class YellowUpdate {
                 if (!empty($matches[1]) && !empty($matches[2])) {
                     $fileName = $matches[1];
                     list($extensionNew, $dummy, $flags) = explode(",", lcfirst($matches[2]), 3);
-                    if (ctype_upper($matches[1][0])) {  //TODO: remove later, converts old format
-                        list($extensionNew) = explode("/", lcfirst($matches[1]));
-                        list($fileName, $flags) = explode(",", $matches[2], 2);
-                    }
                     if ($extension!=$extensionNew) {
                         $extension = $extensionNew;
                         $lastPublished = $this->yellow->toolbox->getFileModified($fileName);
