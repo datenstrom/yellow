@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowMarkdown {
-    const VERSION = "0.8.4";
+    const VERSION = "0.8.5";
     const TYPE = "feature";
     public $yellow;         //access to API
     
@@ -3751,6 +3751,7 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser {
                 $page->safeMode && $page->statusCode==200);
         };
         $this->span_gamut += array("doStrikethrough" => 55);
+        $this->block_gamut += array("doNoticeBlocks" => 65);
         $this->escape_chars .= "~";
         parent::__construct();
     }
@@ -3776,14 +3777,14 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser {
 
     // Handle links
     public function doAutoLinks($text) {
-        $text = preg_replace_callback("/<(\w+:[^\'\">\s]+)>/", array(&$this, "_doAutoLinks_url_callback"), $text);
-        $text = preg_replace_callback("/<([\w\+\-\.]+@[\w\-\.]+)>/", array(&$this, "_doAutoLinks_email_callback"), $text);
-        $text = preg_replace_callback("/^\s*\[(\w+)(.*?)\]\s*$/", array(&$this, "_doAutoLinks_shortcutBlock_callback"), $text);
-        $text = preg_replace_callback("/\[(\w+)(.*?)\]/", array(&$this, "_doAutoLinks_shortcutInline_callback"), $text);
-        $text = preg_replace_callback("/\[\-\-(.*?)\-\-\]/", array(&$this, "_doAutoLinks_shortcutComment_callback"), $text);
-        $text = preg_replace_callback("/\:([\w\+\-\_]+)\:/", array(&$this, "_doAutoLinks_shortcutSymbol_callback"), $text);
-        $text = preg_replace_callback("/((http|https|ftp):\/\/\S+[^\'\"\,\.\;\:\*\~\s]+)/", array(&$this, "_doAutoLinks_url_callback"), $text);
-        $text = preg_replace_callback("/([\w\+\-\.]+@[\w\-\.]+\.[\w]{2,4})/", array(&$this, "_doAutoLinks_email_callback"), $text);
+        $text = preg_replace_callback("/<(\w+:[^\'\">\s]+)>/", array($this, "_doAutoLinks_url_callback"), $text);
+        $text = preg_replace_callback("/<([\w\+\-\.]+@[\w\-\.]+)>/", array($this, "_doAutoLinks_email_callback"), $text);
+        $text = preg_replace_callback("/^\s*\[(\w+)(.*?)\]\s*$/", array($this, "_doAutoLinks_shortcutBlock_callback"), $text);
+        $text = preg_replace_callback("/\[(\w+)(.*?)\]/", array($this, "_doAutoLinks_shortcutInline_callback"), $text);
+        $text = preg_replace_callback("/\[\-\-(.*?)\-\-\]/", array($this, "_doAutoLinks_shortcutComment_callback"), $text);
+        $text = preg_replace_callback("/\:([\w\+\-\_]+)\:/", array($this, "_doAutoLinks_shortcutSymbol_callback"), $text);
+        $text = preg_replace_callback("/((http|https|ftp):\/\/\S+[^\'\"\,\.\;\:\*\~\s]+)/", array($this, "_doAutoLinks_url_callback"), $text);
+        $text = preg_replace_callback("/([\w\+\-\.]+@[\w\-\.]+\.[\w]{2,4})/", array($this, "_doAutoLinks_email_callback"), $text);
         return $text;
     }
     
@@ -3896,7 +3897,36 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser {
         }
         return "<li$attr>".$item."</li>\n";
     }
-
+    
+    // Handle notice blocks
+    public function doNoticeBlocks($text) {
+        return preg_replace_callback("/((?>^[ ]*!.+\n(.+\n)*\n*)+)/m", array($this, "_doNoticeBlocks_callback"), $text);
+    }
+    
+    // Handle notice blocks over multiple lines
+    public function _doNoticeBlocks_callback($matches) {
+        $output = $class = $text = "";
+        foreach (preg_split("/\n/", $matches[1]) as $line) {
+            if (preg_match("/^[ ]*(!{1,6})([\w\-]*)[ ]?(.*)$/", $line, $matches)) {
+                $classNew = empty($matches[2]) ? "notice-".strlen($matches[1]) : $matches[2];
+                if ($classNew!=$class) {
+                    if (!empty($class) && !empty($text)) {
+                        $line = "<div class=\"$class\">\n".$this->runBlockGamut($text)."\n</div>";
+                        $output .= "\n".$this->hashBlock($line)."\n\n";
+                    }
+                    $class = $classNew;
+                    $text = "";
+                }
+            }
+            $text .= $matches[3]."\n";
+        }
+        if (!empty($class) && !empty($text)) {
+            $line = "<div class=\"$class\">\n".$this->runBlockGamut($text)."\n</div>";
+            $output .= "\n".$this->hashBlock($line)."\n\n";
+        }
+        return $output;
+    }
+    
     // Return unique id attribute
     public function getIdAttribute($text) {
         $text = $this->yellow->lookup->normaliseName($text, true, false, true);
