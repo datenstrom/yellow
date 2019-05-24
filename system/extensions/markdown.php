@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowMarkdown {
-    const VERSION = "0.8.5";
+    const VERSION = "0.8.6";
     const TYPE = "feature";
     public $yellow;         //access to API
     
@@ -3900,28 +3900,34 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser {
     
     // Handle notice blocks
     public function doNoticeBlocks($text) {
-        return preg_replace_callback("/((?>^[ ]*!.+\n(.+\n)*\n*)+)/m", array($this, "_doNoticeBlocks_callback"), $text);
+        return preg_replace_callback("/((?>^[ ]*!{1,6}.*\n)+)/m", array($this, "_doNoticeBlocks_callback"), $text);
     }
     
     // Handle notice blocks over multiple lines
     public function _doNoticeBlocks_callback($matches) {
-        $output = $class = $text = "";
+        $output = $openerLength = $attr = $text = "";
         foreach (preg_split("/\n/", $matches[1]) as $line) {
-            if (preg_match("/^[ ]*(!{1,6})([\w\-]*)[ ]?(.*)$/", $line, $matches)) {
-                $classNew = empty($matches[2]) ? "notice-".strlen($matches[1]) : $matches[2];
-                if ($classNew!=$class) {
-                    if (!empty($class) && !empty($text)) {
-                        $line = "<div class=\"$class\">\n".$this->runBlockGamut($text)."\n</div>";
+            if (preg_match("/^[ ]*(!{1,6})[ ]?(.*)$/", $line, $matches)) {
+                $openerLengthNew = strlen($matches[1]);
+                if ($openerLengthNew!=$openerLength) {
+                    if (!empty($text)) {
+                        $line = "<div$attr>\n".$this->runBlockGamut($text)."\n</div>";
                         $output .= "\n".$this->hashBlock($line)."\n\n";
                     }
-                    $class = $classNew;
-                    $text = "";
+                    $openerLength = $openerLengthNew;
+                    $attr = " class=\"notice$openerLength\"";
+                    $text = $matches[2]."\n";
+                    if (preg_match("/^[ ]*".$this->id_class_attr_catch_re."[ ]*$/", $text, $matches)) {
+                        $attr = $this->doExtraAttributes("div", $dummy =& $matches[1]);
+                        $text = "";
+                    }
+                } else {
+                    $text .= $matches[2]."\n";
                 }
             }
-            $text .= $matches[3]."\n";
         }
-        if (!empty($class) && !empty($text)) {
-            $line = "<div class=\"$class\">\n".$this->runBlockGamut($text)."\n</div>";
+        if (!empty($text)) {
+            $line = "<div$attr>\n".$this->runBlockGamut($text)."\n</div>";
             $output .= "\n".$this->hashBlock($line)."\n\n";
         }
         return $output;

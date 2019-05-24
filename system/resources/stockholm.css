@@ -101,18 +101,6 @@ a:hover {
     border-top: 1px solid #ddd;
     border-bottom: 1px solid #ddd;
 }
-.content blockquote {
-    margin-left: 0;
-    padding-left: 1em;
-    border-left: 0.5em solid #0a0;
-}
-.content blockquote blockquote {
-    margin-left: -1.5em;
-    border-left: 0.5em solid #fb0;
-}
-.content blockquote blockquote blockquote {
-    border-color: #d00;
-}
 .content code,
 .content pre {
     font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
@@ -138,6 +126,35 @@ a:hover {
     line-height: 1.45;
     background-color: #f7f7f7;
     border-radius: 3px;
+}
+.content blockquote {
+    margin-left: 0;
+    padding-left: 1em;
+    border-left: 1px solid #ddd;
+}
+.content .notice1 {
+    margin: 1em 0;
+    padding: 10px 1em;
+    background-color: #fffbf0;
+    color: #e90;
+    border-left: 10px solid #fb0;
+}
+.content .notice2 {
+    margin: 1em 0;
+    padding: 10px 1em;
+    background-color: #fdf0f0;
+    color: #c00;
+    border-left: 10px solid #d00;
+}
+.content .notice3,
+.content .notice4,
+.content .notice5,
+.content .notice6 {
+    margin: 1em 0;
+    padding: 10px 1em;
+    background-color: #f0f8fe;
+    color: #07d;
+    border-left: 10px solid #08e;
 }
 .content .flexible {
     position: relative;
@@ -438,9 +455,6 @@ a:hover {
 
 /* Misc */
 
-.layout-default .content img.screenshot {
-    margin: 0 -0.5em;
-}
 .layout-language .content div.language {
     font-size: 1.2em;
     text-align: left;
@@ -454,6 +468,11 @@ a:hover {
     vertical-align: middle;
     margin-top: -5px;
     margin-right: 1.5em;
+}
+.content .main .wikipages ul,
+.content .main .wikitags ul,
+.content .main .wikilinks ul {
+    columns: 3;
 }
 .hljs-meta,
 .hljs-keyword,
@@ -532,6 +551,11 @@ a:hover {
     }
     .with-sidebar .sidebar {
         display: none;
+    }
+    .content .main .wikipages ul,
+    .content .main .wikitags ul,
+    .content .main .wikilinks  ul {
+        columns: 1;
     }
 }
 @media print {

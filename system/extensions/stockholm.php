@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowStockholm {
-    const VERSION = "0.8.3";
+    const VERSION = "0.8.4";
     const TYPE = "theme";
     public $yellow;         //access to API
     
