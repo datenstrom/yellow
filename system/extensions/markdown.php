@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowMarkdown {
-    const VERSION = "0.8.6";
+    const VERSION = "0.8.7";
     const TYPE = "feature";
     public $yellow;         //access to API
     
@@ -3740,11 +3740,13 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser {
     public $yellow;             //access to API
     public $page;               //access to page
     public $idAttributes;       //id attributes
+    public $noticeLevel;        //recursive level
 
     public function __construct($yellow, $page) {
         $this->yellow = $yellow;
         $this->page = $page;
         $this->idAttributes = array();
+        $this->noticeLevel = 0;
         $this->no_markup = $page->safeMode;
         $this->url_filter_func = function($url) use ($yellow, $page) {
             return $yellow->lookup->normaliseLocation($url, $page->location,
@@ -3900,37 +3902,25 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser {
     
     // Handle notice blocks
     public function doNoticeBlocks($text) {
-        return preg_replace_callback("/((?>^[ ]*!{1,6}.*\n)+)/m", array($this, "_doNoticeBlocks_callback"), $text);
+        return preg_replace_callback("/((?>^[ ]*!(?!\[)[ ]?.+\n(.+\n)*)+)/m", array($this, "_doNoticeBlocks_callback"), $text);
     }
     
     // Handle notice blocks over multiple lines
     public function _doNoticeBlocks_callback($matches) {
-        $output = $openerLength = $attr = $text = "";
-        foreach (preg_split("/\n/", $matches[1]) as $line) {
-            if (preg_match("/^[ ]*(!{1,6})[ ]?(.*)$/", $line, $matches)) {
-                $openerLengthNew = strlen($matches[1]);
-                if ($openerLengthNew!=$openerLength) {
-                    if (!empty($text)) {
-                        $line = "<div$attr>\n".$this->runBlockGamut($text)."\n</div>";
-                        $output .= "\n".$this->hashBlock($line)."\n\n";
-                    }
-                    $openerLength = $openerLengthNew;
-                    $attr = " class=\"notice$openerLength\"";
-                    $text = $matches[2]."\n";
-                    if (preg_match("/^[ ]*".$this->id_class_attr_catch_re."[ ]*$/", $text, $matches)) {
-                        $attr = $this->doExtraAttributes("div", $dummy =& $matches[1]);
-                        $text = "";
-                    }
-                } else {
-                    $text .= $matches[2]."\n";
-                }
-            }
+        $lines = $matches[1];
+        $attr = "";
+        $text = preg_replace("/^[ ]*![ ]?/m", "", $lines);
+        if (preg_match("/^[ ]*".$this->id_class_attr_catch_re."[ ]*\n([\S\s]*)$/m", $text, $matches)) {
+            $attr = $this->doExtraAttributes("div", $dummy =& $matches[1]);
+            $text = $matches[2];
+        } elseif ($this->noticeLevel==0) {
+            $level = strspn(str_replace(array(" ", "!["), "", $lines), "!");
+            $attr = " class=\"notice$level\"";
         }
-        if (!empty($text)) {
-            $line = "<div$attr>\n".$this->runBlockGamut($text)."\n</div>";
-            $output .= "\n".$this->hashBlock($line)."\n\n";
-        }
-        return $output;
+        ++$this->noticeLevel;
+        $output = "<div$attr>\n".$this->runBlockGamut($text)."\n</div>";
+        --$this->noticeLevel;
+        return "\n".$this->hashBlock($output)."\n\n";
     }
     
     // Return unique id attribute
