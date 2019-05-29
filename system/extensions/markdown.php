@@ -3917,9 +3917,13 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser {
             $level = strspn(str_replace(array(" ", "!["), "", $lines), "!");
             $attr = " class=\"notice$level\"";
         }
-        ++$this->noticeLevel;
-        $output = "<div$attr>\n".$this->runBlockGamut($text)."\n</div>";
-        --$this->noticeLevel;
+        if (!empty($text)) {
+            ++$this->noticeLevel;
+            $output = "<div$attr>\n".$this->runBlockGamut($text)."\n</div>";
+            --$this->noticeLevel;
+        } else {
+            $output = "<div$attr></div>";
+        }
         return "\n".$this->hashBlock($output)."\n\n";
     }
     
