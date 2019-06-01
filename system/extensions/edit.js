@@ -16,7 +16,6 @@ var yellow = {
 
 yellow.edit = {
     paneId: 0,          //visible pane ID
-    paneActionOld: 0,   //previous pane action
     paneAction: 0,      //current pane action
     paneStatus: 0,      //current pane status
     popupId: 0,         //visible popup ID
@@ -34,7 +33,7 @@ yellow.edit = {
     
     // Handle keyboard
     keydown: function(e) {
-        if (this.paneId=="yellow-pane-edit") this.processShortcut(e);
+        if (this.paneId=="yellow-pane-create" || this.paneId=="yellow-pane-edit" || this.paneId=="yellow-pane-delete") this.processShortcut(e);
         if (this.paneId && e.keyCode==27) this.hidePane(this.paneId);
     },
     
@@ -48,7 +47,7 @@ yellow.edit = {
     drop: function(e) {
         e.stopPropagation();
         e.preventDefault();
-        var elementText = document.getElementById("yellow-pane-edit-text");
+        var elementText = document.getElementById(this.paneId+"-text");
         var files = e.dataTransfer ? e.dataTransfer.files : e.target.files;
         for (var i=0; i<files.length; i++) this.uploadFile(elementText, files[i]);
     },
@@ -85,12 +84,12 @@ yellow.edit = {
         if (yellow.system.userName) {
             elementDiv.innerHTML =
                 "<div class=\"yellow-bar-left\">"+
-                "<a href=\"#\" id=\"yellow-bar-edit\" data-action=\"edit\" aria-expanded=\"false\">"+this.getText("Edit")+"</a>"+
+                "<a href=\"#\" id=\"yellow-pane-edit-bar\" data-action=\"edit\" aria-expanded=\"false\">"+this.getText("Edit")+"</a>"+
                 "</div>"+
                 "<div class=\"yellow-bar-right\">"+
-                "<a href=\"#\" id=\"yellow-bar-create\" data-action=\"create\" aria-expanded=\"false\">"+this.getText("Create")+"</a>"+
-                "<a href=\"#\" id=\"yellow-bar-delete\" data-action=\"delete\" aria-expanded=\"false\">"+this.getText("Delete")+"</a>"+
-                "<a href=\"#\" id=\"yellow-bar-menu\" data-action=\"menu\" aria-expanded=\"false\">"+yellow.toolbox.encodeHtml(yellow.system.userName)+"</a>"+
+                "<a href=\"#\" id=\"yellow-pane-create-bar\" data-action=\"create\" aria-expanded=\"false\">"+this.getText("Create")+"</a>"+
+                "<a href=\"#\" id=\"yellow-pane-delete-bar\" data-action=\"delete\" aria-expanded=\"false\">"+this.getText("Delete")+"</a>"+
+                "<a href=\"#\" id=\"yellow-pane-menu-bar\" data-action=\"menu\" aria-expanded=\"false\">"+yellow.toolbox.encodeHtml(yellow.system.userName)+"</a>"+
                 "</div>"+
                 "<div class=\"yellow-bar-banner\"></div>";
         }
@@ -100,10 +99,9 @@ yellow.edit = {
     },
     
     // Update bar
-    updateBar: function(action, name) {
-        if (yellow.system.debug) console.log("yellow.edit.updateBar action:"+action);
-        if (action) {
-            var element = document.getElementById("yellow-bar-"+action);
+    updateBar: function(paneId, name) {
+        if (paneId) {
+            var element = document.getElementById(paneId+"-bar");
             if (element) {
                 if (name.indexOf("selected")!=-1) element.setAttribute("aria-expanded", "true");
                 yellow.toolbox.addClass(element, name);
@@ -124,13 +122,13 @@ yellow.edit = {
         elementPane.className = "yellow-pane";
         elementPane.setAttribute("id", paneId);
         elementPane.style.display = "none";
-        if (paneId=="yellow-pane-edit") {
+        if (paneId=="yellow-pane-create" || paneId=="yellow-pane-edit") {
             yellow.toolbox.addEvent(elementPane, "input", yellow.onUpdatePane);
             yellow.toolbox.addEvent(elementPane, "dragenter", yellow.onDrag);
             yellow.toolbox.addEvent(elementPane, "dragover", yellow.onDrag);
             yellow.toolbox.addEvent(elementPane, "drop", yellow.onDrop);
         }
-        if (paneId=="yellow-pane-edit" || paneId=="yellow-pane-menu") {
+        if (paneId=="yellow-pane-create" || paneId=="yellow-pane-edit" || paneId=="yellow-pane-delete" || paneId=="yellow-pane-menu") {
             var elementArrow = document.createElement("span");
             elementArrow.className = "yellow-arrow";
             elementArrow.setAttribute("id", paneId+"-arrow");
@@ -145,14 +143,12 @@ yellow.edit = {
                 "<form method=\"post\">"+
                 "<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\"></i></a>"+
                 "<div class=\"yellow-title\"><h1>"+this.getText("LoginTitle")+"</h1></div>"+
-                "<div class=\"yellow-fields\" id=\"yellow-pane-login-fields\">"+
+                "<div class=\"yellow-fields\">"+
                 "<input type=\"hidden\" name=\"action\" value=\"login\" />"+
                 "<p><label for=\"yellow-pane-login-email\">"+this.getText("LoginEmail")+"</label><br /><input class=\"yellow-form-control\" name=\"email\" id=\"yellow-pane-login-email\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(yellow.system.editLoginEmail)+"\" /></p>"+
                 "<p><label for=\"yellow-pane-login-password\">"+this.getText("LoginPassword")+"</label><br /><input class=\"yellow-form-control\" type=\"password\" name=\"password\" id=\"yellow-pane-login-password\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(yellow.system.editLoginPassword)+"\" /></p>"+
                 "<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("LoginButton")+"\" /></p>"+
-                "</div>"+
-                "<div class=\"yellow-actions\" id=\"yellow-pane-login-actions\">"+
-                "<p><a href=\"#\" id=\"yellow-pane-login-forgot\" data-action=\"forgot\">"+this.getText("LoginForgot")+"</a><br /><a href=\"#\" id=\"yellow-pane-login-signup\" data-action=\"signup\">"+this.getText("LoginSignup")+"</a></p>"+
+                "<p><a href=\"#\" id=\"yellow-pane-login-forgot\" class=\"yellow-center\" data-action=\"forgot\">"+this.getText("LoginForgot")+"</a><br /><a href=\"#\" id=\"yellow-pane-login-signup\" class=\"yellow-center\" data-action=\"signup\">"+this.getText("LoginSignup")+"</a></p>"+
                 "</div>"+
                 "</form>";
                 break;
@@ -161,13 +157,13 @@ yellow.edit = {
                 "<form method=\"post\">"+
                 "<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\"></i></a>"+
                 "<div class=\"yellow-title\"><h1>"+this.getText("SignupTitle")+"</h1></div>"+
-                "<div class=\"yellow-status\"><p id=\"yellow-pane-signup-status\" class=\""+paneStatus+"\">"+this.getText(paneAction+"Status", "", paneStatus)+"</p></div>"+
-                "<div class=\"yellow-fields\" id=\"yellow-pane-signup-fields\">"+
+                "<div class=\"yellow-status\"><p id=\"yellow-pane-signup-status\" class=\""+paneStatus+"\">"+this.getText("SignupStatus", "", paneStatus)+"</p></div>"+
+                "<div class=\"yellow-fields\">"+
                 "<input type=\"hidden\" name=\"action\" value=\"signup\" />"+
                 "<p><label for=\"yellow-pane-signup-name\">"+this.getText("SignupName")+"</label><br /><input class=\"yellow-form-control\" name=\"name\" id=\"yellow-pane-signup-name\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("name"))+"\" /></p>"+
                 "<p><label for=\"yellow-pane-signup-email\">"+this.getText("SignupEmail")+"</label><br /><input class=\"yellow-form-control\" name=\"email\" id=\"yellow-pane-signup-email\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("email"))+"\" /></p>"+
                 "<p><label for=\"yellow-pane-signup-password\">"+this.getText("SignupPassword")+"</label><br /><input class=\"yellow-form-control\" type=\"password\" name=\"password\" id=\"yellow-pane-signup-password\" maxlength=\"64\" value=\"\" /></p>"+
-                "<p><input type=\"checkbox\" name=\"consent\" value=\"consent\" id=\"consent\""+(this.getRequest("consent") ? " checked=\"checked\"" : "")+"> <label for=\"consent\">"+this.getText("SignupConsent")+"</label></p>"+
+                "<p><input type=\"checkbox\" name=\"consent\" value=\"consent\" id=\"yellow-pane-signup-consent\""+(this.getRequest("consent") ? " checked=\"checked\"" : "")+"> <label for=\"yellow-pane-signup-consent\">"+this.getText("SignupConsent")+"</label></p>"+
                 "<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("SignupButton")+"\" /></p>"+
                 "</div>"+
                 "</form>";
@@ -177,8 +173,8 @@ yellow.edit = {
                 "<form method=\"post\">"+
                 "<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\"></i></a>"+
                 "<div class=\"yellow-title\"><h1>"+this.getText("ForgotTitle")+"</h1></div>"+
-                "<div class=\"yellow-status\"><p id=\"yellow-pane-forgot-status\" class=\""+paneStatus+"\">"+this.getText(paneAction+"Status", "", paneStatus)+"</p></div>"+
-                "<div class=\"yellow-fields\" id=\"yellow-pane-forgot-fields\">"+
+                "<div class=\"yellow-status\"><p id=\"yellow-pane-forgot-status\" class=\""+paneStatus+"\">"+this.getText("ForgotStatus", "", paneStatus)+"</p></div>"+
+                "<div class=\"yellow-fields\">"+
                 "<input type=\"hidden\" name=\"action\" value=\"forgot\" />"+
                 "<p><label for=\"yellow-pane-forgot-email\">"+this.getText("ForgotEmail")+"</label><br /><input class=\"yellow-form-control\" name=\"email\" id=\"yellow-pane-forgot-email\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("email"))+"\" /></p>"+
                 "<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("OkButton")+"\" /></p>"+
@@ -190,8 +186,8 @@ yellow.edit = {
                 "<form method=\"post\">"+
                 "<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\"></i></a>"+
                 "<div class=\"yellow-title\"><h1>"+this.getText("RecoverTitle")+"</h1></div>"+
-                "<div class=\"yellow-status\"><p id=\"yellow-pane-recover-status\" class=\""+paneStatus+"\">"+this.getText(paneAction+"Status", "", paneStatus)+"</p></div>"+
-                "<div class=\"yellow-fields\" id=\"yellow-pane-recover-fields\">"+
+                "<div class=\"yellow-status\"><p id=\"yellow-pane-recover-status\" class=\""+paneStatus+"\">"+this.getText("RecoverStatus", "", paneStatus)+"</p></div>"+
+                "<div class=\"yellow-fields\">"+
                 "<p><label for=\"yellow-pane-recover-password\">"+this.getText("RecoverPassword")+"</label><br /><input class=\"yellow-form-control\" type=\"password\" name=\"password\" id=\"yellow-pane-recover-password\" maxlength=\"64\" value=\"\" /></p>"+
                 "<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("OkButton")+"\" /></p>"+
                 "</div>"+
@@ -202,8 +198,8 @@ yellow.edit = {
                 "<form method=\"post\">"+
                 "<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\"></i></a>"+
                 "<div class=\"yellow-title\"><h1>"+this.getText("QuitTitle")+"</h1></div>"+
-                "<div class=\"yellow-status\"><p id=\"yellow-pane-quit-status\" class=\""+paneStatus+"\">"+this.getText(paneAction+"Status", "", paneStatus)+"</p></div>"+
-                "<div class=\"yellow-fields\" id=\"yellow-pane-quit-fields\">"+
+                "<div class=\"yellow-status\"><p id=\"yellow-pane-quit-status\" class=\""+paneStatus+"\">"+this.getText("QuitStatus", "", paneStatus)+"</p></div>"+
+                "<div class=\"yellow-fields\">"+
                 "<input type=\"hidden\" name=\"action\" value=\"quit\" />"+
                 "<input type=\"hidden\" name=\"csrftoken\" value=\""+yellow.toolbox.encodeHtml(this.getCookie("csrftoken"))+"\" />"+
                 "<p><label for=\"yellow-pane-quit-name\">"+this.getText("SignupName")+"</label><br /><input class=\"yellow-form-control\" name=\"name\" id=\"yellow-pane-quit-name\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("name"))+"\" /></p>"+
@@ -212,82 +208,95 @@ yellow.edit = {
                 "</form>";
                 break;
             case "yellow-pane-account":
-                var rawDataLanguages = "";
-                if (yellow.system.serverLanguages && Object.keys(yellow.system.serverLanguages).length>1) {
-                    rawDataLanguages += "<p>";
-                    for (var language in yellow.system.serverLanguages) {
-                        var checked = language==this.getRequest("language") ? " checked=\"checked\"" : "";
-                        rawDataLanguages += "<label for=\"yellow-pane-account-"+language+"\"><input type=\"radio\" name=\"language\" id=\"yellow-pane-account-"+language+"\" value=\""+language+"\""+checked+"> "+yellow.toolbox.encodeHtml(yellow.system.serverLanguages[language])+"</label><br />";
-                    }
-                    rawDataLanguages += "</p>";
-                }
                 elementDiv.innerHTML =
                 "<form method=\"post\">"+
                 "<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\"></i></a>"+
-                "<div class=\"yellow-title\"><h1 id=\"yellow-pane-account-title\">"+this.getText("SettingsTitle")+"</h1></div>"+
-                "<div class=\"yellow-status\"><p id=\"yellow-pane-account-status\" class=\""+paneStatus+"\">"+this.getText(paneAction+"Status", "", paneStatus)+"</p></div>"+
-                "<div class=\"yellow-fields\" id=\"yellow-pane-account-fields\">"+
+                "<div class=\"yellow-title\"><h1 id=\"yellow-pane-account-title\">"+this.getText("AccountTitle")+"</h1></div>"+
+                "<div class=\"yellow-status\"><p id=\"yellow-pane-account-status\" class=\""+paneStatus+"\">"+this.getText("AccountStatus", "", paneStatus)+"</p></div>"+
+                "<div class=\"yellow-settings\">"+
+                "<div id=\"yellow-pane-account-settings-actions\" class=\"yellow-settings-left\"><p>"+this.getRawDataActions(paneAction)+"</p></div>"+
+                "<div id=\"yellow-pane-account-settings-separator\" class=\"yellow-settings-left yellow-settings-separator\">&nbsp;</div>"+
+                "<div id=\"yellow-pane-account-settings-fields\" class=\"yellow-settings-right yellow-fields\">"+
                 "<input type=\"hidden\" name=\"action\" value=\"account\" />"+
                 "<input type=\"hidden\" name=\"csrftoken\" value=\""+yellow.toolbox.encodeHtml(this.getCookie("csrftoken"))+"\" />"+
                 "<p><label for=\"yellow-pane-account-name\">"+this.getText("SignupName")+"</label><br /><input class=\"yellow-form-control\" name=\"name\" id=\"yellow-pane-account-name\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("name"))+"\" /></p>"+
                 "<p><label for=\"yellow-pane-account-email\">"+this.getText("SignupEmail")+"</label><br /><input class=\"yellow-form-control\" name=\"email\" id=\"yellow-pane-account-email\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("email"))+"\" /></p>"+
-                "<p><label for=\"yellow-pane-account-password\">"+this.getText("SignupPassword")+"</label><br /><input class=\"yellow-form-control\" type=\"password\" name=\"password\" id=\"yellow-pane-account-password\" maxlength=\"64\" value=\"\" /></p>"+rawDataLanguages+
-                "<p>"+this.getText("AccountQuit")+" <a href=\"#\" data-action=\"quit\">"+this.getText("AccountMore")+"</a></p>"+
-                "<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("OkButton")+"\" /></p>"+
+                "<p><label for=\"yellow-pane-account-password\">"+this.getText("SignupPassword")+"</label><br /><input class=\"yellow-form-control\" type=\"password\" name=\"password\" id=\"yellow-pane-account-password\" maxlength=\"64\" value=\"\" /></p>"+
+                "<p>"+this.getRawDataLanguages(paneId)+"</p>"+
+                "<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("ChangeButton")+"\" /></p>"+
+                "<p><a href=\"#\" id=\"yellow-pane-account-quit\" class=\"yellow-center\" data-action=\"quit\">"+this.getText("AccountQuit")+"</a><br /><a href=\"#\" id=\"yellow-pane-account-update\" class=\"yellow-center\" data-action=\"update\">"+this.getText("AccountUpdate")+"</a></p>"+
+                "</div>"+
+                "<div class=\"yellow-settings yellow-settings-banner\"></div>"+
                 "</div>"+
                 "</form>";
                 break;
-            case "yellow-pane-about":
+            case "yellow-pane-update":
                 elementDiv.innerHTML =
                 "<form method=\"post\">"+
                 "<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\"></i></a>"+
-                "<div class=\"yellow-title\"><h1 id=\"yellow-pane-about-title\">"+yellow.toolbox.encodeHtml(yellow.system.serverVersion)+"</h1></div>"+
-                "<div class=\"yellow-status\"><p id=\"yellow-pane-about-status\" class=\""+paneStatus+"\">"+this.getText("AboutStatus", "", paneStatus)+"</p></div>"+
-                "<div class=\"yellow-output\" id=\"yellow-pane-about-output\">"+yellow.page.rawDataOutput+"</div>"+
-                "<div class=\"yellow-buttons\" id=\"yellow-pane-about-buttons\">"+
+                "<div class=\"yellow-title\"><h1 id=\"yellow-pane-update-title\">"+yellow.toolbox.encodeHtml(yellow.system.serverVersion)+"</h1></div>"+
+                "<div class=\"yellow-status\"><p id=\"yellow-pane-update-status\" class=\""+paneStatus+"\">"+this.getText("UpdateStatus", "", paneStatus)+"</p></div>"+
+                "<div class=\"yellow-output\" id=\"yellow-pane-update-output\">"+yellow.page.rawDataOutput+"</div>"+
+                "<div class=\"yellow-buttons\" id=\"yellow-pane-update-buttons\">"+
                 "<p><a href=\"#\" class=\"yellow-btn\" data-action=\"close\">"+this.getText("OkButton")+"</a></p>"+
                 "</div>"+
                 "</form>";
                 break;
-            case "yellow-pane-edit":
-                var rawDataButtons = "";
-                if (yellow.system.editToolbarButtons && yellow.system.editToolbarButtons!="none") {
-                    var tokens = yellow.system.editToolbarButtons.split(/\s*,\s*/);
-                    for (var i=0; i<tokens.length; i++) {
-                        var token = tokens[i];
-                        if (token!="separator") {
-                            var shortcut = this.getShortcut(token);
-                            var rawDataShortcut = shortcut ? "&nbsp;&nbsp;"+yellow.toolbox.encodeHtml(shortcut) : "";
-                            var rawDataExpandable = this.isExpandable(token) ? " aria-expanded=\"false\"" : "";
-                            rawDataButtons += "<li><a href=\"#\" id=\"yellow-toolbar-"+yellow.toolbox.encodeHtml(token)+"\" class=\"yellow-toolbar-btn-icon yellow-toolbar-tooltip\" data-action=\"toolbar\" data-status=\""+yellow.toolbox.encodeHtml(token)+"\" aria-label=\""+this.getText("Toolbar", "", token)+rawDataShortcut+"\""+rawDataExpandable+"><i class=\"yellow-icon yellow-icon-"+yellow.toolbox.encodeHtml(token)+"\"></i></a></li>";
-                        } else {
-                            rawDataButtons += "<li><a href=\"#\" class=\"yellow-toolbar-btn-separator\"></a></li>";
-                        }
-                    }
-                    if (yellow.system.debug) console.log("yellow.edit.createPane buttons:"+yellow.system.editToolbarButtons);
-                }
+            case "yellow-pane-create":
                 elementDiv.innerHTML =
                 "<form method=\"post\">"+
-                "<div id=\"yellow-pane-edit-toolbar\">"+
-                "<h1 id=\"yellow-pane-edit-toolbar-title\" class=\"yellow-toolbar yellow-toolbar-left\">"+this.getText("Edit")+"</h1>"+
-                "<ul id=\"yellow-pane-edit-toolbar-buttons\" class=\"yellow-toolbar yellow-toolbar-left\">"+rawDataButtons+"</ul>"+
-                "<ul id=\"yellow-pane-edit-toolbar-main\" class=\"yellow-toolbar yellow-toolbar-right\">"+
-                "<li><a href=\"#\" id=\"yellow-pane-edit-cancel\" class=\"yellow-toolbar-btn\" data-action=\"close\">"+this.getText("CancelButton")+"</a></li>"+
-                "<li><a href=\"#\" id=\"yellow-pane-edit-send\" class=\"yellow-toolbar-btn\" data-action=\"send\">"+this.getText("EditButton")+"</a></li>"+
+                "<div id=\"yellow-pane-create-toolbar\">"+
+                "<div class=\"yellow-toolbar yellow-toolbar-left\"><h1 id=\"yellow-pane-create-toolbar-title\">"+this.getText("Create")+"</h1></div>"+
+                "<ul id=\"yellow-pane-create-toolbar-buttons\" class=\"yellow-toolbar yellow-toolbar-left\">"+this.getRawDataButtons(paneId)+"</ul>"+
+                "<ul id=\"yellow-pane-create-toolbar-main\" class=\"yellow-toolbar yellow-toolbar-right\">"+
+                "<li><a href=\"#\" id=\"yellow-pane-create-cancel\" class=\"yellow-toolbar-btn\" data-action=\"close\">"+this.getText("CancelButton")+"</a></li>"+
+                "<li><a href=\"#\" id=\"yellow-pane-create-submit\" class=\"yellow-toolbar-btn\" data-action=\"submit\">"+this.getText("CreateButton")+"</a></li>"+
                 "</ul>"+
                 "<ul class=\"yellow-toolbar yellow-toolbar-banner\"></ul>"+
                 "</div>"+
-                "<textarea id=\"yellow-pane-edit-text\" class=\"yellow-form-control\"></textarea>"+
-                "<div id=\"yellow-pane-edit-preview\"></div>"+
+                "<textarea id=\"yellow-pane-create-text\" class=\"yellow-edit-text\"></textarea>"+
+                "<div id=\"yellow-pane-create-preview\" class=\"yellow-edit-preview\"></div>"+
+                "</form>";
+                break;
+            case "yellow-pane-edit":
+                elementDiv.innerHTML =
+                "<form method=\"post\">"+
+                "<div id=\"yellow-pane-edit-toolbar\">"+
+                "<div class=\"yellow-toolbar yellow-toolbar-left\"><h1 id=\"yellow-pane-edit-toolbar-title\">"+this.getText("Edit")+"</h1></div>"+
+                "<ul id=\"yellow-pane-edit-toolbar-buttons\" class=\"yellow-toolbar yellow-toolbar-left\">"+this.getRawDataButtons(paneId)+"</ul>"+
+                "<ul id=\"yellow-pane-edit-toolbar-main\" class=\"yellow-toolbar yellow-toolbar-right\">"+
+                "<li><a href=\"#\" id=\"yellow-pane-edit-cancel\" class=\"yellow-toolbar-btn\" data-action=\"close\">"+this.getText("CancelButton")+"</a></li>"+
+                "<li><a href=\"#\" id=\"yellow-pane-edit-submit\" class=\"yellow-toolbar-btn\" data-action=\"submit\">"+this.getText("EditButton")+"</a></li>"+
+                "</ul>"+
+                "<ul class=\"yellow-toolbar yellow-toolbar-banner\"></ul>"+
+                "</div>"+
+                "<textarea id=\"yellow-pane-edit-text\" class=\"yellow-edit-text\"></textarea>"+
+                "<div id=\"yellow-pane-edit-preview\" class=\"yellow-edit-preview\"></div>"+
+                "</form>";
+                break;
+            case "yellow-pane-delete":
+                elementDiv.innerHTML =
+                "<form method=\"post\">"+
+                "<div id=\"yellow-pane-delete-toolbar\">"+
+                "<div class=\"yellow-toolbar yellow-toolbar-left\"><h1 id=\"yellow-pane-delete-toolbar-title\">"+this.getText("Delete")+"</h1></div>"+
+                "<ul id=\"yellow-pane-delete-toolbar-buttons\" class=\"yellow-toolbar yellow-toolbar-left\">"+this.getRawDataButtons(paneId)+"</ul>"+
+                "<ul id=\"yellow-pane-delete-toolbar-main\" class=\"yellow-toolbar yellow-toolbar-right\">"+
+                "<li><a href=\"#\" id=\"yellow-pane-delete-cancel\" class=\"yellow-toolbar-btn\" data-action=\"close\">"+this.getText("CancelButton")+"</a></li>"+
+                "<li><a href=\"#\" id=\"yellow-pane-delete-submit\" class=\"yellow-toolbar-btn\" data-action=\"submit\">"+this.getText("DeleteButton")+"</a></li>"+
+                "</ul>"+
+                "<ul class=\"yellow-toolbar yellow-toolbar-banner\"></ul>"+
+                "</div>"+
+                "<textarea id=\"yellow-pane-delete-text\" class=\"yellow-edit-text\"></textarea>"+
+                "<div id=\"yellow-pane-delete-preview\" class=\"yellow-edit-preview\"></div>"+
                 "</form>";
                 break;
             case "yellow-pane-menu":
                 elementDiv.innerHTML =
                 "<ul class=\"yellow-dropdown\">"+
                 "<li><span>"+yellow.toolbox.encodeHtml(yellow.system.userEmail)+"</span></li>"+
-                "<li><a href=\"#\" data-action=\"account\">"+this.getText("SettingsTitle")+"</a></li>" +
+                "<li><a href=\"#\" data-action=\"settings\">"+this.getText("MenuSettings")+"</a></li>" +
                 "<li><a href=\"#\" data-action=\"help\">"+this.getText("MenuHelp")+"</a></li>" +
-                "<li><a href=\"#\" data-action=\"logout\">"+this.getText("MenuLogout")+"</a></li>"+
+                "<li><a href=\"#\" data-action=\"submit\" data-args=\"action:logout\">"+this.getText("MenuLogout")+"</a></li>"+
                 "</ul>";
                 break;
             case "yellow-pane-information":
@@ -301,7 +310,9 @@ yellow.edit = {
                 "</div>"+
                 "</form>";
                 break;
-            default: elementDiv.innerHTML = "<div class=\"yellow-error\"><p>Error: Pane '"+paneId+"' does not exist!</p></div>";
+            default: elementDiv.innerHTML =
+                "<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\"></i></a>"+
+                "<div class=\"yellow-error\">Pane '"+paneId+"' was not found. Oh no...</div>";
         }
         elementPane.appendChild(elementDiv);
         yellow.toolbox.insertAfter(elementPane, document.getElementsByTagName("body")[0].firstChild);
@@ -309,10 +320,10 @@ yellow.edit = {
     },
 
     // Update pane
-    updatePane: function(paneId, paneAction, paneStatus, init) {
+    updatePane: function(paneId, paneAction, paneStatus, paneInit) {
         switch (paneId) {
             case "yellow-pane-login":
-                if (yellow.system.editLoginRestriction) {
+                if (paneInit && yellow.system.editLoginRestriction) {
                     yellow.toolbox.setVisible(document.getElementById("yellow-pane-login-signup"), false);
                 }
                 break;
@@ -323,52 +334,55 @@ yellow.edit = {
                 }
                 break;
             case "yellow-pane-account":
+                if (paneInit && yellow.system.editSettingsActions=="none") {
+                    document.getElementById("yellow-pane-account-title").innerHTML = this.getText("MenuSettings");
+                }
                 if (paneStatus=="none") {
-                    document.getElementById("yellow-pane-account-status").innerHTML = "<a href=\"#\" data-action=\"about\">"+this.getText("AboutTitle")+"</a>";
+                    document.getElementById("yellow-pane-account-status").innerHTML = this.getText("AccountStatusNone");
                     document.getElementById("yellow-pane-account-name").value = yellow.system.userName;
                     document.getElementById("yellow-pane-account-email").value = yellow.system.userEmail;
+                    document.getElementById("yellow-pane-account-password").value = "";
                     document.getElementById("yellow-pane-account-"+yellow.system.userLanguage).checked = true;
                 }
                 break;
-            case "yellow-pane-about":
-                if (paneStatus=="none" && this.isExtension("update")) {
-                    document.getElementById("yellow-pane-about-status").innerHTML = this.getText("AboutStatusCheck");
-                    document.getElementById("yellow-pane-about-output").innerHTML = "";
-                    setTimeout("yellow.action('send');", 500);
+            case "yellow-pane-update":
+                if (paneStatus=="none") {
+                    document.getElementById("yellow-pane-update-status").innerHTML = this.getText("UpdateStatusCheck");
+                    document.getElementById("yellow-pane-update-output").innerHTML = "";
+                    setTimeout("yellow.action('submit', '', 'action:update/option:check/');", 500);
                 }
-                if (paneStatus=="updates" && this.isExtension("update")) {
-                    document.getElementById("yellow-pane-about-status").innerHTML = "<a href=\"#\" data-action=\"update\">"+this.getText("AboutStatusUpdates")+"</a>";
+                if (paneStatus=="updates") {
+                    document.getElementById("yellow-pane-update-status").innerHTML = "<a href=\"#\" data-action=\"submit\" data-args=\"action:update\">"+this.getText("UpdateStatusUpdates")+"</a>";
                 }
                 break;
+            case "yellow-pane-create":
             case "yellow-pane-edit":
-                document.getElementById("yellow-pane-edit-text").focus();
-                if (init) {
-                    yellow.toolbox.setVisible(document.getElementById("yellow-pane-edit-text"), true);
-                    yellow.toolbox.setVisible(document.getElementById("yellow-pane-edit-preview"), false);
-                    document.getElementById("yellow-pane-edit-toolbar-title").innerHTML = yellow.toolbox.encodeHtml(yellow.page.title);
-                    document.getElementById("yellow-pane-edit-text").value = paneAction=="create" ? yellow.page.rawDataNew : yellow.page.rawDataEdit;
-                    var matches = document.getElementById("yellow-pane-edit-text").value.match(/^(\xEF\xBB\xBF)?\-\-\-[\r\n]+/);
-                    var position = document.getElementById("yellow-pane-edit-text").value.indexOf("\n", matches ? matches[0].length : 0);
-                    document.getElementById("yellow-pane-edit-text").setSelectionRange(position, position);
+            case "yellow-pane-delete":
+                document.getElementById(paneId+"-text").focus();
+                if (paneInit) {
+                    yellow.toolbox.setVisible(document.getElementById(paneId+"-text"), true);
+                    yellow.toolbox.setVisible(document.getElementById(paneId+"-preview"), false);
+                    document.getElementById(paneId+"-toolbar-title").innerHTML = yellow.toolbox.encodeHtml(yellow.page.title);
+                    document.getElementById(paneId+"-text").value = paneId=="yellow-pane-create" ? yellow.page.rawDataNew : yellow.page.rawDataEdit;
+                    var matches = document.getElementById(paneId+"-text").value.match(/^(\xEF\xBB\xBF)?\-\-\-[\r\n]+/);
+                    var position = document.getElementById(paneId+"-text").value.indexOf("\n", matches ? matches[0].length : 0);
+                    document.getElementById(paneId+"-text").setSelectionRange(position, position);
                     if (yellow.system.editToolbarButtons!="none") {
-                        yellow.toolbox.setVisible(document.getElementById("yellow-pane-edit-toolbar-title"), false);
+                        yellow.toolbox.setVisible(document.getElementById(paneId+"-toolbar-title"), false);
                         this.updateToolbar(0, "yellow-toolbar-checked");
                     }
-                    if (yellow.system.userRestriction) {
-                        yellow.toolbox.setVisible(document.getElementById("yellow-pane-edit-send"), false);
-                        document.getElementById("yellow-pane-edit-text").readOnly = true;
+                    if (yellow.system.userRestriction || (yellow.page.rawDataReadonly && paneId!="yellow-pane-create")) {
+                        yellow.toolbox.setVisible(document.getElementById(paneId+"-submit"), false);
+                        document.getElementById(paneId+"-text").readOnly = true;
                     }
                 }
-                if (!yellow.system.userRestriction) {
-                    var key, className;
-                    switch (this.getAction(paneId, paneAction)) {
-                        case "create":    key = "CreateButton"; className = "yellow-toolbar-btn yellow-toolbar-btn-create"; break;
-                        case "edit":    key = "EditButton"; className = "yellow-toolbar-btn yellow-toolbar-btn-edit"; break;
-                        case "delete":    key = "DeleteButton"; className = "yellow-toolbar-btn yellow-toolbar-btn-delete"; break;
-                    }
-                    if (document.getElementById("yellow-pane-edit-send").className != className) {
-                        document.getElementById("yellow-pane-edit-send").innerHTML = this.getText(key);
-                        document.getElementById("yellow-pane-edit-send").className = className;
+                if (!document.getElementById(paneId+"-text").readOnly) {
+                    paneAction = this.paneAction = this.getPaneAction(paneId);
+                    var className = "yellow-toolbar-btn yellow-toolbar-btn-"+paneAction;
+                    if (document.getElementById(paneId+"-submit").className != className) {
+                        document.getElementById(paneId+"-submit").className = className;
+                        document.getElementById(paneId+"-submit").innerHTML = this.getText(paneAction+"Button");
+                        document.getElementById(paneId+"-submit").setAttribute("data-args", "action:"+paneAction);
                         this.resizePane(paneId, paneAction, paneStatus);
                     }
                 }
@@ -385,49 +399,54 @@ yellow.edit = {
         var paneWidth = yellow.toolbox.getOuterWidth(elementBar);
         var paneHeight = yellow.toolbox.getWindowHeight() - paneTop - Math.min(yellow.toolbox.getOuterHeight(elementBar) + 10, (yellow.toolbox.getWindowWidth()-yellow.toolbox.getOuterWidth(elementBar))/2);
         switch (paneId) {
+            case "yellow-pane-account":
+                yellow.toolbox.setOuterLeft(document.getElementById(paneId), paneLeft);
+                yellow.toolbox.setOuterTop(document.getElementById(paneId), paneTop);
+                yellow.toolbox.setOuterWidth(document.getElementById(paneId), paneWidth);
+                var elementWidth = yellow.toolbox.getWidth(document.getElementById(paneId));
+                var actionsWidth = yellow.toolbox.getOuterWidth(document.getElementById(paneId+"-settings-actions"));
+                var fieldsWidth = yellow.toolbox.getOuterWidth(document.getElementById(paneId+"-settings-fields"));
+                var separatorWidth = Math.max(10, ((elementWidth-fieldsWidth)/2)-actionsWidth);
+                yellow.toolbox.setOuterWidth(document.getElementById(paneId+"-settings-separator"), separatorWidth);
+                break;
+            case "yellow-pane-create":
             case "yellow-pane-edit":
-                yellow.toolbox.setOuterLeft(document.getElementById("yellow-pane-edit"), paneLeft);
-                yellow.toolbox.setOuterTop(document.getElementById("yellow-pane-edit"), paneTop);
-                yellow.toolbox.setOuterHeight(document.getElementById("yellow-pane-edit"), paneHeight);
-                yellow.toolbox.setOuterWidth(document.getElementById("yellow-pane-edit"), paneWidth);
-                var elementWidth = yellow.toolbox.getWidth(document.getElementById("yellow-pane-edit"));
-                yellow.toolbox.setOuterWidth(document.getElementById("yellow-pane-edit-text"), elementWidth);
-                yellow.toolbox.setOuterWidth(document.getElementById("yellow-pane-edit-preview"), elementWidth);
+            case "yellow-pane-delete":
+                yellow.toolbox.setOuterLeft(document.getElementById(paneId), paneLeft);
+                yellow.toolbox.setOuterTop(document.getElementById(paneId), paneTop);
+                yellow.toolbox.setOuterHeight(document.getElementById(paneId), paneHeight);
+                yellow.toolbox.setOuterWidth(document.getElementById(paneId), paneWidth);
+                var elementWidth = yellow.toolbox.getWidth(document.getElementById(paneId));
+                yellow.toolbox.setOuterWidth(document.getElementById(paneId+"-text"), elementWidth);
+                yellow.toolbox.setOuterWidth(document.getElementById(paneId+"-preview"), elementWidth);
                 var buttonsWidth = 0;
-                var buttonsWidthMax = yellow.toolbox.getOuterWidth(document.getElementById("yellow-pane-edit-toolbar")) -
-                    yellow.toolbox.getOuterWidth(document.getElementById("yellow-pane-edit-toolbar-main")) - 1;
-                var element = document.getElementById("yellow-pane-edit-toolbar-buttons").firstChild;
+                var buttonsWidthMax = yellow.toolbox.getOuterWidth(document.getElementById(paneId+"-toolbar")) -
+                    yellow.toolbox.getOuterWidth(document.getElementById(paneId+"-toolbar-main")) - 1;
+                var element = document.getElementById(paneId+"-toolbar-buttons").firstChild;
                 for (; element; element=element.nextSibling) {
                     element.removeAttribute("style");
                     buttonsWidth += yellow.toolbox.getOuterWidth(element);
                     if (buttonsWidth>buttonsWidthMax) yellow.toolbox.setVisible(element, false);
                 }
-                yellow.toolbox.setOuterWidth(document.getElementById("yellow-pane-edit-toolbar-title"), buttonsWidthMax);
-                var height1 = yellow.toolbox.getHeight(document.getElementById("yellow-pane-edit"));
-                var height2 = yellow.toolbox.getOuterHeight(document.getElementById("yellow-pane-edit-toolbar"));
-                yellow.toolbox.setOuterHeight(document.getElementById("yellow-pane-edit-text"), height1 - height2);
-                yellow.toolbox.setOuterHeight(document.getElementById("yellow-pane-edit-preview"), height1 - height2);
-                var elementLink = document.getElementById("yellow-bar-"+paneAction);
+                yellow.toolbox.setOuterWidth(document.getElementById(paneId+"-toolbar-title"), buttonsWidthMax);
+                var height1 = yellow.toolbox.getHeight(document.getElementById(paneId));
+                var height2 = yellow.toolbox.getOuterHeight(document.getElementById(paneId+"-toolbar"));
+                yellow.toolbox.setOuterHeight(document.getElementById(paneId+"-text"), height1 - height2);
+                yellow.toolbox.setOuterHeight(document.getElementById(paneId+"-preview"), height1 - height2);
+                var elementLink = document.getElementById(paneId+"-bar");
                 var position = yellow.toolbox.getOuterLeft(elementLink) + yellow.toolbox.getOuterWidth(elementLink)/2;
-                position -= yellow.toolbox.getOuterLeft(document.getElementById("yellow-pane-edit")) + 1;
-                yellow.toolbox.setOuterLeft(document.getElementById("yellow-pane-edit-arrow"), position);
+                position -= yellow.toolbox.getOuterLeft(document.getElementById(paneId)) + 1;
+                yellow.toolbox.setOuterLeft(document.getElementById(paneId+"-arrow"), position);
                 break;
             case "yellow-pane-menu":
                 yellow.toolbox.setOuterLeft(document.getElementById("yellow-pane-menu"), paneLeft + paneWidth - yellow.toolbox.getOuterWidth(document.getElementById("yellow-pane-menu")));
                 yellow.toolbox.setOuterTop(document.getElementById("yellow-pane-menu"), paneTop);
-                var elementLink = document.getElementById("yellow-bar-menu");
+                var elementLink = document.getElementById("yellow-pane-menu-bar");
                 var position = yellow.toolbox.getOuterLeft(elementLink) + yellow.toolbox.getOuterWidth(elementLink)/2;
                 position -= yellow.toolbox.getOuterLeft(document.getElementById("yellow-pane-menu"));
                 yellow.toolbox.setOuterLeft(document.getElementById("yellow-pane-menu-arrow"), position);
                 break;
-            case "yellow-pane-login":
-            case "yellow-pane-signup":
-            case "yellow-pane-forgot":
-            case "yellow-pane-recover":
-            case "yellow-pane-quit":
-            case "yellow-pane-account":
-            case "yellow-pane-about":
-            case "yellow-pane-information":
+            default:
                 yellow.toolbox.setOuterLeft(document.getElementById(paneId), paneLeft);
                 yellow.toolbox.setOuterTop(document.getElementById(paneId), paneTop);
                 yellow.toolbox.setOuterWidth(document.getElementById(paneId), paneWidth);
@@ -439,6 +458,7 @@ yellow.edit = {
     showPane: function(paneId, paneAction, paneStatus, paneModal) {
         if (this.paneId!=paneId || this.paneAction!=paneAction) {
             this.hidePane(this.paneId);
+            var paneInit = !document.getElementById(paneId);
             if (!document.getElementById(paneId)) this.createPane(paneId, paneAction, paneStatus);
             var element = document.getElementById(paneId);
             if (!yellow.toolbox.isVisible(element)) {
@@ -451,9 +471,9 @@ yellow.edit = {
                 this.paneId = paneId;
                 this.paneAction = paneAction;
                 this.paneStatus = paneStatus;
-                this.updatePane(paneId, paneAction, paneStatus, this.paneActionOld!=this.paneAction);
+                this.updatePane(paneId, paneAction, paneStatus, paneInit);
                 this.resizePane(paneId, paneAction, paneStatus);
-                this.updateBar(paneAction, "yellow-bar-selected");
+                this.updateBar(paneId, "yellow-bar-selected");
             }
         } else {
             this.hidePane(this.paneId, true);
@@ -469,33 +489,11 @@ yellow.edit = {
             yellow.toolbox.removeValue("meta[name=viewport]", "content", ", maximum-scale=1, user-scalable=0");
             yellow.toolbox.setVisible(element, false, fadeout);
             this.paneId = 0;
-            this.paneActionOld = this.paneAction;
             this.paneAction = 0;
             this.paneStatus = 0;
             this.updateBar(0, "yellow-bar-selected");
         }
         this.hidePopup(this.popupId);
-    },
-
-    // Send pane
-    sendPane: function(paneId, paneAction, paneArgs) {
-        if (yellow.system.debug) console.log("yellow.edit.sendPane id:"+paneId);
-        var args = { "action":paneAction, "csrftoken":this.getCookie("csrftoken") };
-        if (paneId=="yellow-pane-edit") {
-            args.action = this.getAction(paneId, paneAction);
-            args.rawdatasource = yellow.page.rawDataSource;
-            args.rawdataedit = document.getElementById("yellow-pane-edit-text").value;
-            args.rawdataendofline = yellow.page.rawDataEndOfLine;
-        }
-        if (paneArgs) {
-            var tokens = paneArgs.split("/");
-            for (var i=0; i<tokens.length; i++) {
-                var pair = tokens[i].split(/[:=]/);
-                if (!pair[0] || !pair[1]) continue;
-                args[pair[0]] = pair[1];
-            }
-        }
-        yellow.toolbox.submitForm(args);
     },
     
     // Process action
@@ -507,8 +505,7 @@ yellow.edit = {
             if (yellow.system.debug) console.log("yellow.edit.processAction action:"+action+" status:"+status);
             var paneId = (status!="next" && status!="done") ? "yellow-pane-"+action : "yellow-pane-information";
             switch(action) {
-                case "login":       this.showPane("yellow-pane-login", action); break;
-                case "logout":      this.sendPane("yellow-pane-logout", action); break;
+                case "login":       this.showPane(paneId, action, status); break;
                 case "signup":      this.showPane(paneId, action, status); break;
                 case "confirm":     this.showPane(paneId, action, status); break;
                 case "approve":     this.showPane(paneId, action, status); break;
@@ -520,39 +517,16 @@ yellow.edit = {
                 case "quit":        this.showPane(paneId, action, status); break;
                 case "remove":      this.showPane(paneId, action, status); break;
                 case "account":     this.showPane(paneId, action, status); break;
-                case "about":       this.showPane("yellow-pane-about", action, status); break;
-                case "update":      this.sendPane("yellow-pane-update", action, args); break;
-                case "create":      this.showPane("yellow-pane-edit", action, status, true); break;
-                case "edit":        this.showPane("yellow-pane-edit", action, status, true); break;
-                case "delete":      this.showPane("yellow-pane-edit", action, status, true); break;
-                case "menu":        this.showPane("yellow-pane-menu", action, status); break;
-                case "send":        this.sendPane(this.paneId, this.paneAction); break;
+                case "update":      this.showPane(paneId, action, status); break;
+                case "create":      this.showPane(paneId, action, status, true); break;
+                case "edit":        this.showPane(paneId, action, status, true); break;
+                case "delete":      this.showPane(paneId, action, status, true); break;
+                case "menu":        this.showPane(paneId, action, status); break;
                 case "close":       this.hidePane(this.paneId); break;
-                case "help":        this.processHelp(); break;
                 case "toolbar":     this.processToolbar(status, args); break;
-            }
-        }
-    },
-    
-    // Process help
-    processHelp: function() {
-        this.hidePane(this.paneId);
-        window.open(this.getText("HelpUrl", "yellow"), "_self");
-    },
-    
-    // Process shortcut
-    processShortcut: function(e) {
-        var shortcut = yellow.toolbox.getEventShortcut(e);
-        if (shortcut) {
-            if (yellow.system.debug) console.log("yellow.edit.processShortcut shortcut:"+shortcut);
-            var tokens = yellow.system.editKeyboardShortcuts.split(/\s*,\s*/);
-            for (var i=0; i<tokens.length; i++) {
-                var pair = tokens[i].split(" ");
-                if (shortcut==pair[0] || shortcut.replace("meta+", "ctrl+")==pair[0]) {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    this.processToolbar(pair[1]);
-                }
+                case "settings":    this.processSettings(args); break;
+                case "submit":      this.processSubmit(args); break;
+                case "help":        this.processHelp(); break;
             }
         }
     },
@@ -560,9 +534,9 @@ yellow.edit = {
     // Process toolbar
     processToolbar: function(status, args) {
         if (yellow.system.debug) console.log("yellow.edit.processToolbar status:"+status);
-        var elementText = document.getElementById("yellow-pane-edit-text");
-        var elementPreview = document.getElementById("yellow-pane-edit-preview");
-        if (!yellow.system.userRestriction && this.paneAction!="delete" && !yellow.toolbox.isVisible(elementPreview)) {
+        var elementText = document.getElementById(this.paneId+"-text");
+        var elementPreview = document.getElementById(this.paneId+"-preview");
+        if (!yellow.toolbox.isVisible(elementPreview) && !elementText.readOnly) {
             switch (status) {
                 case "h1":              yellow.editor.setMarkdown(elementText, "# ", "insert-multiline-block", true); break;
                 case "h2":              yellow.editor.setMarkdown(elementText, "## ", "insert-multiline-block", true); break;
@@ -586,8 +560,8 @@ yellow.edit = {
                 case "redo":            yellow.editor.redo(); break;
             }
         }
-        if (status=="preview") this.showPreview(elementText, elementPreview);
-        if (status=="save" && !yellow.system.userRestriction && this.paneAction!="delete") this.processAction("send");
+        if (status=="preview" && !elementText.readOnly) this.showPreview(elementText, elementPreview);
+        if (status=="save" && !elementText.readOnly && this.paneAction!="delete") this.processSubmit("action:"+this.paneAction);
         if (status=="help") window.open(this.getText("HelpUrl", "yellow"), "_blank");
         if (status=="markdown") window.open(this.getText("MarkdownUrl", "yellow"), "_blank");
         if (this.isExpandable(status)) {
@@ -599,9 +573,8 @@ yellow.edit = {
     
     // Update toolbar
     updateToolbar: function(status, name) {
-        if (yellow.system.debug) console.log("yellow.edit.updateToolbar status:"+status);
         if (status) {
-            var element = document.getElementById("yellow-toolbar-"+status);
+            var element = document.getElementById(this.paneId+"-toolbar-"+status);
             if (element) {
                 if (name.indexOf("selected")!=-1) element.setAttribute("aria-expanded", "true");
                 yellow.toolbox.addClass(element, name);
@@ -613,6 +586,52 @@ yellow.edit = {
                 yellow.toolbox.removeClass(elements[i], name);
             }
         }
+    },
+    
+    // Process shortcut
+    processShortcut: function(e) {
+        var shortcut = yellow.toolbox.getEventShortcut(e);
+        if (shortcut) {
+            var tokens = yellow.system.editKeyboardShortcuts.split(/\s*,\s*/);
+            for (var i=0; i<tokens.length; i++) {
+                var pair = tokens[i].split(" ");
+                if (shortcut==pair[0] || shortcut.replace("meta+", "ctrl+")==pair[0]) {
+                    if (yellow.system.debug) console.log("yellow.edit.processShortcut shortcut:"+shortcut);
+                    e.stopPropagation();
+                    e.preventDefault();
+                    this.processToolbar(pair[1]);
+                }
+            }
+        }
+    },
+    
+    // Process settings
+    processSettings: function(args) {
+        var action = args!="none" ? args : "account";
+        if (action!=this.paneAction && action!="settings") this.processAction(action);
+    },
+    
+    // Process submit
+    processSubmit: function(args) {
+        var settings = { "action":"none", "csrftoken":this.getCookie("csrftoken") };
+        var tokens = args.split("/");
+        for (var i=0; i<tokens.length; i++) {
+            var pair = tokens[i].split(/[:=]/);
+            if (!pair[0] || !pair[1]) continue;
+            settings[pair[0]] = pair[1];
+        }
+        if (settings["action"]=="create" || settings["action"]=="edit" || settings["action"]=="delete") {
+            settings.rawdatasource = yellow.page.rawDataSource;
+            settings.rawdataedit = document.getElementById(this.paneId+"-text").value;
+            settings.rawdataendofline = yellow.page.rawDataEndOfLine;
+        }
+        if (settings["action"]!="none") yellow.toolbox.submitForm(settings);
+    },
+    
+    // Process help
+    processHelp: function() {
+        this.hidePane(this.paneId);
+        window.open(this.getText("HelpUrl", "yellow"), "_self");
     },
     
     // Create popup
@@ -691,7 +710,7 @@ yellow.edit = {
             yellow.toolbox.setVisible(element, true);
             this.popupId = popupId;
             this.updateToolbar(status, "yellow-toolbar-selected");
-            var elementParent = document.getElementById("yellow-toolbar-"+status);
+            var elementParent = document.getElementById(this.paneId+"-toolbar-"+status);
             var popupLeft = yellow.toolbox.getOuterLeft(elementParent);
             var popupTop = yellow.toolbox.getOuterTop(elementParent) + yellow.toolbox.getOuterHeight(elementParent) - 1;
             yellow.toolbox.setOuterLeft(document.getElementById(popupId), popupLeft);
@@ -809,18 +828,60 @@ yellow.edit = {
         }
     },
     
-    // Return action
-    getAction: function(paneId, paneAction) {
-        var action = "";
-        if (paneId=="yellow-pane-edit") {
-            switch (paneAction) {
-                case "create":  action = "create"; break;
-                case "edit":    action = document.getElementById("yellow-pane-edit-text").value.length!=0 ? "edit" : "delete"; break;
-                case "delete":  action = "delete"; break;
-            }
-            if (yellow.page.statusCode==434 && paneAction!="delete") action = "create";
+    // Return pane action
+    getPaneAction: function(paneId) {
+        var panePrefix = "yellow-pane-";
+        var paneAction = paneId.substring(panePrefix.length);
+        if (paneAction=="edit") {
+            if (document.getElementById("yellow-pane-edit-text").value.length==0) paneAction = "delete";
+            if (yellow.page.statusCode==434) paneAction = "create";
         }
-        return action;
+        return paneAction;
+    },
+    
+    // Return raw data for actions
+    getRawDataActions: function(paneAction) {
+        var rawDataActions = "";
+        if (yellow.system.editSettingsActions && yellow.system.editSettingsActions!="none") {
+            var tokens = yellow.system.editSettingsActions.split(/\s*,\s*/);
+            for (var i=0; i<tokens.length; i++) {
+                var token = tokens[i];
+                rawDataActions += "<a href=\"#\""+(token==paneAction ? "class=\"active\"": "")+" data-action=\"settings\" data-args=\""+yellow.toolbox.encodeHtml(token)+"\">"+this.getText(token+"Title")+"</a><br />";
+            }
+        }
+        return rawDataActions;
+    },
+    
+    // Return raw data for languages
+    getRawDataLanguages: function(paneId) {
+        var rawDataLanguages = "";
+        if (yellow.system.serverLanguages && Object.keys(yellow.system.serverLanguages).length>1) {
+            for (var language in yellow.system.serverLanguages) {
+                var checked = language==this.getRequest("language") ? " checked=\"checked\"" : "";
+                rawDataLanguages += "<label for=\""+paneId+"-"+language+"\"><input type=\"radio\" name=\"language\" id=\""+paneId+"-"+language+"\" value=\""+language+"\""+checked+"> "+yellow.toolbox.encodeHtml(yellow.system.serverLanguages[language])+"</label><br />";
+            }
+        }
+        return rawDataLanguages
+    },
+    
+    // Return raw data for buttons
+    getRawDataButtons: function(paneId) {
+        var rawDataButtons = "";
+        if (yellow.system.editToolbarButtons && yellow.system.editToolbarButtons!="none") {
+            var tokens = yellow.system.editToolbarButtons.split(/\s*,\s*/);
+            for (var i=0; i<tokens.length; i++) {
+                var token = tokens[i];
+                if (token!="separator") {
+                    var shortcut = this.getShortcut(token);
+                    var rawDataShortcut = shortcut ? "&nbsp;&nbsp;"+yellow.toolbox.encodeHtml(shortcut) : "";
+                    var rawDataExpandable = this.isExpandable(token) ? " aria-expanded=\"false\"" : "";
+                    rawDataButtons += "<li><a href=\"#\" id=\""+paneId+"-toolbar-"+yellow.toolbox.encodeHtml(token)+"\" class=\"yellow-toolbar-btn-icon yellow-toolbar-tooltip\" data-action=\"toolbar\" data-status=\""+yellow.toolbox.encodeHtml(token)+"\" aria-label=\""+this.getText("Toolbar", "", token)+rawDataShortcut+"\""+rawDataExpandable+"><i class=\"yellow-icon yellow-icon-"+yellow.toolbox.encodeHtml(token)+"\"></i></a></li>";
+                } else {
+                    rawDataButtons += "<li><a href=\"#\" class=\"yellow-toolbar-btn-separator\"></a></li>";
+                }
+            }
+        }
+        return rawDataButtons;
     },
     
     // Return request string

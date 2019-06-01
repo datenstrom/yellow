@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowEdit {
-    const VERSION = "0.8.7";
+    const VERSION = "0.8.8";
     const TYPE = "feature";
     public $yellow;         //access to API
     public $response;       //web response
@@ -29,8 +29,8 @@ class YellowEdit {
         $this->yellow->system->setDefault("editUserHashAlgorithm", "bcrypt");
         $this->yellow->system->setDefault("editUserHashCost", "10");
         $this->yellow->system->setDefault("editUserHome", "/");
-        $this->yellow->system->setDefault("editLoginRestriction", "0");
         $this->yellow->system->setDefault("editLoginSessionTimeout", "2592000");
+        $this->yellow->system->setDefault("editLoginRestriction", "0");
         $this->yellow->system->setDefault("editBruteForceProtection", "25");
         $this->users->load($this->yellow->system->get("settingDir").$this->yellow->system->get("editUserFile"));
     }
@@ -49,22 +49,6 @@ class YellowEdit {
         return $statusCode;
     }
     
-    // Handle page meta data
-    public function onParseMeta($page) {
-        if ($page==$this->yellow->page && $this->response->isActive()) {
-            if ($this->response->isUser()) {
-                if (empty($this->response->rawDataSource)) $this->response->rawDataSource = $page->rawData;
-                if (empty($this->response->rawDataEdit)) $this->response->rawDataEdit = $page->rawData;
-                if (empty($this->response->rawDataEndOfLine)) $this->response->rawDataEndOfLine = $this->response->getEndOfLine($page->rawData);
-                if ($page->statusCode==434) $this->response->rawDataEdit = $this->response->getRawDataNew($page, true);
-            }
-            if (empty($this->response->language)) $this->response->language = $page->get("language");
-            if (empty($this->response->action)) $this->response->action = $this->response->isUser() ? "none" : "login";
-            if (empty($this->response->status)) $this->response->status = "none";
-            if ($this->response->status=="error") $this->response->action = "error";
-        }
-    }
-    
     // Handle page content of shortcut
     public function onParseContentShortcut($page, $name, $text, $type) {
         $output = null;
@@ -80,6 +64,7 @@ class YellowEdit {
     public function onParsePageExtra($page, $name) {
         $output = null;
         if ($name=="header" && $this->response->isActive()) {
+            $this->response->processPageData($page);
             $extensionLocation = $this->yellow->system->get("serverBase").$this->yellow->system->get("extensionLocation");
             $output = "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" data-bundle=\"none\" href=\"{$extensionLocation}edit.css\" />\n";
             $output .= "<script type=\"text/javascript\" data-bundle=\"none\" src=\"{$extensionLocation}edit.js\"></script>\n";
@@ -242,7 +227,6 @@ class YellowEdit {
                 case "logout":      $statusCode = $this->processRequestLogout($scheme, $address, $base, $location, $fileName); break;
                 case "quit":        $statusCode = $this->processRequestQuit($scheme, $address, $base, $location, $fileName); break;
                 case "account":     $statusCode = $this->processRequestAccount($scheme, $address, $base, $location, $fileName); break;
-                case "about":       $statusCode = $this->processRequestAbout($scheme, $address, $base, $location, $fileName); break;
                 case "update":      $statusCode = $this->processRequestUpdate($scheme, $address, $base, $location, $fileName); break;
                 case "create":      $statusCode = $this->processRequestCreate($scheme, $address, $base, $location, $fileName); break;
                 case "edit":        $statusCode = $this->processRequestEdit($scheme, $address, $base, $location, $fileName); break;
@@ -589,57 +573,28 @@ class YellowEdit {
         }
         return $statusCode;
     }
-    
-    // Process request to show website version and updates
-    public function processRequestAbout($scheme, $address, $base, $location, $fileName) {
-        $this->response->action = "about";
-        $this->response->status = "ok";
-        if ($this->yellow->extensions->isExisting("update")) {
-            list($statusCodeCurrent, $dataCurrent) = $this->yellow->extensions->get("update")->getExtensionsVersion();
-            list($statusCodeLatest, $dataLatest) = $this->yellow->extensions->get("update")->getExtensionsVersion(true);
-            list($statusCodeModified, $dataModified) = $this->yellow->extensions->get("update")->getExtensionsModified();
-            $statusCode = max($statusCodeCurrent, $statusCodeLatest, $statusCodeModified);
-            if ($this->response->isUserWebmaster()) {
-                foreach ($dataCurrent as $key=>$value) {
-                    if (strnatcasecmp($dataCurrent[$key], $dataLatest[$key])<0) {
-                        ++$updates;
-                        $rawData = htmlspecialchars(ucfirst($key)." $dataLatest[$key]")."<br />\n";
-                        $this->response->rawDataOutput .= $rawData;
-                    }
-                }
-                if ($updates==0) {
-                    foreach ($dataCurrent as $key=>$value) {
-                        if (!is_null($dataModified[$key]) && !is_null($dataLatest[$key])) {
-                            $rawData = $this->yellow->text->getTextHtml("editAboutUpdateModified", $this->response->language)." - <a href=\"#\" data-action=\"update\" data-status=\"update\" data-args=\"".$this->yellow->toolbox->normaliseArgs("extension:$key/option:force")."\">".$this->yellow->text->getTextHtml("editAboutUpdateForce", $this->response->language)."</a><br />\n";
-                            $rawData = preg_replace("/@extension/i", htmlspecialchars(ucfirst($key)." $dataLatest[$key]"), $rawData);
-                            $this->response->rawDataOutput .= $rawData;
-                        }
-                    }
-                }
-                $this->response->status = $updates ? "updates" : "done";
-            } else {
-                foreach ($dataCurrent as $key=>$value) {
-                    if (strnatcasecmp($dataCurrent[$key], $dataLatest[$key])<0) ++$updates;
-                }
-                $this->response->status = $updates ? "warning" : "done";
-            }
-            if ($statusCode!=200) $this->response->status = "error";
-        }
-        $statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
-        return $statusCode;
-    }
-    
+
     // Process request to update website
     public function processRequestUpdate($scheme, $address, $base, $location, $fileName) {
-        $statusCode = 0;
-        if ($this->yellow->extensions->isExisting("update") && $this->response->isUserWebmaster()) {
-            $extension = trim($_REQUEST["extension"]);
-            $option = trim($_REQUEST["option"]);
-            $statusCode = $this->yellow->command("update", $extension, $option);
-            if ($statusCode==200) {
-                $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
-                $statusCode = $this->yellow->sendStatus(303, $location);
+        $this->response->action = "update";
+        $this->response->status = "ok";
+        $extension = trim($_REQUEST["extension"]);
+        $option = trim($_REQUEST["option"]);
+        if ($option=="check") {
+            list($statusCode, $updates, $rawData) = $this->response->getUpdateInformation();
+            if ($updates) {
+                $this->response->status = $this->response->isUserWebmaster() ? "updates" : "warning";
+                $this->response->rawDataOutput = $this->response->isUserWebmaster() ? $rawData : "";
             }
+            if ($statusCode!=200) $this->response->status = "error";
+        } elseif ($this->response->isUserWebmaster()) {
+            $this->response->status = $this->yellow->command("update", $extension, $option)==200 ? "done" : "error";
+        }
+        if ($this->response->status=="done") {
+            $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
+            $statusCode = $this->yellow->sendStatus(303, $location);
+        } else {
+            $statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
         }
         return $statusCode;
     }
@@ -949,6 +904,7 @@ class YellowEditResponse {
     public $rawDataSource;      //raw data of page for comparison
     public $rawDataEdit;        //raw data of page for editing
     public $rawDataOutput;      //raw data of dynamic output
+    public $rawDataReadonly;    //raw data is read only? (boolean)
     public $rawDataEndOfLine;   //end of line format for raw data
     public $language;           //response language
     public $action;             //response action
@@ -957,6 +913,24 @@ class YellowEditResponse {
     public function __construct($yellow) {
         $this->yellow = $yellow;
         $this->extension = $yellow->extensions->get("edit");
+    }
+    
+    // Process page data
+    public function processPageData($page) {
+        if ($this->isUser()) {
+            if (empty($this->rawDataSource)) $this->rawDataSource = $page->rawData;
+            if (empty($this->rawDataEdit)) $this->rawDataEdit = $page->rawData;
+            if (empty($this->rawDataEndOfLine)) $this->rawDataEndOfLine = $this->getEndOfLine($page->rawData);
+            if ($page->statusCode==434) $this->rawDataEdit = $this->getRawDataNew($page, true);
+            if ($this->yellow->toolbox->isLocationArgs()) {
+                $this->rawDataEdit = $this->getRawDataGenerated($page);
+                $this->rawDataReadonly = true;
+            }
+        }
+        if (empty($this->language)) $this->language = $page->get("language");
+        if (empty($this->action)) $this->action = $this->isUser() ? "none" : "login";
+        if (empty($this->status)) $this->status = "none";
+        if ($this->status=="error") $this->action = "error";
     }
     
     // Return new page
@@ -1070,6 +1044,7 @@ class YellowEditResponse {
             $data["rawDataEdit"] = $this->rawDataEdit;
             $data["rawDataNew"] = $this->getRawDataNew($page);
             $data["rawDataOutput"] = strval($this->rawDataOutput);
+            $data["rawDataReadonly"] = intval($this->rawDataReadonly);
             $data["rawDataEndOfLine"] = $this->rawDataEndOfLine;
             $data["scheme"] = $this->yellow->page->scheme;
             $data["address"] = $this->yellow->page->address;
@@ -1108,6 +1083,7 @@ class YellowEditResponse {
             foreach ($this->yellow->text->getLanguages() as $language) {
                 $data["serverLanguages"][$language] = $this->yellow->text->getTextHtml("languageDescription", $language);
             }
+            $data["editSettingsActions"] = "none";
             $data["editUploadExtensions"] = $this->yellow->system->get("editUploadExtensions");
             $data["editKeyboardShortcuts"] = $this->yellow->system->get("editKeyboardShortcuts");
             $data["editToolbarButtons"] = $this->getToolbarButtons("edit");
@@ -1166,6 +1142,46 @@ class YellowEditResponse {
             $endOfLine = strposu($rawData, "\r")===false ? "lf" : "crlf";
         }
         return $endOfLine;
+    }
+    
+    // Return update information
+    public function getUpdateInformation() {
+        if ($this->yellow->extensions->isExisting("update")) {
+            list($statusCodeCurrent, $dataCurrent) = $this->yellow->extensions->get("update")->getExtensionsVersion();
+            list($statusCodeLatest, $dataLatest) = $this->yellow->extensions->get("update")->getExtensionsVersion(true);
+            list($statusCodeModified, $dataModified) = $this->yellow->extensions->get("update")->getExtensionsModified();
+            $statusCode = max($statusCodeCurrent, $statusCodeLatest, $statusCodeModified);
+            if ($this->isUserWebmaster()) {
+                foreach ($dataCurrent as $key=>$value) {
+                    if (strnatcasecmp($dataCurrent[$key], $dataLatest[$key])<0) {
+                        $rawData .= htmlspecialchars(ucfirst($key)." $dataLatest[$key]")."<br />\n";
+                        ++$updates;
+                    }
+                }
+                if ($updates==0) {
+                    foreach ($dataCurrent as $key=>$value) {
+                        if (!is_null($dataModified[$key]) && !is_null($dataLatest[$key])) {
+                            $output = $this->yellow->text->getTextHtml("editAboutUpdateModified", $this->language)." - <a href=\"#\" data-action=\"submit\" data-args=\"".$this->yellow->toolbox->normaliseArgs("action:update/extension:$key/option:force")."\">".$this->yellow->text->getTextHtml("editAboutUpdateForce", $this->language)."</a><br />\n";
+                            $rawData .= preg_replace("/@extension/i", htmlspecialchars(ucfirst($key)." $dataLatest[$key]"), $output);
+                        }
+                    }
+                }
+            } else {
+                foreach ($dataCurrent as $key=>$value) {
+                    if (strnatcasecmp($dataCurrent[$key], $dataLatest[$key])<0) ++$updates;
+                }
+            }
+        } else {
+            $statusCode = 200;
+        }
+        return array($statusCode, $updates, $rawData);
+    }
+
+    // Return raw data for generated page
+    public function getRawDataGenerated($page) {
+        $title = $page->get("title");
+        $text = $this->yellow->text->getText("editDataGenerated", $page->get("language"));
+        return "---\nTitle: $title\n---\n$text";
     }
     
     // Return raw data for new page

@@ -18,12 +18,6 @@
 .yellow-bar-right a {
     margin-left: 1em;
 }
-.yellow-bar-right #yellow-bar-create {
-    padding: 0 0.5em;
-}
-.yellow-bar-right #yellow-bar-delete {
-    padding: 0 0.5em;
-}
 .yellow-bar-banner {
     clear: both;
 }
@@ -40,24 +34,32 @@
     border: 1px solid #bbb;
     border-radius: 4px;
     box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.2);
+    text-align: center;
 }
 .yellow-pane h1 {
     color: #000;
     font-size: 2em;
     margin: 0 1em;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .yellow-pane p {
-    margin: 0.5em;
+    margin: 0.5em 0;
 }
 .yellow-pane .yellow-status {
     margin-bottom: 1em;
 }
 .yellow-pane .yellow-fields {
-    width: 15em;
-    text-align: left;
+    width: 14em;
     margin: 0 auto;
+    text-align: left;
 }
-.yellow-pane .yellow-form-control {
+.yellow-pane .yellow-fields .yellow-center {
+    width: 14em;
+    display: inline-block;
+    text-align: center;
+}
+.yellow-pane .yellow-fields .yellow-form-control {
     width: 15em;
     box-sizing: border-box;
 }
@@ -109,6 +111,23 @@
     border-width: 11px;
     margin-left: -11px;
 }
+.yellow-settings {
+    text-align: left;
+}
+.yellow-settings-left {
+    float: left;
+    padding: 0 0.5em;
+}
+.yellow-settings-right {
+    float: left;
+}
+.yellow-settings-separator {
+    visibility: hidden;
+    padding: 20px;
+}
+.yellow-settings-banner {
+    clear: both;
+}
 .yellow-popup {
     position: absolute;
     display: none;
@@ -158,6 +177,12 @@
 }
 .yellow-toolbar-banner {
     clear: both;
+}
+.yellow-toolbar h1 {
+    margin: -5px 0 0 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .yellow-toolbar li {
     display: inline-block;
@@ -271,6 +296,31 @@
 .yellow-toolbar-selected.yellow-toolbar-tooltip::after {
     display: none;
 }
+.yellow-edit-text {
+    margin: 0;
+    padding: 0 2px;
+    outline: none;
+    resize: none;
+    border: none;
+    font-size: 0.9em;
+    font-family: inherit;
+    font-weight: normal;
+    line-height: normal;
+}
+.yellow-edit-preview {
+    padding: 0;
+    overflow: auto;
+}
+.yellow-edit-preview h1 {
+    margin: 0.67em 0;
+}
+.yellow-edit-preview p {
+    margin: 1em 0;
+}
+.yellow-edit-preview .content {
+    margin: 0;
+    padding: 0;
+}
 .yellow-form-control {
     margin: 0;
     padding: 2px 4px;
@@ -318,44 +368,20 @@
 
 /* Specific panes */
 
-#yellow-pane-login,
-#yellow-pane-signup,
-#yellow-pane-forgot,
-#yellow-pane-recover,
-#yellow-pane-quit,
-#yellow-pane-about,
-#yellow-pane-account,
-#yellow-pane-information {
-    text-align: center;
+#yellow-pane-create-bar {
+    padding: 0 0.5em;
 }
-#yellow-pane-edit-toolbar-title {
-    margin: -5px 0 0 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+#yellow-pane-delete-bar {
+    padding: 0 0.5em;
 }
-#yellow-pane-edit-text {
-    padding: 0 2px;
-    outline: none;
-    resize: none;
-    border: none;
-}
-#yellow-pane-edit-preview {
-    padding: 0;
-    overflow: auto;
-}
-#yellow-pane-edit-preview h1 {
-    margin: 0.67em 0;
-}
-#yellow-pane-edit-preview p {
-    margin: 1em 0;
-}
-#yellow-pane-edit-preview .content {
-    margin: 0;
-    padding: 0;
+#yellow-pane-create,
+#yellow-pane-edit,
+#yellow-pane-delete {
+    text-align: left;
 }
 #yellow-pane-menu {
     padding: 10px 0;
+    text-align: left;
 }
 
 /* Specific popups */
