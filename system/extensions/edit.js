@@ -543,6 +543,7 @@ yellow.edit = {
                 case "h3":              yellow.editor.setMarkdown(elementText, "### ", "insert-multiline-block", true); break;
                 case "paragraph":       yellow.editor.setMarkdown(elementText, "", "remove-multiline-block");
                                         yellow.editor.setMarkdown(elementText, "", "remove-fenced-block"); break;
+                case "notice":          yellow.editor.setMarkdown(elementText, "! ", "insert-multiline-block", true); break;
                 case "quote":           yellow.editor.setMarkdown(elementText, "> ", "insert-multiline-block", true); break;
                 case "pre":             yellow.editor.setMarkdown(elementText, "```\n", "insert-fenced-block", true); break;
                 case "bold":            yellow.editor.setMarkdown(elementText, "**", "insert-inline", true); break;
@@ -652,6 +653,7 @@ yellow.edit = {
                 "<li><a href=\"#\" id=\"yellow-popup-format-h3\" data-action=\"toolbar\" data-status=\"h3\">"+this.getText("ToolbarH3")+"</a></li>"+
                 "<li><a href=\"#\" id=\"yellow-popup-format-paragraph\" data-action=\"toolbar\" data-status=\"paragraph\">"+this.getText("ToolbarParagraph")+"</a></li>"+
                 "<li><a href=\"#\" id=\"yellow-popup-format-pre\" data-action=\"toolbar\" data-status=\"pre\">"+this.getText("ToolbarPre")+"</a></li>"+
+                "<li><a href=\"#\" id=\"yellow-popup-format-notice\" data-action=\"toolbar\" data-status=\"notice\">"+this.getText("ToolbarNotice")+"</a></li>"+
                 "<li><a href=\"#\" id=\"yellow-popup-format-quote\" data-action=\"toolbar\" data-status=\"quote\">"+this.getText("ToolbarQuote")+"</a></li>"+
                 "</ul>";
                 break;
@@ -1062,7 +1064,7 @@ yellow.editor = {
         var textSelectionNew = "";
         var lines = yellow.toolbox.getTextLines(textSelection);
         for (var i=0; i<lines.length; i++) {
-            var matches = lines[i].match(/^(\s*[\#\*\-\>\s]+)?(\s+\[.\]|\s*\d+\.)?[ \t]+/);
+            var matches = lines[i].match(/^(\s*[\#\*\-\!\>\s]+)?(\s+\[.\]|\s*\d+\.)?[ \t]+/);
             if (matches) {
                 textSelectionNew += lines[i].substring(matches[0].length);
             } else {

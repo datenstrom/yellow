@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowEdit {
-    const VERSION = "0.8.8";
+    const VERSION = "0.8.9";
     const TYPE = "feature";
     public $yellow;         //access to API
     public $response;       //web response
