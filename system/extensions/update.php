@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowUpdate {
-    const VERSION = "0.8.8";
+    const VERSION = "0.8.9";
     const TYPE = "feature";
     const PRIORITY = "2";
     public $yellow;                 //access to API
@@ -91,7 +91,9 @@ class YellowUpdate {
                 if (!empty($fileDataHeader)) $fileDataHeader .= "\n";
                 if (!empty($fileDataFooter)) $fileDataSettings .= "\n";
                 $fileDataNew = $fileDataHeader.$fileDataSettings.$fileDataFooter;
-                if ($fileData!=$fileDataNew) $this->yellow->toolbox->createFile($fileName, $fileDataNew);
+                if ($fileData!=$fileDataNew && !$this->yellow->toolbox->createFile($fileName, $fileDataNew)) {
+                    $this->yellow->log("error", "Can't write file '$fileName'!");
+                }
             }
         }
     }

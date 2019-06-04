@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowMarkdown {
-    const VERSION = "0.8.7";
+    const VERSION = "0.8.8";
     const TYPE = "feature";
     public $yellow;         //access to API
     
@@ -3914,7 +3914,7 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser {
             $attr = $this->doExtraAttributes("div", $dummy =& $matches[1]);
             $text = $matches[2];
         } elseif ($this->noticeLevel==0) {
-            $level = strspn(str_replace(array(" ", "!["), "", $lines), "!");
+            $level = strspn(str_replace(array("![", " "), "", $lines), "!");
             $attr = " class=\"notice$level\"";
         }
         if (!empty($text)) {

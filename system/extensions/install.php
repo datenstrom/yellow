@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowInstall {
-    const VERSION = "0.8.6";
+    const VERSION = "0.8.7";
     const TYPE = "feature";
     const PRIORITY = "1";
     public $yellow;                 //access to API
@@ -61,8 +61,8 @@ class YellowInstall {
         $this->yellow->page->setRequestInformation($scheme, $address, $base, $location, $fileName);
         $this->yellow->page->parseData($this->getRawDataInstall(), false, $statusCode, $this->yellow->page->get("pageError"));
         $this->yellow->page->safeMode = false;
-        if ($status=="install") $status = $this->updateUser($email, $password, $name, $language)==200 ? "ok" : "error";
-        if ($status=="ok") $status = $this->updateExtension($extension)==200 ? "ok" : "error";
+        if ($status=="install") $status = $this->updateExtension($extension)==200 ? "ok" : "error";
+        if ($status=="ok") $status = $this->updateUser($email, $password, $name, $language)==200 ? "ok" : "error";
         if ($status=="ok") $status = $this->updateContent($language, "Home", "/")==200 ? "ok" : "error";
         if ($status=="ok") $status = $this->updateContent($language, "About", "/about/")==200 ? "ok" : "error";
         if ($status=="ok") $status = $this->updateContent($language, "Footer", "/shared/footer")==200 ? "ok" : "error";
@@ -89,7 +89,7 @@ class YellowInstall {
             $this->yellow->log("info", "Datenstrom Yellow ".YellowCore::VERSION.", PHP ".PHP_VERSION.", $serverVersion");
             if (!$this->yellow->isCommandLine()) {
                 $server = $this->yellow->toolbox->getServerVersion(true);
-                $this->yellow->log("info", "Checked $server server configuration");
+                $this->yellow->log("info", "Check $server server configuration");
             }
             if (!is_file($fileName)) {
                 $statusCode = 500;
@@ -153,21 +153,6 @@ class YellowInstall {
         return $statusCode;
     }
     
-    // Update user
-    public function updateUser($email, $password, $name, $language) {
-        $statusCode = 200;
-        if (!empty($email) && !empty($password) && $this->yellow->extensions->isExisting("edit")) {
-            if (empty($name)) $name = $this->yellow->system->get("sitename");
-            $fileNameUser = $this->yellow->system->get("settingDir").$this->yellow->system->get("editUserFile");
-            if (!$this->yellow->extensions->get("edit")->users->save($fileNameUser, $email, $password, $name, $language)) {
-                $statusCode = 500;
-                $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
-            }
-            $this->yellow->log($statusCode==200 ? "info" : "error", "Install webmaster '".strtok($name, " ")."'");
-        }
-        return $statusCode;
-    }
-    
     // Update extension
     public function updateExtension($extension) {
         $statusCode = 200;
@@ -181,6 +166,21 @@ class YellowInstall {
                     }
                 }
             }
+        }
+        return $statusCode;
+    }
+    
+    // Update user
+    public function updateUser($email, $password, $name, $language) {
+        $statusCode = 200;
+        if (!empty($email) && !empty($password) && $this->yellow->extensions->isExisting("edit")) {
+            if (empty($name)) $name = $this->yellow->system->get("sitename");
+            $fileNameUser = $this->yellow->system->get("settingDir").$this->yellow->system->get("editUserFile");
+            if (!$this->yellow->extensions->get("edit")->users->save($fileNameUser, $email, $password, $name, $language, "", "", "", "", "", "administrator")) {
+                $statusCode = 500;
+                $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
+            }
+            $this->yellow->log($statusCode==200 ? "info" : "error", "Add user '".strtok($name, " ")."'");
         }
         return $statusCode;
     }

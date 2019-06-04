@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowEdit {
-    const VERSION = "0.8.9";
+    const VERSION = "0.8.10";
     const TYPE = "feature";
     public $yellow;         //access to API
     public $response;       //web response
@@ -28,6 +28,7 @@ class YellowEdit {
         $this->yellow->system->setDefault("editUserPasswordMinLength", "8");
         $this->yellow->system->setDefault("editUserHashAlgorithm", "bcrypt");
         $this->yellow->system->setDefault("editUserHashCost", "10");
+        $this->yellow->system->setDefault("editUserGroup", "user");
         $this->yellow->system->setDefault("editUserHome", "/");
         $this->yellow->system->setDefault("editLoginSessionTimeout", "2592000");
         $this->yellow->system->setDefault("editLoginRestriction", "0");
@@ -102,19 +103,25 @@ class YellowEdit {
             foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
                 preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
                 if (!empty($matches[1]) && !empty($matches[2]) && $matches[1][0]!="#") {
-                    list($hash, $name, $language, $status, $stamp, $modified, $errors, $pending, $home) = explode(",", $matches[2]);
+                    list($hash, $name, $language, $status, $stamp, $modified, $errors, $pending, $group, $home) = explode(",", $matches[2]);
                     if ($status!="active" && $status!="inactive") {
                         unset($this->users->users[$matches[1]]);
                         continue;
                     }
                     $pending = "none";
-                    $this->users->set($matches[1], $hash, $name, $language, $status, $stamp, $modified, $errors, $pending, $home);
-                    $fileDataNew .= "$matches[1]: $hash,$name,$language,$status,$stamp,$modified,$errors,$pending,$home\n";
+                    if (empty($home)) { //### TODO: remove later, converts old format
+                        $home = $group;
+                        $group = $matches[1]==$this->yellow->system->get("email") ? "administrator" : "user";
+                    }
+                    $this->users->set($matches[1], $hash, $name, $language, $status, $stamp, $modified, $errors, $pending, $group, $home);
+                    $fileDataNew .= "$matches[1]: $hash,$name,$language,$status,$stamp,$modified,$errors,$pending,$group,$home\n";
                 } else {
                     $fileDataNew .= $line;
                 }
             }
-            if ($fileData!=$fileDataNew) $this->yellow->toolbox->createFile($fileNameUser, $fileDataNew);
+            if ($fileData!=$fileDataNew && !$this->yellow->toolbox->createFile($fileNameUser, $fileDataNew)) {
+                $this->yellow->log("error", "Can't write file '$fileNameUser'!");
+            }
         }
     }
     
@@ -154,6 +161,7 @@ class YellowEdit {
             case "invalid":     echo "ERROR updating settings: Please enter a valid email!\n"; break;
             case "taken":       echo "ERROR updating settings: Please enter a different email!\n"; break;
             case "weak":        echo "ERROR updating settings: Please enter a different password!\n"; break;
+            case "short":       echo "ERROR updating settings: Please enter a longer password!\n"; break;
         }
         if ($status=="ok") {
             $fileNameUser = $this->yellow->system->get("settingDir").$this->yellow->system->get("editUserFile");
@@ -182,6 +190,7 @@ class YellowEdit {
             case "invalid": echo "ERROR updating settings: Please enter a valid email!\n"; break;
             case "unknown": echo "ERROR updating settings: Can't find email '$email'!\n"; break;
             case "weak":    echo "ERROR updating settings: Please enter a different password!\n"; break;
+            case "short":   echo "ERROR updating settings: Please enter a longer password!\n"; break;
         }
         if ($status=="ok") {
             $fileNameUser = $this->yellow->system->get("settingDir").$this->yellow->system->get("editUserFile");
@@ -542,9 +551,10 @@ class YellowEdit {
             if ($this->response->status=="ok" && $email!=$emailSource && $this->users->isTaken($email)) $this->response->status = "taken";
             if ($this->response->status=="ok" && $email!=$emailSource) {
                 $pending = $emailSource;
+                $group = $this->users->getGroup($emailSource);
                 $home = $this->users->getHome($emailSource);
                 $fileNameUser = $this->yellow->system->get("settingDir").$this->yellow->system->get("editUserFile");
-                $this->response->status = $this->users->save($fileNameUser, $email, "no", $name, $language, "unverified", "", "", "", $pending, $home) ? "ok" : "error";
+                $this->response->status = $this->users->save($fileNameUser, $email, "no", $name, $language, "unverified", "", "", "", $pending, $group, $home) ? "ok" : "error";
                 if ($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
             }
             if ($this->response->status=="ok") {
@@ -583,11 +593,11 @@ class YellowEdit {
         if ($option=="check") {
             list($statusCode, $updates, $rawData) = $this->response->getUpdateInformation();
             if ($updates) {
-                $this->response->status = $this->response->isUserWebmaster() ? "updates" : "warning";
-                $this->response->rawDataOutput = $this->response->isUserWebmaster() ? $rawData : "";
+                $this->response->status = $this->response->isUserAdministrator() ? "updates" : "warning";
+                $this->response->rawDataOutput = $this->response->isUserAdministrator() ? $rawData : "";
             }
             if ($statusCode!=200) $this->response->status = "error";
-        } elseif ($this->response->isUserWebmaster()) {
+        } elseif ($this->response->isUserAdministrator()) {
             $this->response->status = $this->yellow->command("update", $extension, $option)==200 ? "done" : "error";
         }
         if ($this->response->status=="done") {
@@ -849,7 +859,8 @@ class YellowEdit {
         }
         if (is_null($status)) {
             $status = "ok";
-            if (!empty($password) && strlenu($password)<$this->yellow->system->get("editUserPasswordMinLength")) $status = "weak";
+            if (!empty($password) && strlenu($password)<$this->yellow->system->get("editUserPasswordMinLength")) $status = "short";
+            if (!empty($password) && $password==$email) $status = "weak";
             if (!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)) $status = "invalid";
         }
         return $status;
@@ -1067,9 +1078,9 @@ class YellowEditResponse {
             $data["userName"] = $this->extension->users->getName($this->userEmail);
             $data["userLanguage"] = $this->extension->users->getLanguage($this->userEmail);
             $data["userStatus"] = $this->extension->users->getStatus($this->userEmail);
+            $data["userGroup"] = $this->extension->users->getGroup($this->userEmail);
             $data["userHome"] = $this->extension->users->getHome($this->userEmail);
             $data["userRestriction"] = intval($this->isUserRestriction());
-            $data["userWebmaster"] = intval($this->isUserWebmaster());
             $data["serverScheme"] = $this->yellow->system->get("serverScheme");
             $data["serverAddress"] = $this->yellow->system->get("serverAddress");
             $data["serverBase"] = $this->yellow->system->get("serverBase");
@@ -1151,7 +1162,7 @@ class YellowEditResponse {
             list($statusCodeLatest, $dataLatest) = $this->yellow->extensions->get("update")->getExtensionsVersion(true);
             list($statusCodeModified, $dataModified) = $this->yellow->extensions->get("update")->getExtensionsModified();
             $statusCode = max($statusCodeCurrent, $statusCodeLatest, $statusCodeModified);
-            if ($this->isUserWebmaster()) {
+            if ($this->isUserAdministrator()) {
                 foreach ($dataCurrent as $key=>$value) {
                     if (strnatcasecmp($dataCurrent[$key], $dataLatest[$key])<0) {
                         $rawData .= htmlspecialchars(ucfirst($key)." $dataLatest[$key]")."<br />\n";
@@ -1460,9 +1471,9 @@ class YellowEditResponse {
         return !empty($this->userEmail);
     }
     
-    // Check if user is webmaster
-    public function isUserWebmaster() {
-        return !empty($this->userEmail) && $this->userEmail==$this->yellow->system->get("email");
+    // Check if user is administrator
+    public function isUserAdministrator() {
+        return !empty($this->userEmail) && $this->extension->users->getGroup($this->userEmail)=="administrator";
     }
     
     // Check if user with restriction
@@ -1493,15 +1504,15 @@ class YellowEditUsers {
             if (preg_match("/^\#/", $line)) continue;
             preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
             if (!empty($matches[1]) && !empty($matches[2])) {
-                list($hash, $name, $language, $status, $stamp, $modified, $errors, $pending, $home) = explode(",", $matches[2]);
-                $this->set($matches[1], $hash, $name, $language, $status, $stamp, $modified, $errors, $pending, $home);
+                list($hash, $name, $language, $status, $stamp, $modified, $errors, $pending, $group, $home) = explode(",", $matches[2]);
+                $this->set($matches[1], $hash, $name, $language, $status, $stamp, $modified, $errors, $pending, $group, $home);
                 if (defined("DEBUG") && DEBUG>=3) echo "YellowEditUsers::load email:$matches[1]<br/>\n";
             }
         }
     }
 
     // Save user to file
-    public function save($fileName, $email, $password = "", $name = "", $language = "", $status = "", $stamp = "", $modified = "", $errors = "", $pending = "", $home = "") {
+    public function save($fileName, $email, $password = "", $name = "", $language = "", $status = "", $stamp = "", $modified = "", $errors = "", $pending = "", $group = "", $home = "") {
         if (!empty($password)) $hash = $this->createHash($password);
         if ($this->isExisting($email)) {
             $email = strreplaceu(",", "-", $email);
@@ -1513,6 +1524,7 @@ class YellowEditUsers {
             $modified = strreplaceu(",", "-", empty($modified) ? time() : $modified);
             $errors = strreplaceu(",", "-", empty($errors) ? "0" : $errors);
             $pending = strreplaceu(",", "-", empty($pending) ? $this->users[$email]["pending"] : $pending);
+            $group = strreplaceu(",", "-", empty($group) ? $this->users[$email]["group"] : $group);
             $home = strreplaceu(",", "-", empty($home) ? $this->users[$email]["home"] : $home);
         } else {
             $email = strreplaceu(",", "-", empty($email) ? "none" : $email);
@@ -1524,20 +1536,21 @@ class YellowEditUsers {
             $modified = strreplaceu(",", "-", empty($modified) ? time() : $modified);
             $errors = strreplaceu(",", "-", empty($errors) ? "0" : $errors);
             $pending = strreplaceu(",", "-", empty($pending) ? "none" : $pending);
+            $group = strreplaceu(",", "-", empty($group) ? $this->yellow->system->get("editUserGroup") : $group);
             $home = strreplaceu(",", "-", empty($home) ? $this->yellow->system->get("editUserHome") : $home);
         }
-        $this->set($email, $hash, $name, $language, $status, $stamp, $modified, $errors, $pending, $home);
+        $this->set($email, $hash, $name, $language, $status, $stamp, $modified, $errors, $pending, $group, $home);
         $fileData = $this->yellow->toolbox->readFile($fileName);
         foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
             preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
             if (!empty($matches[1]) && $matches[1]==$email) {
-                $fileDataNew .= "$email: $hash,$name,$language,$status,$stamp,$modified,$errors,$pending,$home\n";
+                $fileDataNew .= "$email: $hash,$name,$language,$status,$stamp,$modified,$errors,$pending,$group,$home\n";
                 $found = true;
             } else {
                 $fileDataNew .= $line;
             }
         }
-        if (!$found) $fileDataNew .= "$email: $hash,$name,$language,$status,$stamp,$modified,$errors,$pending,$home\n";
+        if (!$found) $fileDataNew .= "$email: $hash,$name,$language,$status,$stamp,$modified,$errors,$pending,$group,$home\n";
         return $this->yellow->toolbox->createFile($fileName, $fileDataNew);
     }
     
@@ -1554,7 +1567,7 @@ class YellowEditUsers {
     }
     
     // Set user data
-    public function set($email, $hash, $name, $language, $status, $stamp, $modified, $errors, $pending, $home) {
+    public function set($email, $hash, $name, $language, $status, $stamp, $modified, $errors, $pending, $group, $home) {
         $this->users[$email] = array();
         $this->users[$email]["email"] = $email;
         $this->users[$email]["hash"] = $hash;
@@ -1565,6 +1578,7 @@ class YellowEditUsers {
         $this->users[$email]["modified"] = $modified;
         $this->users[$email]["errors"] = $errors;
         $this->users[$email]["pending"] = $pending;
+        $this->users[$email]["group"] = $group;
         $this->users[$email]["home"] = $home;
     }
     
@@ -1683,6 +1697,11 @@ class YellowEditUsers {
         return $this->isExisting($email) ? $this->users[$email]["pending"] : "";
     }
     
+    // Return user group
+    public function getGroup($email) {
+        return $this->isExisting($email) ? $this->users[$email]["group"] : "";
+    }
+
     // Return user home
     public function getHome($email) {
         return $this->isExisting($email) ? $this->users[$email]["home"] : "";
@@ -1700,8 +1719,7 @@ class YellowEditUsers {
             $name = $value["name"];
             $status = $value["status"];
             if (preg_match("/\s/", $name)) $name = "\"$name\"";
-            if (preg_match("/\s/", $status)) $status = "\"$status\"";
-            $data[$key] = "$value[email] $name $status";
+            $data[$key] = "$value[email] $name $value[status] $value[group]";
         }
         uksort($data, "strnatcasecmp");
         return $data;
