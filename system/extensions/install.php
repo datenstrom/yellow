@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowInstall {
-    const VERSION = "0.8.7";
+    const VERSION = "0.8.8";
     const TYPE = "feature";
     const PRIORITY = "1";
     public $yellow;                 //access to API
@@ -48,7 +48,7 @@ class YellowInstall {
     
     // Process request to install website
     public function processRequestInstall($scheme, $address, $base, $location, $fileName) {
-        $name = trim(preg_replace("/[^\pL\d\-\. ]/u", "-", $_REQUEST["name"]));
+        $author = trim(preg_replace("/[^\pL\d\-\. ]/u", "-", $_REQUEST["author"]));
         $email = trim($_REQUEST["email"]);
         $password = trim($_REQUEST["password"]);
         $language = trim($_REQUEST["language"]);
@@ -62,7 +62,7 @@ class YellowInstall {
         $this->yellow->page->parseData($this->getRawDataInstall(), false, $statusCode, $this->yellow->page->get("pageError"));
         $this->yellow->page->safeMode = false;
         if ($status=="install") $status = $this->updateExtension($extension)==200 ? "ok" : "error";
-        if ($status=="ok") $status = $this->updateUser($email, $password, $name, $language)==200 ? "ok" : "error";
+        if ($status=="ok") $status = $this->updateUser($email, $password, $author, $language)==200 ? "ok" : "error";
         if ($status=="ok") $status = $this->updateContent($language, "Home", "/")==200 ? "ok" : "error";
         if ($status=="ok") $status = $this->updateContent($language, "About", "/about/")==200 ? "ok" : "error";
         if ($status=="ok") $status = $this->updateContent($language, "Footer", "/shared/footer")==200 ? "ok" : "error";
@@ -293,7 +293,7 @@ class YellowInstall {
         $this->yellow->text->setLanguage($language);
         $rawData = "---\nTitle:".$this->yellow->text->get("installTitle")."\nLanguage:$language\nNavigation:navigation\nHeader:none\nFooter:none\nSidebar:none\n---\n";
         $rawData .= "<form class=\"install-form\" action=\"".$this->yellow->page->getLocation(true)."\" method=\"post\">\n";
-        $rawData .= "<p><label for=\"name\">".$this->yellow->text->get("editSignupName")."</label><br /><input class=\"form-control\" type=\"text\" maxlength=\"64\" name=\"name\" id=\"name\" value=\"\"></p>\n";
+        $rawData .= "<p><label for=\"author\">".$this->yellow->text->get("editSignupName")."</label><br /><input class=\"form-control\" type=\"text\" maxlength=\"64\" name=\"author\" id=\"author\" value=\"\"></p>\n";
         $rawData .= "<p><label for=\"email\">".$this->yellow->text->get("editSignupEmail")."</label><br /><input class=\"form-control\" type=\"text\" maxlength=\"64\" name=\"email\" id=\"email\" value=\"\"></p>\n";
         $rawData .= "<p><label for=\"password\">".$this->yellow->text->get("editSignupPassword")."</label><br /><input class=\"form-control\" type=\"password\" maxlength=\"64\" name=\"password\" id=\"password\" value=\"\"></p>\n";
         if (count($this->yellow->text->getLanguages())>1) {
