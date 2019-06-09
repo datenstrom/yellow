@@ -223,8 +223,30 @@ yellow.edit = {
                 "<p><label for=\"yellow-pane-account-email\">"+this.getText("SignupEmail")+"</label><br /><input class=\"yellow-form-control\" name=\"email\" id=\"yellow-pane-account-email\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("email"))+"\" /></p>"+
                 "<p><label for=\"yellow-pane-account-password\">"+this.getText("SignupPassword")+"</label><br /><input class=\"yellow-form-control\" type=\"password\" name=\"password\" id=\"yellow-pane-account-password\" maxlength=\"64\" value=\"\" /></p>"+
                 "<p>"+this.getRawDataLanguages(paneId)+"</p>"+
+                "<p>"+this.getText("AccountInformation")+" <a href=\"#\" data-action=\"quit\">"+this.getText("AccountMore")+"</a></p>"+
                 "<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("ChangeButton")+"\" /></p>"+
-                "<p><a href=\"#\" id=\"yellow-pane-account-quit\" class=\"yellow-center\" data-action=\"quit\">"+this.getText("AccountQuit")+"</a><br /><a href=\"#\" id=\"yellow-pane-account-update\" class=\"yellow-center\" data-action=\"update\">"+this.getText("AccountUpdate")+"</a></p>"+
+                "</div>"+
+                "<div class=\"yellow-settings yellow-settings-banner\"></div>"+
+                "</div>"+
+                "</form>";
+                break;
+            case "yellow-pane-system":
+                elementDiv.innerHTML =
+                "<form method=\"post\">"+
+                "<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\"></i></a>"+
+                "<div class=\"yellow-title\"><h1 id=\"yellow-pane-system-title\">"+this.getText("SystemTitle")+"</h1></div>"+
+                "<div class=\"yellow-status\"><p id=\"yellow-pane-system-status\" class=\""+paneStatus+"\">"+this.getText("SystemStatus", "", paneStatus)+"</p></div>"+
+                "<div class=\"yellow-settings\">"+
+                "<div id=\"yellow-pane-system-settings-actions\" class=\"yellow-settings-left\"><p>"+this.getRawDataActions(paneAction)+"</p></div>"+
+                "<div id=\"yellow-pane-system-settings-separator\" class=\"yellow-settings-left yellow-settings-separator\">&nbsp;</div>"+
+                "<div id=\"yellow-pane-system-settings-fields\" class=\"yellow-settings-right yellow-fields\">"+
+                "<input type=\"hidden\" name=\"action\" value=\"system\" />"+
+                "<input type=\"hidden\" name=\"csrftoken\" value=\""+yellow.toolbox.encodeHtml(this.getCookie("csrftoken"))+"\" />"+
+                "<p><label for=\"yellow-pane-system-sitename\">"+this.getText("SystemSitename")+"</label><br /><input class=\"yellow-form-control\" name=\"sitename\" id=\"yellow-pane-system-sitename\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("sitename"))+"\" /></p>"+
+                "<p><label for=\"yellow-pane-system-author\">"+this.getText("SystemAuthor")+"</label><br /><input class=\"yellow-form-control\" name=\"author\" id=\"yellow-pane-system-author\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("author"))+"\" /></p>"+
+                "<p><label for=\"yellow-pane-system-email\">"+this.getText("SystemEmail")+"</label><br /><input class=\"yellow-form-control\" name=\"email\" id=\"yellow-pane-system-email\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("email"))+"\" /></p>"+
+                "<p>"+this.getText("SystemInformation")+"</p>"+
+                "<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("ChangeButton")+"\" /></p>"+
                 "</div>"+
                 "<div class=\"yellow-settings yellow-settings-banner\"></div>"+
                 "</div>"+
@@ -345,13 +367,21 @@ yellow.edit = {
                     document.getElementById("yellow-pane-account-"+yellow.system.userLanguage).checked = true;
                 }
                 break;
-            case "yellow-pane-update":
+            case "yellow-pane-system":
                 if (paneStatus=="none") {
+                    document.getElementById("yellow-pane-system-status").innerHTML = this.getText("SystemStatusNone");
+                    document.getElementById("yellow-pane-system-sitename").value = yellow.system.sitename;
+                    document.getElementById("yellow-pane-system-author").value = yellow.system.author;
+                    document.getElementById("yellow-pane-system-email").value = yellow.system.email;
+                }
+                break;
+            case "yellow-pane-update":
+                if (paneStatus=="none" && this.isUserAdministrator()) {
                     document.getElementById("yellow-pane-update-status").innerHTML = this.getText("UpdateStatusCheck");
                     document.getElementById("yellow-pane-update-output").innerHTML = "";
                     setTimeout("yellow.action('submit', '', 'action:update/option:check/');", 500);
                 }
-                if (paneStatus=="updates") {
+                if (paneStatus=="updates" && this.isUserAdministrator()) {
                     document.getElementById("yellow-pane-update-status").innerHTML = "<a href=\"#\" data-action=\"submit\" data-args=\"action:update\">"+this.getText("UpdateStatusUpdates")+"</a>";
                 }
                 break;
@@ -400,6 +430,7 @@ yellow.edit = {
         var paneHeight = yellow.toolbox.getWindowHeight() - paneTop - Math.min(yellow.toolbox.getOuterHeight(elementBar) + 10, (yellow.toolbox.getWindowWidth()-yellow.toolbox.getOuterWidth(elementBar))/2);
         switch (paneId) {
             case "yellow-pane-account":
+            case "yellow-pane-system":
                 yellow.toolbox.setOuterLeft(document.getElementById(paneId), paneLeft);
                 yellow.toolbox.setOuterTop(document.getElementById(paneId), paneTop);
                 yellow.toolbox.setOuterWidth(document.getElementById(paneId), paneWidth);
@@ -517,6 +548,7 @@ yellow.edit = {
                 case "quit":        this.showPane(paneId, action, status); break;
                 case "remove":      this.showPane(paneId, action, status); break;
                 case "account":     this.showPane(paneId, action, status); break;
+                case "system":      this.showPane(paneId, action, status); break;
                 case "update":      this.showPane(paneId, action, status); break;
                 case "create":      this.showPane(paneId, action, status, true); break;
                 case "edit":        this.showPane(paneId, action, status, true); break;
@@ -925,6 +957,11 @@ yellow.edit = {
     // Return cookie string
     getCookie: function(name) {
         return yellow.toolbox.getCookie(name);
+    },
+    
+    // Check if user is administrator
+    isUserAdministrator: function() {
+        return yellow.system.userGroup=="administrator";
     },
 
     // Check if element is expandable
