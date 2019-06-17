@@ -1,6 +1,8 @@
 Contributing guidelines
 =======================
 
+Everyone is welcome to contribute and give feedback.
+
 ## How to report a problem
 
 1. [Submit an issue for each problem](https://github.com/datenstrom/yellow/issues).
@@ -15,8 +17,12 @@ Contributing guidelines
 
 ## How to add something
 
-1. [Start with the example extension](https://github.com/schulle4u/yellow-extension-example).
-2. Create a new repository, update code and documentation.
-3. Publish it, add a link to the existing extensions.
+1. [Create your own extension](https://github.com/schulle4u/yellow-extension-example).
+2. Start with an example, first make it work then make it better.
+3. Upload your extension to GitHub, let us know if you need help.
 
-Your feedback and help is much appreciated. :+1:
+## How to stay in touch 
+
+1. [Click “Watch” at the top of the repository](https://github.com/datenstrom/yellow).
+2. Be notified of new releases in your mailbox.
+3. Answer questions and problems from other people.
