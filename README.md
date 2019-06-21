@@ -13,4 +13,5 @@ We have a developer kit and an API for developers. [Learn more](https://develope
 <p>
 <a href="README-de.md"><img src="https://raw.githubusercontent.com/datenstrom/yellow-developers/master/media/images/language-de.png" width="15" height="15" alt="Deutsch">&nbsp; Deutsch</a>&nbsp;
 <a href="README.md"><img src="https://raw.githubusercontent.com/datenstrom/yellow-developers/master/media/images/language-en.png" width="15" height="15" alt="English">&nbsp; English</a>&nbsp;
+<a href="README-fr.md"><img src="https://raw.githubusercontent.com/datenstrom/yellow-developers/master/media/images/language-fr.png" width="15" height="15" alt="Français">&nbsp; Français</a>&nbsp;
 </p>

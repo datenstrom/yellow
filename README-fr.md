@@ -1,14 +1,14 @@
 # [![Datenstrom](https://raw.githubusercontent.com/datenstrom/yellow-developers/master/media/images/datenstrom-logo-small.png)](https://github.com/datenstrom)&nbsp; Datenstrom Yellow 0.8.5
 
-[![Datenstrom Yellow](https://raw.githubusercontent.com/datenstrom/yellow-developers/master/media/images/datenstrom-yellow-de.jpg)](https://datenstrom.se/de/yellow/)
+[![Datenstrom Yellow](https://raw.githubusercontent.com/datenstrom/yellow-developers/master/media/images/datenstrom-yellow-fr.jpg)](https://datenstrom.se/fr/yellow/)
 
-Datenstrom Yellow ist für Menschen die Webseiten machen. [Demo anschauen](https://developers.datenstrom.se/de/).
+Datenstrom Yellow est fait pour les gens qui font des sites web. [Voir la démo](https://developers.datenstrom.se/fr/).
 
-1. [Datenstrom Yellow herunterladen und entpacken](https://github.com/datenstrom/yellow/archive/master.zip).
-2. Kopiere alle Dateien auf deinen Webserver.
-3. Öffne deine Webseite in einem Webbrowser.
+1. [Téléchargez et décompressez Datenstrom Yellow.](https://github.com/datenstrom/yellow/archive/master.zip).
+2. Copiez tout les fichiers sur votre serveur web.  
+3. Ouvrez votre site dans un navigateur web.
 
-Wir haben ein Entwickler-Kit und eine API für Entwickler. [Mehr erfahren](https://developers.datenstrom.se/de/help/).
+Nous avons un kit de développement et une API pour les développeurs. [Apprenez-en plus](https://developers.datenstrom.se/fr/help/).
 
 <p>
 <a href="README-de.md"><img src="https://raw.githubusercontent.com/datenstrom/yellow-developers/master/media/images/language-de.png" width="15" height="15" alt="Deutsch">&nbsp; Deutsch</a>&nbsp;
