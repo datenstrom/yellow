@@ -3,4 +3,6 @@
 .travis.yml export-ignore
 CONTRIBUTING.md export-ignore
 LICENSE.md export-ignore
+README-de.md export-ignore
+README-fr.md export-ignore
 README.md export-ignore
