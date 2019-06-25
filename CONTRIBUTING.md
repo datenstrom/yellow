@@ -11,8 +11,8 @@ Everyone is welcome to contribute and give feedback.
 
 ## How to suggest an idea
 
-1. [Submit a new issue to this repository](https://github.com/datenstrom/yellow-extensions/issues).
-2. Describe how your idea makes life easier, not technical details.
+1. [Submit a new issue for each idea](https://github.com/datenstrom/yellow-extensions/issues).
+2. Describe your idea, how it would make your everyday life easier.
 3. Vote for ideas, add a thumbs-up to ideas you like. [What's popular](https://github.com/datenstrom/yellow-extensions/issues?q=is%3Aopen+is%3Aissue+sort%3Areactions-%2B1-desc).
 
 ## How to add something
@@ -23,6 +23,6 @@ Everyone is welcome to contribute and give feedback.
 
 ## How to stay in touch 
 
-1. [Click “Watch” at the top of this page](https://github.com/datenstrom/yellow).
-2. Be notified of new releases in your mailbox.
-3. Answer questions and problems from other people.
+1. [Click on “Watch” at the top](https://github.com/datenstrom/yellow).
+2. Answer questions and problems from other people.
+3. Be notified of new releases in your mailbox. [What's new](https://github.com/datenstrom/yellow/releases).
