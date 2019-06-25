@@ -6,9 +6,7 @@ Datenstrom Yellow est fait pour les gens qui font des sites web. [Voir la démo]
 
 1. [Téléchargez et décompressez Datenstrom Yellow.](https://github.com/datenstrom/yellow/archive/master.zip).
 2. Copiez tout les fichiers sur votre serveur web.  
-3. Ouvrez votre site dans un navigateur web.
-
-Nous avons des extensions et une API pour les développeurs. [Apprenez-en plus](https://developers.datenstrom.se/fr/help/).
+3. Ouvrez votre site dans un navigateur web. [Apprenez-en plus](https://developers.datenstrom.se/fr/help/).
 
 <p>
 <a href="README-de.md"><img src="https://raw.githubusercontent.com/datenstrom/yellow-extensions/master/website/media/images/language-de.png" width="15" height="15" alt="Deutsch">&nbsp; Deutsch</a>&nbsp;
