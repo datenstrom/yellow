@@ -4,7 +4,7 @@ Datenstrom Yellow is for people who make websites. [See demo](https://extensions
 
 [![Datenstrom Yellow](https://raw.githubusercontent.com/datenstrom/yellow-extensions/master/website/media/images/datenstrom-yellow-en.jpg)](https://datenstrom.se/yellow/)
 
-## How to install Datenstrom Yellow
+## How to install
 
 1. [Download Datenstrom Yellow and unzip it](https://github.com/datenstrom/yellow/archive/master.zip).
 2. Copy all files to your web server.

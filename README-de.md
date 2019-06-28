@@ -4,7 +4,7 @@ Datenstrom Yellow ist für Menschen die Webseiten machen. [Demo anschauen](https
 
 [![Datenstrom Yellow](https://raw.githubusercontent.com/datenstrom/yellow-extensions/master/website/media/images/datenstrom-yellow-de.jpg)](https://datenstrom.se/de/yellow/)
 
-## Wie man Datenstrom Yellow installiert
+## Wie man es installiert
 
 1. [Datenstrom Yellow herunterladen und entpacken](https://github.com/datenstrom/yellow/archive/master.zip).
 2. Kopiere alle Dateien auf deinen Webserver.
