@@ -15,7 +15,7 @@ Everyone is welcome to contribute and give feedback.
 2. Describe your idea, how it would make your everyday life easier.
 3. Vote for good ideas, add a thumbs-up to eveything you like. [What's popular](https://github.com/datenstrom/yellow-extensions/issues?q=is%3Aopen+is%3Aissue+sort%3Areactions-%2B1-desc).
 
-## How to add something
+## How to add an extension
 
 1. [Make your own extension](https://github.com/datenstrom/yellow-extensions).
 2. Start with an example, first make it work then make it better.
