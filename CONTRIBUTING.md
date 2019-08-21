@@ -5,15 +5,15 @@ Everyone is welcome to contribute and give feedback.
 
 ## How to report a problem
 
-1. [Submit a new issue for each problem](https://github.com/datenstrom/yellow/issues) at datenstrom/yellow.
+1. [Submit a new issue for each problem](https://github.com/datenstrom/yellow/issues).
 2. Describe your problem, sometimes there are different solutions.
 3. Add a lot of details, the more we know the better we can help.
 
 ## How to suggest an idea
 
-1. [Submit a new issue for each idea](https://github.com/datenstrom/yellow-extensions/issues)  at datenstrom/yellow-extensions.
+1. [Submit a new issue for each idea](https://github.com/datenstrom/yellow/issues).
 2. Describe your idea, how it would make your everyday life easier.
-3. Vote for good ideas, add a thumbs-up to eveything you like. [What's popular](https://github.com/datenstrom/yellow-extensions/issues?q=is%3Aopen+is%3Aissue+sort%3Areactions-%2B1-desc).
+3. Vote for good ideas, add a thumbs-up to eveything you like. [What's popular](https://github.com/datenstrom/yellow/issues?q=is%3Aopen+is%3Aissue+sort%3Areactions-%2B1-desc+label%3Aidea).
 
 ## How to add an extension
 
