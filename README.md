@@ -2,8 +2,6 @@
 
 Datenstrom Yellow is for people who make websites. [See demo](https://extensions.datenstrom.se/).
 
-## Quick start
-
 1. [Download Datenstrom Yellow and unzip it](https://github.com/datenstrom/yellow/archive/master.zip).
 2. Copy all files to your web server.
 3. Open your website in a web browser. [Learn more](https://extensions.datenstrom.se/help/).
