@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowEdit {
-    const VERSION = "0.8.11";
+    const VERSION = "0.8.12";
     const TYPE = "feature";
     public $yellow;         //access to API
     public $response;       //web response
@@ -97,31 +97,43 @@ class YellowEdit {
 
     // Handle update
     public function onUpdate($action) {
-        if ($action=="update") {
+        if ($action=="update") {        //TODO: remove later, converts old format
             $fileNameUser = $this->yellow->system->get("settingDir").$this->yellow->system->get("editUserFile");
             $fileData = $this->yellow->toolbox->readFile($fileNameUser);
             foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
                 preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
-                if (!empty($matches[1]) && !empty($matches[2]) && $matches[1][0]!="#") {
-                    list($hash, $name, $language, $status, $pending, $stamp, $modified, $errors, $group, $home) = explode(",", $matches[2]);
-                    if ($status!="active" && $status!="inactive") {
-                        unset($this->users->users[$matches[1]]);
-                        continue;
+                if (!empty($matches[1]) && !empty($matches[2]) && $matches[1][0]!="#" && preg_match("/@/", $matches[1])) {
+                    list($hash, $name, $language, $status, $pending, $stamp, $modified, $failed, $group, $home) = explode(",", $matches[2]);
+                    if (!is_numeric($failed)) {
+                        list($hash, $name, $language, $status, $stamp, $modified, $failed, $pending, $group, $home) = explode(",", $matches[2]);
                     }
-                    if (!is_numeric($errors)) { //TODO: remove later, converts old format
-                        list($hash, $name, $language, $status, $stamp, $modified, $errors, $pending, $group, $home) = explode(",", $matches[2]);
-                    }
-                    if (empty($home)) { //TODO: remove later, converts old format
+                    if (empty($home)) {
                         $home = $group;
                         $group = $matches[1]==$this->yellow->system->get("email") ? "administrator" : "user";
                     }
-                    $pending = "none";
-                    $this->users->set($matches[1], $hash, $name, $language, $status, $pending, $stamp, $modified, $errors, $group, $home);
-                    $fileDataNew .= "$matches[1]: $hash,$name,$language,$status,$pending,$stamp,$modified,$errors,$group,$home\n";
+                    $fileDataNew .= "Email: $matches[1]\nName: $name\nLanguage: $language\nGroup: $group\nHome: $home\nStatus: $status\nPending: $pending\nHash: $hash\nStamp: $stamp\nFailed: $failed\nModified: $modified\n\n";
                 } else {
                     $fileDataNew .= $line;
                 }
             }
+            $fileDataNew = rtrim($fileDataNew)."\n";
+            if ($fileData!=$fileDataNew && !$this->yellow->toolbox->createFile($fileNameUser, $fileDataNew)) {
+                $this->yellow->log("error", "Can't write file '$fileNameUser'!");
+            }
+        }
+        if ($action=="update") {
+            $fileNameUser = $this->yellow->system->get("settingDir").$this->yellow->system->get("editUserFile");
+            $fileData = $this->yellow->toolbox->readFile($fileNameUser);
+            $fileDataNew = "";
+            foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
+                preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
+                if (lcfirst($matches[1])=="email" && !strempty($matches[2])) {
+                    $status = $this->users->getUser($matches[2], "status");
+                    $cleanup = !empty($status) && $status!="active" && $status!="inactive";
+                }
+                if (!$cleanup) $fileDataNew .= $line;
+            }
+            $fileDataNew = rtrim($fileDataNew)."\n";
             if ($fileData!=$fileDataNew && !$this->yellow->toolbox->createFile($fileNameUser, $fileDataNew)) {
                 $this->yellow->log("error", "Can't write file '$fileNameUser'!");
             }
@@ -168,13 +180,24 @@ class YellowEdit {
         }
         if ($status=="ok") {
             $fileNameUser = $this->yellow->system->get("settingDir").$this->yellow->system->get("editUserFile");
-            $status = $this->users->save($fileNameUser, $email, $password, $name, "", "active") ? "ok" : "error";
+            $settings = array(
+                "name" => $name,
+                "language" => $this->yellow->system->get("language"),
+                "group" => $this->yellow->system->get("editUserGroup"),
+                "home" => $this->yellow->system->get("editUserHome"),
+                "status" => "active",
+                "pending" => "none",
+                "hash" => $this->users->createHash($password),
+                "stamp" => $this->users->createStamp(),
+                "failed" => "0",
+                "modified" => time());
+            $status = $this->users->save($fileNameUser, $email, $settings) ? "ok" : "error";
             if ($status=="error") echo "ERROR updating settings: Can't write file '$fileNameUser'!\n";
             $this->yellow->log($status=="ok" ? "info" : "error", "Add user '".strtok($name, " ")."'");
         }
         if ($status=="ok") {
             $algorithm = $this->yellow->system->get("editUserHashAlgorithm");
-            $status = substru($this->users->getHash($email), 0, 10)!="error-hash" ? "ok" : "error";
+            $status = substru($this->users->getUser($email, "hash"), 0, 10)!="error-hash" ? "ok" : "error";
             if ($status=="error") echo "ERROR updating settings: Hash algorithm '$algorithm' not supported!\n";
         }
         $statusCode = $status=="ok" ? 200 : 500;
@@ -197,7 +220,12 @@ class YellowEdit {
         }
         if ($status=="ok") {
             $fileNameUser = $this->yellow->system->get("settingDir").$this->yellow->system->get("editUserFile");
-            $status = $this->users->save($fileNameUser, $email, $password, $name) ? "ok" : "error";
+            $settings = array(
+                "name" => empty($name) ? $this->users->getUser($email, "name") : $name,
+                "hash" => empty($password) ? $this->users->getUser($email, "hash") : $this->users->createHash($password),
+                "failed" => "0",
+                "modified" => time());
+            $status = $this->users->save($fileNameUser, $email, $settings) ? "ok" : "error";
             if ($status=="error") echo "ERROR updating settings: Can't write file '$fileNameUser'!\n";
         }
         $statusCode = $status=="ok" ? 200 : 500;
@@ -209,7 +237,7 @@ class YellowEdit {
     public function userRemove($args) {
         $status = "ok";
         list($command, $option, $email) = $args;
-        $name = $this->users->getName($email);
+        $name = $this->users->getUser($email, "name");
         if (empty($email)) $status = $this->response->status = "invalid";
         if (empty($name)) $name = $this->yellow->system->get("sitename");
         if ($status=="ok") $status = $this->getUserAccount($email, "", "remove");
@@ -288,8 +316,9 @@ class YellowEdit {
     // Process request for user login
     public function processRequestLogin($scheme, $address, $base, $location, $fileName) {
         $fileNameUser = $this->yellow->system->get("settingDir").$this->yellow->system->get("editUserFile");
-        if ($this->users->save($fileNameUser, $this->response->userEmail)) {
-            $home = $this->users->getHome($this->response->userEmail);
+        $settings = array("failed" => "0", "modified" => time());
+        if ($this->users->save($fileNameUser, $this->response->userEmail, $settings)) {
+            $home = $this->users->getUser($this->response->userEmail, "home");
             if (substru($location, 0, strlenu($home))==$home) {
                 $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
                 $statusCode = $this->yellow->sendStatus(303, $location);
@@ -331,13 +360,23 @@ class YellowEdit {
         if ($this->response->status=="ok" && $this->users->isTaken($email)) $this->response->status = "next";
         if ($this->response->status=="ok") {
             $fileNameUser = $this->yellow->system->get("settingDir").$this->yellow->system->get("editUserFile");
-            $language = $this->yellow->lookup->findLanguageFromFile($fileName, $this->yellow->system->get("language"));
-            $this->response->status = $this->users->save($fileNameUser, $email, $password, $name, $language, "unconfirmed") ? "ok" : "error";
+            $settings = array(
+                "name" => $name,
+                "language" => $this->yellow->lookup->findLanguageFromFile($fileName, $this->yellow->system->get("language")),
+                "group" => $this->yellow->system->get("editUserGroup"),
+                "home" => $this->yellow->system->get("editUserHome"),
+                "status" => "unconfirmed",
+                "pending" => "none",
+                "hash" => $this->users->createHash($password),
+                "stamp" => $this->users->createStamp(),
+                "failed" => "0",
+                "modified" => time());
+            $this->response->status = $this->users->save($fileNameUser, $email, $settings) ? "ok" : "error";
             if ($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
         }
         if ($this->response->status=="ok") {
             $algorithm = $this->yellow->system->get("editUserHashAlgorithm");
-            $this->response->status = substru($this->users->getHash($email), 0, 10)!="error-hash" ? "ok" : "error";
+            $this->response->status = substru($this->users->getUser($email, "hash"), 0, 10)!="error-hash" ? "ok" : "error";
             if ($this->response->status=="error") $this->yellow->page->error(500, "Hash algorithm '$algorithm' not supported!");
         }
         if ($this->response->status=="ok") {
@@ -356,7 +395,8 @@ class YellowEdit {
         $this->response->status = $this->getUserStatus($email, $_REQUEST["action"]);
         if ($this->response->status=="ok") {
             $fileNameUser = $this->yellow->system->get("settingDir").$this->yellow->system->get("editUserFile");
-            $this->response->status = $this->users->save($fileNameUser, $email, "", "", "", "unapproved") ? "ok" : "error";
+            $settings = array("status" => "unapproved", "failed" => "0", "modified" => time());
+            $this->response->status = $this->users->save($fileNameUser, $email, $settings) ? "ok" : "error";
             if ($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
         }
         if ($this->response->status=="ok") {
@@ -375,9 +415,10 @@ class YellowEdit {
         $this->response->status = $this->getUserStatus($email, $_REQUEST["action"]);
         if ($this->response->status=="ok") {
             $fileNameUser = $this->yellow->system->get("settingDir").$this->yellow->system->get("editUserFile");
-            $this->response->status = $this->users->save($fileNameUser, $email, "", "", "", "active") ? "ok" : "error";
+            $settings = array("status" => "active", "failed" => "0", "modified" => time());
+            $this->response->status = $this->users->save($fileNameUser, $email, $settings) ? "ok" : "error";
             if ($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
-            $this->yellow->log($this->response->status=="ok" ? "info" : "error", "Add user '".strtok($this->users->getName($email), " ")."'");
+            $this->yellow->log($this->response->status=="ok" ? "info" : "error", "Add user '".strtok($this->users->getUser($email, "name"), " ")."'");
         }
         if ($this->response->status=="ok") {
             $this->response->status = $this->response->sendMail($scheme, $address, $base, $email, "welcome") ? "done" : "error";
@@ -414,7 +455,8 @@ class YellowEdit {
             if ($this->response->status=="ok") $this->response->status = $this->getUserAccount($email, $password, $this->response->action);
             if ($this->response->status=="ok") {
                 $fileNameUser = $this->yellow->system->get("settingDir").$this->yellow->system->get("editUserFile");
-                $this->response->status = $this->users->save($fileNameUser, $email, $password) ? "ok" : "error";
+                $settings = array("hash" => $this->users->createHash($password), "failed" => "0", "modified" => time());
+                $this->response->status = $this->users->save($fileNameUser, $email, $settings) ? "ok" : "error";
                 if ($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
             }
             if ($this->response->status=="ok") {
@@ -434,7 +476,8 @@ class YellowEdit {
         $this->response->status = $this->getUserStatus($email, $_REQUEST["action"]);
         if ($this->response->status=="ok") {
             $fileNameUser = $this->yellow->system->get("settingDir").$this->yellow->system->get("editUserFile");
-            $this->response->status = $this->users->save($fileNameUser, $email, "", "", "", "active") ? "done" : "error";
+            $settings = array("status" => "active", "failed" => "0", "modified" => time());
+            $this->response->status = $this->users->save($fileNameUser, $email, $settings) ? "done" : "error";
             if ($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
         }
         $statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
@@ -448,12 +491,13 @@ class YellowEdit {
         $email = $emailSource = $_REQUEST["email"];
         $this->response->status = $this->getUserStatus($email, $_REQUEST["action"]);
         if ($this->response->status=="ok") {
-            $emailSource = $this->users->getPending($email);
-            if ($this->users->getStatus($emailSource)!="active") $this->response->status = "done";
+            $emailSource = $this->users->getUser($email, "pending");
+            if ($this->users->getUser($emailSource, "status")!="active") $this->response->status = "done";
         }
         if ($this->response->status=="ok") {
             $fileNameUser = $this->yellow->system->get("settingDir").$this->yellow->system->get("editUserFile");
-            $this->response->status = $this->users->save($fileNameUser, $email, "", "", "", "unchanged") ? "ok" : "error";
+            $settings = array("status" => "unchanged", "failed" => "0", "modified" => time());
+            $this->response->status = $this->users->save($fileNameUser, $email, $settings) ? "ok" : "error";
             if ($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
         }
         if ($this->response->status=="ok") {
@@ -471,14 +515,18 @@ class YellowEdit {
         $email = $emailSource = trim($_REQUEST["email"]);
         $this->response->status = $this->getUserStatus($email, $_REQUEST["action"]);
         if ($this->response->status=="ok") {
-            list($email, $hash) = explode(":", $this->users->getPending($email), 2);
+            list($email, $hash) = explode(":", $this->users->getUser($email, "pending"), 2);
             if (!$this->users->isExisting($email) || empty($hash)) $this->response->status = "done";
         }
         if ($this->response->status=="ok") {
-            $this->users->users[$email]["hash"] = $hash;
-            $this->users->users[$email]["pending"] = "none";
             $fileNameUser = $this->yellow->system->get("settingDir").$this->yellow->system->get("editUserFile");
-            $this->response->status = $this->users->save($fileNameUser, $email, "", "", "", "active") ? "ok" : "error";
+            $settings = array(
+                "status" => "active",
+                "pending" => "none",
+                "hash" => $hash,
+                "failed" => "0",
+                "modified" => time());
+            $this->response->status = $this->users->save($fileNameUser, $email, $settings) ? "ok" : "error";
             if ($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
         }
         if ($this->response->status=="ok" && $email!=$emailSource) {
@@ -501,7 +549,7 @@ class YellowEdit {
         $name = trim($_REQUEST["name"]);
         $email = $this->response->userEmail;
         if (empty($name)) $this->response->status = "none";
-        if ($this->response->status=="ok" && $name!=$this->users->getName($email)) $this->response->status = "mismatch";
+        if ($this->response->status=="ok" && $name!=$this->users->getUser($email, "name")) $this->response->status = "mismatch";
         if ($this->response->status=="ok") $this->response->status = $this->getUserAccount($email, "", $this->response->action);
         if ($this->response->status=="ok") {
             $this->response->status = $this->response->sendMail($scheme, $address, $base, $email, "remove") ? "next" : "error";
@@ -519,9 +567,10 @@ class YellowEdit {
         $this->response->status = $this->getUserStatus($email, $_REQUEST["action"]);
         if ($this->response->status=="ok") {
             $fileNameUser = $this->yellow->system->get("settingDir").$this->yellow->system->get("editUserFile");
-            $this->response->status = $this->users->save($fileNameUser, $email, "", "", "", "removed") ? "ok" : "error";
+            $settings = array("status" => "removed", "failed" => "0", "modified" => time());
+            $this->response->status = $this->users->save($fileNameUser, $email, $settings) ? "ok" : "error";
             if ($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
-            $this->yellow->log($this->response->status=="ok" ? "info" : "error", "Remove user '".strtok($this->users->getName($email), " ")."'");
+            $this->yellow->log($this->response->status=="ok" ? "info" : "error", "Remove user '".strtok($this->users->getUser($email, "name"), " ")."'");
         }
         if ($this->response->status=="ok") {
             $this->response->status = $this->response->sendMail($scheme, $address, $base, $email, "goodbye") ? "ok" : "error";
@@ -554,17 +603,30 @@ class YellowEdit {
             if ($this->response->status=="ok") $this->response->status = $this->getUserAccount($email, $password, $this->response->action);
             if ($this->response->status=="ok" && $email!=$emailSource && $this->users->isTaken($email)) $this->response->status = "taken";
             if ($this->response->status=="ok" && $email!=$emailSource) {
-                $pending = $emailSource;
-                $group = $this->users->getGroup($emailSource);
-                $home = $this->users->getHome($emailSource);
                 $fileNameUser = $this->yellow->system->get("settingDir").$this->yellow->system->get("editUserFile");
-                $this->response->status = $this->users->save($fileNameUser, $email, "no", $name, $language, "unverified", $pending, "", "", "", $group, $home) ? "ok" : "error";
+                $settings = array(
+                    "name" => $name,
+                    "language" => $language,
+                    "group" => $this->users->getUser($emailSource, "group"),
+                    "home" => $this->users->getUser($emailSource, "home"),
+                    "status" => "unverified",
+                    "pending" => $emailSource,
+                    "hash" => $this->users->createHash("none"),
+                    "stamp" => $this->users->createStamp(),
+                    "failed" => "0",
+                    "modified" => time());
+                $this->response->status = $this->users->save($fileNameUser, $email, $settings) ? "ok" : "error";
                 if ($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
             }
             if ($this->response->status=="ok") {
-                $pending = $email.":".(empty($password) ? $this->users->getHash($emailSource) : $this->users->createHash($password));
                 $fileNameUser = $this->yellow->system->get("settingDir").$this->yellow->system->get("editUserFile");
-                $this->response->status = $this->users->save($fileNameUser, $emailSource, "", $name, $language, "", $pending) ? "ok" : "error";
+                $settings = array(
+                    "name" => $name,
+                    "language" => $language,
+                    "pending" => $email.":".(empty($password) ? $this->users->getUser($emailSource, "hash") : $this->users->createHash($password)),
+                    "failed" => "0",
+                    "modified" => time());
+                $this->response->status = $this->users->save($fileNameUser, $emailSource, $settings) ? "ok" : "error";
                 if ($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
             }
             if ($this->response->status=="ok") {
@@ -575,7 +637,8 @@ class YellowEdit {
         } else {
             if ($this->response->status=="ok") {
                 $fileNameUser = $this->yellow->system->get("settingDir").$this->yellow->system->get("editUserFile");
-                $this->response->status = $this->users->save($fileNameUser, $email, "", $name, $language) ? "done" : "error";
+                $settings = array("name" => $name, "language" => $language, "failed" => "0", "modified" => time());
+                $this->response->status = $this->users->save($fileNameUser, $email, $settings) ? "done" : "error";
                 if ($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
             }
         }
@@ -841,16 +904,15 @@ class YellowEdit {
         if (!empty($this->response->userFailedError)) {
             if ($this->response->userFailedExpire>time() && $this->users->isExisting($this->response->userFailedEmail)) {
                 $email = $this->response->userFailedEmail;
-                $modified = $this->users->getModified($email);
-                $errors = $this->users->getErrors($email)+1;
+                $failed = $this->users->getUser($email, "failed")+1;
                 $fileNameUser = $this->yellow->system->get("settingDir").$this->yellow->system->get("editUserFile");
-                $status = $this->users->save($fileNameUser, $email, "", "", "", "", "", "", $modified, $errors) ? "ok" : "error";
+                $status = $this->users->save($fileNameUser, $email, array("failed" => $failed)) ? "ok" : "error";
                 if ($status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
-                if ($errors==$this->yellow->system->get("editBruteForceProtection")) {
-                    $statusBeforeProtection = $this->users->getStatus($email);
+                if ($failed==$this->yellow->system->get("editBruteForceProtection")) {
+                    $statusBeforeProtection = $this->users->getUser($email, "status");
                     $statusAfterProtection = ($statusBeforeProtection=="active" || $statusBeforeProtection=="inactive") ? "inactive" : "failed";
                     if ($status=="ok") {
-                        $status = $this->users->save($fileNameUser, $email, "", "", "", $statusAfterProtection, "", "", $modified, $errors) ? "ok" : "error";
+                        $status = $this->users->save($fileNameUser, $email, array("status" => $statusAfterProtection)) ? "ok" : "error";
                         if ($status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
                     }
                     if ($status=="ok" && $statusBeforeProtection=="active") {
@@ -881,7 +943,7 @@ class YellowEdit {
             case "change":      $statusExpected = "active"; break;
             case "remove":      $statusExpected = "active"; break;
         }
-        return $this->users->getStatus($email)==$statusExpected ? "ok" : "done";
+        return $this->users->getUser($email, "status")==$statusExpected ? "ok" : "done";
     }
 
     // Return user account changes
@@ -912,7 +974,7 @@ class YellowEdit {
             }
         }
         if (is_null($userRestriction)) {
-            $userRestriction = substru($location, 0, strlenu($this->users->getHome($email)))!=$this->users->getHome($email);
+            $userRestriction = substru($location, 0, strlenu($this->users->getUser($email, "home")))!=$this->users->getUser($email, "home");
             $userRestriction |= empty($fileName) || strlenu(dirname($fileName))>128 || strlenu(basename($fileName))>128;
         }
         return $userRestriction;
@@ -920,7 +982,7 @@ class YellowEdit {
     
     // Return user language
     public function getUserLanguage($email) {
-        $language = $this->users->getLanguage($email);
+        $language = $this->users->getUser($email, "language");
         if (!$this->yellow->text->isLanguage($language)) $language = $this->yellow->system->get("language");
         return $language;
     }
@@ -1111,11 +1173,11 @@ class YellowEditResponse {
         $data = $this->yellow->system->getData("", "Location");
         if ($this->isUser()) {
             $data["userEmail"] = $this->userEmail;
-            $data["userName"] = $this->extension->users->getName($this->userEmail);
-            $data["userLanguage"] = $this->extension->users->getLanguage($this->userEmail);
-            $data["userStatus"] = $this->extension->users->getStatus($this->userEmail);
-            $data["userGroup"] = $this->extension->users->getGroup($this->userEmail);
-            $data["userHome"] = $this->extension->users->getHome($this->userEmail);
+            $data["userName"] = $this->extension->users->getUser($this->userEmail, "name");
+            $data["userLanguage"] = $this->extension->users->getUser($this->userEmail, "language");
+            $data["userStatus"] = $this->extension->users->getUser($this->userEmail, "status");
+            $data["userGroup"] = $this->extension->users->getUser($this->userEmail, "group");
+            $data["userHome"] = $this->extension->users->getUser($this->userEmail, "home");
             $data["userRestriction"] = intval($this->isUserRestriction());
             if ($this->isUserAdministrator()) {
                 $data["sitename"] = $this->yellow->system->get("sitename");
@@ -1257,9 +1319,9 @@ class YellowEditResponse {
             $rawData = preg_replace("/@timestamp/i", time(), $rawData);
             $rawData = preg_replace("/@datetime/i", date("Y-m-d H:i:s"), $rawData);
             $rawData = preg_replace("/@date/i", date("Y-m-d"), $rawData);
-            $rawData = preg_replace("/@usershort/i", strtok($this->extension->users->getName($this->userEmail), " "), $rawData);
-            $rawData = preg_replace("/@username/i", $this->extension->users->getName($this->userEmail), $rawData);
-            $rawData = preg_replace("/@userlanguage/i", $this->extension->users->getLanguage($this->userEmail), $rawData);
+            $rawData = preg_replace("/@usershort/i", strtok($this->extension->users->getUser($this->userEmail, "name"), " "), $rawData);
+            $rawData = preg_replace("/@username/i", $this->extension->users->getUser($this->userEmail, "name"), $rawData);
+            $rawData = preg_replace("/@userlanguage/i", $this->extension->users->getUser($this->userEmail, "language"), $rawData);
         } else {
             $rawData = "---\nTitle: Page\n---\n";
         }
@@ -1448,7 +1510,7 @@ class YellowEditResponse {
             $userEmail = $this->yellow->system->get("email");
             $userLanguage = $this->extension->getUserLanguage($userEmail);
         } else {
-            $userName = $this->extension->users->getName($email);
+            $userName = $this->extension->users->getUser($email, "name");
             $userEmail = $email;
             $userLanguage = $this->extension->getUserLanguage($email);
         }
@@ -1513,7 +1575,7 @@ class YellowEditResponse {
     
     // Check if user is administrator
     public function isUserAdministrator() {
-        return !empty($this->userEmail) && $this->extension->users->getGroup($this->userEmail)=="administrator";
+        return !empty($this->userEmail) && $this->extension->users->getUser($this->userEmail, "group")=="administrator";
     }
     
     // Check if user with restriction
@@ -1543,83 +1605,93 @@ class YellowEditUsers {
         foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
             if (preg_match("/^\#/", $line)) continue;
             preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
-            if (!empty($matches[1]) && !empty($matches[2])) {
-                list($hash, $name, $language, $status, $pending, $stamp, $modified, $errors, $group, $home) = explode(",", $matches[2]);
-                $this->set($matches[1], $hash, $name, $language, $status, $pending, $stamp, $modified, $errors, $group, $home);
-                if (defined("DEBUG") && DEBUG>=3) echo "YellowEditUsers::load email:$matches[1]<br/>\n";
+            if (lcfirst($matches[1])=="email" && !strempty($matches[2])) {
+                $email = $matches[2];
+                if (defined("DEBUG") && DEBUG>=3) echo "YellowEditUsers::load email:$email<br/>\n";
+            }
+            if (!empty($email) && !empty($matches[1]) && !strempty($matches[2])) {
+                $this->setUser($email, $matches[1], $matches[2]);
             }
         }
     }
 
     // Save user to file
-    public function save($fileName, $email, $password = "", $name = "", $language = "", $status = "", $pending = "", $stamp = "", $modified = "", $errors = "", $group = "", $home = "") {
-        if (!empty($password)) $hash = $this->createHash($password);
-        if ($this->isExisting($email)) {
-            $email = strreplaceu(",", "-", $email);
-            $hash = strreplaceu(",", "-", empty($hash) ? $this->users[$email]["hash"] : $hash);
-            $name = strreplaceu(",", "-", empty($name) ? $this->users[$email]["name"] : $name);
-            $language = strreplaceu(",", "-", empty($language) ? $this->users[$email]["language"] : $language);
-            $status = strreplaceu(",", "-", empty($status) ? $this->users[$email]["status"] : $status);
-            $pending = strreplaceu(",", "-", empty($pending) ? $this->users[$email]["pending"] : $pending);
-            $stamp = strreplaceu(",", "-", empty($stamp) ? $this->users[$email]["stamp"] : $stamp);
-            $modified = strreplaceu(",", "-", empty($modified) ? time() : $modified);
-            $errors = strreplaceu(",", "-", empty($errors) ? "0" : $errors);
-            $group = strreplaceu(",", "-", empty($group) ? $this->users[$email]["group"] : $group);
-            $home = strreplaceu(",", "-", empty($home) ? $this->users[$email]["home"] : $home);
-        } else {
-            $email = strreplaceu(",", "-", empty($email) ? "none" : $email);
-            $hash = strreplaceu(",", "-", empty($hash) ? "none" : $hash);
-            $name = strreplaceu(",", "-", empty($name) ? $this->yellow->system->get("sitename") : $name);
-            $language = strreplaceu(",", "-", empty($language) ? $this->yellow->system->get("language") : $language);
-            $status = strreplaceu(",", "-", empty($status) ? "active" : $status);
-            $pending = strreplaceu(",", "-", empty($pending) ? "none" : $pending);
-            $stamp = strreplaceu(",", "-", empty($stamp) ? $this->createStamp() : $stamp);
-            $modified = strreplaceu(",", "-", empty($modified) ? time() : $modified);
-            $errors = strreplaceu(",", "-", empty($errors) ? "0" : $errors);
-            $group = strreplaceu(",", "-", empty($group) ? $this->yellow->system->get("editUserGroup") : $group);
-            $home = strreplaceu(",", "-", empty($home) ? $this->yellow->system->get("editUserHome") : $home);
-        }
-        $this->set($email, $hash, $name, $language, $status, $pending, $stamp, $modified, $errors, $group, $home);
+    public function save($fileName, $email, $settings) {
         $fileData = $this->yellow->toolbox->readFile($fileName);
+        $fileDataStart = $fileDataMiddle = $fileDataEnd = "";
         foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
             preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
-            if (!empty($matches[1]) && $matches[1]==$email) {
-                $fileDataNew .= "$email: $hash,$name,$language,$status,$pending,$stamp,$modified,$errors,$group,$home\n";
-                $found = true;
+            if (lcfirst($matches[1])=="email" && !strempty($matches[2])) {
+                $scan = $matches[2]==$email;
+            }
+            if (!$scan && empty($fileDataMiddle)) {
+                $fileDataStart .= $line;
+            } elseif ($scan) {
+                $fileDataMiddle .= $line;
             } else {
-                $fileDataNew .= $line;
+                $fileDataEnd .= $line;
             }
         }
-        if (!$found) $fileDataNew .= "$email: $hash,$name,$language,$status,$pending,$stamp,$modified,$errors,$group,$home\n";
+        $settingsNew = new YellowDataCollection();
+        $settingsNew["email"] = $email;
+        foreach ($settings as $key=>$value) {
+            if (!empty($key) && !strempty($value)) {
+                $this->setUser($email, $key, $value);
+                $settingsNew[$key] = $value;
+            }
+        }
+        foreach ($this->yellow->toolbox->getTextLines($fileDataMiddle) as $line) {
+            preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
+            if (!empty($matches[1]) && !is_null($settingsNew[$matches[1]])) {
+                $fileDataSettings .= "$matches[1]: ".$settingsNew[$matches[1]]."\n";
+                unset($settingsNew[$matches[1]]);
+            } else {
+                $fileDataSettings .= $line;
+            }
+        }
+        foreach ($settingsNew as $key=>$value) {
+            $fileDataSettings .= ucfirst($key).": $value\n";
+        }
+        if(!empty($fileDataSettings)) {
+            $fileDataSettings = preg_replace("/\n+/", "\n", $fileDataSettings);
+            if (!empty($fileDataStart) && substr($fileDataStart, -2)!="\n\n") $fileDataSettings = "\n".$fileDataSettings;
+            if (!empty($fileDataEnd)) $fileDataSettings .= "\n";
+        }
+        $fileDataNew = $fileDataStart.$fileDataSettings.$fileDataEnd;
         return $this->yellow->toolbox->createFile($fileName, $fileDataNew);
     }
     
     // Remove user from file
     public function remove($fileName, $email) {
-        unset($this->users[$email]);
         $fileData = $this->yellow->toolbox->readFile($fileName);
+        $fileDataStart = $fileDataMiddle = $fileDataEnd = "";
         foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
             preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
-            if (!empty($matches[1]) && $matches[1]==$email) continue;
-            $fileDataNew .= $line;
+            if (lcfirst($matches[1])=="email" && !strempty($matches[2])) {
+                $scan = $matches[2]==$email;
+            }
+            if (!$scan && empty($fileDataMiddle)) {
+                $fileDataStart .= $line;
+            } elseif ($scan) {
+                $fileDataMiddle .= $line;
+            } else {
+                $fileDataEnd .= $line;
+            }
         }
+        unset($this->users[$email]);
+        $fileDataNew = rtrim($fileDataStart.$fileDataEnd)."\n";
         return $this->yellow->toolbox->createFile($fileName, $fileDataNew);
     }
     
-    // Set user data
-    public function set($email, $hash, $name, $language, $status, $pending, $stamp, $modified, $errors, $group, $home) {
-        $this->users[$email] = array();
-        $this->users[$email]["email"] = $email;
-        $this->users[$email]["hash"] = $hash;
-        $this->users[$email]["name"] = $name;
-        $this->users[$email]["language"] = $language;
-        $this->users[$email]["status"] = $status;
-        $this->users[$email]["pending"] = $pending;
-        $this->users[$email]["stamp"] = $stamp;
-        $this->users[$email]["modified"] = $modified;
-        $this->users[$email]["errors"] = $errors;
-        $this->users[$email]["group"] = $group;
-        $this->users[$email]["home"] = $home;
+    // Set user setting
+    public function setUser($email, $key, $value) {
+        if (is_null($this->users[$email])) $this->users[$email] = new YellowDataCollection();
+        $this->users[$email][$key] = $value;
+    }
+    
+    // Return user setting
+    public function getUser($email, $key) {
+        return !is_null($this->users[$email]) && !is_null($this->users[$email][$key]) ? $this->users[$email][$key] : "";
     }
     
     // Check user authentication from email and password
@@ -1650,7 +1722,7 @@ class YellowEditUsers {
     public function createAuthToken($email, $expire) {
         $signature = $this->yellow->toolbox->createHash($this->users[$email]["hash"]."auth".$expire, "sha256");
         if (empty($signature)) $signature = "padd"."error-hash-algorithm-sha256";
-        return substrb($signature, 4).$this->getStamp($email).dechex($expire);
+        return substrb($signature, 4).$this->getUser($email, "stamp").dechex($expire);
     }
     
     // Create action token
@@ -1697,56 +1769,6 @@ class YellowEditUsers {
         return hexdec(substrb($authToken, 96+20));
     }
     
-    // Return user hash
-    public function getHash($email) {
-        return $this->isExisting($email) ? $this->users[$email]["hash"] : "";
-    }
-    
-    // Return user name
-    public function getName($email) {
-        return $this->isExisting($email) ? $this->users[$email]["name"] : "";
-    }
-
-    // Return user language
-    public function getLanguage($email) {
-        return $this->isExisting($email) ? $this->users[$email]["language"] : "";
-    }
-    
-    // Return user status
-    public function getStatus($email) {
-        return $this->isExisting($email) ? $this->users[$email]["status"] : "";
-    }
-    
-    // Return user pending
-    public function getPending($email) {
-        return $this->isExisting($email) ? $this->users[$email]["pending"] : "";
-    }
-    
-    // Return user stamp
-    public function getStamp($email) {
-        return $this->isExisting($email) ? $this->users[$email]["stamp"] : "";
-    }
-    
-    // Return user modified
-    public function getModified($email) {
-        return $this->isExisting($email) ? $this->users[$email]["modified"] : "";
-    }
-
-    // Return user errors
-    public function getErrors($email) {
-        return $this->isExisting($email) ? $this->users[$email]["errors"] : "";
-    }
-
-    // Return user group
-    public function getGroup($email) {
-        return $this->isExisting($email) ? $this->users[$email]["group"] : "";
-    }
-
-    // Return user home
-    public function getHome($email) {
-        return $this->isExisting($email) ? $this->users[$email]["home"] : "";
-    }
-    
     // Return number of users
     public function getNumber() {
         return count($this->users);
@@ -1757,9 +1779,8 @@ class YellowEditUsers {
         $data = array();
         foreach ($this->users as $key=>$value) {
             $name = $value["name"];
-            $status = $value["status"];
             if (preg_match("/\s/", $name)) $name = "\"$name\"";
-            $data[$key] = "$value[email] $name $value[status] $value[group]";
+            $data[$key] = "$value[email] $name $value[group] $value[status]";
         }
         uksort($data, "strnatcasecmp");
         return $data;
