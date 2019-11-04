@@ -1,6 +1,6 @@
 # Datenstrom Yellow
 
-Datenstrom Yellow ist für Menschen die Webseiten machen. [Demo anschauen](https://extensions.datenstrom.se/de/).
+Datenstrom Yellow ist für Menschen die Webseiten machen.
 
 1. [Datenstrom Yellow herunterladen und entpacken](https://github.com/datenstrom/yellow/archive/master.zip).
 2. Kopiere alle Dateien auf deinen Webserver.
