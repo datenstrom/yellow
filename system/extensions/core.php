@@ -1003,9 +1003,27 @@ class YellowPageCollection extends ArrayObject {
         return $this;
     }
 
-    // Merge page collection
+    // Calculate union, merge page collection
     public function merge($input) {
         $this->exchangeArray(array_merge($this->getArrayCopy(), (array)$input));
+        return $this;
+    }
+    
+    // Calculate intersection, remove pages that are not present in another page collection
+    public function intersect($input) {
+        $callback = function ($a, $b) {
+            return strcmp(spl_object_hash($a), spl_object_hash($b));
+        };
+        $this->exchangeArray(array_uintersect($this->getArrayCopy(), (array)$input, $callback));
+        return $this;
+    }
+
+    // Calculate difference, remove pages that are present in another page collection
+    public function diff($input) {
+        $callback = function ($a, $b) {
+            return strcmp(spl_object_hash($a), spl_object_hash($b));
+        };
+        $this->exchangeArray(array_udiff($this->getArrayCopy(), (array)$input, $callback));
         return $this;
     }
     
