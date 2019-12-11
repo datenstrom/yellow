@@ -447,7 +447,9 @@ class YellowPage {
             if (!$this->isExisting("titleContent")) $this->set("titleContent", $this->get("title"));
             if (!$this->isExisting("titleNavigation")) $this->set("titleNavigation", $this->get("title"));
             if (!$this->isExisting("titleHeader")) $this->set("titleHeader", $titleHeader);
-            if ($this->get("status")=="hidden") $this->available = false;
+            if ($this->get("status")=="unlisted") $this->visible = false;
+            if ($this->get("status")=="shared") $this->available = false;
+            if ($this->get("status")=="hidden") $this->available = false;   //TODO: remove later, for backwards compatibility
             $this->set("pageRead", $this->yellow->lookup->normaliseUrl(
                 $this->yellow->system->get("serverScheme"),
                 $this->yellow->system->get("serverAddress"),
