@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowInstall {
-    const VERSION = "0.8.9";
+    const VERSION = "0.8.10";
     const TYPE = "feature";
     const PRIORITY = "1";
     public $yellow;                 //access to API
@@ -290,6 +290,7 @@ class YellowInstall {
         $data = array();
         foreach ($_REQUEST as $key=>$value) {
             if (!$this->yellow->system->isExisting($key)) continue;
+            if ($key=="password" || $key=="status") continue;
             $data[$key] = trim($value);
         }
         $data["timezone"] = $this->yellow->toolbox->getTimezone();

@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowUpdate {
-    const VERSION = "0.8.9";
+    const VERSION = "0.8.10";
     const TYPE = "feature";
     const PRIORITY = "2";
     public $yellow;                 //access to API
@@ -56,6 +56,38 @@ class YellowUpdate {
 
     // Handle update
     public function onUpdate($action) {
+        if ($action=="update") {  //TODO: remove later, converts old core settings
+            if ($this->yellow->system->isExisting("safeMode")) {
+                $safeMode = $this->yellow->system->get("safeMode");
+                $multiLanguageMode = $this->yellow->system->get("multiLanguageMode");
+                $fileName = $this->yellow->system->get("settingDir").$this->yellow->system->get("systemFile");
+                $this->yellow->system->save($fileName, array("coreSafeMode" => $safeMode, "coreMultiLanguageMode" => $multiLanguageMode));
+                $path = $this->yellow->system->get("contentDir");
+                foreach ($this->yellow->toolbox->getDirectoryEntriesRecursive($path, "/^.*\.md$/", true, false) as $entry) {
+                    $fileData = $fileDataNew = $this->yellow->toolbox->readFile($entry);
+                    $fileStatusUnlisted = false;
+                    $tokens = explode("/", substru($entry, strlenu($path)));
+                    for ($i=0; $i<count($tokens)-1; ++$i) {
+                        if (!preg_match("/^[\d\-\_\.]+(.*)$/", $tokens[$i]) && $tokens[$i]!="shared") {
+                            $fileStatusUnlisted = true;
+                            break;
+                        }
+                    }
+                    if ($fileStatusUnlisted && empty($this->yellow->toolbox->getMetaData($fileDataNew, "status"))) {
+                        $fileDataNew = $this->yellow->toolbox->setMetaData($fileDataNew, "status", "unlisted");
+                    }
+                    $fileDataNew = preg_replace("/Status: hidden/i", "Status: shared", $fileDataNew);
+                    if ($fileData!=$fileDataNew) {
+                        $modified = $this->yellow->toolbox->getFileModified($entry);
+                        if (!$this->yellow->toolbox->deleteFile($entry) ||
+                            !$this->yellow->toolbox->createFile($entry, $fileDataNew) ||
+                            !$this->yellow->toolbox->modifyFile($entry, $modified)) {
+                            $this->yellow->log("error", "Can't write file '$entry'!");
+                        }
+                    }
+                }
+            }
+        }
         if ($action=="startup") {
             if ($this->yellow->system->get("updateNotification")!="none") {
                 foreach (explode(",", $this->yellow->system->get("updateNotification")) as $token) {
@@ -449,7 +481,7 @@ class YellowUpdate {
     // Update content for multi language mode
     public function updateContentMultiLanguage($extension) {
         $statusCode = 200;
-        if ($this->yellow->system->get("multiLanguageMode") && !$this->yellow->extensions->isExisting($extension)) {
+        if ($this->yellow->system->get("coreMultiLanguageMode") && !$this->yellow->extensions->isExisting($extension)) {
             $pathsSource = $pathsTarget = array();
             $pathBase = $this->yellow->system->get("contentDir");
             $fileExtension = $this->yellow->system->get("contentExtension");

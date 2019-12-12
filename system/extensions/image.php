@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowImage {
-    const VERSION = "0.8.2";
+    const VERSION = "0.8.3";
     const TYPE = "feature";
     public $yellow;             //access to API
     public $graphicsLibrary;    //graphics library support? (boolean)
@@ -66,7 +66,7 @@ class YellowImage {
                     $file->error(500, "Can't write file '$fileName'!");
                 }
             }
-            if ($this->yellow->system->get("safeMode") && $fileType=="svg") {
+            if ($this->yellow->system->get("coreSafeMode") && $fileType=="svg") {
                 $output = $this->sanitiseXmlData($this->yellow->toolbox->readFile($fileName));
                 if (empty($output) || !$this->yellow->toolbox->createFile($fileName, $output)) {
                      $file->error(500, "Can't write file '$fileName'!");

@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowCommand {
-    const VERSION = "0.8.6";
+    const VERSION = "0.8.7";
     const TYPE = "feature";
     const PRIORITY = "3";
     public $yellow;                     //access to API
@@ -578,7 +578,7 @@ class YellowCommand {
                 array_push($locations, $page->location);
             }
         }
-        if (!$this->yellow->content->find("/") && $this->yellow->system->get("multiLanguageMode")) array_unshift($locations, "/");
+        if (!$this->yellow->content->find("/") && $this->yellow->system->get("coreMultiLanguageMode")) array_unshift($locations, "/");
         return $locations;
     }
     

@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowCore {
-    const VERSION = "0.8.6";
+    const VERSION = "0.8.7";
     const TYPE = "feature";
     public $page;           //current page
     public $content;        //content files from file system
@@ -32,6 +32,7 @@ class YellowCore {
         $this->system->setDefault("layout", "default");
         $this->system->setDefault("theme", "default");
         $this->system->setDefault("parser", "markdown");
+        $this->system->setDefault("status", "public");
         $this->system->setDefault("navigation", "navigation");
         $this->system->setDefault("header", "header");
         $this->system->setDefault("footer", "footer");
@@ -66,8 +67,8 @@ class YellowCore {
         $this->system->setDefault("systemFile", "system.ini");
         $this->system->setDefault("textFile", "text.ini");
         $this->system->setDefault("logFile", "yellow.log");
-        $this->system->setDefault("safeMode", "0");
-        $this->system->setDefault("multiLanguageMode", "0");
+        $this->system->setDefault("coreSafeMode", "0");
+        $this->system->setDefault("coreMultiLanguageMode", "0");
         $this->system->setDefault("serverUrl", "");
     }
     
@@ -415,9 +416,9 @@ class YellowPage {
         $this->rawData = $rawData;
         $this->parser = null;
         $this->parserData = "";
-        $this->safeMode = intval($this->yellow->system->get("safeMode"));
+        $this->safeMode = intval($this->yellow->system->get("coreSafeMode"));
         $this->available = $this->yellow->lookup->isAvailableLocation($this->location, $this->fileName);
-        $this->visible = $this->yellow->lookup->isVisibleLocation($this->location, $this->fileName);
+        $this->visible = true;
         $this->active = $this->yellow->lookup->isActiveLocation($this->location, $this->yellow->page->location);
         $this->cacheable = $cacheable;
         $this->lastModified = 0;
@@ -441,7 +442,7 @@ class YellowPage {
             $this->set("title", $this->yellow->toolbox->createTextTitle($this->location));
             $this->set("language", $this->yellow->lookup->findLanguageFromFile($this->fileName, $this->yellow->system->get("language")));
             $this->set("modified", date("Y-m-d H:i:s", $this->yellow->toolbox->getFileModified($this->fileName)));
-            $this->parseMetaRaw(array("sitename", "author", "layout", "theme", "parser", "navigation", "header", "footer", "sidebar"));
+            $this->parseMetaRaw(array("sitename", "author", "layout", "theme", "parser", "status", "navigation", "header", "footer", "sidebar"));
             $titleHeader = ($this->location==$this->yellow->content->getHomeLocation($this->location)) ?
                 $this->get("sitename") : $this->get("title")." - ".$this->get("sitename");
             if (!$this->isExisting("titleContent")) $this->set("titleContent", $this->get("title"));
@@ -449,7 +450,6 @@ class YellowPage {
             if (!$this->isExisting("titleHeader")) $this->set("titleHeader", $titleHeader);
             if ($this->get("status")=="unlisted") $this->visible = false;
             if ($this->get("status")=="shared") $this->available = false;
-            if ($this->get("status")=="hidden") $this->available = false;   //TODO: remove later, for backwards compatibility
             $this->set("pageRead", $this->yellow->lookup->normaliseUrl(
                 $this->yellow->system->get("serverScheme"),
                 $this->yellow->system->get("serverAddress"),
@@ -1311,7 +1311,7 @@ class YellowContent {
     // Return root location
     public function getRootLocation($location) {
         $rootLocation = "root/";
-        if ($this->yellow->system->get("multiLanguageMode")) {
+        if ($this->yellow->system->get("coreMultiLanguageMode")) {
             foreach ($this->scanLocation("") as $page) {
                 $token = substru($page->location, 4);
                 if ($token!="/" && substru($location, 0, strlenu($token))==$token) {
@@ -1751,7 +1751,7 @@ class YellowLookup {
         $path = $this->yellow->system->get("contentDir");
         $pathRoot = $this->yellow->system->get("contentRootDir");
         $pathHome = $this->yellow->system->get("contentHomeDir");
-        if (!$this->yellow->system->get("multiLanguageMode")) $pathRoot = "";
+        if (!$this->yellow->system->get("coreMultiLanguageMode")) $pathRoot = "";
         if (!empty($pathRoot)) {
             $token = $root = rtrim($pathRoot, "/");
             foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/.*/", true, true, false) as $entry) {
@@ -2096,7 +2096,7 @@ class YellowLookup {
         if ($this->isFileLocation($location)) {
             $redirect = is_dir($this->findFileFromLocation("$location/", true));
         } elseif ($location=="/") {
-            $redirect = $this->yellow->system->get("multiLanguageMode");
+            $redirect = $this->yellow->system->get("coreMultiLanguageMode");
         }
         return $redirect;
     }
@@ -2120,25 +2120,6 @@ class YellowLookup {
             if (substru($location, 0, strlenu($sharedLocation))==$sharedLocation) $available = false;
         }
         return $available;
-    }
-    
-    // Check if location is visible
-    public function isVisibleLocation($location, $fileName) {
-        $visible = true;
-        $pathBase = $this->yellow->system->get("contentDir");
-        if (substru($fileName, 0, strlenu($pathBase))==$pathBase) {
-            $fileName = substru($fileName, strlenu($pathBase));
-            $tokens = explode("/", $fileName);
-            for ($i=0; $i<count($tokens)-1; ++$i) {
-                if (!preg_match("/^[\d\-\_\.]+(.*)$/", $tokens[$i])) {
-                    $visible = false;
-                    break;
-                }
-            }
-        } else {
-            $visible = false;
-        }
-        return $visible;
     }
     
     // Check if location is within current HTTP request
