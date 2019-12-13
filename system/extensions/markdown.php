@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowMarkdown {
-    const VERSION = "0.8.8";
+    const VERSION = "0.8.9";
     const TYPE = "feature";
     public $yellow;         //access to API
     
@@ -62,7 +62,7 @@ class MarkdownParser {
 	 * Define the package version
 	 * @var string
 	 */
-	const MARKDOWNLIB_VERSION = "1.8.0";
+	const MARKDOWNLIB_VERSION = "1.9.0";
 
 	/**
 	 * Simple function interface - Initialize the parser and return the result
@@ -129,25 +129,25 @@ class MarkdownParser {
 
 	/**
 	 * Optional filter function for URLs
-	 * @var callable
+	 * @var callable|null
 	 */
 	public $url_filter_func = null;
 
 	/**
 	 * Optional header id="" generation callback function.
-	 * @var callable
+	 * @var callable|null
 	 */
 	public $header_id_func = null;
 
 	/**
 	 * Optional function for converting code block content to HTML
-	 * @var callable
+	 * @var callable|null
 	 */
 	public $code_block_content_func = null;
 
 	/**
 	 * Optional function for converting code span content to HTML.
-	 * @var callable
+	 * @var callable|null
 	 */
 	public $code_span_content_func = null;
 
@@ -811,16 +811,15 @@ class MarkdownParser {
 	 * @return string
 	 */
 	protected function _doAnchors_inline_callback($matches) {
-		$whole_match	=  $matches[1];
 		$link_text		=  $this->runSpanGamut($matches[2]);
-		$url			=  $matches[3] == '' ? $matches[4] : $matches[3];
+		$url			=  $matches[3] === '' ? $matches[4] : $matches[3];
 		$title			=& $matches[7];
 
 		// If the URL was of the form <s p a c e s> it got caught by the HTML
 		// tag parser and hashed. Need to reverse the process before using
 		// the URL.
 		$unhashed = $this->unhash($url);
-		if ($unhashed != $url)
+		if ($unhashed !== $url)
 			$url = preg_replace('/^<(.*)>$/', '\1', $unhashed);
 
 		$url = $this->encodeURLAttribute($url);
@@ -996,7 +995,7 @@ class MarkdownParser {
 			return $matches[0];
 		}
 
-		$level = $matches[2]{0} == '=' ? 1 : 2;
+		$level = $matches[2][0] == '=' ? 1 : 2;
 
 		// ID attribute generation
 		$idAtt = $this->_generateIdFromHeaderValue($matches[1]);
@@ -1262,7 +1261,7 @@ class MarkdownParser {
 		$codeblock = $matches[1];
 
 		$codeblock = $this->outdent($codeblock);
-		if ($this->code_block_content_func) {
+		if (is_callable($this->code_block_content_func)) {
 			$codeblock = call_user_func($this->code_block_content_func, $codeblock, "");
 		} else {
 			$codeblock = htmlspecialchars($codeblock, ENT_NOQUOTES);
@@ -1281,7 +1280,7 @@ class MarkdownParser {
 	 * @return string
 	 */
 	protected function makeCodeSpan($code) {
-		if ($this->code_span_content_func) {
+		if (is_callable($this->code_span_content_func)) {
 			$code = call_user_func($this->code_span_content_func, $code);
 		} else {
 			$code = htmlspecialchars(trim($code), ENT_NOQUOTES);
@@ -1402,7 +1401,7 @@ class MarkdownParser {
 				} else {
 					// Other closing marker: close one em or strong and
 					// change current token state to match the other
-					$token_stack[0] = str_repeat($token{0}, 3-$token_len);
+					$token_stack[0] = str_repeat($token[0], 3-$token_len);
 					$tag = $token_len == 2 ? "strong" : "em";
 					$span = $text_stack[0];
 					$span = $this->runSpanGamut($span);
@@ -1427,7 +1426,7 @@ class MarkdownParser {
 				} else {
 					// Reached opening three-char emphasis marker. Push on token
 					// stack; will be handled by the special condition above.
-					$em = $token{0};
+					$em = $token[0];
 					$strong = "$em$em";
 					array_unshift($token_stack, $token);
 					array_unshift($text_stack, '');
@@ -1620,11 +1619,11 @@ class MarkdownParser {
 	 * This function is *not* suitable for attributes enclosed in single quotes.
 	 *
 	 * @param  string $url
-	 * @param  string &$text Passed by reference
+	 * @param  string $text Passed by reference
 	 * @return string        URL
 	 */
 	protected function encodeURLAttribute($url, &$text = null) {
-		if ($this->url_filter_func) {
+		if (is_callable($this->url_filter_func)) {
 			$url = call_user_func($this->url_filter_func, $url);
 		}
 
@@ -1738,7 +1737,7 @@ class MarkdownParser {
 	 * attribute special characters by Allan Odgaard.
 	 *
 	 * @param  string  $text
-	 * @param  string  &$tail
+	 * @param  string  $tail Passed by reference
 	 * @param  integer $head_length
 	 * @return string
 	 */
@@ -1836,13 +1835,13 @@ class MarkdownParser {
 	 * Handle $token provided by parseSpan by determining its nature and
 	 * returning the corresponding value that should replace it.
 	 * @param  string $token
-	 * @param  string &$str
+	 * @param  string $str Passed by reference
 	 * @return string
 	 */
 	protected function handleSpanToken($token, &$str) {
-		switch ($token{0}) {
+		switch ($token[0]) {
 			case "\\":
-				return $this->hashPart("&#". ord($token{1}). ";");
+				return $this->hashPart("&#". ord($token[1]). ";");
 			case "`":
 				// Search for end marker in remaining text.
 				if (preg_match('/^(.*?[^`])'.preg_quote($token).'(?!`)(.*)$/sm',
@@ -1965,11 +1964,10 @@ class MarkdownExtraParser extends MarkdownParser {
 	public $fn_id_prefix = "";
 
 	/**
-	 * Optional title attribute for footnote links and backlinks.
+	 * Optional title attribute for footnote links.
 	 * @var string
 	 */
-	public $fn_link_title     = "";
-	public $fn_backlink_title = "";
+	public $fn_link_title = "";
 
 	/**
 	 * Optional class attribute for footnote links and backlinks.
@@ -1982,9 +1980,21 @@ class MarkdownExtraParser extends MarkdownParser {
 	 * Content to be displayed within footnote backlinks. The default is '↩';
 	 * the U+FE0E on the end is a Unicode variant selector used to prevent iOS
 	 * from displaying the arrow character as an emoji.
+	 * Optionally use '^^' and '%%' to refer to the footnote number and
+	 * reference number respectively. {@see parseFootnotePlaceholders()}
 	 * @var string
 	 */
 	public $fn_backlink_html = '&#8617;&#xFE0E;';
+
+	/**
+	 * Optional title and aria-label attributes for footnote backlinks for
+	 * added accessibility (to ensure backlink uniqueness).
+	 * Use '^^' and '%%' to refer to the footnote number and reference number
+	 * respectively. {@see parseFootnotePlaceholders()}
+	 * @var string
+	 */
+	public $fn_backlink_title = "";
+	public $fn_backlink_label = "";
 
 	/**
 	 * Class name for table cell alignment (%% replaced left/center/right)
@@ -2018,6 +2028,27 @@ class MarkdownExtraParser extends MarkdownParser {
 	 * @var boolean
 	 */
 	public $hashtag_protection = false;
+
+	/**
+	 * Determines whether footnotes should be appended to the end of the document.
+	 * If true, footnote html can be retrieved from $this->footnotes_assembled.
+	 * @var boolean
+	 */
+	public $omit_footnotes = false;
+
+
+	/**
+	 * After parsing, the HTML for the list of footnotes appears here.
+	 * This is available only if $omit_footnotes == true.
+	 *
+	 * Note: when placing the content of `footnotes_assembled` on the page,
+	 * consider adding the attribute `role="doc-endnotes"` to the `div` or
+	 * `section` that will enclose the list of footnotes so they are
+	 * reachable to accessibility tools the same way they would be with the
+	 * default HTML output.
+	 * @var null|string
+	 */
+	public $footnotes_assembled = null;
 
 	/**
 	 * Parser implementation
@@ -2073,6 +2104,12 @@ class MarkdownExtraParser extends MarkdownParser {
 	 */
 	protected $footnote_counter = 1;
 
+    /**
+     * Ref attribute for links
+     * @var array
+     */
+	protected $ref_attr = array();
+
 	/**
 	 * Setting up Extra-specific variables.
 	 */
@@ -2086,6 +2123,7 @@ class MarkdownExtraParser extends MarkdownParser {
 		$this->abbr_desciptions = array();
 		$this->abbr_word_re = '';
 		$this->footnote_counter = 1;
+		$this->footnotes_assembled = null;
 
 		foreach ($this->predef_abbr as $abbr_word => $abbr_desc) {
 			if ($this->abbr_word_re)
@@ -2105,6 +2143,9 @@ class MarkdownExtraParser extends MarkdownParser {
 		$this->footnotes_numbers = array();
 		$this->abbr_desciptions = array();
 		$this->abbr_word_re = '';
+
+		if ( ! $this->omit_footnotes )
+			$this->footnotes_assembled = null;
 
 		parent::teardown();
 	}
@@ -2142,7 +2183,9 @@ class MarkdownExtraParser extends MarkdownParser {
 	 * @return string
 	 */
 	protected function doExtraAttributes($tag_name, $attr, $defaultIdValue = null, $classes = array()) {
-		if (empty($attr) && !$defaultIdValue && empty($classes)) return "";
+		if (empty($attr) && !$defaultIdValue && empty($classes)) {
+			return "";
+		}
 
 		// Split on components
 		preg_match_all('/[#.a-z][-_:a-zA-Z0-9=]+/', $attr, $matches);
@@ -2152,9 +2195,9 @@ class MarkdownExtraParser extends MarkdownParser {
 		$attributes = array();
 		$id = false;
 		foreach ($elements as $element) {
-			if ($element{0} == '.') {
+			if ($element[0] === '.') {
 				$classes[] = substr($element, 1);
-			} else if ($element{0} == '#') {
+			} else if ($element[0] === '#') {
 				if ($id === false) $id = substr($element, 1);
 			} else if (strpos($element, '=') > 0) {
 				$parts = explode('=', $element, 2);
@@ -2162,7 +2205,9 @@ class MarkdownExtraParser extends MarkdownParser {
 			}
 		}
 
-		if (!$id) $id = $defaultIdValue;
+		if ($id === false || $id === '') {
+			$id = $defaultIdValue;
+		}
 
 		// Compose attributes as string
 		$attr_str = "";
@@ -2426,7 +2471,6 @@ class MarkdownExtraParser extends MarkdownParser {
 
 			$tag  = $parts[1]; // Tag to handle.
 			$text = $parts[2]; // Remaining text after current tag.
-			$tag_re = preg_quote($tag); // For use in a regular expression.
 
 			// Check for: Fenced code block marker.
 			// Note: need to recheck the whole tag to disambiguate backtick
@@ -2448,14 +2492,14 @@ class MarkdownExtraParser extends MarkdownParser {
 				}
 			}
 			// Check for: Indented code block.
-			else if ($tag{0} == "\n" || $tag{0} == " ") {
+			else if ($tag[0] === "\n" || $tag[0] === " ") {
 				// Indented code block: pass it unchanged, will be handled
 				// later.
 				$parsed .= $tag;
 			}
 			// Check for: Code span marker
 			// Note: need to check this after backtick fenced code blocks
-			else if ($tag{0} == "`") {
+			else if ($tag[0] === "`") {
 				// Find corresponding end marker.
 				$tag_re = preg_quote($tag);
 				if (preg_match('{^(?>.+?|\n(?!\n))*?(?<!`)' . $tag_re . '(?!`)}',
@@ -2489,7 +2533,7 @@ class MarkdownExtraParser extends MarkdownParser {
 			// Check for: Clean tag (like script, math)
 			//            HTML Comments, processing instructions.
 			else if (preg_match('{^<(?:' . $this->clean_tags_re . ')\b}', $tag) ||
-				$tag{1} == '!' || $tag{1} == '?')
+				$tag[1] === '!' || $tag[1] === '?')
 			{
 				// Need to parse tag and following text using the HTML parser.
 				// (don't check for markdown attribute)
@@ -2504,8 +2548,11 @@ class MarkdownExtraParser extends MarkdownParser {
 				preg_match('{^</?(?:' . $enclosing_tag_re . ')\b}', $tag))
 			{
 				// Increase/decrease nested tag count.
-				if ($tag{1} == '/')						$depth--;
-				else if ($tag{strlen($tag)-2} != '/')	$depth++;
+				if ($tag[1] === '/') {
+					$depth--;
+				} else if ($tag[strlen($tag)-2] !== '/') {
+					$depth++;
+				}
 
 				if ($depth < 0) {
 					// Going out of parent element. Clean up and break so we
@@ -2535,7 +2582,7 @@ class MarkdownExtraParser extends MarkdownParser {
 	 * Returns an array of that form: ( processed text , remaining text )
 	 * @param  string $text
 	 * @param  string $hash_method
-	 * @param  string $md_attr
+	 * @param  bool $md_attr Handle `markdown="1"` attribute
 	 * @return array
 	 */
 	protected function _hashHTMLBlocks_inHTML($text, $hash_method, $md_attr) {
@@ -2585,6 +2632,7 @@ class MarkdownExtraParser extends MarkdownParser {
 		$depth		= 0;	// Current depth inside the tag tree.
 		$block_text	= "";	// Temporary text holder for current text.
 		$parsed		= "";	// Parsed text that will be returned.
+		$base_tag_name_re = '';
 
 		// Get the name of the starting tag.
 		// (This pattern makes $base_tag_name_re safe without quoting.)
@@ -2604,7 +2652,7 @@ class MarkdownExtraParser extends MarkdownParser {
 				// In that case, we return original text unchanged and pass the
 				// first character as filtered to prevent an infinite loop in the
 				// parent function.
-				return array($original_text{0}, substr($original_text, 1));
+				return array($original_text[0], substr($original_text, 1));
 			}
 
 			$block_text .= $parts[0]; // Text before current tag.
@@ -2614,7 +2662,7 @@ class MarkdownExtraParser extends MarkdownParser {
 			// Check for: Auto-close tag (like <hr/>)
 			//			 Comments and Processing Instructions.
 			if (preg_match('{^</?(?:' . $this->auto_close_tags_re . ')\b}', $tag) ||
-				$tag{1} == '!' || $tag{1} == '?')
+				$tag[1] === '!' || $tag[1] === '?')
 			{
 				// Just add the tag to the block as if it was text.
 				$block_text .= $tag;
@@ -2623,8 +2671,11 @@ class MarkdownExtraParser extends MarkdownParser {
 				// Increase/decrease nested tag count. Only do so if
 				// the tag's name match base tag's.
 				if (preg_match('{^</?' . $base_tag_name_re . '\b}', $tag)) {
-					if ($tag{1} == '/')						$depth--;
-					else if ($tag{strlen($tag)-2} != '/')	$depth++;
+					if ($tag[1] === '/') {
+						$depth--;
+					} else if ($tag[strlen($tag)-2] !== '/') {
+						$depth++;
+					}
 				}
 
 				// Check for `markdown="1"` attribute and handle it.
@@ -2636,9 +2687,9 @@ class MarkdownExtraParser extends MarkdownParser {
 					$tag = preg_replace($markdown_attr_re, '', $tag);
 
 					// Check if text inside this tag must be parsed in span mode.
-					$this->mode = $attr_m[2] . $attr_m[3];
-					$span_mode = $this->mode == 'span' || $this->mode != 'block' &&
-						preg_match('{^<(?:' . $this->contain_span_tags_re . ')\b}', $tag);
+					$mode = $attr_m[2] . $attr_m[3];
+					$span_mode = $mode === 'span' || ($mode !== 'block' &&
+						preg_match('{^<(?:' . $this->contain_span_tags_re . ')\b}', $tag));
 
 					// Calculate indent before tag.
 					if (preg_match('/(?:^|\n)( *?)(?! ).*?$/', $block_text, $matches)) {
@@ -2669,8 +2720,11 @@ class MarkdownExtraParser extends MarkdownParser {
 					}
 
 					// Append tag content to parsed text.
-					if (!$span_mode)	$parsed .= "\n\n$block_text\n\n";
-					else				$parsed .= "$block_text";
+					if (!$span_mode) {
+						$parsed .= "\n\n$block_text\n\n";
+					} else {
+						$parsed .= (string) $block_text;
+					}
 
 					// Start over with a new block.
 					$block_text = "";
@@ -2815,16 +2869,15 @@ class MarkdownExtraParser extends MarkdownParser {
 	 * @return string
 	 */
 	protected function _doAnchors_inline_callback($matches) {
-		$whole_match	=  $matches[1];
 		$link_text		=  $this->runSpanGamut($matches[2]);
-		$url			=  $matches[3] == '' ? $matches[4] : $matches[3];
+		$url			=  $matches[3] === '' ? $matches[4] : $matches[3];
 		$title			=& $matches[7];
 		$attr  = $this->doExtraAttributes("a", $dummy =& $matches[8]);
 
 		// if the URL was of the form <s p a c e s> it got caught by the HTML
 		// tag parser and hashed. Need to reverse the process before using the URL.
 		$unhashed = $this->unhash($url);
-		if ($unhashed != $url)
+		if ($unhashed !== $url)
 			$url = preg_replace('/^<(.*)>$/', '\1', $unhashed);
 
 		$url = $this->encodeURLAttribute($url);
@@ -2907,7 +2960,7 @@ class MarkdownExtraParser extends MarkdownParser {
 		$alt_text    = $matches[2];
 		$link_id     = strtolower($matches[3]);
 
-		if ($link_id == "") {
+		if ($link_id === "") {
 			$link_id = strtolower($alt_text); // for shortcut links like ![this][].
 		}
 
@@ -2920,8 +2973,9 @@ class MarkdownExtraParser extends MarkdownParser {
 				$title = $this->encodeAttribute($title);
 				$result .=  " title=\"$title\"";
 			}
-			if (isset($this->ref_attr[$link_id]))
+			if (isset($this->ref_attr[$link_id])) {
 				$result .= $this->ref_attr[$link_id];
+			}
 			$result .= $this->empty_element_suffix;
 			$result = $this->hashPart($result);
 		}
@@ -2939,9 +2993,8 @@ class MarkdownExtraParser extends MarkdownParser {
 	 * @return string
 	 */
 	protected function _doImages_inline_callback($matches) {
-		$whole_match	= $matches[1];
 		$alt_text		= $matches[2];
-		$url			= $matches[3] == '' ? $matches[4] : $matches[3];
+		$url			= $matches[3] === '' ? $matches[4] : $matches[3];
 		$title			=& $matches[7];
 		$attr  = $this->doExtraAttributes("img", $dummy =& $matches[8]);
 
@@ -3007,11 +3060,11 @@ class MarkdownExtraParser extends MarkdownParser {
 	 * @return string
 	 */
 	protected function _doHeaders_callback_setext($matches) {
-		if ($matches[3] == '-' && preg_match('{^- }', $matches[1])) {
+		if ($matches[3] === '-' && preg_match('{^- }', $matches[1])) {
 			return $matches[0];
 		}
 
-		$level = $matches[3]{0} == '=' ? 1 : 2;
+		$level = $matches[3][0] === '=' ? 1 : 2;
 
 		$defaultId = is_callable($this->header_id_func) ? call_user_func($this->header_id_func, $matches[1]) : null;
 
@@ -3114,8 +3167,7 @@ class MarkdownExtraParser extends MarkdownParser {
 	 * @param  string $alignname
 	 * @return string
 	 */
-	protected function _doTable_makeAlignAttr($alignname)
-	{
+	protected function _doTable_makeAlignAttr($alignname) {
 		if (empty($this->table_align_class_tmpl)) {
 			return " align=\"$alignname\"";
 		}
@@ -3163,8 +3215,9 @@ class MarkdownExtraParser extends MarkdownParser {
 		$text = "<table>\n";
 		$text .= "<thead>\n";
 		$text .= "<tr>\n";
-		foreach ($headers as $n => $header)
+		foreach ($headers as $n => $header) {
 			$text .= "  <th$attr[$n]>" . $this->runSpanGamut(trim($header)) . "</th>\n";
+		}
 		$text .= "</tr>\n";
 		$text .= "</thead>\n";
 
@@ -3182,8 +3235,9 @@ class MarkdownExtraParser extends MarkdownParser {
 			$row_cells = array_pad($row_cells, $col_count, '');
 
 			$text .= "<tr>\n";
-			foreach ($row_cells as $n => $cell)
+			foreach ($row_cells as $n => $cell) {
 				$text .= "  <td$attr[$n]>" . $this->runSpanGamut(trim($cell)) . "</td>\n";
+			}
 			$text .= "</tr>\n";
 		}
 		$text .= "</tbody>\n";
@@ -3351,8 +3405,6 @@ class MarkdownExtraParser extends MarkdownParser {
 	 */
 	protected function doFencedCodeBlocks($text) {
 
-		$less_than_tab = $this->tab_width;
-
 		$text = preg_replace_callback('{
 				(?:\n|\A)
 				# 1: Opening marker
@@ -3405,9 +3457,10 @@ class MarkdownExtraParser extends MarkdownParser {
 			array($this, '_doFencedCodeBlocks_newlines'), $codeblock);
 
 		$classes = array();
-		if ($classname != "") {
-			if ($classname{0} == '.')
+		if ($classname !== "") {
+			if ($classname[0] === '.') {
 				$classname = substr($classname, 1);
+			}
 			$classes[] = $this->code_class_prefix . $classname;
 		}
 		$attr_str = $this->doExtraAttributes($this->code_attr_on_pre ? "pre" : "code", $attrs, null, $classes);
@@ -3548,65 +3601,95 @@ class MarkdownExtraParser extends MarkdownParser {
 		$text = preg_replace_callback('{F\x1Afn:(.*?)\x1A:}',
 			array($this, '_appendFootnotes_callback'), $text);
 
-		if (!empty($this->footnotes_ordered)) {
-			$text .= "\n\n";
-			$text .= "<div class=\"footnotes\" role=\"doc-endnotes\">\n";
-			$text .= "<hr" . $this->empty_element_suffix . "\n";
-			$text .= "<ol>\n\n";
-
-			$attr = "";
-			if ($this->fn_backlink_class != "") {
-				$class = $this->fn_backlink_class;
-				$class = $this->encodeAttribute($class);
-				$attr .= " class=\"$class\"";
+		if ( ! empty( $this->footnotes_ordered ) ) {
+			$this->_doFootnotes();
+			if ( ! $this->omit_footnotes ) {
+				$text .= "\n\n";
+				$text .= "<div class=\"footnotes\" role=\"doc-endnotes\">\n";
+				$text .= "<hr" . $this->empty_element_suffix . "\n";
+				$text .= $this->footnotes_assembled;
+				$text .= "</div>";
 			}
-			if ($this->fn_backlink_title != "") {
-				$title = $this->fn_backlink_title;
-				$title = $this->encodeAttribute($title);
-				$attr .= " title=\"$title\"";
-				$attr .= " aria-label=\"$title\"";
-			}
-			$attr .= " role=\"doc-backlink\"";
-			$backlink_text = $this->fn_backlink_html;
-			$num = 0;
+		}
+		return $text;
+	}
 
-			while (!empty($this->footnotes_ordered)) {
-				$footnote = reset($this->footnotes_ordered);
-				$note_id = key($this->footnotes_ordered);
-				unset($this->footnotes_ordered[$note_id]);
-				$ref_count = $this->footnotes_ref_count[$note_id];
-				unset($this->footnotes_ref_count[$note_id]);
-				unset($this->footnotes[$note_id]);
 
-				$footnote .= "\n"; // Need to append newline before parsing.
-				$footnote = $this->runBlockGamut("$footnote\n");
-				$footnote = preg_replace_callback('{F\x1Afn:(.*?)\x1A:}',
-					array($this, '_appendFootnotes_callback'), $footnote);
+	/**
+	 * Generates the HTML for footnotes.  Called by appendFootnotes, even if
+	 * footnotes are not being appended.
+	 * @return void
+	 */
+	protected function _doFootnotes() {
+		$attr = array();
+		if ($this->fn_backlink_class !== "") {
+			$class = $this->fn_backlink_class;
+			$class = $this->encodeAttribute($class);
+			$attr['class'] = " class=\"$class\"";
+		}
+		$attr['role'] = " role=\"doc-backlink\"";
+		$num = 0;
 
-				$attr = str_replace("%%", ++$num, $attr);
-				$note_id = $this->encodeAttribute($note_id);
+		$text = "<ol>\n\n";
+		while (!empty($this->footnotes_ordered)) {
+			$footnote = reset($this->footnotes_ordered);
+			$note_id = key($this->footnotes_ordered);
+			unset($this->footnotes_ordered[$note_id]);
+			$ref_count = $this->footnotes_ref_count[$note_id];
+			unset($this->footnotes_ref_count[$note_id]);
+			unset($this->footnotes[$note_id]);
 
-				// Prepare backlink, multiple backlinks if multiple references
-				$backlink = "<a href=\"#fnref:$note_id\"$attr>$backlink_text</a>";
-				for ($ref_num = 2; $ref_num <= $ref_count; ++$ref_num) {
-					$backlink .= " <a href=\"#fnref$ref_num:$note_id\"$attr>$backlink_text</a>";
+			$footnote .= "\n"; // Need to append newline before parsing.
+			$footnote = $this->runBlockGamut("$footnote\n");
+			$footnote = preg_replace_callback('{F\x1Afn:(.*?)\x1A:}',
+				array($this, '_appendFootnotes_callback'), $footnote);
+
+			$num++;
+			$note_id = $this->encodeAttribute($note_id);
+
+			// Prepare backlink, multiple backlinks if multiple references
+			// Do not create empty backlinks if the html is blank
+			$backlink = "";
+			if (!empty($this->fn_backlink_html)) {
+				for ($ref_num = 1; $ref_num <= $ref_count; ++$ref_num) {
+					if (!empty($this->fn_backlink_title)) {
+						$attr['title'] = ' title="' . $this->encodeAttribute($this->fn_backlink_title) . '"';
+					}
+					if (!empty($this->fn_backlink_label)) {
+						$attr['label'] = ' aria-label="' . $this->encodeAttribute($this->fn_backlink_label) . '"';
+					}
+					$parsed_attr = $this->parseFootnotePlaceholders(
+						implode('', $attr),
+						$num,
+						$ref_num
+					);
+					$backlink_text = $this->parseFootnotePlaceholders(
+						$this->fn_backlink_html,
+						$num,
+						$ref_num
+					);
+					$ref_count_mark = $ref_num > 1 ? $ref_num : '';
+					$backlink .= " <a href=\"#fnref$ref_count_mark:$note_id\"$parsed_attr>$backlink_text</a>";
 				}
-				// Add backlink to last paragraph; create new paragraph if needed.
+				$backlink = trim($backlink);
+			}
+
+			// Add backlink to last paragraph; create new paragraph if needed.
+			if (!empty($backlink)) {
 				if (preg_match('{</p>$}', $footnote)) {
 					$footnote = substr($footnote, 0, -4) . "&#160;$backlink</p>";
 				} else {
 					$footnote .= "\n\n<p>$backlink</p>";
 				}
-
-				$text .= "<li id=\"fn:$note_id\" role=\"doc-endnote\">\n";
-				$text .= $footnote . "\n";
-				$text .= "</li>\n\n";
 			}
 
-			$text .= "</ol>\n";
-			$text .= "</div>";
+			$text .= "<li id=\"fn:$note_id\" role=\"doc-endnote\">\n";
+			$text .= $footnote . "\n";
+			$text .= "</li>\n\n";
 		}
-		return $text;
+		$text .= "</ol>\n";
+
+		$this->footnotes_assembled = $text;
 	}
 
 	/**
@@ -3633,12 +3716,12 @@ class MarkdownExtraParser extends MarkdownParser {
 			}
 
 			$attr = "";
-			if ($this->fn_link_class != "") {
+			if ($this->fn_link_class !== "") {
 				$class = $this->fn_link_class;
 				$class = $this->encodeAttribute($class);
 				$attr .= " class=\"$class\"";
 			}
-			if ($this->fn_link_title != "") {
+			if ($this->fn_link_title !== "") {
 				$title = $this->fn_link_title;
 				$title = $this->encodeAttribute($title);
 				$attr .= " title=\"$title\"";
@@ -3655,6 +3738,23 @@ class MarkdownExtraParser extends MarkdownParser {
 		}
 
 		return "[^" . $matches[1] . "]";
+	}
+
+	/**
+	 * Build footnote label by evaluating any placeholders.
+	 * - ^^  footnote number
+	 * - %%  footnote reference number (Nth reference to footnote number)
+	 * @param  string $label
+	 * @param  int    $footnote_number
+	 * @param  int    $reference_number
+	 * @return string
+	 */
+	protected function parseFootnotePlaceholders($label, $footnote_number, $reference_number) {
+		return str_replace(
+			array('^^', '%%'),
+			array($footnote_number, $reference_number),
+			$label
+		);
 	}
 
 
@@ -3723,13 +3823,11 @@ class MarkdownExtraParser extends MarkdownParser {
 			$desc = $this->abbr_desciptions[$abbr];
 			if (empty($desc)) {
 				return $this->hashPart("<abbr>$abbr</abbr>");
-			} else {
-				$desc = $this->encodeAttribute($desc);
-				return $this->hashPart("<abbr title=\"$desc\">$abbr</abbr>");
 			}
-		} else {
-			return $matches[0];
+			$desc = $this->encodeAttribute($desc);
+			return $this->hashPart("<abbr title=\"$desc\">$abbr</abbr>");
 		}
+		return $matches[0];
 	}
 }
 
