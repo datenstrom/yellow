@@ -531,15 +531,20 @@ class YellowPage {
             if ($name=="yellow" && $type=="inline") {
                 $output = "Datenstrom Yellow ".YellowCore::VERSION;
                 if ($text=="error") $output = $this->get("pageError");
-                if ($text=="about") {
-                    $output = "<span class=\"".htmlspecialchars($name)."\">\n";
-                    $serverVersion = $this->yellow->toolbox->getServerVersion();
-                    $output .= "Datenstrom Yellow ".YellowCore::VERSION.", PHP ".PHP_VERSION.", $serverVersion<br />\n";
-                    foreach ($this->yellow->extensions->getData() as $key=>$value) {
-                        $output .= htmlspecialchars(ucfirst($key)." $value")."<br />\n";
+                if ($text=="logfile") {
+                    $fileName = $this->yellow->system->get("extensionDir").$this->yellow->system->get("logFile");
+                    $fileHandle = @fopen($fileName, "r");
+                    if ($fileHandle) {
+                        $dataBufferSize = 512;
+                        fseek($fileHandle, max(0, filesize($fileName) - $dataBufferSize));
+                        $dataBuffer = fread($fileHandle, $dataBufferSize);
+                        if (strlenb($dataBuffer)==$dataBufferSize) {
+                            $dataBuffer = ($pos = strposu($dataBuffer, "\n")) ? substru($dataBuffer, $pos+1) : $dataBuffer;
+                        }
+                        fclose($fileHandle);
                     }
-                    $output .= "</span>\n";
-                    if ($this->safeMode) $this->error(500, "Yellow '$text' is not available in safe mode!");
+                    $output = strreplaceu("\n", "<br />\n", htmlspecialchars($dataBuffer));
+                    if ($this->safeMode || empty($output)) $output = "No log file available.";
                 }
             }
         }
