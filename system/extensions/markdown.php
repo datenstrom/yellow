@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowMarkdown {
-    const VERSION = "0.8.9";
+    const VERSION = "0.8.10";
     const TYPE = "feature";
     public $yellow;         //access to API
     
@@ -3962,7 +3962,7 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser {
     public function _doImages_inline_callback($matches) {
         $src = $matches[3]=="" ? $matches[4] : $matches[3];
         if (!preg_match("/^\w+:/", $src)) {
-            $src = $this->yellow->system->get("serverBase").$this->yellow->system->get("imageLocation").$src;
+            $src = $this->yellow->system->get("coreServerBase").$this->yellow->system->get("coreImageLocation").$src;
         }
         $alt = $matches[2];
         $title = $matches[7]=="" ? $matches[2] : $matches[7];

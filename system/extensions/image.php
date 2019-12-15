@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowImage {
-    const VERSION = "0.8.3";
+    const VERSION = "0.8.4";
     const TYPE = "feature";
     public $yellow;             //access to API
     public $graphicsLibrary;    //graphics library support? (boolean)
@@ -35,7 +35,7 @@ class YellowImage {
                 if (empty($alt)) $alt = $this->yellow->system->get("imageAlt");
                 if (empty($width)) $width = "100%";
                 if (empty($height)) $height = $width;
-                list($src, $width, $height) = $this->getImageInformation($this->yellow->system->get("imageDir").$name, $width, $height);
+                list($src, $width, $height) = $this->getImageInformation($this->yellow->system->get("coreImageDir").$name, $width, $height);
             } else {
                 if (empty($alt)) $alt = $this->yellow->system->get("imageAlt");
                 $src = $this->yellow->lookup->normaliseUrl("", "", "", $name);
@@ -101,12 +101,12 @@ class YellowImage {
 
     // Return image info, create thumbnail on demand
     public function getImageInformation($fileName, $widthOutput, $heightOutput) {
-        $fileNameShort = substru($fileName, strlenu($this->yellow->system->get("imageDir")));
+        $fileNameShort = substru($fileName, strlenu($this->yellow->system->get("coreImageDir")));
         list($widthInput, $heightInput, $type) = $this->yellow->toolbox->detectImageInformation($fileName);
         $widthOutput = $this->convertValueAndUnit($widthOutput, $widthInput);
         $heightOutput = $this->convertValueAndUnit($heightOutput, $heightInput);
         if (($widthInput==$widthOutput && $heightInput==$heightOutput) || $type=="svg") {
-            $src = $this->yellow->system->get("serverBase").$this->yellow->system->get("imageLocation").$fileNameShort;
+            $src = $this->yellow->system->get("coreServerBase").$this->yellow->system->get("coreImageLocation").$fileNameShort;
             $width = $widthOutput;
             $height = $heightOutput;
         } else {
@@ -123,7 +123,7 @@ class YellowImage {
                     $this->yellow->page->error(500, "Can't write file '$fileNameOutput'!");
                 }
             }
-            $src = $this->yellow->system->get("serverBase").$this->yellow->system->get("imageThumbnailLocation").$fileNameThumb;
+            $src = $this->yellow->system->get("coreServerBase").$this->yellow->system->get("imageThumbnailLocation").$fileNameThumb;
             list($width, $height) = $this->yellow->toolbox->detectImageInformation($fileNameOutput);
         }
         return array($src, $width, $height);

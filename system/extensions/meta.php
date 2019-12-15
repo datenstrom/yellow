@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowMeta {
-    const VERSION = "0.8.8";
+    const VERSION = "0.8.9";
     const TYPE = "feature";
     public $yellow;         //access to API
     
@@ -17,7 +17,7 @@ class YellowMeta {
     // Handle update
     public function onUpdate($action) {
         if ($action=="update") {        //TODO: remove later, converts old settings
-            $path = $this->yellow->system->get("contentDir");
+            $path = $this->yellow->system->get("coreContentDir");
             foreach ($this->yellow->toolbox->getDirectoryEntriesRecursive($path, "/^.*\.md$/", true, false) as $entry) {
                 $fileData = $fileDataNew = $this->yellow->toolbox->readFile($entry);
                 $fileDataNew = preg_replace("/SocialtagsImage:/i", "Image:", $fileDataNew);
@@ -74,12 +74,12 @@ class YellowMeta {
             $alt = $page->isExisting("imageAlt") ? $page->get("imageAlt") : $page->get("title");
         }
         if (!preg_match("/^\w+:/", $name)) {
-            $location = $name!="icon" ? $this->yellow->system->get("imageLocation").$name :
-                $this->yellow->system->get("resourceLocation").$page->get("theme")."-icon.png";
+            $location = $name!="icon" ? $this->yellow->system->get("coreImageLocation").$name :
+                $this->yellow->system->get("coreResourceLocation").$page->get("theme")."-icon.png";
             $url = $this->yellow->lookup->normaliseUrl(
-                $this->yellow->system->get("serverScheme"),
-                $this->yellow->system->get("serverAddress"),
-                $this->yellow->system->get("serverBase"), $location);
+                $this->yellow->system->get("coreServerScheme"),
+                $this->yellow->system->get("coreServerAddress"),
+                $this->yellow->system->get("coreServerBase"), $location);
         } else {
             $url = $this->yellow->lookup->normaliseUrl("", "", "", $name);
         }

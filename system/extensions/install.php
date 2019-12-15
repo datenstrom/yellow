@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowInstall {
-    const VERSION = "0.8.10";
+    const VERSION = "0.8.11";
     const TYPE = "feature";
     const PRIORITY = "1";
     public $yellow;                 //access to API
@@ -83,7 +83,7 @@ class YellowInstall {
     // Update log
     public function updateLog() {
         $statusCode = 200;
-        $fileName = $this->yellow->system->get("extensionDir").$this->yellow->system->get("logFile");
+        $fileName = $this->yellow->system->get("coreExtensionDir").$this->yellow->system->get("coreLogFile");
         if (!is_file($fileName)) {
             $serverVersion = $this->yellow->toolbox->getServerVersion();
             $this->yellow->log("info", "Datenstrom Yellow ".YellowCore::VERSION.", PHP ".PHP_VERSION.", $serverVersion");
@@ -102,7 +102,7 @@ class YellowInstall {
     // Update language
     public function updateLanguage() {
         $statusCode = 200;
-        $path = $this->yellow->system->get("extensionDir")."install-languages.zip";
+        $path = $this->yellow->system->get("coreExtensionDir")."install-languages.zip";
         if (is_file($path) && $this->yellow->extensions->isExisting("update")) {
             $zip = new ZipArchive();
             if ($zip->open($path)===true) {
@@ -143,7 +143,7 @@ class YellowInstall {
                 }
                 $zip->close();
                 if ($statusCode==200) {
-                    $this->yellow->text->load($this->yellow->system->get("extensionDir").$this->yellow->system->get("languageFile"), "");
+                    $this->yellow->text->load($this->yellow->system->get("coreExtensionDir").$this->yellow->system->get("coreLanguageFile"), "");
                 }
             } else {
                 $statusCode = 500;
@@ -156,7 +156,7 @@ class YellowInstall {
     // Update extension
     public function updateExtension($extension) {
         $statusCode = 200;
-        $path = $this->yellow->system->get("extensionDir");
+        $path = $this->yellow->system->get("coreExtensionDir");
         if (!empty($extension) && $this->yellow->extensions->isExisting("update")) {
             foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.zip$/", true, false) as $entry) {
                 if (preg_match("/^install-(.*?)\./", basename($entry), $matches)) {
@@ -175,7 +175,7 @@ class YellowInstall {
         $statusCode = 200;
         if (!empty($email) && !empty($password) && $this->yellow->extensions->isExisting("edit")) {
             if (empty($name)) $name = $this->yellow->system->get("sitename");
-            $fileNameUser = $this->yellow->system->get("settingDir").$this->yellow->system->get("editUserFile");
+            $fileNameUser = $this->yellow->system->get("coreSettingDir").$this->yellow->system->get("editUserFile");
             $settings = array(
                 "name" => $name,
                 "language" => $language,
@@ -219,7 +219,7 @@ class YellowInstall {
     // Update settings
     public function updateSettings($settings) {
         $statusCode = 200;
-        $fileName = $this->yellow->system->get("settingDir").$this->yellow->system->get("systemFile");
+        $fileName = $this->yellow->system->get("coreSettingDir").$this->yellow->system->get("coreSystemFile");
         if (!$this->yellow->system->save($fileName, $settings)) {
             $statusCode = 500;
             $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
@@ -231,7 +231,7 @@ class YellowInstall {
     public function removeFiles() {
         $statusCode = 200;
         if (function_exists("opcache_reset")) opcache_reset();
-        $path = $this->yellow->system->get("extensionDir");
+        $path = $this->yellow->system->get("coreExtensionDir");
         foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.zip$/", true, false) as $entry) {
             if (preg_match("/^install-(.*?)\./", basename($entry), $matches)) {
                 if (!$this->yellow->toolbox->deleteFile($entry)) {
@@ -240,7 +240,7 @@ class YellowInstall {
                 }
             }
         }
-        $path = $this->yellow->system->get("extensionDir")."install.php";
+        $path = $this->yellow->system->get("coreExtensionDir")."install.php";
         if ($statusCode==200 && !$this->yellow->toolbox->deleteFile($path)) {
             $statusCode = 500;
             $this->yellow->page->error($statusCode, "Can't delete file '$path'!");
@@ -252,7 +252,7 @@ class YellowInstall {
     // Check web server rewrite
     public function checkServerRewrite($scheme, $address, $base, $location, $fileName) {
         $curlHandle = curl_init();
-        $location = $this->yellow->system->get("resourceLocation").$this->yellow->lookup->normaliseName($this->yellow->system->get("theme")).".css";
+        $location = $this->yellow->system->get("coreResourceLocation").$this->yellow->lookup->normaliseName($this->yellow->system->get("theme")).".css";
         $url = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
         curl_setopt($curlHandle, CURLOPT_URL, $url);
         curl_setopt($curlHandle, CURLOPT_USERAGENT, "Mozilla/5.0 (compatible; YellowCore/".YellowCore::VERSION).")";
@@ -266,7 +266,7 @@ class YellowInstall {
     
     // Check web server read/write access
     public function checkServerAccess() {
-        $fileName = $this->yellow->system->get("settingDir").$this->yellow->system->get("systemFile");
+        $fileName = $this->yellow->system->get("coreSettingDir").$this->yellow->system->get("coreSystemFile");
         return $this->yellow->system->save($fileName, array());
     }
 
@@ -293,9 +293,9 @@ class YellowInstall {
             if ($key=="password" || $key=="status") continue;
             $data[$key] = trim($value);
         }
-        $data["timezone"] = $this->yellow->toolbox->getTimezone();
-        $data["staticUrl"] = $this->yellow->toolbox->getServerUrl();
-        if ($this->yellow->isCommandLine()) $data["staticUrl"] = getenv("URL");
+        $data["coreStaticUrl"] = $this->yellow->toolbox->getServerUrl();
+        $data["coreServerTimezone"] = $this->yellow->toolbox->getTimezone();
+        if ($this->yellow->isCommandLine()) $data["coreStaticUrl"] = getenv("URL");
         return $data;
     }
 
@@ -333,7 +333,7 @@ class YellowInstall {
     // Return extensions for install page
     public function getExtensionsInstall() {
         $extensions = array("website");
-        $path = $this->yellow->system->get("extensionDir");
+        $path = $this->yellow->system->get("coreExtensionDir");
         foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.zip$/", true, false, false) as $entry) {
             if (preg_match("/^install-(.*?)\./", $entry, $matches) && $matches[1]!="languages") array_push($extensions, $matches[1]);
         }
