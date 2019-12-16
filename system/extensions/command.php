@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowCommand {
-    const VERSION = "0.8.8";
+    const VERSION = "0.8.9";
     const TYPE = "feature";
     const PRIORITY = "3";
     public $yellow;                     //access to API
@@ -225,7 +225,6 @@ class YellowCommand {
     
     // Analyse locations with arguments
     public function analyseLocations($scheme, $address, $base, $rawData) {
-        $pagination = $this->yellow->system->get("coreContentPagination");
         preg_match_all("/<(.*?)href=\"([^\"]+)\"(.*?)>/i", $rawData, $matches);
         foreach ($matches[2] as $match) {
             $location = rawurldecode($match);
@@ -238,7 +237,7 @@ class YellowCommand {
             if (substru($location, 0, strlenu($base))!=$base) continue;
             $location = substru($location, strlenu($base));
             if (!$this->yellow->toolbox->isLocationArgs($location)) continue;
-            if (!$this->yellow->toolbox->isLocationArgsPagination($location, $pagination)) {
+            if (!$this->yellow->toolbox->isLocationArgsPagination($location)) {
                 $location = rtrim($location, "/")."/";
                 if (is_null($this->locationsArgs[$location])) {
                     $this->locationsArgs[$location] = $location;

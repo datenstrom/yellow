@@ -41,6 +41,7 @@ class YellowCore {
         $this->system->setDefault("coreStaticErrorFile", "404.html");
         $this->system->setDefault("coreStaticDir", "public/");
         $this->system->setDefault("coreCacheDir", "cache/");
+        $this->system->setDefault("coreTrashDir", "system/trash/");
         $this->system->setDefault("coreServerUrl", "auto");
         $this->system->setDefault("coreServerTimezone", "UTC");
         $this->system->setDefault("coreSafeMode", "0");
@@ -58,12 +59,10 @@ class YellowCore {
         $this->system->setDefault("coreLayoutDir", "system/layouts/");
         $this->system->setDefault("coreResourceDir", "system/resources/");
         $this->system->setDefault("coreSettingDir", "system/settings/");
-        $this->system->setDefault("coreTrashDir", "system/trash/");
         $this->system->setDefault("coreContentDir", "content/");
         $this->system->setDefault("coreContentRootDir", "default/");
         $this->system->setDefault("coreContentHomeDir", "home/");
         $this->system->setDefault("coreContentSharedDir", "shared/");
-        $this->system->setDefault("coreContentPagination", "page");
         $this->system->setDefault("coreContentDefaultFile", "page.md");
         $this->system->setDefault("coreContentExtension", ".md");
         $this->system->setDefault("coreDownloadExtension", ".download");
@@ -349,7 +348,7 @@ class YellowCore {
     
     // Return request location
     public function getRequestLocationArgsClean() {
-        return $this->toolbox->getLocationArgsClean($this->system->get("coreContentPagination"));
+        return $this->toolbox->getLocationArgsClean();
     }
     
     // Return request language
@@ -1075,8 +1074,7 @@ class YellowPageCollection extends ArrayObject {
     public function pagination($limit, $reverse = true) {
         $this->paginationNumber = 1;
         $this->paginationCount = ceil($this->count() / $limit);
-        $pagination = $this->yellow->system->get("coreContentPagination");
-        if (isset($_REQUEST[$pagination])) $this->paginationNumber = intval($_REQUEST[$pagination]);
+        if (isset($_REQUEST["page"])) $this->paginationNumber = intval($_REQUEST["page"]);
         if ($this->paginationNumber>$this->paginationCount) $this->paginationNumber = 0;
         if ($this->paginationNumber>=1) {
             $array = $this->getArrayCopy();
@@ -1099,10 +1097,8 @@ class YellowPageCollection extends ArrayObject {
     // Return location for a page in pagination
     public function getPaginationLocation($absoluteLocation = true, $pageNumber = 1) {
         if ($pageNumber>=1 && $pageNumber<=$this->paginationCount) {
-            $pagination = $this->yellow->system->get("coreContentPagination");
             $location = $this->yellow->page->getLocation($absoluteLocation);
-            $locationArgs = $this->yellow->toolbox->getLocationArgsNew(
-                $pageNumber>1 ? "$pagination:$pageNumber" : "$pagination:", $pagination);
+            $locationArgs = $this->yellow->toolbox->getLocationArgsNew($pageNumber>1 ? "page:$pageNumber" : "page:");
         }
         return $location.$locationArgs;
     }
@@ -2248,7 +2244,7 @@ class YellowToolbox {
     }
     
     // Return location arguments from current HTTP request, modify existing arguments
-    public function getLocationArgsNew($arg, $pagination) {
+    public function getLocationArgsNew($arg) {
         $separator = $this->getLocationArgsSeparator();
         preg_match("/^(.*?):(.*)$/", $arg, $args);
         foreach (explode("/", $_SERVER["LOCATION_ARGS"]) as $token) {
@@ -2268,13 +2264,13 @@ class YellowToolbox {
         }
         if (!empty($locationArgs)) {
             $locationArgs = $this->normaliseArgs($locationArgs, false, false);
-            if (!$this->isLocationArgsPagination($locationArgs, $pagination)) $locationArgs .= "/";
+            if (!$this->isLocationArgsPagination($locationArgs)) $locationArgs .= "/";
         }
         return $locationArgs;
     }
     
     // Return location arguments from current HTTP request, convert form parameters
-    public function getLocationArgsClean($pagination) {
+    public function getLocationArgsClean() {
         foreach (array_merge($_GET, $_POST) as $key=>$value) {
             if (!empty($key) && !strempty($value)) {
                 if (!empty($locationArgs)) $locationArgs .= "/";
@@ -2285,7 +2281,7 @@ class YellowToolbox {
         }
         if (!empty($locationArgs)) {
             $locationArgs = $this->normaliseArgs($locationArgs, false, false);
-            if (!$this->isLocationArgsPagination($locationArgs, $pagination)) $locationArgs .= "/";
+            if (!$this->isLocationArgsPagination($locationArgs)) $locationArgs .= "/";
         }
         return $locationArgs;
     }
@@ -2303,9 +2299,9 @@ class YellowToolbox {
     }
     
     // Check if there are pagination arguments in current HTTP request
-    public function isLocationArgsPagination($location, $pagination) {
+    public function isLocationArgsPagination($location) {
         $separator = $this->getLocationArgsSeparator();
-        return preg_match("/^(.*\/)?$pagination$separator.*$/", $location);
+        return preg_match("/^(.*\/)?page$separator.*$/", $location);
     }
 
     // Check if script location is requested
