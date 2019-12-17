@@ -256,7 +256,7 @@ yellow.edit = {
                 elementDiv.innerHTML =
                 "<form method=\"post\">"+
                 "<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\"></i></a>"+
-                "<div class=\"yellow-title\"><h1 id=\"yellow-pane-update-title\">"+yellow.toolbox.encodeHtml(yellow.system.serverVersion)+"</h1></div>"+
+                "<div class=\"yellow-title\"><h1 id=\"yellow-pane-update-title\">"+yellow.toolbox.encodeHtml(yellow.system.coreVersion)+"</h1></div>"+
                 "<div class=\"yellow-status\"><p id=\"yellow-pane-update-status\" class=\""+paneStatus+"\">"+this.getText("UpdateStatus", "", paneStatus)+"</p></div>"+
                 "<div class=\"yellow-output\" id=\"yellow-pane-update-output\">"+yellow.page.rawDataOutput+"</div>"+
                 "<div class=\"yellow-buttons\" id=\"yellow-pane-update-buttons\">"+
@@ -376,12 +376,12 @@ yellow.edit = {
                 }
                 break;
             case "yellow-pane-update":
-                if (paneStatus=="none" && this.isUserAdministrator()) {
+                if (paneStatus=="none") {
                     document.getElementById("yellow-pane-update-status").innerHTML = this.getText("UpdateStatusCheck");
                     document.getElementById("yellow-pane-update-output").innerHTML = "";
                     setTimeout("yellow.action('submit', '', 'action:update/option:check/');", 500);
                 }
-                if (paneStatus=="updates" && this.isUserAdministrator()) {
+                if (paneStatus=="updates") {
                     document.getElementById("yellow-pane-update-status").innerHTML = "<a href=\"#\" data-action=\"submit\" data-args=\"action:update\">"+this.getText("UpdateStatusUpdates")+"</a>";
                 }
                 break;
@@ -401,7 +401,7 @@ yellow.edit = {
                         yellow.toolbox.setVisible(document.getElementById(paneId+"-toolbar-title"), false);
                         this.updateToolbar(0, "yellow-toolbar-checked");
                     }
-                    if (yellow.system.userRestriction || (yellow.page.rawDataReadonly && paneId!="yellow-pane-create")) {
+                    if (!this.isUserAccess(paneAction, yellow.page.location) || (yellow.page.rawDataReadonly && paneId!="yellow-pane-create")) {
                         yellow.toolbox.setVisible(document.getElementById(paneId+"-submit"), false);
                         document.getElementById(paneId+"-text").readOnly = true;
                     }
@@ -813,7 +813,7 @@ yellow.edit = {
     uploadFile: function(elementText, file) {
         var extension = (file.name.lastIndexOf(".")!=-1 ? file.name.substring(file.name.lastIndexOf("."), file.name.length) : "").toLowerCase();
         var extensions = yellow.system.editUploadExtensions.split(/\s*,\s*/);
-        if (file.size<=yellow.system.serverFileSizeMax && extensions.indexOf(extension)!=-1) {
+        if (file.size<=yellow.system.coreFileSizeMax && extensions.indexOf(extension)!=-1) {
             var text = this.getText("UploadProgress")+"\u200b";
             yellow.editor.setMarkdown(elementText, text, "insert");
             var thisObject = this;
@@ -834,8 +834,8 @@ yellow.edit = {
         if (result) {
             var textOld = this.getText("UploadProgress")+"\u200b";
             var textNew;
-            if (result.location.substring(0, yellow.system.imageLocation.length)==yellow.system.imageLocation) {
-                textNew = "[image "+result.location.substring(yellow.system.imageLocation.length)+"]";
+            if (result.location.substring(0, yellow.system.coreImageLocation.length)==yellow.system.coreImageLocation) {
+                textNew = "[image "+result.location.substring(yellow.system.coreImageLocation.length)+"]";
             } else {
                 textNew = "[link]("+result.location+")";
             }
@@ -889,10 +889,10 @@ yellow.edit = {
     // Return raw data for languages
     getRawDataLanguages: function(paneId) {
         var rawDataLanguages = "";
-        if (yellow.system.serverLanguages && Object.keys(yellow.system.serverLanguages).length>1) {
-            for (var language in yellow.system.serverLanguages) {
+        if (yellow.system.coreLanguages && Object.keys(yellow.system.coreLanguages).length>1) {
+            for (var language in yellow.system.coreLanguages) {
                 var checked = language==this.getRequest("language") ? " checked=\"checked\"" : "";
-                rawDataLanguages += "<label for=\""+paneId+"-"+language+"\"><input type=\"radio\" name=\"language\" id=\""+paneId+"-"+language+"\" value=\""+language+"\""+checked+"> "+yellow.toolbox.encodeHtml(yellow.system.serverLanguages[language])+"</label><br />";
+                rawDataLanguages += "<label for=\""+paneId+"-"+language+"\"><input type=\"radio\" name=\"language\" id=\""+paneId+"-"+language+"\" value=\""+language+"\""+checked+"> "+yellow.toolbox.encodeHtml(yellow.system.coreLanguages[language])+"</label><br />";
             }
         }
         return rawDataLanguages
@@ -959,9 +959,10 @@ yellow.edit = {
         return yellow.toolbox.getCookie(name);
     },
     
-    // Check if user is administrator
-    isUserAdministrator: function() {
-        return yellow.system.userGroup=="administrator";
+    // Check if user with access
+    isUserAccess: function(action, location) {
+        var tokens = yellow.system.userAccess.split(/\s*,\s*/);
+        return tokens.indexOf(action)!=-1 && (!location || location.substring(0, yellow.system.userHome.length)==yellow.system.userHome);
     },
 
     // Check if element is expandable
@@ -971,7 +972,7 @@ yellow.edit = {
     
     // Check if extension exists
     isExtension: function(name) {
-        return name in yellow.system.serverExtensions;
+        return name in yellow.system.coreExtensions;
     }
 };
 

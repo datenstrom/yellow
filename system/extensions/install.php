@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowInstall {
-    const VERSION = "0.8.11";
+    const VERSION = "0.8.12";
     const TYPE = "feature";
     const PRIORITY = "1";
     public $yellow;                 //access to API
@@ -179,8 +179,8 @@ class YellowInstall {
             $settings = array(
                 "name" => $name,
                 "language" => $language,
-                "group" => "administrator",
                 "home" => "/",
+                "access" => "create, edit, delete, upload, system, update",
                 "status" => "active",
                 "pending" => "none",
                 "hash" => $this->yellow->extensions->get("edit")->users->createHash($password),
