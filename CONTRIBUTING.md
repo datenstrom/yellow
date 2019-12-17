@@ -17,9 +17,9 @@ Everyone is welcome to contribute and give feedback.
 
 ## How to make an extension
 
-1. [Start with an example extension](https://github.com/datenstrom/yellow-extensions).
+1. [Start with an example extension](https://github.com/schulle4u/yellow-extension-example).
 2. Aim for a simple solution, first make it work then make it better.
-3. Upload your extension to GitHub, let us know if you need help. [What's possible](https://extensions.datenstrom.se/help/api).
+3. Upload your extension to GitHub, let us know if you need help.
 
 ## How to stay in touch 
 
