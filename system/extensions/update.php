@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowUpdate {
-    const VERSION = "0.8.11";
+    const VERSION = "0.8.12";
     const TYPE = "feature";
     const PRIORITY = "2";
     public $yellow;                 //access to API
@@ -434,22 +434,30 @@ class YellowUpdate {
                     }
                 }
             }
+            $rootPages = array();
+            foreach ($this->yellow->content->scanLocation("") as $page) {
+                if ($page->isAvailable() && $page->isVisible()) array_push($rootPages, $page);
+            }
             foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
                 preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
                 if (lcfirst($matches[1])=="extension") $extension = lcfirst($matches[2]);
                 if (lcfirst($matches[1])=="version") $version = lcfirst($matches[2]);
                 if (lcfirst($matches[1])=="published") $modified = strtotime($matches[2]);
+                if (lcfirst($matches[1])=="language") $language = $matches[2];
                 if (!empty($matches[1]) && !empty($matches[2]) && strposu($matches[1], "/")) {
                     $fileName = $matches[1];
                     list($dummy, $entry, $flags) = explode(",", $matches[2], 3);
-                    $fileData = $zip->getFromName($pathBase.basename($entry));
-                    $lastModified = $this->yellow->toolbox->getFileModified($fileName);
-                    $statusCode = $this->updateExtensionFile($fileName, $fileData, $modified, $lastModified, $lastPublished, $flags, $force, $extension);
+                    foreach ($rootPages as $page) {
+                        list($fileNameSource, $fileNameDestination) = $this->getExtensionsFileNames($fileName, $entry, $flags, $language, $pathBase, $page);
+                        $fileData = $zip->getFromName($fileNameSource);
+                        $lastModified = $this->yellow->toolbox->getFileModified($fileNameDestination);
+                        $statusCode = $this->updateExtensionFile($fileNameDestination, $fileData,
+                            $modified, $lastModified, $lastPublished, $flags, $force, $extension);
+                    }
                     if ($statusCode!=200) break;
                 }
             }
             $zip->close();
-            $statusCode = max($statusCode, $this->updateContentMultiLanguage($extension));
             $statusCode = max($statusCode, $this->processUpdateNotification($extension, $action));
             $this->yellow->log($statusCode==200 ? "info" : "error", ucfirst($action)." extension '".ucfirst($extension)." $version'");
             ++$this->updates;
@@ -469,8 +477,8 @@ class YellowUpdate {
             if (preg_match("/create/i", $flags) && !is_file($fileName) && !empty($fileData)) $create = true;
             if (preg_match("/update/i", $flags) && is_file($fileName) && !empty($fileData)) $update = true;
             if (preg_match("/delete/i", $flags) && is_file($fileName)) $delete = true;
-            if (preg_match("/careful/i", $flags) && is_file($fileName) && $lastModified!=$lastPublished && !$force) $update = false;
             if (preg_match("/optional/i", $flags) && $this->yellow->extensions->isExisting($extension)) $create = $update = $delete = false;
+            if (preg_match("/careful/i", $flags) && is_file($fileName) && $lastModified!=$lastPublished && !$force) $update = false;
             if ($create) {
                 if (!$this->yellow->toolbox->createFile($fileName, $fileData, true) ||
                     !$this->yellow->toolbox->modifyFile($fileName, $modified)) {
@@ -500,49 +508,32 @@ class YellowUpdate {
         }
         return $statusCode;
     }
-
-    // Update content for multi language mode
-    public function updateContentMultiLanguage($extension) {
-        $statusCode = 200;
-        if ($this->yellow->system->get("coreMultiLanguageMode") && !$this->yellow->extensions->isExisting($extension)) {
-            $pathsSource = $pathsTarget = array();
-            $pathBase = $this->yellow->system->get("coreContentDir");
-            $fileExtension = $this->yellow->system->get("coreContentExtension");
-            $fileRegex = "/^.*\\".$fileExtension."$/";
-            foreach ($this->yellow->toolbox->getDirectoryEntries($pathBase, "/.*/", true, true) as $entry) {
-                if (count($this->yellow->toolbox->getDirectoryEntries($entry, $fileRegex, false, false))) {
-                    array_push($pathsSource, $entry."/");
-                } elseif (count($this->yellow->toolbox->getDirectoryEntries($entry, "/.*/", false, true))) {
-                    array_push($pathsTarget, $entry."/");
-                }
-            }
-            if (count($pathsSource) && count($pathsTarget)) {
-                foreach ($pathsSource as $pathSource) {
-                    foreach ($pathsTarget as $pathTarget) {
-                        $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($pathSource, "/.*/", false, false);
-                        foreach ($fileNames as $fileName) {
-                            $modified = $this->yellow->toolbox->getFileModified($fileName);
-                            $fileNameTarget = $pathTarget.substru($fileName, strlenu($pathBase));
-                            if (!is_file($fileNameTarget)) {
-                                if (!$this->yellow->toolbox->copyFile($fileName, $fileNameTarget, true) ||
-                                    !$this->yellow->toolbox->modifyFile($fileNameTarget, $modified)) {
-                                    $statusCode = 500;
-                                    $this->yellow->page->error(500, "Can't write file '$fileNameTarget'!");
-                                }
-                            }
-                            if (defined("DEBUG") && DEBUG>=2) echo "YellowUpdate::updateContentMultiLanguage file:$fileNameTarget<br/>\n";
-                        }
-                    }
-                    if (!$this->yellow->toolbox->deleteDirectory($pathSource)) {
-                        $statusCode = 500;
-                        $this->yellow->page->error(500, "Can't delete path '$pathSource'!");
-                    }
-                }
-            }
-        }
-        return $statusCode;
-    }
     
+    // Return extension file names
+    public function getExtensionsFileNames($fileName, $entry, $flags, $language, $pathBase, $page) {
+        if (preg_match("/multi-language/i", $flags)) {
+            $languagesAvailable = preg_split("/\s*,\s*/", $language);
+            $languagesWanted = array($page->get("language"), "en");
+            foreach ($languagesWanted as $language) {
+                if (in_array($language, $languagesAvailable)) {
+                    $languageFound = $language;
+                    break;
+                }
+            }
+            $pathLanguage = $languageFound ? "$languageFound/" : "";
+            $fileNameSource = $pathBase.$pathLanguage.basename($entry);
+        } else {
+            $fileNameSource = $pathBase.basename($entry);
+        }
+        if ($this->yellow->system->get("coreMultiLanguageMode") && $this->yellow->lookup->isContentFile($fileName)) {
+            $contentDirLength = strlenu($this->yellow->system->get("coreContentDir"));
+            $fileNameDestination = $page->fileName.substru($fileName, $contentDirLength);
+        } else {
+            $fileNameDestination = $fileName;
+        }
+        return array($fileNameSource, $fileNameDestination);
+    }
+
     // Remove extensions
     public function removeExtensions($data) {
         $statusCode = 200;
