@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowCommand {
-    const VERSION = "0.8.9";
+    const VERSION = "0.8.10";
     const TYPE = "feature";
     const PRIORITY = "3";
     public $yellow;                     //access to API
@@ -40,7 +40,7 @@ class YellowCommand {
         $help .= "build [directory location]\n";
         $help .= "check [directory location]\n";
         $help .= "clean [directory location]\n";
-        $help .= "serve [url]\n";
+        $help .= "serve [directory url]\n";
         return $help;
     }
     
@@ -463,15 +463,21 @@ class YellowCommand {
 
     // Process command to start built-in web server
     public function processCommandServe($args) {
-        list($command, $url) = $args;
+        list($command, $path, $url) = $args;
+        if (empty($path) && is_dir($this->yellow->system->get("coreStaticDir"))) $path = $this->yellow->system->get("coreStaticDir");
         if (empty($url)) $url = "http://localhost:8000";
         list($scheme, $address, $base) = $this->yellow->lookup->getUrlInformation($url);
         if ($scheme=="http" && !empty($address)) {
             if (!preg_match("/\:\d+$/", $address)) $address .= ":8000";
             echo "Starting built-in web server on $scheme://$address/\n";
             echo "Press Ctrl-C to quit...\n";
-            system("php -S $address yellow.php", $returnStatus);
+            if (empty($path) || $path=="dynamic") {
+                system("php -S $address yellow.php", $returnStatus);
+            } else {
+                system("php -S $address -t $path", $returnStatus);
+            }
             $statusCode = $returnStatus!=0 ? 500 : 200;
+            if ($statusCode!=200) echo "ERROR starting web server: Please check your arguments!\n";
         } else {
             $statusCode = 400;
             echo "Yellow $command: Invalid arguments\n";
