@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowInstall {
-    const VERSION = "0.8.12";
+    const VERSION = "0.8.13";
     const TYPE = "feature";
     const PRIORITY = "1";
     public $yellow;                 //access to API
@@ -64,8 +64,6 @@ class YellowInstall {
         if ($status=="install") $status = $this->updateExtension($extension)==200 ? "ok" : "error";
         if ($status=="ok") $status = $this->updateUser($email, $password, $author, $language)==200 ? "ok" : "error";
         if ($status=="ok") $status = $this->updateContent($language, "Home", "/")==200 ? "ok" : "error";
-        if ($status=="ok") $status = $this->updateContent($language, "About", "/about/")==200 ? "ok" : "error";
-        if ($status=="ok") $status = $this->updateContent($language, "Footer", "/shared/footer")==200 ? "ok" : "error";
         if ($status=="ok") $status = $this->updateContent($language, "Default", "/shared/page-new-default")==200 ? "ok" : "error";
         if ($status=="ok") $status = $this->updateContent($language, "Blog", "/shared/page-new-blog")==200 ? "ok" : "error";
         if ($status=="ok") $status = $this->updateContent($language, "Wiki", "/shared/page-new-wiki")==200 ? "ok" : "error";
