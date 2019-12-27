@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowBundle {
-    const VERSION = "0.8.6";
+    const VERSION = "0.8.7";
     const TYPE = "feature";
     public $yellow;         //access to API
 
@@ -380,7 +380,7 @@ abstract class Minify
 
                 // we can safely ignore patterns for positions we've unset earlier,
                 // because we know these won't show up anymore
-                if (!isset($positions[$i])) {
+                if (array_key_exists($i, $positions) == false) {
                     continue;
                 }
 
@@ -878,10 +878,11 @@ class CSS extends Minify
              */
             $this->extractStrings();
             $this->stripComments();
+            $this->extractCalcs();
             $css = $this->replace($css);
 
             $css = $this->stripWhitespace($css);
-            $css = $this->shortenHex($css);
+            $css = $this->shortenColors($css);
             $css = $this->shortenZeroes($css);
             $css = $this->shortenFontWeights($css);
             $css = $this->stripEmptyTags($css);
@@ -1052,12 +1053,16 @@ class CSS extends Minify
      *
      * @return string
      */
-    protected function shortenHex($content)
+    protected function shortenColors($content)
     {
-        $content = preg_replace('/(?<=[: ])#([0-9a-z])\\1([0-9a-z])\\2([0-9a-z])\\3(?=[; }])/i', '#$1$2$3', $content);
+        $content = preg_replace('/(?<=[: ])#([0-9a-z])\\1([0-9a-z])\\2([0-9a-z])\\3(?:([0-9a-z])\\4)?(?=[; }])/i', '#$1$2$3$4', $content);
 
-        // we can shorten some even more by replacing them with their color name
+        // remove alpha channel if it's pointless...
+        $content = preg_replace('/(?<=[: ])#([0-9a-z]{6})ff?(?=[; }])/i', '#$1', $content);
+        $content = preg_replace('/(?<=[: ])#([0-9a-z]{3})f?(?=[; }])/i', '#$1', $content);
+
         $colors = array(
+            // we can shorten some even more by replacing them with their color name
             '#F0FFFF' => 'azure',
             '#F5F5DC' => 'beige',
             '#A52A2A' => 'brown',
@@ -1085,10 +1090,13 @@ class CSS extends Minify
             '#FF6347' => 'tomato',
             '#EE82EE' => 'violet',
             '#F5DEB3' => 'wheat',
+            // or the other way around
+            'WHITE' => '#fff',
+            'BLACK' => '#000',
         );
 
         return preg_replace_callback(
-            '/(?<=[: ])('.implode(array_keys($colors), '|').')(?=[; }])/i',
+            '/(?<=[: ])('.implode('|', array_keys($colors)).')(?=[; }])/i',
             function ($match) use ($colors) {
                 return $colors[strtoupper($match[0])];
             },
@@ -1130,11 +1138,7 @@ class CSS extends Minify
         // `5px - 0px` is valid, but `5px - 0` is not
         // `10px * 0` is valid (equates to 0), and so is `10 * 0px`, but
         // `10 * 0` is invalid
-        // best to just leave `calc()`s alone, even if they could be optimized
-        // (which is a whole other undertaking, where units & order of
-        // operations all need to be considered...)
-        $calcs = $this->findCalcs($content);
-        $content = str_replace($calcs, array_keys($calcs), $content);
+        // we've extracted calcs earlier, so we don't need to worry about this
 
         // reusable bits of code throughout these regexes:
         // before & after are used to make sure we don't match lose unintended
@@ -1171,9 +1175,6 @@ class CSS extends Minify
         $content = preg_replace('/flex:([0-9]+\s[0-9]+\s)0([;\}])/', 'flex:${1}0%${2}', $content);
         $content = preg_replace('/flex-basis:0([;\}])/', 'flex-basis:0%${1}', $content);
 
-        // restore `calc()` expressions
-        $content = str_replace(array_keys($calcs), $calcs, $content);
-
         return $content;
     }
 
@@ -1197,6 +1198,17 @@ class CSS extends Minify
      */
     protected function stripComments()
     {
+        // PHP only supports $this inside anonymous functions since 5.4
+        $minifier = $this;
+        $callback = function ($match) use ($minifier) {
+            $count = count($minifier->extracted);
+            $placeholder = '/*'.$count.'*/';
+            $minifier->extracted[$placeholder] = $match[0];
+
+            return $placeholder;
+        };
+        $this->registerPattern('/\n?\/\*(!|.*?@license|.*?@preserve).*?\*\/\n?/s', $callback);
+
         $this->registerPattern('/\/\*.*?\*\//s', '');
     }
 
@@ -1219,8 +1231,8 @@ class CSS extends Minify
         // remove whitespace around meta characters
         // inspired by stackoverflow.com/questions/15195750/minify-compress-css-with-regex
         $content = preg_replace('/\s*([\*$~^|]?+=|[{};,>~]|!important\b)\s*/', '$1', $content);
-        $content = preg_replace('/([\[(:])\s+/', '$1', $content);
-        $content = preg_replace('/\s+([\]\)])/', '$1', $content);
+        $content = preg_replace('/([\[(:>\+])\s+/', '$1', $content);
+        $content = preg_replace('/\s+([\]\)>\+])/', '$1', $content);
         $content = preg_replace('/\s+(:)(?![^\}]*\{)/', '$1', $content);
 
         // whitespace around + and - can only be stripped inside some pseudo-
@@ -1237,18 +1249,13 @@ class CSS extends Minify
     }
 
     /**
-     * Find all `calc()` occurrences.
-     *
-     * @param string $content The CSS content to find `calc()`s in.
-     *
-     * @return string[]
+     * Replace all `calc()` occurrences.
      */
-    protected function findCalcs($content)
+    protected function extractCalcs()
     {
-        $results = array();
-        preg_match_all('/calc(\(.+?)(?=$|;|calc\()/', $content, $matches, PREG_SET_ORDER);
-
-        foreach ($matches as $match) {
+        // PHP only supports $this inside anonymous functions since 5.4
+        $minifier = $this;
+        $callback = function ($match) use ($minifier) {
             $length = strlen($match[1]);
             $expr = '';
             $opened = 0;
@@ -1262,11 +1269,17 @@ class CSS extends Minify
                     break;
                 }
             }
+            $rest = str_replace($expr, '', $match[1]);
+            $expr = trim(substr($expr, 1, -1));
 
-            $results['calc('.count($results).')'] = 'calc'.$expr;
-        }
+            $count = count($minifier->extracted);
+            $placeholder = 'calc('.$count.')';
+            $minifier->extracted[$placeholder] = 'calc('.$expr.')';
 
-        return $results;
+            return $placeholder.$rest;
+        };
+
+        $this->registerPattern('/calc(\(.+?)(?=$|;|calc\()/', $callback);
     }
 
     /**
@@ -1482,11 +1495,21 @@ class JS extends Minify
      */
     protected function stripComments()
     {
+        // PHP only supports $this inside anonymous functions since 5.4
+        $minifier = $this;
+        $callback = function ($match) use ($minifier) {
+            $count = count($minifier->extracted);
+            $placeholder = '/*'.$count.'*/';
+            $minifier->extracted[$placeholder] = $match[0];
+
+            return $placeholder;
+        };
+        // multi-line comments
+        $this->registerPattern('/\n?\/\*(!|.*?@license|.*?@preserve).*?\*\/\n?/s', $callback);
+        $this->registerPattern('/\/\*.*?\*\//s', '');
+
         // single-line comments
         $this->registerPattern('/\/\/.*$/m', '');
-
-        // multi-line comments
-        $this->registerPattern('/\/\*.*?\*\//s', '');
     }
 
     /**
@@ -1525,7 +1548,7 @@ class JS extends Minify
         // closing the regex)
         // then also ignore bare `/` inside `[]`, where they don't need to be
         // escaped: anything inside `[]` can be ignored safely
-        $pattern = '\\/(?:[^\\[\\/\\\\\n\r]+|(?:\\\\.)+|(?:\\[(?:[^\\]\\\\\n\r]+|(?:\\\\.)+)+\\])+)++\\/[gimuy]*';
+        $pattern = '\\/(?!\*)(?:[^\\[\\/\\\\\n\r]++|(?:\\\\.)++|(?:\\[(?:[^\\]\\\\\n\r]++|(?:\\\\.)++)++\\])++)++\\/[gimuy]*';
 
         // a regular expression can only be followed by a few operators or some
         // of the RegExp methods (a `\` followed by a variable or value is
@@ -1622,7 +1645,9 @@ class JS extends Minify
             array(
                 '/('.implode('|', $operatorsBefore).')\s+/',
                 '/\s+('.implode('|', $operatorsAfter).')/',
-            ), '\\1', $content
+            ),
+            '\\1',
+            $content
         );
 
         // make sure + and - can't be mistaken for, or joined into ++ and --
@@ -1630,7 +1655,9 @@ class JS extends Minify
             array(
                 '/(?<![\+\-])\s*([\+\-])(?![\+\-])/',
                 '/(?<![\+\-])([\+\-])\s*(?![\+\-])/',
-            ), '\\1', $content
+            ),
+            '\\1',
+            $content
         );
 
         // collapse whitespace around reserved words into single space

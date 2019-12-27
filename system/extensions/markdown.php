@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowMarkdown {
-    const VERSION = "0.8.10";
+    const VERSION = "0.8.11";
     const TYPE = "feature";
     public $yellow;         //access to API
     
@@ -3928,7 +3928,7 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser {
     public function _doHeaders_callback_setext($matches) {
         if ($matches[3]=="-" && preg_match('{^- }', $matches[1])) return $matches[0];
         $text = $matches[1];
-        $level = $matches[3]{0}=="=" ? 1 : 2;
+        $level = $matches[3][0]=="=" ? 1 : 2;
         $attr = $this->doExtraAttributes("h$level", $dummy =& $matches[2]);
         if (empty($attr) && $level>=2 && $level<=3) $attr = $this->getIdAttribute($text);
         $output = "<h$level$attr>".$this->runSpanGamut($text)."</h$level>";
