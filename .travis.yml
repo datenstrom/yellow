@@ -1,4 +1,4 @@
-# Automated tests for Travis CI, https://travis-ci.org/datenstrom
+# Datenstrom Yellow tests, https://travis-ci.org/datenstrom
 
 language: php
 php:
