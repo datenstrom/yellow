@@ -4,7 +4,9 @@ Datenstrom Yellow ist für Menschen die Webseiten machen.
 
 1. [Datenstrom Yellow herunterladen und entpacken](https://github.com/datenstrom/yellow/archive/master.zip).
 2. Kopiere alle Dateien auf deinen Webserver.
-3. Öffne deine Webseite in einem Webbrowser. [Mehr erfahren](https://extensions.datenstrom.se/de/help/).
+3. Öffne deine Webseite in einem Webbrowser.
+
+Hast du Fragen? [Support finden](https://extensions.datenstrom.se/de/help/) und [Richtlinien zum Mitmachen](CONTRIBUTING-de.md).
 
 <p>
 <a href="README-de.md"><img src="https://raw.githubusercontent.com/datenstrom/yellow-extensions/master/features/help/language-de.png" width="15" height="15" alt="Deutsch">&nbsp; Deutsch</a>&nbsp;
