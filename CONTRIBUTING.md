@@ -13,7 +13,7 @@ Everyone is welcome to contribute and give feedback.
 
 1. [Submit a new issue for each idea](https://github.com/datenstrom/yellow/issues).
 2. Describe your idea, how it would make your everyday life easier.
-3. Vote for good ideas, add a thumbs-up to eveything you like. [What's popular](https://github.com/datenstrom/yellow/issues?q=is%3Aopen+is%3Aissue+sort%3Areactions-%2B1-desc+label%3Aidea).
+3. Vote for good ideas, add a thumbs-up to everything you like. [What's popular?](https://github.com/datenstrom/yellow/issues?q=is%3Aopen+is%3Aissue+sort%3Areactions-%2B1-desc+label%3Aidea)
 
 ## How to make an extension
 
@@ -24,5 +24,10 @@ Everyone is welcome to contribute and give feedback.
 ## How to stay in touch 
 
 1. [Click on “Watch” at the top](https://github.com/datenstrom/yellow).
-2. Answer questions and problems from other people.
-3. Be notified of new releases in your mailbox. [What's new](https://github.com/datenstrom/yellow/releases).
+2. Answer questions and problems from others when you have time.
+3. Be notified of new releases in your mailbox. [What's new?](https://github.com/datenstrom/yellow/releases)
+
+<p>
+<a href="CONTRIBUTING-de.md"><img src="https://raw.githubusercontent.com/datenstrom/yellow-extensions/master/features/help/language-de.png" width="15" height="15" alt="Deutsch">&nbsp; Deutsch</a>&nbsp;
+<a href="CONTRIBUTING.md"><img src="https://raw.githubusercontent.com/datenstrom/yellow-extensions/master/features/help/language-en.png" width="15" height="15" alt="English">&nbsp; English</a>&nbsp;
+</p>
