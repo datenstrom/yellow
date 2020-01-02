@@ -19,12 +19,12 @@ Everyone is welcome to contribute and give feedback.
 
 1. [Start with the example extension](https://github.com/schulle4u/yellow-extension-example) and [basic extension](https://github.com/schulle4u/yellow-extension-basic).
 2. Aim for a simple solution, first make it work then make it better.
-3. Upload your extension to GitHub, let us know if you need help.
+3. Publish your extension, let us know if you need help. [What's available?](https://github.com/datenstrom/yellow-extensions)
 
 ## How to stay in touch 
 
 1. [Click on “Watch” at the top](https://github.com/datenstrom/yellow).
-2. Answer questions and problems from others when you have time.
+2. Answer questions and discus problems with others, if you enjoy it.
 3. Be notified of new releases in your mailbox. [What's new?](https://github.com/datenstrom/yellow/releases)
 
 <p>

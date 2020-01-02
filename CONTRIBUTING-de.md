@@ -19,12 +19,12 @@ Jeder ist eingeladen mitzumachen und Feedback zu geben.
 
 1. [Beginne mit der Example-Erweiterung](https://github.com/schulle4u/yellow-extension-example) und [Basic-Erweiterung](https://github.com/schulle4u/yellow-extension-basic).
 2. Strebe eine einfache Lösung an, erst funktionieren lassen, dann besser machen.
-3. Lade deine Erweiterung auf GitHub hoch, lass uns wissen falls du Hilfe benötigst.
+3. Veröffentliche deine Erweiterung, lass uns wissen falls du Hilfe benötigst. [Was gibt es?](https://github.com/datenstrom/yellow-extensions)
 
 ## Wie man in Verbindung bleibt 
 
 1. [Klicke ganz oben auf "Watch"](https://github.com/datenstrom/yellow).
-2. Beantworte Fragen und Problem von anderen, wenn du Zeit hast.
+2. Beantworte Fragen und diskutiere Probleme mit anderen, wenn dir das Spass macht.
 3. Werde über neue Versionen in deiner Mailbox informiert. [Was ist neu?](https://github.com/datenstrom/yellow/releases)
 
 <p>
