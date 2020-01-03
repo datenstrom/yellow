@@ -1,10 +1,10 @@
 <?php
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/features/update
-// Copyright (c) 2013-2019 Datenstrom, https://datenstrom.se
+// Copyright (c) 2013-2020 Datenstrom, https://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 class YellowUpdate {
-    const VERSION = "0.8.12";
+    const VERSION = "0.8.13";
     const TYPE = "feature";
     const PRIORITY = "2";
     public $yellow;                 //access to API
@@ -367,7 +367,8 @@ class YellowUpdate {
     public function showExtensions() {
         list($statusCode, $dataLatest) = $this->getExtensionsVersion(true, true);
         foreach ($dataLatest as $key=>$value) {
-            list($version, $url, $description) = explode(",", $value, 3);
+            list($version, $type, $url, $description) = explode(",", $value, 4);
+            if (substru($type, 0, 4)=="http") list($version, $url, $description) = explode(",", $value, 3); //TODO: remove later, converts old format
             echo ucfirst($key).": $description\n";
         }
         if ($statusCode!=200) echo "ERROR checking extensions: ".$this->yellow->page->get("pageError")."\n";
@@ -381,7 +382,8 @@ class YellowUpdate {
         $fileExtension = $this->yellow->system->get("coreDownloadExtension");
         foreach ($data as $key=>$value) {
             $fileName = $path.$this->yellow->lookup->normaliseName($key, true, false, true).".zip";
-            list($version, $url) = explode(",", $value);
+            list($version, $type, $url) = explode(",", $value);
+            if (substru($type, 0, 4)=="http") list($version, $url) = explode(",", $value); //TODO: remove later, converts old format
             list($statusCode, $fileData) = $this->getExtensionFile($url);
             if (empty($fileData) || !$this->yellow->toolbox->createFile($fileName.$fileExtension, $fileData)) {
                 $statusCode = 500;
