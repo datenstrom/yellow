@@ -19,7 +19,7 @@ class YellowEdit {
         $this->merge = new YellowEditMerge($yellow);
         $this->yellow->system->setDefault("editLocation", "/edit/");
         $this->yellow->system->setDefault("editUploadNewLocation", "/media/@group/@filename");
-        $this->yellow->system->setDefault("editUploadExtensions", ".gif, .jpg, .pdf, .png, .svg, .tgz, .zip");
+        $this->yellow->system->setDefault("editUploadExtensions", ".gif, .jpg, .pdf, .png, .svg, .zip");
         $this->yellow->system->setDefault("editKeyboardShortcuts", "ctrl+b bold, ctrl+i italic, ctrl+k strikethrough, ctrl+e code, ctrl+s save, ctrl+alt+p preview");
         $this->yellow->system->setDefault("editToolbarButtons", "auto");
         $this->yellow->system->setDefault("editEndOfLine", "auto");
