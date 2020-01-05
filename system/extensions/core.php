@@ -1,10 +1,10 @@
 <?php
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/features/core
-// Copyright (c) 2013-2019 Datenstrom, https://datenstrom.se
+// Copyright (c) 2013-2020 Datenstrom, https://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 class YellowCore {
-    const VERSION = "0.8.8";
+    const VERSION = "0.8.9";
     const TYPE = "feature";
     public $page;           //current page
     public $content;        //content files from file system
