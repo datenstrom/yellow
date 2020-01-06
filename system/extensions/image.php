@@ -1,10 +1,10 @@
 <?php
 // Image extension, https://github.com/datenstrom/yellow-extensions/tree/master/features/image
-// Copyright (c) 2013-2019 Datenstrom, https://datenstrom.se
+// Copyright (c) 2013-2020 Datenstrom, https://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 class YellowImage {
-    const VERSION = "0.8.4";
+    const VERSION = "0.8.5";
     const TYPE = "feature";
     public $yellow;             //access to API
     public $graphicsLibrary;    //graphics library support? (boolean)
@@ -27,7 +27,7 @@ class YellowImage {
         $output = null;
         if ($name=="image" && $type=="inline") {
             if (!$this->graphicsLibrary) {
-                $this->yellow->page->error(500, "Image extension requires GD library with gif/jpg/png support!");
+                $this->yellow->page->error(500, "Image extension requires GD library and EXIF library!");
                 return $output;
             }
             list($name, $alt, $style, $width, $height) = $this->yellow->toolbox->getTextArgs($text);
@@ -62,6 +62,7 @@ class YellowImage {
                 list($widthOutput, $heightOutput) = $this->getImageDimensionsFit($widthInput, $heightInput, $widthMax, $heightMax);
                 $image = $this->loadImage($fileName, $type);
                 $image = $this->resizeImage($image, $widthInput, $heightInput, $widthOutput, $heightOutput);
+                $image = $this->orientImage($image, $fileName, $type);
                 if (!$this->saveImage($image, $fileName, $type, $this->yellow->system->get("imageUploadJpgQuality"))) {
                     $file->error(500, "Can't write file '$fileName'!");
                 }
@@ -117,6 +118,7 @@ class YellowImage {
             if ($this->isFileNotUpdated($fileName, $fileNameOutput)) {
                 $image = $this->loadImage($fileName, $type);
                 $image = $this->resizeImage($image, $widthInput, $heightInput, $widthOutput, $heightOutput);
+                $image = $this->orientImage($image, $fileName, $type);
                 if (is_file($fileNameOutput)) $this->yellow->toolbox->deleteFile($fileNameOutput);
                 if (!$this->saveImage($image, $fileNameOutput, $type, $this->yellow->system->get("imageThumbnailJpgQuality")) ||
                     !$this->yellow->toolbox->modifyFile($fileNameOutput, $this->yellow->toolbox->getFileModified($fileName))) {
@@ -183,6 +185,25 @@ class YellowImage {
             imagecopyresampled($imageOutput, $image, $widthDiff/-2, 0, 0, 0, $widthFit, $heightOutput, $widthInput, $heightInput);
         }
         return $imageOutput;
+    }
+    
+    // Orient image automatically
+    public function orientImage($image, $fileName, $type) {
+        if ($type=="jpg") {
+            $exif = @exif_read_data($fileName);
+            if ($exif && isset($exif["Orientation"])) {
+                switch ($exif["Orientation"]) {
+                    case 2: imageflip($image, IMG_FLIP_HORIZONTAL); break;
+                    case 3: $image = imagerotate($image, 180, 0); break;
+                    case 4: imageflip($image, IMG_FLIP_VERTICAL); break;
+                    case 5: $image = imagerotate($image, 90, 0); imageflip($image, IMG_FLIP_VERTICAL); break;
+                    case 6: $image = imagerotate($image, -90, 0); break;
+                    case 7: $image = imagerotate($image, 90, 0); imageflip($image, IMG_FLIP_HORIZONTAL); break;
+                    case 8: $image = imagerotate($image, 90, 0); break;
+                }
+            }
+        }
+        return $image;
     }
     
     // Return value according to unit
@@ -255,7 +276,6 @@ class YellowImage {
 
     // Check graphics library support
     public function isGraphicsLibrary() {
-        return extension_loaded("gd") && function_exists("gd_info") &&
-            ((imagetypes()&(IMG_GIF|IMG_JPG|IMG_PNG))==(IMG_GIF|IMG_JPG|IMG_PNG));
+        return extension_loaded("gd") && function_exists("gd_info") && extension_loaded("exif");
     }
 }
