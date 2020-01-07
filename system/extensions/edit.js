@@ -826,7 +826,7 @@ yellow.edit = {
             request.onload = function() { if (this.status==200) { thisObject.uploadFileDone.call(thisObject, elementText, this.responseText); } else { thisObject.uploadFileError.call(thisObject, elementText, this.responseText); } };
             request.send(formData);
         } else {
-            var textError = extensions.indexOf(extension)!=-1 ? "file too big!" : "format not supported!";
+            var textError = extensions.indexOf(extension)!=-1 ? "file too big!" : "file format not supported!";
             var textNew = "[Can't upload file '"+file.name+"', "+textError+"]";
             yellow.editor.setMarkdown(elementText, textNew, "insert");
         }
