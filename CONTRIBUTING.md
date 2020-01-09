@@ -23,7 +23,7 @@ Everyone is welcome to contribute and give feedback.
 
 ## How to stay in touch 
 
-1. [Click on “Watch” at the top](https://github.com/datenstrom/yellow).
+1. [Click on 'Watch' at the top](https://github.com/datenstrom/yellow).
 2. Answer questions and discus problems with others, if you enjoy it.
 3. Be notified of new releases in your mailbox. [What's new?](https://github.com/datenstrom/yellow/releases)
 
