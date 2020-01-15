@@ -1,5 +1,6 @@
 <div class="footer" role="contentinfo">
 <div class="siteinfo">
+<?php if ($page = $this->yellow->content->shared("footer")) $this->yellow->page->setPage("footer", $page) ?>
 <?php if ($this->yellow->page->isPage("footer")) echo $this->yellow->page->getPage("footer")->getContent() ?>
 <div class="siteinfo-banner"></div>
 </div>

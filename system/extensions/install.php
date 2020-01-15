@@ -1,10 +1,10 @@
 <?php
 // Install extension, https://github.com/datenstrom/yellow
-// Copyright (c) 2013-2019 Datenstrom, https://datenstrom.se
+// Copyright (c) 2013-2020 Datenstrom, https://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 class YellowInstall {
-    const VERSION = "0.8.13";
+    const VERSION = "0.8.14";
     const TYPE = "feature";
     const PRIORITY = "1";
     public $yellow;                 //access to API
@@ -35,7 +35,8 @@ class YellowInstall {
     public function processCommandInstall() {
         $statusCode = $this->updateLog();
         if ($statusCode==200) $statusCode = $this->updateLanguage();
-        if ($statusCode==200) $statusCode = $this->updateSettings($this->getSystemData());
+        if ($statusCode==200) $statusCode = $this->updateText("en");
+        if ($statusCode==200) $statusCode = $this->updateSystem($this->getSystemData());
         if ($statusCode==200) $statusCode = $this->removeFiles();
         if ($statusCode==200) {
             $statusCode = 0;
@@ -63,11 +64,13 @@ class YellowInstall {
         $this->yellow->page->safeMode = false;
         if ($status=="install") $status = $this->updateExtension($extension)==200 ? "ok" : "error";
         if ($status=="ok") $status = $this->updateUser($email, $password, $author, $language)==200 ? "ok" : "error";
-        if ($status=="ok") $status = $this->updateContent($language, "Home", "/")==200 ? "ok" : "error";
-        if ($status=="ok") $status = $this->updateContent($language, "Default", "/shared/page-new-default")==200 ? "ok" : "error";
-        if ($status=="ok") $status = $this->updateContent($language, "Blog", "/shared/page-new-blog")==200 ? "ok" : "error";
-        if ($status=="ok") $status = $this->updateContent($language, "Wiki", "/shared/page-new-wiki")==200 ? "ok" : "error";
-        if ($status=="ok") $status = $this->updateSettings($this->getSystemData())==200 ? "ok" : "error";
+        if ($status=="ok") $status = $this->updateContent($language, "installHome", "/")==200 ? "ok" : "error";
+        if ($status=="ok") $status = $this->updateContent($language, "installDefault", "/shared/page-new-default")==200 ? "ok" : "error";
+        if ($status=="ok") $status = $this->updateContent($language, "installBlog", "/shared/page-new-blog")==200 ? "ok" : "error";
+        if ($status=="ok") $status = $this->updateContent($language, "installWiki", "/shared/page-new-wiki")==200 ? "ok" : "error";
+        if ($status=="ok") $status = $this->updateContent($language, "coreError404", "/shared/page-error-404")==200 ? "ok" : "error";
+        if ($status=="ok") $status = $this->updateText($language)==200 ? "ok" : "error";
+        if ($status=="ok") $status = $this->updateSystem($this->getSystemData())==200 ? "ok" : "error";
         if ($status=="ok") $status = $this->removeFiles()==200 ? "done" : "error";
         if ($status=="done") {
             $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
@@ -179,12 +182,12 @@ class YellowInstall {
                 "language" => $language,
                 "home" => "/",
                 "access" => "create, edit, delete, upload, system, update",
-                "status" => "active",
-                "pending" => "none",
                 "hash" => $this->yellow->extensions->get("edit")->users->createHash($password),
                 "stamp" => $this->yellow->extensions->get("edit")->users->createStamp(),
+                "pending" => "none",
                 "failed" => "0",
-                "modified" => time());
+                "modified" => time(),
+                "status" => "active");
             if (!$this->yellow->extensions->get("edit")->users->save($fileNameUser, $email, $settings)) {
                 $statusCode = 500;
                 $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
@@ -200,11 +203,11 @@ class YellowInstall {
         $fileName = $this->yellow->lookup->findFileFromLocation($location);
         $fileData = strreplaceu("\r\n", "\n", $this->yellow->toolbox->readFile($fileName));
         if (!empty($fileData) && $language!="en") {
-            $titleOld = "Title: ".$this->yellow->text->getText("install{$name}Title", "en");
-            $titleNew = "Title: ".$this->yellow->text->getText("install{$name}Title", $language);
-            $textOld = strreplaceu("\\n", "\n", $this->yellow->text->getText("install{$name}Text", "en"));
-            $textNew = strreplaceu("\\n", "\n", $this->yellow->text->getText("install{$name}Text", $language));
-            if ($name!="Footer") $fileData = strreplaceu($titleOld, $titleNew, $fileData);
+            $titleOld = "Title: ".$this->yellow->text->getText("{$name}Title", "en");
+            $titleNew = "Title: ".$this->yellow->text->getText("{$name}Title", $language);
+            $textOld = strreplaceu("\\n", "\n", $this->yellow->text->getText("{$name}Text", "en"));
+            $textNew = strreplaceu("\\n", "\n", $this->yellow->text->getText("{$name}Text", $language));
+            $fileData = strreplaceu($titleOld, $titleNew, $fileData);
             $fileData = strreplaceu($textOld, $textNew, $fileData);
             if (!$this->yellow->toolbox->createFile($fileName, $fileData)) {
                 $statusCode = 500;
@@ -214,8 +217,26 @@ class YellowInstall {
         return $statusCode;
     }
     
-    // Update settings
-    public function updateSettings($settings) {
+    // Update text settings
+    public function updateText($language) {
+        $statusCode = 200;
+        $fileName = $this->yellow->system->get("coreSettingDir").$this->yellow->system->get("coreTextFile");
+        $fileData = $this->yellow->toolbox->readFile($fileName);
+        if (count($this->yellow->toolbox->getTextLines($fileData))<4) {
+            $fileData .= "Language: $language\n";
+            $fileData .= "CoreDateFormatMedium: ".$this->yellow->text->getText("coreDateFormatMedium", $language)."\n";
+            $fileData .= "EditLoginTitle: ".$this->yellow->text->getText("editLoginTitle", $language)."\n";
+            $fileData .= "picture.jpg: ".$this->yellow->text->getText("installExampleImage", $language)."\n";
+            if (!$this->yellow->toolbox->createFile($fileName, $fileData)) {
+                $statusCode = 500;
+                $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
+            }
+        }
+        return $statusCode;
+    }
+    
+    // Update system settings
+    public function updateSystem($settings) {
         $statusCode = 200;
         $fileName = $this->yellow->system->get("coreSettingDir").$this->yellow->system->get("coreSystemFile");
         if (!$this->yellow->system->save($fileName, $settings)) {

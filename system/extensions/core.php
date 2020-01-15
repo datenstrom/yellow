@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowCore {
-    const VERSION = "0.8.9";
+    const VERSION = "0.8.10";
     const TYPE = "feature";
     public $page;           //current page
     public $content;        //content files from file system
@@ -32,10 +32,6 @@ class YellowCore {
         $this->system->setDefault("theme", "default");
         $this->system->setDefault("parser", "markdown");
         $this->system->setDefault("status", "public");
-        $this->system->setDefault("navigation", "navigation");
-        $this->system->setDefault("header", "header");
-        $this->system->setDefault("footer", "footer");
-        $this->system->setDefault("sidebar", "sidebar");
         $this->system->setDefault("coreStaticUrl", "");
         $this->system->setDefault("coreStaticDefaultFile", "index.html");
         $this->system->setDefault("coreStaticErrorFile", "404.html");
@@ -64,6 +60,7 @@ class YellowCore {
         $this->system->setDefault("coreContentHomeDir", "home/");
         $this->system->setDefault("coreContentSharedDir", "shared/");
         $this->system->setDefault("coreContentDefaultFile", "page.md");
+        $this->system->setDefault("coreContentErrorFile", "page-error-(.*).md");
         $this->system->setDefault("coreContentExtension", ".md");
         $this->system->setDefault("coreDownloadExtension", ".download");
         $this->system->setDefault("coreSystemFile", "system.ini");
@@ -169,13 +166,15 @@ class YellowCore {
     // Read page
     public function readPage($scheme, $address, $base, $location, $fileName, $cacheable, $statusCode, $pageError) {
         if ($statusCode>=400) {
-            $language = $this->lookup->findLanguageFromFile($fileName, $this->system->get("language"));
-            if ($this->text->isExisting("error${statusCode}Title", $language)) {
-                $rawData = "---\nTitle:".$this->text->getText("error${statusCode}Title", $language)."\n";
-                $rawData .= "Layout:error\nSidebar:none\nLanguage:$language\n---\n".$this->text->getText("error${statusCode}Text", $language);
+            $locationError = $this->content->getHomeLocation($page->location).$this->system->get("coreContentSharedDir");
+            $fileNameError = $this->lookup->findFileFromLocation($locationError, true).$this->system->get("coreContentErrorFile");
+            $fileNameError = strreplaceu("(.*)", $statusCode, $fileNameError);
+            if (is_file($fileNameError)) {
+                $rawData = $this->toolbox->readFile($fileNameError);
             } else {
-                $rawData = "---\nTitle:".$this->toolbox->getHttpStatusFormatted($statusCode, true)."\n";
-                $rawData .= "Layout:error\nSidebar:none\nLanguage:en\n---\n[yellow error]";
+                $language = $this->lookup->findLanguageFromFile($fileName, $this->system->get("language"));
+                $rawData = "---\nTitle:".$this->text->getText("coreError${statusCode}Title", $language)."\n";
+                $rawData .= "Layout:error\n---\n".$this->text->getText("coreError${statusCode}Text", $language);
             }
             $cacheable = false;
         } else {
@@ -444,7 +443,7 @@ class YellowPage {
             $this->set("title", $this->yellow->toolbox->createTextTitle($this->location));
             $this->set("language", $this->yellow->lookup->findLanguageFromFile($this->fileName, $this->yellow->system->get("language")));
             $this->set("modified", date("Y-m-d H:i:s", $this->yellow->toolbox->getFileModified($this->fileName)));
-            $this->parseMetaRaw(array("sitename", "author", "layout", "theme", "parser", "status", "navigation", "header", "footer", "sidebar"));
+            $this->parseMetaRaw(array("sitename", "author", "layout", "theme", "parser", "status"));
             $titleHeader = ($this->location==$this->yellow->content->getHomeLocation($this->location)) ?
                 $this->get("sitename") : $this->get("title")." - ".$this->get("sitename");
             if (!$this->isExisting("titleContent")) $this->set("titleContent", $this->get("title"));
@@ -479,6 +478,10 @@ class YellowPage {
             $value = $this->yellow->system->get($key);
             if (!empty($key) && !strempty($value)) $this->set($key, $value);
         }
+        $this->set("navigation", "navigation"); //TODO: remove later, for backwards compatibility
+        $this->set("header", "header");
+        $this->set("sidebar", "sidebar");
+        $this->set("footer", "footer");
         if (preg_match("/^(\xEF\xBB\xBF)?\-\-\-[\r\n]+(.+?)\-\-\-[\r\n]+/s", $this->rawData, $parts)) {
             $this->metaDataOffsetBytes = strlenb($parts[0]);
             foreach (preg_split("/[\r\n]+/", $parts[2]) as $line) {
@@ -514,7 +517,8 @@ class YellowPage {
                 $this->parserData = preg_replace("/\[yellow error\]/i", $this->get("pageError"), $this->parserData);
             }
             if (!$this->isExisting("description")) {
-                $this->set("description", $this->yellow->toolbox->createTextDescription($this->parserData, 150));
+                $description = $this->yellow->toolbox->createTextDescription($this->parserData, 150);
+                $this->set("description", !empty($description) ? $description : $this->get("title"));
             }
             if (defined("DEBUG") && DEBUG>=3) echo "YellowPage::parseContent location:".$this->location."<br/>\n";
         }
@@ -651,7 +655,7 @@ class YellowPage {
         if (!empty($format)) {
             $format = $this->yellow->text->get($format);
         } else {
-            $format = $this->yellow->text->get("dateFormatMedium");
+            $format = $this->yellow->text->get("coreDateFormatMedium");
         }
         return $this->yellow->text->getDateFormatted(strtotime($this->get($key)), $format);
     }
@@ -666,7 +670,7 @@ class YellowPage {
         if (!empty($format)) {
             $format = $this->yellow->text->get($format);
         } else {
-            $format = $this->yellow->text->get("dateFormatMedium");
+            $format = $this->yellow->text->get("coreDateFormatMedium");
         }
         return $this->yellow->text->getDateRelative(strtotime($this->get($key)), $format, $daysLimit);
     }
@@ -1269,6 +1273,7 @@ class YellowContent {
             $location = $this->getHomeLocation($this->yellow->page->location).$this->yellow->system->get("coreContentSharedDir").$name;
             $page = $this->find($location);
         }
+        if ($page) $page->setPage("main", $this->yellow->page);
         return $page;
     }
     
@@ -1649,8 +1654,8 @@ class YellowText {
     
     // Return human readable date, custom date format
     public function getDateFormatted($timestamp, $format) {
-        $dateMonths = preg_split("/\s*,\s*/", $this->get("dateMonths"));
-        $dateWeekdays = preg_split("/\s*,\s*/", $this->get("dateWeekdays"));
+        $dateMonths = preg_split("/\s*,\s*/", $this->get("coreDateMonths"));
+        $dateWeekdays = preg_split("/\s*,\s*/", $this->get("coreDateWeekdays"));
         $month = $dateMonths[date("n", $timestamp) - 1];
         $weekday = $dateWeekdays[date("N", $timestamp) - 1];
         $timeZone = $this->yellow->system->get("coreServerTimezone");
@@ -1669,7 +1674,7 @@ class YellowText {
     public function getDateRelative($timestamp, $format, $daysLimit) {
         $timeDifference = time() - $timestamp;
         $days = abs(intval($timeDifference / 86400));
-        $tokens = preg_split("/\s*,\s*/", $this->get($timeDifference>=0 ? "datePast" : "dateFuture"));
+        $tokens = preg_split("/\s*,\s*/", $this->get($timeDifference>=0 ? "coreDatePast" : "coreDateFuture"));
         if ($days<=$daysLimit || $daysLimit==0) {
             if ($days==0) {
                 $output = $tokens[0];
@@ -1709,11 +1714,11 @@ class YellowText {
     // Normalise date into known format
     public function normaliseDate($text) {
         if (preg_match("/^\d+\-\d+$/", $text)) {
-            $output = $this->getDateFormatted(strtotime($text), $this->get("dateFormatShort"));
+            $output = $this->getDateFormatted(strtotime($text), $this->get("coreDateFormatShort"));
         } elseif (preg_match("/^\d+\-\d+\-\d+$/", $text)) {
-            $output = $this->getDateFormatted(strtotime($text), $this->get("dateFormatMedium"));
+            $output = $this->getDateFormatted(strtotime($text), $this->get("coreDateFormatMedium"));
         } elseif (preg_match("/^\d+\-\d+\-\d+ \d+\:\d+$/", $text)) {
-            $output = $this->getDateFormatted(strtotime($text), $this->get("dateFormatLong"));
+            $output = $this->getDateFormatted(strtotime($text), $this->get("coreDateFormatLong"));
         } else {
             $output = $text;
         }

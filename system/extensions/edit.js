@@ -595,8 +595,7 @@ yellow.edit = {
         }
         if (status=="preview" && !elementText.readOnly) this.showPreview(elementText, elementPreview);
         if (status=="save" && !elementText.readOnly && this.paneAction!="delete") this.processSubmit("action:"+this.paneAction);
-        if (status=="help") window.open(this.getText("HelpUrl", "yellow"), "_blank");
-        if (status=="markdown") window.open(this.getText("MarkdownUrl", "yellow"), "_blank");
+        if (status=="help") window.open(this.getText("YellowHelpUrl"), "_blank");
         if (this.isExpandable(status)) {
             this.showPopup("yellow-popup-"+status, status);
         } else {
@@ -664,7 +663,7 @@ yellow.edit = {
     // Process help
     processHelp: function() {
         this.hidePane(this.paneId);
-        window.open(this.getText("HelpUrl", "yellow"), "_self");
+        window.open(this.getText("YellowHelpUrl"), "_self");
     },
     
     // Create popup
