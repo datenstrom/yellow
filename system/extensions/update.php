@@ -111,6 +111,7 @@ class YellowUpdate {
                     $fileDataNew = str_replace("system->get(\"imageLocation\")", "system->get(\"coreImageLocation\")", $fileDataNew);
                     $fileDataNew = str_replace("system->get(\"extensionLocation\")", "system->get(\"coreExtensionLocation\")", $fileDataNew);
                     $fileDataNew = str_replace("system->get(\"resourceLocation\")", "system->get(\"coreResourceLocation\")", $fileDataNew);
+                    $fileDataNew = str_replace("text->getHtml(\"paginationPrevious\")", "text->getHtml(\"corePaginationPrevious\")", $fileDataNew);
                     $fileDataNew = str_replace("text->getHtml(\"paginationNext\")", "text->getHtml(\"corePaginationNext\")", $fileDataNew);
                     $fileDataNew = str_replace("\$this->yellow->page->get(\"header\")", "\"header\"", $fileDataNew);
                     $fileDataNew = str_replace("\$this->yellow->page->get(\"sidebar\")", "\"sidebar\"", $fileDataNew);
