@@ -1230,9 +1230,25 @@ class YellowContent {
     }
     
     // Return page collection with top-level navigation
-    public function top($showInvisible = false) {
+    public function top($showInvisible = false, $showOnePager = true) {
         $rootLocation = $this->getRootLocation($this->yellow->page->location);
-        return $this->getChildren($rootLocation, $showInvisible);
+        $pages = $this->getChildren($rootLocation, $showInvisible);
+        if (count($pages)==1 && $showOnePager) {
+            $scheme = $this->yellow->page->scheme;
+            $address = $this->yellow->page->address;
+            $base = $this->yellow->page->base;
+            $one = ($pages->offsetGet(0)->location!=$this->yellow->page->location) ? $pages->offsetGet(0) : $this->yellow->page;
+            preg_match_all("/<h(\d) id=\"([^\"]+)\">(.*?)<\/h\d>/i", $one->getContent(), $matches, PREG_SET_ORDER);
+            foreach ($matches as $match) {
+                if ($match[1]==2) {
+                    $page = new YellowPage($this->yellow);
+                    $page->setRequestInformation($scheme, $address, $base, $one->location."#".$match[2], $one->fileName);
+                    $page->parseData("---\nTitle:$match[3]\n---\n", false, 0);
+                    $pages->append($page);
+                }
+            }
+        }
+        return $pages;
     }
     
     // Return page collection with path ancestry
