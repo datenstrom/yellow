@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowEdit {
-    const VERSION = "0.8.18";
+    const VERSION = "0.8.19";
     const TYPE = "feature";
     public $yellow;         //access to API
     public $response;       //web response
@@ -1468,31 +1468,6 @@ class YellowEditResponse {
         return $titleText.$titleNumber;
     }
     
-    // Normalise text lines, convert line endings
-    public function normaliseLines($text, $endOfLine = "lf") {
-        if ($endOfLine=="lf") {
-            $text = preg_replace("/\R/u", "\n", $text);
-        } else {
-            $text = preg_replace("/\R/u", "\r\n", $text);
-        }
-        return $text;
-    }
-    
-    // Create browser cookies
-    public function createCookies($scheme, $address, $base, $email) {
-        $expire = time() + $this->yellow->system->get("editLoginSessionTimeout");
-        $authToken = $this->extension->users->createAuthToken($email, $expire);
-        $csrfToken = $this->extension->users->createCsrfToken();
-        setcookie("authtoken", $authToken, $expire, "$base/", "", $scheme=="https", true);
-        setcookie("csrftoken", $csrfToken, $expire, "$base/", "", $scheme=="https", false);
-    }
-    
-    // Destroy browser cookies
-    public function destroyCookies($scheme, $address, $base) {
-        setcookie("authtoken", "", 1, "$base/", "", $scheme=="https", true);
-        setcookie("csrftoken", "", 1, "$base/", "", $scheme=="https", false);
-    }
-    
     // Send mail to user
     public function sendMail($scheme, $address, $base, $email, $action) {
         if ($action=="approve") {
@@ -1531,6 +1506,21 @@ class YellowEditResponse {
         $mailMessage = "$message\r\n\r\n$url\r\n-- \r\n$footer";
         return mail($mailTo, $mailSubject, $mailMessage, $mailHeaders);
     }
+        
+    // Create browser cookies
+    public function createCookies($scheme, $address, $base, $email) {
+        $expire = time() + $this->yellow->system->get("editLoginSessionTimeout");
+        $authToken = $this->extension->users->createAuthToken($email, $expire);
+        $csrfToken = $this->extension->users->createCsrfToken();
+        setcookie("authtoken", $authToken, $expire, "$base/", "", $scheme=="https", true);
+        setcookie("csrftoken", $csrfToken, $expire, "$base/", "", $scheme=="https", false);
+    }
+    
+    // Destroy browser cookies
+    public function destroyCookies($scheme, $address, $base) {
+        setcookie("authtoken", "", 1, "$base/", "", $scheme=="https", true);
+        setcookie("csrftoken", "", 1, "$base/", "", $scheme=="https", false);
+    }
     
     // Change content file
     public function editContentFile($page, $action) {
@@ -1557,6 +1547,16 @@ class YellowEditResponse {
                 if (method_exists($value["obj"], "onEditSystemFile")) $value["obj"]->onEditSystemFile($file, $action);
             }
         }
+    }
+    
+    // Normalise text lines, convert line endings
+    public function normaliseLines($text, $endOfLine = "lf") {
+        if ($endOfLine=="lf") {
+            $text = preg_replace("/\R/u", "\n", $text);
+        } else {
+            $text = preg_replace("/\R/u", "\r\n", $text);
+        }
+        return $text;
     }
     
     // Check if meta data has been modified

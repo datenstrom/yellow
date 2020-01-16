@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowMeta {
-    const VERSION = "0.8.10";
+    const VERSION = "0.8.11";
     const TYPE = "feature";
     public $yellow;         //access to API
     
@@ -12,26 +12,6 @@ class YellowMeta {
     public function onLoad($yellow) {
         $this->yellow = $yellow;
         $this->yellow->system->setDefault("metaDefaultImage", "icon");
-    }
-    
-    // Handle update
-    public function onUpdate($action) {
-        if ($action=="update") {        //TODO: remove later, converts old settings
-            $path = $this->yellow->system->get("coreContentDir");
-            foreach ($this->yellow->toolbox->getDirectoryEntriesRecursive($path, "/^.*\.md$/", true, false) as $entry) {
-                $fileData = $fileDataNew = $this->yellow->toolbox->readFile($entry);
-                $fileDataNew = preg_replace("/SocialtagsImage:/i", "Image:", $fileDataNew);
-                $fileDataNew = preg_replace("/SocialtagsImageAlt:/i", "ImageAlt:", $fileDataNew);
-                if ($fileData!=$fileDataNew) {
-                    $modified = $this->yellow->toolbox->getFileModified($entry);
-                    if (!$this->yellow->toolbox->deleteFile($entry) ||
-                        !$this->yellow->toolbox->createFile($entry, $fileDataNew) ||
-                        !$this->yellow->toolbox->modifyFile($entry, $modified)) {
-                        $this->yellow->log("error", "Can't write file '$entry'!");
-                    }
-                }
-            }
-        }
     }
     
     // Handle page extra data
