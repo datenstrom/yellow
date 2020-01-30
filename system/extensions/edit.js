@@ -84,12 +84,12 @@ yellow.edit = {
         if (yellow.system.userName) {
             elementDiv.innerHTML =
                 "<div class=\"yellow-bar-left\">"+
-                "<a href=\"#\" id=\"yellow-pane-edit-bar\" data-action=\"edit\" aria-expanded=\"false\">"+this.getText("Edit")+"</a>"+
+                this.getRawDataPaneAction("edit")+
                 "</div>"+
                 "<div class=\"yellow-bar-right\">"+
-                "<a href=\"#\" id=\"yellow-pane-create-bar\" data-action=\"create\" aria-expanded=\"false\">"+this.getText("Create")+"</a>"+
-                "<a href=\"#\" id=\"yellow-pane-delete-bar\" data-action=\"delete\" aria-expanded=\"false\">"+this.getText("Delete")+"</a>"+
-                "<a href=\"#\" id=\"yellow-pane-menu-bar\" data-action=\"menu\" aria-expanded=\"false\">"+yellow.toolbox.encodeHtml(yellow.system.userName)+"</a>"+
+                this.getRawDataPaneAction("create")+
+                this.getRawDataPaneAction("delete")+
+                this.getRawDataPaneAction("menu", yellow.system.userName, true)+
                 "</div>"+
                 "<div class=\"yellow-bar-banner\"></div>";
         }
@@ -214,7 +214,7 @@ yellow.edit = {
                 "<div class=\"yellow-title\"><h1 id=\"yellow-pane-account-title\">"+this.getText("AccountTitle")+"</h1></div>"+
                 "<div class=\"yellow-status\"><p id=\"yellow-pane-account-status\" class=\""+paneStatus+"\">"+this.getText("AccountStatus", "", paneStatus)+"</p></div>"+
                 "<div class=\"yellow-settings\">"+
-                "<div id=\"yellow-pane-account-settings-actions\" class=\"yellow-settings-left\"><p>"+this.getRawDataActions(paneAction)+"</p></div>"+
+                "<div id=\"yellow-pane-account-settings-actions\" class=\"yellow-settings-left\"><p>"+this.getRawDataSettingsActions(paneAction)+"</p></div>"+
                 "<div id=\"yellow-pane-account-settings-separator\" class=\"yellow-settings-left yellow-settings-separator\">&nbsp;</div>"+
                 "<div id=\"yellow-pane-account-settings-fields\" class=\"yellow-settings-right yellow-fields\">"+
                 "<input type=\"hidden\" name=\"action\" value=\"account\" />"+
@@ -237,7 +237,7 @@ yellow.edit = {
                 "<div class=\"yellow-title\"><h1 id=\"yellow-pane-system-title\">"+this.getText("SystemTitle")+"</h1></div>"+
                 "<div class=\"yellow-status\"><p id=\"yellow-pane-system-status\" class=\""+paneStatus+"\">"+this.getText("SystemStatus", "", paneStatus)+"</p></div>"+
                 "<div class=\"yellow-settings\">"+
-                "<div id=\"yellow-pane-system-settings-actions\" class=\"yellow-settings-left\"><p>"+this.getRawDataActions(paneAction)+"</p></div>"+
+                "<div id=\"yellow-pane-system-settings-actions\" class=\"yellow-settings-left\"><p>"+this.getRawDataSettingsActions(paneAction)+"</p></div>"+
                 "<div id=\"yellow-pane-system-settings-separator\" class=\"yellow-settings-left yellow-settings-separator\">&nbsp;</div>"+
                 "<div id=\"yellow-pane-system-settings-fields\" class=\"yellow-settings-right yellow-fields\">"+
                 "<input type=\"hidden\" name=\"action\" value=\"system\" />"+
@@ -876,8 +876,18 @@ yellow.edit = {
         return paneAction;
     },
     
-    // Return raw data for actions
-    getRawDataActions: function(paneAction) {
+    // Return raw data for pane action
+    getRawDataPaneAction: function(paneAction, text, important) {
+        var rawDataAction = "";
+        if (this.isUserAccess(paneAction) || important) {
+            if (!text) text = this.getText(paneAction);
+            rawDataAction = "<a href=\"#\" id=\"yellow-pane-"+paneAction+"-bar\" data-action=\""+paneAction+"\" aria-expanded=\"false\">"+yellow.toolbox.encodeHtml(text)+"</a>";
+        }
+        return rawDataAction;
+    },
+    
+    // Return raw data for settings actions
+    getRawDataSettingsActions: function(paneAction) {
         var rawDataActions = "";
         if (yellow.system.editSettingsActions && yellow.system.editSettingsActions!="none") {
             var tokens = yellow.system.editSettingsActions.split(/\s*,\s*/);
