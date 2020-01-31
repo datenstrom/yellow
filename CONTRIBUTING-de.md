@@ -12,7 +12,7 @@ Jeder ist eingeladen mitzumachen und Feedback zu geben.
 ## Wie man eine Idee vorschlägt
 
 1. [Erstelle eine neue Support-Anfrage für jede Idee](https://github.com/datenstrom/yellow/issues).
-2. Erzähle was deinen Alltag leichter machen würde, eine Alternative die du magst.
+2. Beschreibe was deinen Alltag leichter machen würde, finde eine Lösung die du magst.
 3. Stimme für gute Ideen ab, gib ihnen einen Daumen nach oben. [Was ist beliebt?](https://github.com/datenstrom/yellow/issues?q=is%3Aopen+is%3Aissue+sort%3Areactions-%2B1-desc+label%3Aidea)
 
 ## Wie man eine Erweiterung macht

@@ -12,7 +12,7 @@ Everyone is welcome to contribute and give feedback.
 ## How to suggest an idea
 
 1. [Submit a new issue for each idea](https://github.com/datenstrom/yellow/issues).
-2. Tell what would make your everyday life easier, an alternative that you like.
+2. Describe what would make your everyday life easier, find a solution that you like.
 3. Vote for good ideas, give them a thumbs-up. [What's popular?](https://github.com/datenstrom/yellow/issues?q=is%3Aopen+is%3Aissue+sort%3Areactions-%2B1-desc+label%3Aidea)
 
 ## How to make an extension
