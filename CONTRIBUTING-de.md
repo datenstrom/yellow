@@ -17,7 +17,7 @@ Jeder ist eingeladen mitzumachen und Feedback zu geben.
 
 ## Wie man eine Erweiterung macht
 
-1. [Beginne mit der Example-Erweiterung](https://github.com/schulle4u/yellow-extension-example) und [Basic-Erweiterung](https://github.com/schulle4u/yellow-extension-basic).
+1. [Beginne mit einer Beispiel-Funktion](https://github.com/schulle4u/yellow-extension-example), [Sprache](https://github.com/datenstrom/yellow-extensions/blob/master/languages/english/english-language.txt) oder [Thema](https://github.com/schulle4u/yellow-extension-basic).
 2. Strebe eine einfache Lösung an, erst funktionieren lassen, dann besser machen.
 3. Veröffentliche deine Erweiterung, lass uns wissen falls du Hilfe benötigst. [Was gibt es?](https://github.com/datenstrom/yellow-extensions)
 

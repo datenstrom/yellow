@@ -17,7 +17,7 @@ Everyone is welcome to contribute and give feedback.
 
 ## How to make an extension
 
-1. [Start with the example extension](https://github.com/schulle4u/yellow-extension-example) and [basic extension](https://github.com/schulle4u/yellow-extension-basic).
+1. [Start with the example feature](https://github.com/schulle4u/yellow-extension-example), [language](https://github.com/datenstrom/yellow-extensions/blob/master/languages/english/english-language.txt) or [theme](https://github.com/schulle4u/yellow-extension-basic).
 2. Aim for a simple solution, first make it work then make it better.
 3. Publish your extension, let us know if you need help. [What's available?](https://github.com/datenstrom/yellow-extensions)
 
