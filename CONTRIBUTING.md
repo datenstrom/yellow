@@ -1,7 +1,7 @@
 Contributing guidelines
 =======================
 
-Everyone is welcome to contribute and give feedback.
+You are welcome to contribute. We need you as user, developer or designer.
 
 ## How to report a problem
 
@@ -12,7 +12,7 @@ Everyone is welcome to contribute and give feedback.
 ## How to suggest an idea
 
 1. [Submit a new issue for each idea](https://github.com/datenstrom/yellow/issues).
-2. Describe what would make your everyday life easier, find a solution that you like.
+2. Explain your idea, how it would make your everyday life easier.
 3. Vote for good ideas, give them a thumbs-up. [What's popular?](https://github.com/datenstrom/yellow/issues?q=is%3Aopen+is%3Aissue+sort%3Areactions-%2B1-desc+label%3Aidea)
 
 ## How to make an extension
