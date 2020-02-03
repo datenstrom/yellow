@@ -1,7 +1,7 @@
 Contributing guidelines
 =======================
 
-You are welcome to contribute. We need you as user, developer or designer.
+Let's make things for people. We need you as user, developer or designer.
 
 ## How to report a problem
 

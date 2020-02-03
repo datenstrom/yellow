@@ -1,7 +1,7 @@
 Richtlinien zum Mitmachen
 =========================
 
-Du bist eingeladen mitzumachen. Wir brauchen dich als Benutzer, Entwickler oder Designer.
+Lass uns Dinge für Menschen machen. Wir brauchen dich als Benutzer, Entwickler oder Designer.
 
 ## Wie man ein Problem meldet
 
