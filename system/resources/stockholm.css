@@ -1,5 +1,5 @@
 /* Stockholm extension, https://github.com/datenstrom/yellow-extensions/tree/master/themes/stockholm */
-/* Copyright (c) 2013-2019 Datenstrom, https://datenstrom.se */
+/* Copyright (c) 2013-2020 Datenstrom, https://datenstrom.se */
 /* This file may be used and distributed under the terms of the public license. */
 
 html, body, div, form, pre, span, tr, th, td, img {
@@ -264,88 +264,8 @@ a:hover {
 .navigation li {
     display: inline;
 }
-.navigation-tree {
-    display: block;
-    float: right;
-    margin-bottom: 1em;
-    line-height: 2;
-}
-.navigation-tree a {
-    padding: 0 0.3em;
-}
-.navigation-tree ul {
-    margin: 0 -0.3em;
-    padding: 0;
-    list-style: none;
-}
-.navigation-tree li {
-    display: inline;
-}
-.navigation-tree ul li {
-    display: inline-block;
-    position: relative;
-    cursor: pointer;
-    margin: 0;
-}
-.navigation-tree ul li ul {
-    padding: 0.3em;
-    position: absolute;
-    width: 13em;
-    background: #fff;
-    z-index: 100;
-    display: none;
-}
-.navigation-tree ul li ul {
-    border: 1px solid #bbb;
-    border-radius: 4px;
-    box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.2);
-}
-.navigation-tree ul li ul li {
-    display: block;
-}
-.navigation-tree > ul > li:hover > ul {
-    display: block;
-}
 .navigation-banner {
     clear: both;
-}
-.navigation-search {
-    padding-bottom: 0.75em;
-}
-.navigation-search .search-form {
-    position: relative;
-}
-.navigation-search .search-text {
-    font-family: inherit;
-    font-size: inherit;
-    font-weight: inherit;
-}
-.navigation-search .search-text {
-    padding: 0.5em;
-    border: 1px solid #bbb;
-    border-radius: 4px;
-    width: 100%;
-    box-sizing: border-box;
-}
-.navigation-search .search-text {
-    background-color: #fff;
-    background-image: linear-gradient(to bottom, #fff, #fff);
-}
-.navigation-search .search-button {
-    position: absolute;
-    top: 0;
-    right: 0;
-}
-.navigation-search .search-button {
-    font-family: inherit;
-    font-size: inherit;
-    font-weight: inherit;
-}
-.navigation-search .search-button {
-    margin: 5px;
-    padding: 0.3em;
-    border: none;
-    background-color: transparent;
 }
 
 /* Footer */
@@ -360,11 +280,6 @@ a:hover {
     color: #07d;
     text-decoration: underline;
 }
-.footer .siteinfo a.language img {
-    vertical-align: middle;
-    margin-top: -5px;
-    margin-right: 0.75em;
-}
 .footer .siteinfo-left {
     float: left;
 }
@@ -372,33 +287,6 @@ a:hover {
     float: right;
 }
 .footer .siteinfo-banner {
-    clear: both;
-}
-
-/* Sidebar */
-
-.with-sidebar .main {
-    margin-right: 15em;
-}
-.with-sidebar .sidebar {
-    float: right;
-    width: 13em;
-    margin-top: 3.2em;
-    padding: 2px;
-    overflow: hidden;
-    text-align: right;
-}
-.with-sidebar .sidebar ul {
-    padding: 0;
-    list-style: none;
-}
-.with-sidebar .sidebar .search-form input {
-    width: 100%;
-    box-sizing: border-box;
-}
-.with-sidebar .content:after {
-    content: "";
-    display: table;
     clear: both;
 }
 
@@ -450,55 +338,6 @@ a:hover {
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Misc */
-
-.layout-language .content div.language {
-    font-size: 1.2em;
-    text-align: left;
-    width: 9em;
-    margin: 0 auto;
-}
-.layout-language .content div.language p {
-    margin: 1.5em 0em;
-}
-.layout-language .content div.language img {
-    vertical-align: middle;
-    margin-top: -5px;
-    margin-right: 1.5em;
-}
-.content .main .wikipages ul,
-.content .main .wikitags ul,
-.content .main .wikilinks ul {
-    columns: 3;
-}
-.hljs-meta,
-.hljs-keyword,
-.hljs-literal {
-    color: #b0b;
-}
-.hljs-attr,
-.hljs-attribute,
-.hljs-selector-id,
-.hljs-selector-class,
-.hljs-selector-pseudo {
-    color: #b0b;
-}
-.hljs-type,
-.hljs-built_in,
-.hljs-builtin-name,
-.hljs-params {
-    color: #b0b;
-}
-.hljs-string {
-    color: #717171;
-}
-.hljs-symbol,
-.hljs-bullet,
-.hljs-link,
-.hljs-number {
-    color: #717171;
-}
-
 /* Responsive and print */
 
 .page {
@@ -531,28 +370,12 @@ a:hover {
         padding: 0;
     }
     .header .sitename,
-    .navigation,
-    .navigation-tree {
+    .navigation {
         float: none;
     }
     .header .sitename,
-    .navigation,
-    .navigation-tree {
+    .navigation {
         margin-bottom: 0.5em;
-    }
-    .navigation-search {
-        padding-bottom: 1em;
-    }
-    .with-sidebar .main {
-        margin-right: 0;
-    }
-    .with-sidebar .sidebar {
-        display: none;
-    }
-    .content .main .wikipages ul,
-    .content .main .wikitags ul,
-    .content .main .wikilinks  ul {
-        columns: 1;
     }
 }
 @media print {
