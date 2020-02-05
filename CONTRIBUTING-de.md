@@ -18,8 +18,8 @@ Lass uns Dinge für Menschen machen. Deine Mitarbeit ist sehr willkommen.
 ## Wie man eine Erweiterung verbessert
 
 1. [Forke das offizielle Repository](https://github.com/datenstrom/yellow-extensions) oder das Repository eines Entwicklers.
-2. Aktive Mitarbeit ist das beste Werkzeug, um Dinge in die Tat umzusetzen.
-3. Lade deine Änderungen zu GitHub hoch und erzeuge einen Pull-Request.
+2. Stelle dir vor was der Benutzer machen will, konzentriere dich auf das Wesentliche.
+3. Lade deine Verbesserung zu GitHub hoch und erzeuge einen Pull-Request.
 
 ## Wie man eine Erweiterung macht
 
