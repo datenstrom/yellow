@@ -19,7 +19,7 @@ Lass uns Dinge für Menschen machen. Deine Mitarbeit ist sehr willkommen.
 
 1. [Forke das offizielle Repository](https://github.com/datenstrom/yellow-extensions) oder das Repository eines Entwicklers.
 2. Aktive Mitarbeit ist das beste Werkzeug, um Dinge in die Tat umzusetzen.
-3. Lade deine Änderungen zu GitHub hoch und erzeuge einen [Pull-Request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request-from-a-fork).
+3. Lade deine Änderungen zu GitHub hoch und erzeuge einen Pull-Request.
 
 ## Wie man eine Erweiterung macht
 

@@ -17,9 +17,9 @@ Let's make things for people. Your contribution is very welcome.
 
 ## How to improve an extension
 
-1. [Fork the official repository](https://github.com/datenstrom/yellow-extensions) or the repository from a developer.
+1. [Fork the official repository](https://github.com/datenstrom/yellow-extensions) or the repository of a developer.
 2. Active contribution is the best tool you have to make things happen.
-3. Upload your changes to GitHub and create a [pull request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request-from-a-fork).
+3. Upload your changes to GitHub and create a pull request.
 
 ## How to make an extension
 
