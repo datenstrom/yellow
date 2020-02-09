@@ -29,7 +29,7 @@ html, body, div, form, pre, span, tr, th, td, img {
 body {
     margin: 1em;
     background-color: #fff;
-    color: #717171;
+    color: #666;
     font-family: "Open Sans", Helvetica, sans-serif;
     font-size: 1em;
     font-weight: 300;
@@ -42,7 +42,7 @@ h4,
 h5,
 h6 {
     color: #111;
-    font-weight: normal;
+    font-weight: 400;
 }
 h1 {
     font-size: 2em;
@@ -69,9 +69,8 @@ a:hover {
 
 /* Content */
 
-.content h1:first-child,
-.content > *:first-child {
-    margin-top: 0;
+.content h1 {
+    margin: 1em 0;
 }
 .content h1 a {
     color: #111;
@@ -165,23 +164,6 @@ a:hover {
     width: 100%;
     height: 100%;
 }
-.content .stretchable ul {
-    margin: 0 -0.5em;
-    padding: 0;
-    list-style: none;
-    text-align: center;
-}
-.content .stretchable li {
-    margin: 0;
-    padding: 1em 0;
-    display: inline-block;
-    text-align: center;
-    vertical-align: top;
-}
-.content .stretchable a {
-    color: #717171;
-    text-decoration: none;
-}
 .content .task-list-item {
     list-style-type: none;
 }
@@ -193,6 +175,13 @@ a:hover {
     margin: 0;
     padding: 0;
     list-style: none;
+}
+.content .wikipages ul,
+.content .wikitags ul,
+.content .wikilinks ul {
+    padding: 0;
+    list-style: none;
+    column-width: 19em;
 }
 .content .entry-links .previous {
     margin-right: 1em;
@@ -221,11 +210,12 @@ a:hover {
 
 /* Header */
 
+.header {
+    margin: 2em 0;
+}
 .header .sitename {
     display: block;
     float: left;
-    margin-top: 0.25em;
-    margin-bottom: 1em;
 }
 .header .sitename h1 {
     margin:0;
@@ -233,16 +223,18 @@ a:hover {
     font-weight: 300;
 }
 .header .sitename h1 a {
-    color: #111;
+    color: #666;
+    border-bottom: solid 3px #fff;
     text-decoration: none;
+    padding: 0.5em 0;
 }
 .header .sitename h1 a:hover {
     color: #07d;
-    text-decoration: underline;
+    border-bottom: solid 3px #29f;
 }
 .header .sitename p {
     margin-top: 0;
-    color: #111;
+    color: #666;
 }
 
 /* Navigation */
@@ -250,19 +242,28 @@ a:hover {
 .navigation {
     display: block;
     float: right;
-    margin-bottom: 1em;
-    line-height: 2;
 }
 .navigation a {
-    padding: 0 0.3em;
+    color: #666;
+    border-bottom: solid 3px #fff;
+    text-decoration: none;
+    padding: 0.5em 0;
+    margin: 0 0.5em;
+}
+.navigation a:hover {
+    color: #07d;
+    border-bottom: solid 3px #29f;
 }
 .navigation ul {
-    margin: 0 -0.3em;
+    margin: 0 -0.5em;
     padding: 0;
     list-style: none;
 }
 .navigation li {
     display: inline;
+}
+.navigation li a.active {
+    border-bottom: solid 3px #29f;
 }
 .navigation-banner {
     clear: both;
@@ -271,7 +272,7 @@ a:hover {
 /* Footer */
 
 .footer {
-    margin-top: 1em;
+    margin: 2em 0;
 }
 .footer .siteinfo a {
     color: #07d;
@@ -279,15 +280,6 @@ a:hover {
 .footer .siteinfo a:hover {
     color: #07d;
     text-decoration: underline;
-}
-.footer .siteinfo-left {
-    float: left;
-}
-.footer .siteinfo-right {
-    float: right;
-}
-.footer .siteinfo-banner {
-    clear: both;
 }
 
 /* Forms and buttons */
@@ -298,7 +290,7 @@ a:hover {
     display: inline-block;
     min-width: 7em;
     background-color: #fff;
-    color: #555;
+    color: #666;
     background-image: linear-gradient(to bottom, #fff, #fff);
     border: 1px solid #bbb;
     border-radius: 4px;
@@ -362,20 +354,7 @@ a:hover {
     }
     .content h1,
     .content h2 {
-        font-size: 1.3em;
-    }
-    .footer,
-    .page {
-        margin: 0;
-        padding: 0;
-    }
-    .header .sitename,
-    .navigation {
-        float: none;
-    }
-    .header .sitename,
-    .navigation {
-        margin-bottom: 0.5em;
+        font-size: 1.5em;
     }
 }
 @media print {
