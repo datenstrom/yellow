@@ -66,6 +66,10 @@ class YellowCore {
         $this->system->setDefault("coreSystemFile", "system.ini");
         $this->system->setDefault("coreTextFile", "text.ini");
         $this->system->setDefault("coreLogFile", "yellow.log");
+        $troubleshooting = "<a href=\"https://datenstrom.se/yellow/help/troubleshooting\">See troubleshooting</a>.";
+        extension_loaded("mbstring") || die("Datenstrom Yellow requires PHP mbstring extension! $troubleshooting");
+        extension_loaded("curl") || die("Datenstrom Yellow requires PHP cURL extension! $troubleshooting");
+        extension_loaded("zip") || die("Datenstrom Yellow requires PHP zip extension! $troubleshooting");
     }
     
     public function __destruct() {

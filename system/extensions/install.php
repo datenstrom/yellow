@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowInstall {
-    const VERSION = "0.8.14";
+    const VERSION = "0.8.15";
     const TYPE = "feature";
     const PRIORITY = "1";
     public $yellow;                 //access to API
@@ -17,10 +17,12 @@ class YellowInstall {
     // Handle request
     public function onRequest($scheme, $address, $base, $location, $fileName) {
         $statusCode = 0;
-        if ($this->yellow->lookup->isContentFile($fileName)) {
+        if ($this->yellow->lookup->isContentFile($fileName) || empty($fileName)) {
             $server = $this->yellow->toolbox->getServerVersion(true);
-            $this->checkServerRewrite($scheme, $address, $base, $location, $fileName) || die("Datenstrom Yellow requires $server rewrite module!");
-            $this->checkServerAccess() || die("Datenstrom Yellow requires $server read/write access!");
+            $troubleshooting = "<a href=\"https://datenstrom.se/yellow/help/troubleshooting\">See troubleshooting</a>.";
+            $this->checkServerConfiguration($server) || die("Datenstrom Yellow requires $server configuration file! $troubleshooting");
+            $this->checkServerRewrite($scheme, $address, $base, $location, $fileName) || die("Datenstrom Yellow requires $server rewrite module! $troubleshooting");
+            $this->checkServerAccess() || die("Datenstrom Yellow requires $server read/write access! $troubleshooting");
             $statusCode = $this->processRequestInstall($scheme, $address, $base, $location, $fileName);
         }
         return $statusCode;
@@ -266,6 +268,11 @@ class YellowInstall {
         }
         if ($statusCode==200) unset($this->yellow->extensions->extensions["install"]);
         return $statusCode;
+    }
+    
+    // Check web server configuration
+    public function checkServerConfiguration($server) {
+        return strtoloweru($server)!="apache" || is_file(".htaccess");
     }
     
     // Check web server rewrite

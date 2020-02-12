@@ -4,10 +4,9 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowImage {
-    const VERSION = "0.8.5";
+    const VERSION = "0.8.6";
     const TYPE = "feature";
     public $yellow;             //access to API
-    public $graphicsLibrary;    //graphics library support? (boolean)
 
     // Handle initialisation
     public function onLoad($yellow) {
@@ -19,17 +18,14 @@ class YellowImage {
         $this->yellow->system->setDefault("imageThumbnailLocation", "/media/thumbnails/");
         $this->yellow->system->setDefault("imageThumbnailDir", "media/thumbnails/");
         $this->yellow->system->setDefault("imageThumbnailJpgQuality", "80");
-        $this->graphicsLibrary = $this->isGraphicsLibrary();
-    }
+        $troubleshooting = "<a href=\"https://datenstrom.se/yellow/help/troubleshooting\">See troubleshooting</a>.";
+        extension_loaded("gd") || die("Datenstrom Yellow requires PHP GD extension! $troubleshooting");
+        extension_loaded("exif") || die("Datenstrom Yellow requires PHP Exif extension! $troubleshooting");    }
 
     // Handle page content of shortcut
     public function onParseContentShortcut($page, $name, $text, $type) {
         $output = null;
         if ($name=="image" && $type=="inline") {
-            if (!$this->graphicsLibrary) {
-                $this->yellow->page->error(500, "Image extension requires GD library and EXIF library!");
-                return $output;
-            }
             list($name, $alt, $style, $width, $height) = $this->yellow->toolbox->getTextArgs($text);
             if (!preg_match("/^\w+:/", $name)) {
                 if (empty($alt)) $alt = $this->yellow->system->get("imageAlt");
@@ -52,7 +48,7 @@ class YellowImage {
     
     // Handle media file changes
     public function onEditMediaFile($file, $action) {
-        if ($action=="upload" && $this->graphicsLibrary) {
+        if ($action=="upload") {
             $fileName = $file->fileName;
             $fileType = $this->yellow->toolbox->getFileType($file->get("fileNameShort"));
             list($widthInput, $heightInput, $type) = $this->yellow->toolbox->detectImageInformation($fileName, $fileType);
@@ -272,10 +268,5 @@ class YellowImage {
     // Check if file needs to be updated
     public function isFileNotUpdated($fileNameInput, $fileNameOutput) {
         return $this->yellow->toolbox->getFileModified($fileNameInput)!=$this->yellow->toolbox->getFileModified($fileNameOutput);
-    }
-
-    // Check graphics library support
-    public function isGraphicsLibrary() {
-        return extension_loaded("gd") && function_exists("gd_info") && extension_loaded("exif");
     }
 }
