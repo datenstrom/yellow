@@ -4,9 +4,6 @@
 // This file may be used and distributed under the terms of the public license.
 
 version_compare(PHP_VERSION, "5.6", ">=") || die("Datenstrom Yellow requires PHP 5.6 or higher!");
-extension_loaded("mbstring") || die("Datenstrom Yellow requires PHP mbstring extension!");
-extension_loaded("curl") || die("Datenstrom Yellow requires PHP cURL extension!");
-extension_loaded("zip") || die("Datenstrom Yellow requires PHP zip extension!");
 require_once("system/extensions/core.php");
 
 if (PHP_SAPI!="cli") {
