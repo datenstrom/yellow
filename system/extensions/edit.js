@@ -92,6 +92,8 @@ yellow.edit = {
                 this.getRawDataPaneAction("menu", yellow.system.userName, true)+
                 "</div>"+
                 "<div class=\"yellow-bar-banner\"></div>";
+        } else {
+            elementDiv.innerHTML = "&nbsp;";
         }
         elementBar.appendChild(elementDiv);
         yellow.toolbox.insertBefore(elementBar, document.getElementsByTagName("body")[0].firstChild);
@@ -587,7 +589,7 @@ yellow.edit = {
                 case "tl":              yellow.editor.setMarkdown(elementText, "- [ ] ", "insert-multiline-block", true); break;
                 case "link":            yellow.editor.setMarkdown(elementText, "[link](url)", "insert", false, yellow.editor.getMarkdownLink); break;
                 case "text":            yellow.editor.setMarkdown(elementText, args, "insert"); break;
-                case "draft":           yellow.editor.setMetaData(elementText, "status", "draft", true); break;
+                case "status":          yellow.editor.setMetaData(elementText, "status", true); break;
                 case "file":            this.showFileDialog(); break;
                 case "undo":            yellow.editor.undo(); break;
                 case "redo":            yellow.editor.redo(); break;
@@ -1161,9 +1163,15 @@ yellow.editor = {
     },
     
     // Set meta data
-    setMetaData: function(element, key, value, toggle) {
+    setMetaData: function(element, key, toggle) {
         var information = this.getMetaDataInformation(element, key);
         if (information.bottom!=0) {
+            var value = "";
+            if (key=="status") {
+                var tokens = yellow.system.editStatusValues.split(/\s*,\s*/);
+                var index = tokens.indexOf(information.value);
+                value = tokens[index+1<tokens.length ? index+1 : index];
+            }
             var selectionStart = information.found ? information.start : information.bottom;
             var selectionEnd = information.found ? information.end : information.bottom;
             var text = information.text;

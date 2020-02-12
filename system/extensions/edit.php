@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowEdit {
-    const VERSION = "0.8.20";
+    const VERSION = "0.8.21";
     const TYPE = "feature";
     public $yellow;         //access to API
     public $response;       //web response
@@ -1183,9 +1183,10 @@ class YellowEditResponse {
             $data["editSettingsActions"] = $this->getSettingsActions();
             $data["editUploadExtensions"] = $this->yellow->system->get("editUploadExtensions");
             $data["editKeyboardShortcuts"] = $this->yellow->system->get("editKeyboardShortcuts");
-            $data["editToolbarButtons"] = $this->getToolbarButtons("edit");
-            $data["emojiawesomeToolbarButtons"] =  $this->getToolbarButtons("emojiawesome");
-            $data["fontawesomeToolbarButtons"] =  $this->getToolbarButtons("fontawesome");
+            $data["editToolbarButtons"] = $this->getToolbarButtons();
+            $data["editStatusValues"] = $this->getStatusValues();
+            $data["emojiawesomeToolbarButtons"] = $this->yellow->system->get("emojiawesomeToolbarButtons");
+            $data["fontawesomeToolbarButtons"] = $this->yellow->system->get("fontawesomeToolbarButtons");
             if ($this->isUserAccess("system")) {
                 $data["sitename"] = $this->yellow->system->get("sitename");
                 $data["author"] = $this->yellow->system->get("author");
@@ -1226,21 +1227,25 @@ class YellowEditResponse {
     }
     
     // Return toolbar buttons
-    public function getToolbarButtons($name) {
-        if ($name=="edit") {
-            $toolbarButtons = $this->yellow->system->get("editToolbarButtons");
-            if ($toolbarButtons=="auto") {
-                $toolbarButtons = "";
-                if ($this->yellow->extensions->isExisting("markdown")) $toolbarButtons = "format, bold, italic, strikethrough, code, separator, list, link, file";
-                if ($this->yellow->extensions->isExisting("emojiawesome")) $toolbarButtons .= ", emojiawesome";
-                if ($this->yellow->extensions->isExisting("fontawesome")) $toolbarButtons .= ", fontawesome";
-                if ($this->yellow->extensions->isExisting("draft")) $toolbarButtons .= ", draft";
-                $toolbarButtons .= ", preview";
-            }
-        } else {
-            $toolbarButtons = $this->yellow->system->get("{$name}ToolbarButtons");
+    public function getToolbarButtons() {
+        $toolbarButtons = $this->yellow->system->get("editToolbarButtons");
+        if ($toolbarButtons=="auto") {
+            $toolbarButtons = "";
+            if ($this->yellow->extensions->isExisting("markdown")) $toolbarButtons = "format, bold, italic, strikethrough, code, separator, list, link, file";
+            if ($this->yellow->extensions->isExisting("emojiawesome")) $toolbarButtons .= ", emojiawesome";
+            if ($this->yellow->extensions->isExisting("fontawesome")) $toolbarButtons .= ", fontawesome";
+            $toolbarButtons .= ", status, preview";
         }
         return $toolbarButtons;
+    }
+    
+    // Return status values
+    public function getStatusValues() {
+        $statusValues = "";
+        if ($this->yellow->extensions->isExisting("private")) $statusValues .= ", private";
+        if ($this->yellow->extensions->isExisting("draft")) $statusValues .= ", draft";
+        $statusValues .= ", unlisted";
+        return ltrim($statusValues, ", ");
     }
     
     // Return end of line format

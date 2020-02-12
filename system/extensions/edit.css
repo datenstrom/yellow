@@ -4,8 +4,6 @@
 
 .yellow-bar {
     position: relative;
-    line-height: 2em;
-    margin-bottom: 10px;
 }
 .yellow-bar-left {
     display: block;
@@ -554,7 +552,7 @@
 .yellow-icon-fontawesome:before {
     content: "\f113";
 }
-.yellow-icon-draft:before {
+.yellow-icon-status:before {
     content: "\f114";
 }
 .yellow-icon-undo:before {
