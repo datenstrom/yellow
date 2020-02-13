@@ -68,8 +68,6 @@ class YellowCore {
         $this->system->setDefault("coreLogFile", "yellow.log");
         $troubleshooting = "<a href=\"https://datenstrom.se/yellow/help/troubleshooting\">See troubleshooting</a>.";
         extension_loaded("mbstring") || die("Datenstrom Yellow requires PHP mbstring extension! $troubleshooting");
-        extension_loaded("curl") || die("Datenstrom Yellow requires PHP cURL extension! $troubleshooting");
-        extension_loaded("zip") || die("Datenstrom Yellow requires PHP zip extension! $troubleshooting");
     }
     
     public function __destruct() {
@@ -1833,7 +1831,7 @@ class YellowLookup {
         $pathHome = $this->yellow->system->get("coreContentHomeDir");
         $fileDefault = $this->yellow->system->get("coreContentDefaultFile");
         $fileExtension = $this->yellow->system->get("coreContentExtension");
-        if (substru($fileName, 0, strlenu($pathBase))==$pathBase) {
+        if (substru($fileName, 0, strlenu($pathBase))==$pathBase && mb_check_encoding($fileName, "UTF-8")) {
             $fileName = substru($fileName, strlenu($pathBase));
             $tokens = explode("/", $fileName);
             if (!empty($pathRoot)) {
