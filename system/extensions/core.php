@@ -66,8 +66,6 @@ class YellowCore {
         $this->system->setDefault("coreSystemFile", "system.ini");
         $this->system->setDefault("coreTextFile", "text.ini");
         $this->system->setDefault("coreLogFile", "yellow.log");
-        $troubleshooting = "<a href=\"https://datenstrom.se/yellow/help/troubleshooting\">See troubleshooting</a>.";
-        extension_loaded("mbstring") || die("Datenstrom Yellow requires PHP mbstring extension! $troubleshooting");
     }
     
     public function __destruct() {
@@ -76,6 +74,9 @@ class YellowCore {
     
     // Handle initialisation
     public function load() {
+        $troubleshooting = "<a href=\"https://datenstrom.se/yellow/help/troubleshooting\">See troubleshooting</a>.";
+        extension_loaded("mbstring") || die("Datenstrom Yellow requires PHP mbstring extension! $troubleshooting");
+        version_compare(PHP_VERSION, "5.6", ">=") || die("Datenstrom Yellow requires PHP 5.6 or higher! $troubleshooting");
         if (defined("DEBUG") && DEBUG>=3) {
             $serverVersion = $this->toolbox->getServerVersion();
             echo "YellowCore::load Datenstrom Yellow ".YellowCore::VERSION.", PHP ".PHP_VERSION.", $serverVersion<br/>\n";

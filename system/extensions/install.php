@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowInstall {
-    const VERSION = "0.8.15";
+    const VERSION = "0.8.16";
     const TYPE = "feature";
     const PRIORITY = "1";
     public $yellow;                 //access to API
@@ -12,6 +12,9 @@ class YellowInstall {
     // Handle initialisation
     public function onLoad($yellow) {
         $this->yellow = $yellow;
+        $troubleshooting = "<a href=\"https://datenstrom.se/yellow/help/troubleshooting\">See troubleshooting</a>.";
+        extension_loaded("curl") || die("Datenstrom Yellow requires PHP cURL extension! $troubleshooting");
+        extension_loaded("zip") || die("Datenstrom Yellow requires PHP zip extension! $troubleshooting");
     }
     
     // Handle request
@@ -22,7 +25,7 @@ class YellowInstall {
             $troubleshooting = "<a href=\"https://datenstrom.se/yellow/help/troubleshooting\">See troubleshooting</a>.";
             $this->checkServerConfiguration($server) || die("Datenstrom Yellow requires $server configuration file! $troubleshooting");
             $this->checkServerRewrite($scheme, $address, $base, $location, $fileName) || die("Datenstrom Yellow requires $server rewrite module! $troubleshooting");
-            $this->checkServerAccess() || die("Datenstrom Yellow requires $server read/write access! $troubleshooting");
+            $this->checkServerAccess() || die("Datenstrom Yellow requires $server write access! $troubleshooting");
             $statusCode = $this->processRequestInstall($scheme, $address, $base, $location, $fileName);
         }
         return $statusCode;
@@ -290,7 +293,7 @@ class YellowInstall {
         return !empty($rawData) && $statusCode==200;
     }
     
-    // Check web server read/write access
+    // Check web server write access
     public function checkServerAccess() {
         $fileName = $this->yellow->system->get("coreSettingDir").$this->yellow->system->get("coreSystemFile");
         return $this->yellow->system->save($fileName, array());

@@ -3,7 +3,6 @@
 // Copyright (c) 2013-2020 Datenstrom, https://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
-version_compare(PHP_VERSION, "5.6", ">=") || die("Datenstrom Yellow requires PHP 5.6 or higher!");
 require_once("system/extensions/core.php");
 
 if (PHP_SAPI!="cli") {
