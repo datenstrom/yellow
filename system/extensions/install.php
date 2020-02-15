@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowInstall {
-    const VERSION = "0.8.16";
+    const VERSION = "0.8.17";
     const TYPE = "feature";
     const PRIORITY = "1";
     public $yellow;                 //access to API
@@ -93,10 +93,6 @@ class YellowInstall {
         if (!is_file($fileName)) {
             $serverVersion = $this->yellow->toolbox->getServerVersion();
             $this->yellow->log("info", "Datenstrom Yellow ".YellowCore::VERSION.", PHP ".PHP_VERSION.", $serverVersion");
-            if (!$this->yellow->isCommandLine()) {
-                $server = $this->yellow->toolbox->getServerVersion(true);
-                $this->yellow->log("info", "Check $server server configuration");
-            }
             if (!is_file($fileName)) {
                 $statusCode = 500;
                 $this->yellow->page->error(500, "Can't write file '$fileName'!");
