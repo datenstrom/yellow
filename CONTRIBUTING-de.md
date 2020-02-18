@@ -22,7 +22,7 @@ Wir machen Dinge für Menschen. Deine Mitarbeit ist sehr willkommen.
 1. [Beginne mit einer Beispiel-Funktion](https://github.com/schulle4u/yellow-extension-example), [Sprache](https://github.com/datenstrom/yellow-extensions/blob/master/languages/english/english-language.txt) oder [Thema](https://github.com/schulle4u/yellow-extension-basic).
 2. Stelle dir vor was der Benutzer machen will, strebe eine einfache Lösung an.
 2. Lade deine Erweiterung zu GitHub hoch, lass uns wissen, falls du auf Hilfe brauchst.
-3.  Veröffentliche deine Erweiterung im öffentlichen Repository. [Wie geht das?](https://github.com/datenstrom/yellow-extensions/blob/master/features/release/README-de.md)
+3.  Veröffentliche deine Erweiterung im offiziellen Repository. [Wie geht das?](https://github.com/datenstrom/yellow-extensions/blob/master/features/release/README-de.md)
 
 ## Wie man in Verbindung bleibt 
 
