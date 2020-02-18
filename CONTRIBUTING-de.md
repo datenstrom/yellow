@@ -17,17 +17,12 @@ Wir machen Dinge für Menschen. Deine Mitarbeit ist sehr willkommen.
 3. Schlage eine spezifische Lösung vor, das macht es leichter zu verstehen.
 4. Stimme für gute Ideen ab und gib ihnen einen Daumen nach oben. [Was ist beliebt?](https://github.com/datenstrom/yellow/issues?q=is%3Aopen+is%3Aissue+sort%3Areactions-%2B1-desc+label%3Aidea)
 
-## Wie man eine Erweiterung verbessert
-
-1. [Forke das offizielle Repository](https://github.com/datenstrom/yellow-extensions) oder das Repository eines Entwicklers.
-2. Stelle dir vor was der Benutzer machen will, strebe eine einfache Lösung an.
-3. Lade deine Verbesserung zu GitHub hoch und erzeuge einen Pull-Request.
-
 ## Wie man eine Erweiterung macht
 
 1. [Beginne mit einer Beispiel-Funktion](https://github.com/schulle4u/yellow-extension-example), [Sprache](https://github.com/datenstrom/yellow-extensions/blob/master/languages/english/english-language.txt) oder [Thema](https://github.com/schulle4u/yellow-extension-basic).
-2. Erst funktionieren lassen, dann besser machen. Lass uns wissen, falls du auf Probleme stößt.
-3. Lade deine Erweiterung zu GitHub hoch und erzeuge ein neues Release. [Wie geht das?](https://github.com/datenstrom/yellow-extensions/blob/master/features/release/README-de.md)
+2. Stelle dir vor was der Benutzer machen will, strebe eine einfache Lösung an.
+2. Lade deine Erweiterung zu GitHub hoch, lass uns wissen, falls du auf Hilfe brauchst.
+3.  Veröffentliche deine Erweiterung im öffentlichen Repository. [Wie geht das?](https://github.com/datenstrom/yellow-extensions/blob/master/features/release/README-de.md)
 
 ## Wie man in Verbindung bleibt 
 
