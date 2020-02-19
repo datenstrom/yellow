@@ -20,8 +20,8 @@ class YellowUpdate {
         $this->yellow->system->setDefault("updateWaffleFile", "waffle.ini");
         $this->yellow->system->setDefault("updateNotification", "none");
         $troubleshooting = "<a href=\"https://datenstrom.se/yellow/help/troubleshooting\">See troubleshooting</a>.";
-        extension_loaded("curl") || die("Datenstrom Yellow requires PHP cURL extension! $troubleshooting");
-        extension_loaded("zip") || die("Datenstrom Yellow requires PHP zip extension! $troubleshooting");
+        extension_loaded("curl") || die("Datenstrom Yellow requires PHP extension 'curl'! $troubleshooting");
+        extension_loaded("zip") || die("Datenstrom Yellow requires PHP extension 'zip'! $troubleshooting");
     }
     
     // Handle request

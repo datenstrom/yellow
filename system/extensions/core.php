@@ -75,7 +75,7 @@ class YellowCore {
     // Handle initialisation
     public function load() {
         $troubleshooting = "<a href=\"https://datenstrom.se/yellow/help/troubleshooting\">See troubleshooting</a>.";
-        extension_loaded("mbstring") || die("Datenstrom Yellow requires PHP mbstring extension! $troubleshooting");
+        extension_loaded("mbstring") || die("Datenstrom Yellow requires PHP extension 'mbstring'! $troubleshooting");
         version_compare(PHP_VERSION, "5.6", ">=") || die("Datenstrom Yellow requires PHP 5.6 or higher! $troubleshooting");
         if (defined("DEBUG") && DEBUG>=3) {
             $serverVersion = $this->toolbox->getServerVersion();

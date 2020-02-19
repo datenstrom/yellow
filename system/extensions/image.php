@@ -19,8 +19,8 @@ class YellowImage {
         $this->yellow->system->setDefault("imageThumbnailDir", "media/thumbnails/");
         $this->yellow->system->setDefault("imageThumbnailJpgQuality", "80");
         $troubleshooting = "<a href=\"https://datenstrom.se/yellow/help/troubleshooting\">See troubleshooting</a>.";
-        extension_loaded("gd") || die("Datenstrom Yellow requires PHP GD extension! $troubleshooting");
-        extension_loaded("exif") || die("Datenstrom Yellow requires PHP Exif extension! $troubleshooting");
+        extension_loaded("gd") || die("Datenstrom Yellow requires PHP extension 'gd'! $troubleshooting");
+        extension_loaded("exif") || die("Datenstrom Yellow requires PHP extension 'exif'! $troubleshooting");
     }
 
     // Handle page content of shortcut
