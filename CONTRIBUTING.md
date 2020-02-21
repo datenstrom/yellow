@@ -26,7 +26,7 @@ We make things for people. Your contribution is very welcome.
 
 ## How to stay in touch 
 
-1. [Click on 'Watch' at the top](https://github.com/datenstrom/yellow) or [follow @datendesigner](https://twitter.com/datendesigner).
+1. [Click on 'Watch' at the top](https://github.com/datenstrom/yellow) or [follow @datendesigner on Twitter](https://twitter.com/datendesigner).
 2. Tell us about the websites, blogs, wikis and extensions you made.
 3. Answer questions and discus problems with others, if you enjoy it.
 4. Be notified of new releases in your mailbox. [What's new?](https://github.com/datenstrom/yellow/releases)
