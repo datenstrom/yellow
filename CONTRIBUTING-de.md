@@ -26,9 +26,10 @@ Wir machen Dinge für Menschen. Deine Mitarbeit ist sehr willkommen.
 
 ## Wie man in Verbindung bleibt 
 
-1. [Klicke ganz oben auf "Watch"](https://github.com/datenstrom/yellow).
-2. Beantworte Fragen und diskutiere Probleme mit anderen, wenn dir das Spass macht.
-3. Werde über neue Versionen in deiner Mailbox informiert. [Was ist neu?](https://github.com/datenstrom/yellow/releases)
+1. [Klicke ganz oben auf "Watch"](https://github.com/datenstrom/yellow) oder [folge @datendesigner](https://twitter.com/datendesigner).
+2. Erzähle uns von den Webseiten, Blogs, Wikis und Erweiterungen, die du erstellt hast.
+3. Beantworte Fragen und diskutiere Probleme mit anderen, wenn dir das Spass macht.
+4. Werde über neue Versionen in deiner Mailbox informiert. [Was ist neu?](https://github.com/datenstrom/yellow/releases)
 
 <p>
 <a href="CONTRIBUTING-de.md"><img src="https://raw.githubusercontent.com/datenstrom/yellow-extensions/master/features/help/language-de.png" width="15" height="15" alt="Deutsch">&nbsp; Deutsch</a>&nbsp;
