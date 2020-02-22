@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowInstall {
-    const VERSION = "0.8.17";
+    const VERSION = "0.8.18";
     const TYPE = "feature";
     const PRIORITY = "1";
     public $yellow;                 //access to API
@@ -12,20 +12,18 @@ class YellowInstall {
     // Handle initialisation
     public function onLoad($yellow) {
         $this->yellow = $yellow;
-        $troubleshooting = "<a href=\"https://datenstrom.se/yellow/help/troubleshooting\">See troubleshooting</a>.";
-        extension_loaded("curl") || die("Datenstrom Yellow requires PHP extension 'curl'! $troubleshooting");
-        extension_loaded("zip") || die("Datenstrom Yellow requires PHP extension 'zip'! $troubleshooting");
     }
     
     // Handle request
     public function onRequest($scheme, $address, $base, $location, $fileName) {
         $statusCode = 0;
         if ($this->yellow->lookup->isContentFile($fileName) || empty($fileName)) {
-            $server = $this->yellow->toolbox->getServerVersion(true);
             $troubleshooting = "<a href=\"https://datenstrom.se/yellow/help/troubleshooting\">See troubleshooting</a>.";
-            $this->checkServerConfiguration($server) || die("Datenstrom Yellow requires a configuration file for $server! $troubleshooting");
-            $this->checkServerRewrite($scheme, $address, $base, $location, $fileName) || die("Datenstrom Yellow requires rewrite support for $server! $troubleshooting");
-            $this->checkServerAccess() || die("Datenstrom Yellow requires write access for $server! $troubleshooting");
+            $server = $this->yellow->toolbox->getServerVersion(true);
+            $this->checkServerExtensions() || die("Datenstrom Yellow requires PHP extension '".$this->getServerExtensionRequired()."' for $server! $troubleshooting\n");
+            $this->checkServerConfiguration($server) || die("Datenstrom Yellow requires a configuration file for $server! $troubleshooting\n");
+            $this->checkServerRewrite($scheme, $address, $base, $location, $fileName) || die("Datenstrom Yellow requires rewrite support for $server! $troubleshooting\n");
+            $this->checkServerAccess() || die("Datenstrom Yellow requires write access for $server! $troubleshooting\n");
             $statusCode = $this->processRequestInstall($scheme, $address, $base, $location, $fileName);
         }
         return $statusCode;
@@ -33,6 +31,7 @@ class YellowInstall {
     
     // Handle command
     public function onCommand($args) {
+        $this->checkServerExtensions() || die("Datenstrom Yellow requires PHP extension '".$this->getServerExtensionRequired()."'!\n");
         return $this->processCommandInstall();
     }
     
@@ -269,6 +268,11 @@ class YellowInstall {
         return $statusCode;
     }
     
+    // Check web server extensions
+    public function checkServerExtensions() {
+        return empty($this->getServerExtensionRequired());
+    }
+    
     // Check web server configuration
     public function checkServerConfiguration($server) {
         return strtoloweru($server)!="apache" || is_file(".htaccess");
@@ -310,7 +314,17 @@ class YellowInstall {
         return array_unique($languages);
     }
     
-    // Return system data, detect server URL
+    // Return web server extension required
+    public function getServerExtensionRequired() {
+        $extension = "";
+        $extensionsRequired = "curl, dom, gd, exif, mbstring, zip";
+        foreach (preg_split("/\s*,\s*/", $extensionsRequired) as $extensionRequired) {
+            if (!extension_loaded($extensionRequired)) $extension = $extensionRequired;
+        }
+        return $extension;
+    }
+    
+    // Return system data, detect system settings
     public function getSystemData() {
         $data = array();
         foreach ($_REQUEST as $key=>$value) {
