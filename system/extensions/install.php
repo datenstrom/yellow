@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowInstall {
-    const VERSION = "0.8.18";
+    const VERSION = "0.8.19";
     const TYPE = "feature";
     const PRIORITY = "1";
     public $yellow;                 //access to API
@@ -268,10 +268,12 @@ class YellowInstall {
     // Check web server
     public function checkServer() {
         if ($this->yellow->isCommandLine()) {
+            version_compare(PHP_VERSION, "5.6", ">=") || die("Datenstrom Yellow requires PHP 5.6 or higher!\n");
             $this->checkServerExtensions() || die("Datenstrom Yellow requires PHP ".$this->getServerExtensionRequired()." extension!\n");
         } else {
             $server = $this->yellow->toolbox->getServerVersion(true);
             $troubleshooting = "<a href=\"https://datenstrom.se/yellow/help/troubleshooting\">See troubleshooting</a>.";
+            version_compare(PHP_VERSION, "5.6", ">=") || die("Datenstrom Yellow requires PHP 5.6 or higher! $troubleshooting\n");
             $this->checkServerExtensions() || die("Datenstrom Yellow requires PHP ".$this->getServerExtensionRequired()." extension for $server! $troubleshooting\n");
             $this->checkServerConfiguration() || die("Datenstrom Yellow requires a configuration file for $server! $troubleshooting\n");
             $this->checkServerRewrite() || die("Datenstrom Yellow requires rewrite support for $server! $troubleshooting\n");

@@ -74,8 +74,6 @@ class YellowCore {
     
     // Handle initialisation
     public function load() {
-        $troubleshooting = PHP_SAPI!="cli" ? "<a href=\"https://datenstrom.se/yellow/help/troubleshooting\">See troubleshooting</a>." : "";
-        version_compare(PHP_VERSION, "5.6", ">=") || die("Datenstrom Yellow requires PHP 5.6 or higher! $troubleshooting\n");
         if (defined("DEBUG") && DEBUG>=3) {
             $serverVersion = $this->toolbox->getServerVersion();
             echo "YellowCore::load Datenstrom Yellow ".YellowCore::VERSION.", PHP ".PHP_VERSION.", $serverVersion<br/>\n";
@@ -2198,6 +2196,7 @@ class YellowToolbox {
     public function getServerVersion($shortFormat = false) {
         $serverVersion = strtoupperu(PHP_SAPI)." ".PHP_OS;
         if (preg_match("/^(\S+)/", $_SERVER["SERVER_SOFTWARE"], $matches)) $serverVersion = $matches[1]." ".PHP_OS;
+        if (preg_match("/^(\S+)\/(\S+)/", $_SERVER["SERVER_SOFTWARE"], $matches)) $serverVersion = $matches[1]." ".$matches[2]." ".PHP_OS;
         if ($shortFormat && preg_match("/^(\pL+)/u", $serverVersion, $matches)) $serverVersion = $matches[1];
         return $serverVersion;
     }
