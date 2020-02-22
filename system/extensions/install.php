@@ -17,13 +17,7 @@ class YellowInstall {
     // Handle request
     public function onRequest($scheme, $address, $base, $location, $fileName) {
         $statusCode = 0;
-        if ($this->yellow->lookup->isContentFile($fileName) || empty($fileName)) {
-            $troubleshooting = "<a href=\"https://datenstrom.se/yellow/help/troubleshooting\">See troubleshooting</a>.";
-            $server = $this->yellow->toolbox->getServerVersion(true);
-            $this->checkServerExtensions() || die("Datenstrom Yellow requires PHP extension '".$this->getServerExtensionRequired()."' for $server! $troubleshooting\n");
-            $this->checkServerConfiguration($server) || die("Datenstrom Yellow requires a configuration file for $server! $troubleshooting\n");
-            $this->checkServerRewrite($scheme, $address, $base, $location, $fileName) || die("Datenstrom Yellow requires rewrite support for $server! $troubleshooting\n");
-            $this->checkServerAccess() || die("Datenstrom Yellow requires write access for $server! $troubleshooting\n");
+        if (($this->yellow->lookup->isContentFile($fileName) || empty($fileName)) && $this->checkServer()) {
             $statusCode = $this->processRequestInstall($scheme, $address, $base, $location, $fileName);
         }
         return $statusCode;
@@ -31,22 +25,9 @@ class YellowInstall {
     
     // Handle command
     public function onCommand($args) {
-        $this->checkServerExtensions() || die("Datenstrom Yellow requires PHP extension '".$this->getServerExtensionRequired()."'!\n");
-        return $this->processCommandInstall();
-    }
-    
-    // Process command to install website
-    public function processCommandInstall() {
-        $statusCode = $this->updateLog();
-        if ($statusCode==200) $statusCode = $this->updateLanguage();
-        if ($statusCode==200) $statusCode = $this->updateText("en");
-        if ($statusCode==200) $statusCode = $this->updateSystem($this->getSystemData());
-        if ($statusCode==200) $statusCode = $this->removeFiles();
-        if ($statusCode==200) {
-            $statusCode = 0;
-        } else {
-            echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
-            echo "Your website has ".($statusCode!=200 ? "not " : "")."been updated: Please run command again\n";
+        $statusCode = 0;
+        if ($this->checkServer()) {
+            $statusCode = $this->processCommandInstall();
         }
         return $statusCode;
     }
@@ -81,6 +62,22 @@ class YellowInstall {
             $statusCode = $this->yellow->sendStatus(303, $location);
         } else {
             $statusCode = $this->yellow->sendPage();
+        }
+        return $statusCode;
+    }
+    
+    // Process command to install website
+    public function processCommandInstall() {
+        $statusCode = $this->updateLog();
+        if ($statusCode==200) $statusCode = $this->updateLanguage();
+        if ($statusCode==200) $statusCode = $this->updateText("en");
+        if ($statusCode==200) $statusCode = $this->updateSystem($this->getSystemData());
+        if ($statusCode==200) $statusCode = $this->removeFiles();
+        if ($statusCode==200) {
+            $statusCode = 0;
+        } else {
+            echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
+            echo "Your website has ".($statusCode!=200 ? "not " : "")."been updated: Please run command again\n";
         }
         return $statusCode;
     }
@@ -268,19 +265,36 @@ class YellowInstall {
         return $statusCode;
     }
     
+    // Check web server
+    public function checkServer() {
+        if ($this->yellow->isCommandLine()) {
+            $this->checkServerExtensions() || die("Datenstrom Yellow requires PHP ".$this->getServerExtensionRequired()." extension!\n");
+        } else {
+            $server = $this->yellow->toolbox->getServerVersion(true);
+            $troubleshooting = "<a href=\"https://datenstrom.se/yellow/help/troubleshooting\">See troubleshooting</a>.";
+            $this->checkServerExtensions() || die("Datenstrom Yellow requires PHP ".$this->getServerExtensionRequired()." extension for $server! $troubleshooting\n");
+            $this->checkServerConfiguration() || die("Datenstrom Yellow requires a configuration file for $server! $troubleshooting\n");
+            $this->checkServerRewrite() || die("Datenstrom Yellow requires rewrite support for $server! $troubleshooting\n");
+            $this->checkServerWrite() || die("Datenstrom Yellow requires write access for $server! $troubleshooting\n");
+        }
+        return true;
+    }
+    
     // Check web server extensions
     public function checkServerExtensions() {
         return empty($this->getServerExtensionRequired());
     }
     
-    // Check web server configuration
-    public function checkServerConfiguration($server) {
+    // Check web server configuration file
+    public function checkServerConfiguration() {
+        $server = $this->yellow->toolbox->getServerVersion(true);
         return strtoloweru($server)!="apache" || is_file(".htaccess");
     }
     
-    // Check web server rewrite
-    public function checkServerRewrite($scheme, $address, $base, $location, $fileName) {
+    // Check web server rewrite support
+    public function checkServerRewrite() {
         $curlHandle = curl_init();
+        list($scheme, $address, $base) = $this->yellow->getRequestInformation();
         $location = $this->yellow->system->get("coreResourceLocation").$this->yellow->lookup->normaliseName($this->yellow->system->get("theme")).".css";
         $url = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
         curl_setopt($curlHandle, CURLOPT_URL, $url);
@@ -294,7 +308,7 @@ class YellowInstall {
     }
     
     // Check web server write access
-    public function checkServerAccess() {
+    public function checkServerWrite() {
         $fileName = $this->yellow->system->get("coreSettingDir").$this->yellow->system->get("coreSystemFile");
         return $this->yellow->system->save($fileName, array());
     }
@@ -324,7 +338,7 @@ class YellowInstall {
         return $extension;
     }
     
-    // Return system data, detect system settings
+    // Return system data including static information
     public function getSystemData() {
         $data = array();
         foreach ($_REQUEST as $key=>$value) {
