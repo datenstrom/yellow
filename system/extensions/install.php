@@ -267,7 +267,7 @@ class YellowInstall {
         $serverVersion = $this->yellow->toolbox->getServerVersion(true);
         $troubleshooting = "<a href=\"https://datenstrom.se/yellow/help/troubleshooting\">See troubleshooting</a>.";
         $this->checkServerConfiguration() || die("Datenstrom Yellow requires a configuration file for $serverVersion! $troubleshooting\n");
-        $this->checkServerRewrite($scheme, $address, $base) || die("Datenstrom Yellow requires rewrite support for $serverVersion! $troubleshooting\n");
+        $this->checkServerRewrite() || die("Datenstrom Yellow requires rewrite support for $serverVersion! $troubleshooting\n");
         $this->checkServerWrite() || die("Datenstrom Yellow requires write access for $serverVersion! $troubleshooting\n");
         return true;
     }
