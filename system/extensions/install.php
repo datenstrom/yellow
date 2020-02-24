@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowInstall {
-    const VERSION = "0.8.19";
+    const VERSION = "0.8.20";
     const TYPE = "feature";
     const PRIORITY = "1";
     public $yellow;                 //access to API
@@ -17,7 +17,7 @@ class YellowInstall {
     // Handle request
     public function onRequest($scheme, $address, $base, $location, $fileName) {
         $statusCode = 0;
-        if (($this->yellow->lookup->isContentFile($fileName) || empty($fileName)) && $this->checkServer()) {
+        if ($this->yellow->lookup->isContentFile($fileName) || empty($fileName)) {
             $statusCode = $this->processRequestInstall($scheme, $address, $base, $location, $fileName);
         }
         return $statusCode;
@@ -25,15 +25,12 @@ class YellowInstall {
     
     // Handle command
     public function onCommand($args) {
-        $statusCode = 0;
-        if ($this->checkServer()) {
-            $statusCode = $this->processCommandInstall();
-        }
-        return $statusCode;
+        return $this->processCommandInstall();
     }
     
     // Process request to install website
     public function processRequestInstall($scheme, $address, $base, $location, $fileName) {
+        $this->checkServerRequirements();
         $author = trim(preg_replace("/[^\pL\d\-\. ]/u", "-", $_REQUEST["author"]));
         $email = trim($_REQUEST["email"]);
         $password = trim($_REQUEST["password"]);
@@ -56,7 +53,7 @@ class YellowInstall {
         if ($status=="ok") $status = $this->updateContent($language, "coreError404", "/shared/page-error-404")==200 ? "ok" : "error";
         if ($status=="ok") $status = $this->updateText($language)==200 ? "ok" : "error";
         if ($status=="ok") $status = $this->updateSystem($this->getSystemData())==200 ? "ok" : "error";
-        if ($status=="ok") $status = $this->removeFiles()==200 ? "done" : "error";
+        if ($status=="ok") $status = $this->removeInstall()==200 ? "done" : "error";
         if ($status=="done") {
             $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
             $statusCode = $this->yellow->sendStatus(303, $location);
@@ -72,7 +69,7 @@ class YellowInstall {
         if ($statusCode==200) $statusCode = $this->updateLanguage();
         if ($statusCode==200) $statusCode = $this->updateText("en");
         if ($statusCode==200) $statusCode = $this->updateSystem($this->getSystemData());
-        if ($statusCode==200) $statusCode = $this->removeFiles();
+        if ($statusCode==200) $statusCode = $this->removeInstall();
         if ($statusCode==200) {
             $statusCode = 0;
         } else {
@@ -244,7 +241,7 @@ class YellowInstall {
     }
     
     // Remove files used by installation
-    public function removeFiles() {
+    public function removeInstall() {
         $statusCode = 200;
         if (function_exists("opcache_reset")) opcache_reset();
         $path = $this->yellow->system->get("coreExtensionDir");
@@ -265,32 +262,20 @@ class YellowInstall {
         return $statusCode;
     }
     
-    // Check web server
-    public function checkServer() {
-        if ($this->yellow->isCommandLine()) {
-            version_compare(PHP_VERSION, "5.6", ">=") || die("Datenstrom Yellow requires PHP 5.6 or higher!\n");
-            $this->checkServerExtensions() || die("Datenstrom Yellow requires PHP ".$this->getServerExtensionRequired()." extension!\n");
-        } else {
-            $server = $this->yellow->toolbox->getServerVersion(true);
-            $troubleshooting = "<a href=\"https://datenstrom.se/yellow/help/troubleshooting\">See troubleshooting</a>.";
-            version_compare(PHP_VERSION, "5.6", ">=") || die("Datenstrom Yellow requires PHP 5.6 or higher! $troubleshooting\n");
-            $this->checkServerExtensions() || die("Datenstrom Yellow requires PHP ".$this->getServerExtensionRequired()." extension for $server! $troubleshooting\n");
-            $this->checkServerConfiguration() || die("Datenstrom Yellow requires a configuration file for $server! $troubleshooting\n");
-            $this->checkServerRewrite() || die("Datenstrom Yellow requires rewrite support for $server! $troubleshooting\n");
-            $this->checkServerWrite() || die("Datenstrom Yellow requires write access for $server! $troubleshooting\n");
-        }
+    // Check web server requirements
+    public function checkServerRequirements() {
+        $serverVersion = $this->yellow->toolbox->getServerVersion(true);
+        $troubleshooting = "<a href=\"https://datenstrom.se/yellow/help/troubleshooting\">See troubleshooting</a>.";
+        $this->checkServerConfiguration() || die("Datenstrom Yellow requires a configuration file for $serverVersion! $troubleshooting\n");
+        $this->checkServerRewrite($scheme, $address, $base) || die("Datenstrom Yellow requires rewrite support for $serverVersion! $troubleshooting\n");
+        $this->checkServerWrite() || die("Datenstrom Yellow requires write access for $serverVersion! $troubleshooting\n");
         return true;
-    }
-    
-    // Check web server extensions
-    public function checkServerExtensions() {
-        return empty($this->getServerExtensionRequired());
     }
     
     // Check web server configuration file
     public function checkServerConfiguration() {
-        $server = $this->yellow->toolbox->getServerVersion(true);
-        return strtoloweru($server)!="apache" || is_file(".htaccess");
+        $serverVersion = $this->yellow->toolbox->getServerVersion(true);
+        return strtoloweru($serverVersion)!="apache" || is_file(".htaccess");
     }
     
     // Check web server rewrite support
@@ -306,7 +291,7 @@ class YellowInstall {
         $rawData = curl_exec($curlHandle);
         $statusCode = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);
         curl_close($curlHandle);
-        return !empty($rawData) && $statusCode==200;
+        return $statusCode==200;
     }
     
     // Check web server write access
@@ -328,16 +313,6 @@ class YellowInstall {
             if (!empty($language)) array_push($languages, $language);
         }
         return array_unique($languages);
-    }
-    
-    // Return web server extension required
-    public function getServerExtensionRequired() {
-        $extension = "";
-        $extensionsRequired = "curl, dom, gd, exif, mbstring, zip";
-        foreach (preg_split("/\s*,\s*/", $extensionsRequired) as $extensionRequired) {
-            if (!extension_loaded($extensionRequired)) $extension = $extensionRequired;
-        }
-        return $extension;
     }
     
     // Return system data including static information

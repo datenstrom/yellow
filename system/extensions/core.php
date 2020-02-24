@@ -16,6 +16,9 @@ class YellowCore {
     public $extensions;     //features and themes
 
     public function __construct() {
+        $this->checkRequirements();
+        mb_internal_encoding("UTF-8");
+        error_reporting(E_ALL ^ E_NOTICE);
         $this->page = new YellowPage($this);
         $this->content = new YellowContent($this);
         $this->media = new YellowMedia($this);
@@ -72,6 +75,17 @@ class YellowCore {
         $this->shutdown();
     }
     
+    // Check requirements
+    public function checkRequirements() {
+        $troubleshooting = PHP_SAPI!="cli" ? "<a href=\"https://datenstrom.se/yellow/help/troubleshooting\">See troubleshooting</a>." : "";
+        version_compare(PHP_VERSION, "5.6", ">=") || die("Datenstrom Yellow requires PHP 5.6 or higher! $troubleshooting\n");
+        extension_loaded("curl") || die("Datenstrom Yellow requires PHP curl extension! $troubleshooting\n");
+        extension_loaded("gd") || die("Datenstrom Yellow requires PHP gd extension! $troubleshooting\n");
+        extension_loaded("exif") || die("Datenstrom Yellow requires PHP exif extension! $troubleshooting\n");
+        extension_loaded("mbstring") || die("Datenstrom Yellow requires PHP mbstring extension! $troubleshooting\n");
+        extension_loaded("zip") || die("Datenstrom Yellow requires PHP zip extension! $troubleshooting\n");
+    }
+
     // Handle initialisation
     public function load() {
         if (defined("DEBUG") && DEBUG>=3) {
@@ -3035,8 +3049,7 @@ class YellowExtensions {
     }
 }
 
-// Unicode support for PHP
-mb_internal_encoding("UTF-8");
+// Unicode string support
 function strempty($string) {
     return is_null($string) || $string==="";
 }
@@ -3076,6 +3089,3 @@ function substru() {
 function substrb() {
     return call_user_func_array("substr", func_get_args());
 }
-
-// Error reporting for PHP
-error_reporting(E_ALL ^ E_NOTICE);
