@@ -3,7 +3,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 var yellow = {
-    onLoad: function() { yellow.edit.load(); },
+    onLoad: function(e) { yellow.edit.load(e); },
     onKeydown: function(e) { yellow.edit.keydown(e); },
     onDrag: function(e) { yellow.edit.drag(e); },
     onDrop: function(e) { yellow.edit.drop(e); },
@@ -22,12 +22,16 @@ yellow.edit = {
     intervalId: 0,      //timer interval ID
 
     // Handle initialisation
-    load: function() {
+    load: function(e) {
         var body = document.getElementsByTagName("body")[0];
         if (body && body.firstChild && !document.getElementById("yellow-bar")) {
             this.createBar("yellow-bar");
             this.processAction(yellow.page.action, yellow.page.status);
             clearInterval(this.intervalId);
+        }
+        if (e.type=="DOMContentLoaded") {
+            var page = document.getElementsByClassName("page")[0];
+            if (page) this.bindActions(page);
         }
     },
     
@@ -862,6 +866,8 @@ yellow.edit = {
     bindActions: function(element) {
         var elements = element.getElementsByTagName("a");
         for (var i=0, l=elements.length; i<l; i++) {
+            var href = elements[i].getAttribute("href");
+            if (href.substring(0, 13)=="#data-action-") elements[i].setAttribute("data-action", href.substring(13));
             if (elements[i].getAttribute("data-action")) elements[i].onclick = yellow.onClickAction;
             if (elements[i].getAttribute("data-action")=="toolbar") elements[i].onmousedown = function(e) { e.preventDefault(); };
         }
@@ -1475,4 +1481,5 @@ yellow.toolbox = {
     }
 };
 
-yellow.edit.intervalId = setInterval("yellow.onLoad()", 1);
+yellow.edit.intervalId = setInterval("yellow.onLoad(new Event('DOMContentLoading'))", 1);
+window.addEventListener("DOMContentLoaded", yellow.onLoad, false);

@@ -1,10 +1,10 @@
 <?php
 // Markdown extension, https://github.com/datenstrom/yellow-extensions/tree/master/features/markdown
-// Copyright (c) 2013-2019 Datenstrom, https://datenstrom.se
+// Copyright (c) 2013-2020 Datenstrom, https://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 class YellowMarkdown {
-    const VERSION = "0.8.11";
+    const VERSION = "0.8.12";
     const TYPE = "feature";
     public $yellow;         //access to API
     
@@ -15,7 +15,7 @@ class YellowMarkdown {
     
     // Handle page content in raw format
     public function onParseContentRaw($page, $text) {
-        $markdown = new YellowMarkdownExtraParser($this->yellow, $page);
+        $markdown = new YellowMarkdownParser($this->yellow, $page);
         return $markdown->transform($text);
     }
 }
@@ -3831,10 +3831,10 @@ class MarkdownExtraParser extends MarkdownParser {
 	}
 }
 
-// Yellow Markdown extra extension
-// Copyright (c) 2013-2019 Datenstrom
+// Datenstrom Yellow Markdown parser
+// Copyright (c) 2013-2020 Datenstrom
 
-class YellowMarkdownExtraParser extends MarkdownExtraParser {
+class YellowMarkdownParser extends MarkdownExtraParser {
     public $yellow;             //access to API
     public $page;               //access to page
     public $idAttributes;       //id attributes
@@ -3845,10 +3845,8 @@ class YellowMarkdownExtraParser extends MarkdownExtraParser {
         $this->page = $page;
         $this->idAttributes = array();
         $this->noticeLevel = 0;
-        $this->no_markup = $page->safeMode;
         $this->url_filter_func = function($url) use ($yellow, $page) {
-            return $yellow->lookup->normaliseLocation($url, $page->location,
-                $page->safeMode && $page->statusCode==200);
+            return $yellow->lookup->normaliseLocation($url, $page->location);
         };
         $this->span_gamut += array("doStrikethrough" => 55);
         $this->block_gamut += array("doNoticeBlocks" => 65);

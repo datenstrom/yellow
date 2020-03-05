@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowUpdate {
-    const VERSION = "0.8.16";
+    const VERSION = "0.8.17";
     const TYPE = "feature";
     const PRIORITY = "2";
     public $yellow;                 //access to API
@@ -68,11 +68,10 @@ class YellowUpdate {
             }
         }
         if ($action=="update") {  //TODO: remove later, converts old content settings
-            if ($this->yellow->system->isExisting("safeMode")) {
-                $coreSafeMode = $this->yellow->system->get("safeMode");
+            if ($this->yellow->system->isExisting("multiLanguageMode")) {
                 $coreMultiLanguageMode = $this->yellow->system->get("multiLanguageMode");
                 $fileName = $this->yellow->system->get("coreSettingDir").$this->yellow->system->get("coreSystemFile");
-                $this->yellow->system->save($fileName, array("coreSafeMode" => $coreSafeMode, "coreMultiLanguageMode" => $coreMultiLanguageMode));
+                $this->yellow->system->save($fileName, array("coreMultiLanguageMode" => $coreMultiLanguageMode));
                 $path = $this->yellow->system->get("coreContentDir");
                 foreach ($this->yellow->toolbox->getDirectoryEntriesRecursive($path, "/^.*\.md$/", true, false) as $entry) {
                     $fileData = $fileDataNew = $this->yellow->toolbox->readFile($entry);

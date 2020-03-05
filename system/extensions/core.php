@@ -43,7 +43,6 @@ class YellowCore {
         $this->system->setDefault("coreTrashDir", "system/trash/");
         $this->system->setDefault("coreServerUrl", "auto");
         $this->system->setDefault("coreServerTimezone", "UTC");
-        $this->system->setDefault("coreSafeMode", "0");
         $this->system->setDefault("coreMultiLanguageMode", "0");
         $this->system->setDefault("coreMediaLocation", "/media/");
         $this->system->setDefault("coreDownloadLocation", "/media/downloads/");
@@ -85,7 +84,7 @@ class YellowCore {
         extension_loaded("mbstring") || die("Datenstrom Yellow requires PHP mbstring extension! $troubleshooting\n");
         extension_loaded("zip") || die("Datenstrom Yellow requires PHP zip extension! $troubleshooting\n");
     }
-
+    
     // Handle initialisation
     public function load() {
         if (defined("DEBUG") && DEBUG>=3) {
@@ -187,8 +186,8 @@ class YellowCore {
                 $rawData = $this->toolbox->readFile($fileNameError);
             } else {
                 $language = $this->lookup->findLanguageFromFile($fileName, $this->system->get("language"));
-                $rawData = "---\nTitle:".$this->text->getText("coreError${statusCode}Title", $language)."\n";
-                $rawData .= "Layout:error\n---\n".$this->text->getText("coreError${statusCode}Text", $language);
+                $rawData = "---\nTitle: ".$this->text->getText("coreError${statusCode}Title", $language)."\n";
+                $rawData .= "Layout: error\n---\n".$this->text->getText("coreError${statusCode}Text", $language);
             }
             $cacheable = false;
         } else {
@@ -292,7 +291,7 @@ class YellowCore {
             $handler = $this->getCommandHandler();
             echo "YellowCore::command status:$statusCode handler:$handler time:$time ms<br/>\n";
         }
-        return $statusCode;
+        return $statusCode<400 ? 0 : 1;
     }
     
     // Handle startup
@@ -401,7 +400,6 @@ class YellowPage {
     public $outputData;             //response output
     public $parser;                 //content parser
     public $parserData;             //content data of page
-    public $safeMode;               //page is parsed in safe mode? (boolean)
     public $available;              //page is available? (boolean)
     public $visible;                //page is visible location? (boolean)
     public $active;                 //page is active location? (boolean)
@@ -431,7 +429,6 @@ class YellowPage {
         $this->rawData = $rawData;
         $this->parser = null;
         $this->parserData = "";
-        $this->safeMode = intval($this->yellow->system->get("coreSafeMode"));
         $this->available = $this->yellow->lookup->isAvailableLocation($this->location, $this->fileName);
         $this->visible = true;
         $this->active = $this->yellow->lookup->isActiveLocation($this->location, $this->yellow->page->location);
@@ -519,6 +516,7 @@ class YellowPage {
                     $this->parserData = preg_replace("/@pageRead/i", $this->get("pageRead"), $this->parserData);
                     $this->parserData = preg_replace("/@pageEdit/i", $this->get("pageEdit"), $this->parserData);
                     $this->parserData = $this->parser->onParseContentRaw($this, $this->parserData);
+                    $this->parserData = $this->yellow->toolbox->normaliseData($this->parserData, "html");
                     foreach ($this->yellow->extensions->extensions as $key=>$value) {
                         if (method_exists($value["obj"], "onParseContentText")) {
                             $output = $value["obj"]->onParseContentText($this, $this->parserData);
@@ -564,7 +562,6 @@ class YellowPage {
                         fclose($fileHandle);
                     }
                     $output = strreplaceu("\n", "<br />\n", htmlspecialchars($dataBuffer));
-                    if ($this->safeMode || empty($output)) $output = "No log file available.";
                 }
             }
         }
@@ -615,11 +612,9 @@ class YellowPage {
     // Parse page layout
     public function parsePageLayout($name) {
         $this->outputData = null;
-        if (!$this->isError()) {
-            foreach ($this->yellow->extensions->extensions as $key=>$value) {
-                if (method_exists($value["obj"], "onParsePageLayout")) {
-                    $value["obj"]->onParsePageLayout($this, $name);
-                }
+        foreach ($this->yellow->extensions->extensions as $key=>$value) {
+            if (method_exists($value["obj"], "onParsePageLayout")) {
+                $value["obj"]->onParsePageLayout($this, $name);
             }
         }
         if (is_null($this->outputData)) {
@@ -1257,7 +1252,7 @@ class YellowContent {
                 if ($match[1]==2) {
                     $page = new YellowPage($this->yellow);
                     $page->setRequestInformation($scheme, $address, $base, $one->location."#".$match[2], $one->fileName);
-                    $page->parseData("---\nTitle:$match[3]\n---\n", false, 0);
+                    $page->parseData("---\nTitle: $match[3]\n---\n", false, 0);
                     $pages->append($page);
                 }
             }
@@ -2078,12 +2073,12 @@ class YellowLookup {
         if (!preg_match("/^\w+:/", trim(html_entity_decode($location, ENT_QUOTES, "UTF-8")))) {
             $pageBase = $this->yellow->page->base;
             $mediaBase = $this->yellow->system->get("coreServerBase").$this->yellow->system->get("coreMediaLocation");
-            if (preg_match("/^\#/", $location)) {
-                $location = $pageBase.$pageLocation.$location;
-            } elseif (!preg_match("/^\//", $location)) {
-                $location = $this->getDirectoryLocation($pageBase.$pageLocation).$location;
-            } elseif (!preg_match("#^($pageBase|$mediaBase)#", $location)) {
-                $location = $pageBase.$location;
+            if (!preg_match("/^\#/", $location)) {
+                if (!preg_match("/^\//", $location)) {
+                    $location = $this->getDirectoryLocation($pageBase.$pageLocation).$location;
+                } elseif (!preg_match("#^($pageBase|$mediaBase)#", $location)) {
+                    $location = $pageBase.$location;
+                }
             }
             $location = strreplaceu("/./", "/", $location);
             $location = strreplaceu(":", $this->yellow->toolbox->getLocationArgsSeparator(), $location);
@@ -2386,6 +2381,70 @@ class YellowToolbox {
         return strreplaceu(array("%2F","%3A","%3D"), array("/",":","="), rawurlencode($text));
     }
     
+    // Normalise elements and attributes in html/svg data
+    public function normaliseData($text, $type = "html", $filterStrict = true) {
+        $elementsHtml = array(
+            "a", "abbr", "acronym", "address", "area", "article", "aside", "audio", "b", "bdi", "bdo", "big", "blink", "blockquote", "body", "br", "button", "canvas", "caption", "center", "cite", "code", "col", "colgroup", "content", "data", "datalist", "dd", "decorator", "del", "details", "dfn", "dir", "div", "dl", "dt", "element", "em", "fieldset", "figcaption", "figure", "font", "footer", "form", "h1", "h2", "h3", "h4", "h5", "h6", "head", "header", "hgroup", "hr", "html", "i", "iframe", "image", "img", "input", "ins", "kbd", "label", "legend", "li", "main", "map", "mark", "marquee", "menu", "menuitem", "meta", "meter", "nav", "nobr", "ol", "optgroup", "option", "output", "p", "pre", "progress", "q", "rp", "rt", "ruby", "s", "samp", "section", "select", "shadow", "small", "source", "spacer", "span", "strike", "strong", "style", "sub", "summary", "sup", "table", "tbody", "td", "template", "textarea", "tfoot", "th", "thead", "time", "title", "tr", "track", "tt", "u", "ul", "var", "video", "wbr");
+        $elementsSvg = array(
+            "svg", "altglyph", "altglyphdef", "altglyphitem", "animatecolor", "animatemotion", "animatetransform", "circle", "clippath", "defs", "desc", "ellipse", "feblend", "fecolormatrix", "fecomponenttransfer", "fecomposite", "feconvolvematrix", "fediffuselighting", "fedisplacementmap", "fedistantlight", "feflood", "fefunca", "fefuncb", "fefuncg", "fefuncr", "fegaussianblur", "femerge", "femergenode", "femorphology", "feoffset", "fepointlight", "fespecularlighting", "fespotlight", "fetile", "feturbulence", "filter", "font", "g", "glyph", "glyphref", "hkern", "image", "line", "lineargradient", "marker", "mask", "metadata", "mpath", "path", "pattern", "polygon", "polyline", "radialgradient", "rect", "stop", "switch", "symbol", "text", "textpath", "title", "tref", "tspan", "use", "view", "vkern");
+        $attributesHtml = array(
+            "accept", "action", "align", "allowfullscreen", "alt", "autocomplete", "background", "bgcolor", "border", "cellpadding", "cellspacing", "charset", "checked", "cite", "class", "clear", "color", "cols", "colspan", "content", "coords", "crossorigin", "datetime", "default", "dir", "disabled", "download", "enctype", "face", "for", "frameborder", "headers", "height", "hidden", "high", "href", "hreflang", "id", "integrity", "ismap", "label", "lang", "list", "loop", "low", "max", "maxlength", "media", "method", "min", "multiple", "name", "noshade", "novalidate", "nowrap", "open", "optimum", "pattern", "placeholder", "poster", "prefix", "preload", "property", "pubdate", "radiogroup", "readonly", "rel", "required", "rev", "reversed", "role", "rows", "rowspan", "spellcheck", "scope", "selected", "shape", "size", "sizes", "span", "srclang", "start", "src", "srcset", "step", "style", "summary", "tabindex", "title", "type", "usemap", "valign", "value", "width", "xmlns");
+        $attributesSvg = array(
+            "accent-height", "accumulate", "additivive", "alignment-baseline", "ascent", "attributename", "attributetype", "azimuth", "basefrequency", "baseline-shift", "begin", "bias", "by", "class", "clip", "clip-path", "clip-rule", "color", "color-interpolation", "color-interpolation-filters", "color-profile", "color-rendering", "cx", "cy", "d", "datenstrom", "dx", "dy", "diffuseconstant", "direction", "display", "divisor", "dur", "edgemode", "elevation", "end", "fill", "fill-opacity", "fill-rule", "filter", "flood-color", "flood-opacity", "font-family", "font-size", "font-size-adjust", "font-stretch", "font-style", "font-variant", "font-weight", "fx", "fy", "g1", "g2", "glyph-name", "glyphref", "gradientunits", "gradienttransform", "height", "href", "id", "image-rendering", "in", "in2", "k", "k1", "k2", "k3", "k4", "kerning", "keypoints", "keysplines", "keytimes", "lang", "lengthadjust", "letter-spacing", "kernelmatrix", "kernelunitlength", "lighting-color", "local", "marker-end", "marker-mid", "marker-start", "markerheight", "markerunits", "markerwidth", "maskcontentunits", "maskunits", "max", "mask", "media", "method", "mode", "min", "name", "numoctaves", "offset", "operator", "opacity", "order", "orient", "orientation", "origin", "overflow", "paint-order", "path", "pathlength", "patterncontentunits", "patterntransform", "patternunits", "points", "preservealpha", "preserveaspectratio", "r", "rx", "ry", "radius", "refx", "refy", "repeatcount", "repeatdur", "restart", "result", "rotate", "scale", "seed", "shape-rendering", "specularconstant", "specularexponent", "spreadmethod", "stddeviation", "stitchtiles", "stop-color", "stop-opacity", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke", "stroke-width", "style", "surfacescale", "tabindex", "targetx", "targety", "transform", "text-anchor", "text-decoration", "text-rendering", "textlength", "type", "u1", "u2", "unicode", "values", "viewbox", "visibility", "vert-adv-y", "vert-origin-x", "vert-origin-y", "width", "word-spacing", "wrap", "writing-mode", "xchannelselector", "ychannelselector", "x", "x1", "x2", "xlink:href", "xml:id", "xml:space", "xmlns", "y", "y1", "y2", "z", "zoomandpan");
+        $elementsSafe = $elementsHtml;
+        $attributesSafe = $attributesHtml;
+        if ($type=="svg") {
+            $elementsSafe = array_merge($elementsHtml, $elementsSvg);
+            $attributesSafe = array_merge($attributesHtml, $attributesSvg);
+        }
+        while (true) {
+            $elementFound = preg_match("/<(\/?)([\!\?\w]+)(.*?)(\/?)>/s", $text, $matches, PREG_OFFSET_CAPTURE, $offsetBytes);
+            $elementBefore = $elementFound ? substrb($text, $offsetBytes, $matches[0][1] - $offsetBytes) : substrb($text, $offsetBytes);
+            $elementStart = $matches[1][0];
+            $elementName = $matches[2][0];
+            $elementMiddle = $matches[3][0];
+            $elementEnd = $matches[4][0];
+            $output .= $elementBefore;
+            if ($elementName[0]=="!") {
+                $output .= "<$elementName$elementMiddle>";
+            } elseif (in_array(strtolower($elementName), $elementsSafe)) {
+                $elementAttributes = $this->getTextAttributes($elementMiddle);
+                foreach ($elementAttributes as $key=>$value) {
+                    if (!in_array(strtolower($key), $attributesSafe) && !preg_match("/^(aria|data)-/i", $key)) {
+                        unset($elementAttributes[$key]);
+                    }
+                }
+                if ($filterStrict) {
+                    $href = isset($elementAttributes["href"]) ? $elementAttributes["href"] : "";
+                    if (preg_match("/^\w+:/", $href) && !preg_match("/^(http|https|ftp|mailto):/", $href)) {
+                        $elementAttributes["href"] = "error-xss-filter";
+                    }
+                    $href = isset($elementAttributes["xlink:href"]) ? $elementAttributes["xlink:href"] : "";
+                    if (preg_match("/^\w+:/", $href) && !preg_match("/^(http|https|ftp|mailto):/", $href)) {
+                        $elementAttributes["xlink:href"] = "error-xss-filter";
+                    }
+                }
+                $output .= "<$elementStart$elementName";
+                foreach ($elementAttributes as $key=>$value) $output .= " $key=\"$value\"";
+                if (!empty($elementEnd)) $output .= " ";
+                $output .= "$elementEnd>";
+            }
+            if (!$elementFound) break;
+            $offsetBytes = $matches[0][1] + strlenb($matches[0][0]);
+        }
+        return $output;
+    }
+    
+    // Normalise text lines, convert line endings
+    public function normaliseLines($text, $endOfLine = "lf") {
+        if ($endOfLine=="lf") {
+            $text = preg_replace("/\R/u", "\n", $text);
+        } else {
+            $text = preg_replace("/\R/u", "\r\n", $text);
+        }
+        return $text;
+    }
+    
     // Normalise text into UTF-8 NFC
     public function normaliseUnicode($text) {
         if (PHP_OS=="Darwin" && !mb_check_encoding($text, "ASCII")) {
@@ -2656,6 +2715,49 @@ class YellowToolbox {
         return $lines;
     }
     
+    // Return attributes from text string
+    public function getTextAttributes($text) {
+        $tokens = array();
+        $posStart = $posQuote = 0;
+        for ($pos=0; $pos<strlenb($text); ++$pos) {
+            if ($text[$pos]==" " && !$posQuote) {
+                if ($pos>$posStart) array_push($tokens, substrb($text, $posStart, $pos-$posStart));
+                $posStart = $pos+1;
+            }
+            if ($text[$pos]=="=" && !$posQuote) {
+                if ($pos>$posStart) array_push($tokens, substrb($text, $posStart, $pos-$posStart));
+                array_push($tokens, "=");
+                $posStart = $pos+1;
+            }
+            if ($text[$pos]=="\"") {
+                if ($posQuote) {
+                    if ($pos>$posQuote) array_push($tokens, substrb($text, $posQuote+1, $pos-$posQuote-1));
+                    $posQuote = 0;
+                    $posStart = $pos+1;
+                } else {
+                    if ($pos==$posStart) $posQuote = $pos;
+                }
+            }
+        }
+        if ($pos>$posStart && !$posQuote) {
+            array_push($tokens, substrb($text, $posStart, $pos-$posStart));
+        }
+        $attributes = array();
+        for ($i=0; $i<count($tokens); ++$i) {
+            if ($tokens[$i+1]=="=") {
+                $key = $tokens[$i];
+                $value = $tokens[$i+2];
+                $i += 2;
+            } else {
+                $key = $value = $tokens[$i];
+            }
+            if (!strempty($key) && !strempty($value)) {
+                $attributes[$key] = $value;
+            }
+        }
+        return $attributes;
+    }
+    
     // Return arguments from text string, space separated
     public function getTextArgs($text, $optional = "-") {
         $text = preg_replace("/\s+/s", " ", trim($text));
@@ -2673,78 +2775,83 @@ class YellowToolbox {
         return str_word_count($text);
     }
     
+    // Return text truncated at word boundary
+    public function getTextTruncated($text, $lengthMax) {
+        if (strlenu($text)>$lengthMax-1) {
+            $text = substru($text, 0, $lengthMax);
+            $pos = strrposu($text, " ");
+            $text = substru($text, 0, $pos ? $pos : $lengthMax-1)."…";
+        }
+        return $text;
+    }
+    
     // Create description from text string
     public function createTextDescription($text, $lengthMax = 0, $removeHtml = true, $endMarker = "", $endMarkerText = "") {
-        if (preg_match("/^<h1>.*?<\/h1>(.*)$/si", $text, $matches)) $text = $matches[1];
+        $elementsBlock = array("blockquote", "br", "div", "h1", "h2", "h3", "h4", "h5", "h6", "hr", "li", "ol", "p", "pre", "ul");
+        $elementsVoid = array("area", "br", "col", "embed", "hr", "img", "input", "param", "source", "wbr");
         if ($lengthMax==0) $lengthMax = strlenu($text);
         if ($removeHtml) {
             while (true) {
-                $elementFound = preg_match("/<\s*?([\/!]?\w*)(.*?)\s*?\>/s", $text, $matches, PREG_OFFSET_CAPTURE, $offsetBytes);
-                $element = $matches[0][0];
-                $elementName = $matches[1][0];
-                $elementText = $matches[2][0];
-                $elementOffsetBytes = $elementFound ? $matches[0][1] : strlenb($text);
-                $string = html_entity_decode(substrb($text, $offsetBytes, $elementOffsetBytes - $offsetBytes), ENT_QUOTES, "UTF-8");
-                if (preg_match("/^(blockquote|br|div|h\d|hr|li|ol|p|pre|ul)/i", $elementName)) $string .= " ";
-                if (preg_match("/^\/(code|pre)/i", $elementName)) $string = preg_replace("/^(\d+\n){2,}$/", "", $string);
-                $string = preg_replace("/\s+/s", " ", $string);
-                if (substru($string, 0, 1)==" " && (empty($output) || substru($output, -1)==" ")) $string = substru($string, 1);
-                $length = strlenu($string);
-                $output .= substru($string, 0, $length<$lengthMax ? $length : $lengthMax-1);
-                $lengthMax -= $length;
-                if (!empty($element) && $element==$endMarker) {
+                $elementFound = preg_match("/<(\/?)([\!\?\w]+)(.*?)(\/?)>/s", $text, $matches, PREG_OFFSET_CAPTURE, $offsetBytes);
+                $elementBefore = $elementFound ? substrb($text, $offsetBytes, $matches[0][1] - $offsetBytes) : substrb($text, $offsetBytes);
+                $elementRawData = $matches[0][0];
+                $elementStart = $matches[1][0];
+                $elementName = $matches[2][0];
+                if(!strempty($elementBefore)) {
+                    $rawText = preg_replace("/\s+/s", " ", html_entity_decode($elementBefore, ENT_QUOTES, "UTF-8"));
+                    if (empty($elementStart) && in_array(strtolower($elementName), $elementsBlock)) $rawText = rtrim($rawText)." ";
+                    if (substru($rawText, 0, 1)==" " && (empty($output) || substru($output, -1)==" ")) $rawText = ltrim($rawText);
+                    $output .= $this->getTextTruncated($rawText, $lengthMax);
+                    $lengthMax -= strlenu($rawText);
+                }
+                if (!empty($elementRawData) && $elementRawData==$endMarker) {
+                    $output .= $endMarkerText;
                     $lengthMax = 0;
-                    $endMarkerFound = true;
                 }
                 if ($lengthMax<=0 || !$elementFound) break;
-                $offsetBytes = $elementOffsetBytes + strlenb($element);
+                $offsetBytes = $matches[0][1] + strlenb($matches[0][0]);
             }
-            $output = rtrim($output);
-            if ($lengthMax<=0) $output .= $endMarkerFound ? $endMarkerText : "…";
+            $output = preg_replace("/\s+\…$/s", "…", $output);
         } else {
             $elementsOpen = array();
             while (true) {
-                $elementFound = preg_match("/&.*?\;|<\s*?([\/!]?\w*)(.*?)\s*?\>/s", $text, $matches, PREG_OFFSET_CAPTURE, $offsetBytes);
-                $element = $matches[0][0];
-                $elementName = $matches[1][0];
-                $elementText = $matches[2][0];
-                $elementOffsetBytes = $elementFound ? $matches[0][1] : strlenb($text);
-                $string = substrb($text, $offsetBytes, $elementOffsetBytes - $offsetBytes);
-                $length = strlenu($string);
-                $output .= substru($string, 0, $length<$lengthMax ? $length : $lengthMax-1);
-                $lengthMax -= $length + ($element[0]=="&" ? 1 : 0);
-                if (!empty($element) && $element==$endMarker) {
+                $elementFound = preg_match("/&.*?\;|<(\/?)([\!\?\w]+)(.*?)(\/?)>/s", $text, $matches, PREG_OFFSET_CAPTURE, $offsetBytes);
+                $elementBefore = $elementFound ? substrb($text, $offsetBytes, $matches[0][1] - $offsetBytes) : substrb($text, $offsetBytes);
+                $elementRawData = $matches[0][0];
+                $elementStart = $matches[1][0];
+                $elementName = $matches[2][0];
+                $elementEnd = $matches[4][0];
+                if(!strempty($elementBefore)) {
+                    $output .= $this->getTextTruncated($elementBefore, $lengthMax);
+                    $lengthMax -= strlenu($elementBefore);
+                }
+                if (!empty($elementRawData) && $elementRawData==$endMarker) {
+                    $output .= $endMarkerText;
                     $lengthMax = 0;
-                    $endMarkerFound = true;
                 }
                 if ($lengthMax<=0 || !$elementFound) break;
-                if (!empty($elementName) && substru($elementText, -1)!="/" &&
-                   !preg_match("/^(area|br|col|hr|img|input|col|param|!)/i", $elementName)) {
-                    if ($elementName[0]!="/") {
+                if (!empty($elementName) && empty($elementEnd) && !in_array(strtolower($elementName), $elementsVoid)) {
+                    if (empty($elementStart)) {
                         array_push($elementsOpen, $elementName);
                     } else {
                         array_pop($elementsOpen);
                     }
                 }
-                $output .= $element;
-                $offsetBytes = $elementOffsetBytes + strlenb($element);
+                $output .= $elementRawData;
+                if ($elementRawData[0]=="&") --$lengthMax;
+                $offsetBytes = $matches[0][1] + strlenb($matches[0][0]);
             }
-            $output = rtrim($output);
+            $output = preg_replace("/\s+\…$/s", "…", $output);
             for ($i=count($elementsOpen)-1; $i>=0; --$i) {
-                if (!preg_match("/^(dl|ol|ul|table|tbody|thead|tfoot|tr)/i", $elementsOpen[$i])) break;
-                $output .= "</".$elementsOpen[$i].">";
-            }
-            if ($lengthMax<=0) $output .= $endMarkerFound ? $endMarkerText : "…";
-            for (; $i>=0; --$i) {
                 $output .= "</".$elementsOpen[$i].">";
             }
         }
-        return $output;
+        return trim($output);
     }
     
     // Create title from text string
     public function createTextTitle($text) {
-        if (preg_match("/^.*\/([\w\-]+)/", $text, $matches)) $text = strreplaceu("-", " ", ucfirst($matches[1]));
+        if (preg_match("/^.*\/([\pL\d\-\_]+)/u", $text, $matches)) $text = strreplaceu("-", " ", ucfirst($matches[1]));
         return $text;
     }
 

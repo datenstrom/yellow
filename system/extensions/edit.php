@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowEdit {
-    const VERSION = "0.8.21";
+    const VERSION = "0.8.22";
     const TYPE = "feature";
     public $yellow;         //access to API
     public $response;       //web response
@@ -61,11 +61,17 @@ class YellowEdit {
         return $output;
     }
     
+    // Handle page layout
+    public function onParsePageLayout($page, $name) {
+        if ($this->response->isActive()) {
+            $this->response->processPageData($page);
+        }
+    }
+    
     // Handle page extra data
     public function onParsePageExtra($page, $name) {
         $output = null;
         if ($name=="header" && $this->response->isActive()) {
-            $this->response->processPageData($page);
             $extensionLocation = $this->yellow->system->get("coreServerBase").$this->yellow->system->get("coreExtensionLocation");
             $output = "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" data-bundle=\"none\" href=\"{$extensionLocation}edit.css\" />\n";
             $output .= "<script type=\"text/javascript\" data-bundle=\"none\" src=\"{$extensionLocation}edit.js\"></script>\n";
@@ -303,7 +309,7 @@ class YellowEdit {
                 $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
                 $statusCode = $this->yellow->sendStatus(301, $location);
             } else {
-                $this->yellow->page->error($this->response->isUserAccess("edit", $location) ? 434 : 404);
+                $this->yellow->page->error($this->response->isUserAccess("create", $location) ? 434 : 404);
                 $statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
             }
         }
@@ -694,7 +700,7 @@ class YellowEdit {
                     $this->response->rawDataOutput = "";
                 }
             } else {
-                $this->response->status = $this->yellow->command("update", $extension, $option)==200 ? "done" : "error";
+                $this->response->status = $this->yellow->command("update", $extension, $option)==0 ? "done" : "error";
             }
             if ($this->response->status=="done") {
                 $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
@@ -1009,10 +1015,13 @@ class YellowEditResponse {
             if (empty($this->rawDataSource)) $this->rawDataSource = $page->rawData;
             if (empty($this->rawDataEdit)) $this->rawDataEdit = $page->rawData;
             if (empty($this->rawDataEndOfLine)) $this->rawDataEndOfLine = $this->getEndOfLine($page->rawData);
-            if ($page->statusCode==434) $this->rawDataEdit = $this->getRawDataNew($page, true);
-            if ($this->yellow->toolbox->isLocationArgs()) {
+            if ($page->statusCode==404 || $this->yellow->toolbox->isLocationArgs()) {
                 $this->rawDataEdit = $this->getRawDataGenerated($page);
                 $this->rawDataReadonly = true;
+            }
+            if ($page->statusCode==434)  {
+                $this->rawDataEdit = $this->getRawDataNew($page, true);
+                $this->rawDataReadonly = false;
             }
         }
         if (empty($this->language)) $this->language = $page->get("language");
@@ -1023,16 +1032,17 @@ class YellowEditResponse {
     
     // Return new page
     public function getPageNew($scheme, $address, $base, $location, $fileName, $rawData, $endOfLine) {
+        $rawData = $this->yellow->toolbox->normaliseLines($rawData, $endOfLine);
         $page = new YellowPage($this->yellow);
         $page->setRequestInformation($scheme, $address, $base, $location, $fileName);
-        $page->parseData($this->normaliseLines($rawData, $endOfLine), false, 0);
+        $page->parseData($rawData, false, 0);
         $this->editContentFile($page, "create");
         if ($this->yellow->content->find($page->location)) {
             $page->location = $this->getPageNewLocation($page->rawData, $page->location, $page->get("pageNewLocation"));
             $page->fileName = $this->getPageNewFile($page->location, $page->fileName, $page->get("published"));
             while ($this->yellow->content->find($page->location) || empty($page->fileName)) {
-                $rawData = $this->yellow->toolbox->setMetaData($page->rawData, "title", $this->getTitleNext($page->rawData));
-                $page->rawData = $this->normaliseLines($rawData, $endOfLine);
+                $page->rawData = $this->yellow->toolbox->setMetaData($page->rawData, "title", $this->getTitleNext($page->rawData));
+                $page->rawData = $this->yellow->toolbox->normaliseLines($page->rawData, $endOfLine);
                 $page->location = $this->getPageNewLocation($page->rawData, $page->location, $page->get("pageNewLocation"));
                 $page->fileName = $this->getPageNewFile($page->location, $page->fileName, $page->get("published"));
                 if (++$pageCounter>999) break;
@@ -1051,16 +1061,16 @@ class YellowEditResponse {
     
     // Return modified page
     public function getPageEdit($scheme, $address, $base, $location, $fileName, $rawDataSource, $rawDataEdit, $rawDataFile, $endOfLine) {
+        $rawDataSource = $this->yellow->toolbox->normaliseLines($rawDataSource, $endOfLine);
+        $rawDataEdit = $this->yellow->toolbox->normaliseLines($rawDataEdit, $endOfLine);
+        $rawDataFile = $this->yellow->toolbox->normaliseLines($rawDataFile, $endOfLine);
+        $rawData = $this->extension->merge->merge($rawDataSource, $rawDataEdit, $rawDataFile);
         $page = new YellowPage($this->yellow);
         $page->setRequestInformation($scheme, $address, $base, $location, $fileName);
-        $rawData = $this->extension->merge->merge(
-            $this->normaliseLines($rawDataSource, $endOfLine),
-            $this->normaliseLines($rawDataEdit, $endOfLine),
-            $this->normaliseLines($rawDataFile, $endOfLine));
-        $page->parseData($this->normaliseLines($rawData, $endOfLine), false, 0);
+        $page->parseData($rawData, false, 0);
         $pageSource = new YellowPage($this->yellow);
         $pageSource->setRequestInformation($scheme, $address, $base, $location, $fileName);
-        $pageSource->parseData($this->normaliseLines($rawDataSource, $endOfLine), false, 0);
+        $pageSource->parseData(($rawDataSource), false, 0);
         $this->editContentFile($page, "edit");
         if ($this->isMetaModified($pageSource, $page) && $page->location!=$this->yellow->content->getHomeLocation($page->location)) {
             $page->location = $this->getPageNewLocation($page->rawData, $page->location, $page->get("pageNewLocation"), true);
@@ -1079,9 +1089,10 @@ class YellowEditResponse {
     
     // Return deleted page
     public function getPageDelete($scheme, $address, $base, $location, $fileName, $rawData, $endOfLine) {
+        $rawData = $this->yellow->toolbox->normaliseLines($rawData, $endOfLine);
         $page = new YellowPage($this->yellow);
         $page->setRequestInformation($scheme, $address, $base, $location, $fileName);
-        $page->parseData($this->normaliseLines($rawData, $endOfLine), false, 0);
+        $page->parseData($rawData, false, 0);
         $this->editContentFile($page, "delete");
         if (!$this->isUserAccess("delete", $page->location)) {
             $page->error(500, "Page '".$page->get("title")."' is restricted!");
@@ -1091,9 +1102,10 @@ class YellowEditResponse {
 
     // Return preview page
     public function getPagePreview($scheme, $address, $base, $location, $fileName, $rawData, $endOfLine) {
+        $rawData = $this->yellow->toolbox->normaliseLines($rawData, $endOfLine);
         $page = new YellowPage($this->yellow);
         $page->setRequestInformation($scheme, $address, $base, $location, $fileName);
-        $page->parseData($this->normaliseLines($rawData, $endOfLine), false, 200);
+        $page->parseData($rawData, false, 200);
         $this->yellow->text->setLanguage($page->get("language"));
         $class = "page-preview layout-".$page->get("layout");
         $output = "<div class=\"".htmlspecialchars($class)."\"><div class=\"content\"><div class=\"main\">";
@@ -1110,6 +1122,14 @@ class YellowEditResponse {
         $file->setRequestInformation($scheme, $address, $base, "/".$fileNameTemp, $fileNameTemp);
         $file->parseData(null, false, 0);
         $file->set("fileNameShort", $fileNameShort);
+        $file->set("type", $this->yellow->toolbox->getFileType($fileNameShort));
+        if ($file->get("type")=="html" || $file->get("type")=="svg") {
+            $fileData = $this->yellow->toolbox->readFile($fileNameTemp);
+            $fileData = $this->yellow->toolbox->normaliseData($fileData, $file->get("type"));
+            if (empty($fileData) || !$this->yellow->toolbox->createFile($fileNameTemp, $fileData)) {
+                $file->error(500, "Can't write file '$fileNameTemp'!");
+            }
+        }
         $this->editMediaFile($file, "upload");
         $file->location = $this->getFileNewLocation($fileNameShort, $pageLocation, $file->get("fileNewLocation"));
         $file->fileName = substru($file->location, 1);
@@ -1148,7 +1168,6 @@ class YellowEditResponse {
             $data["address"] = $this->yellow->page->address;
             $data["base"] = $this->yellow->page->base;
             $data["location"] = $this->yellow->page->location;
-            $data["safeMode"] = $this->yellow->page->safeMode;
         }
         if ($this->action!="none") $data = array_merge($data, $this->getRequestData());
         $data["action"] = $this->action;
@@ -1552,16 +1571,6 @@ class YellowEditResponse {
                 if (method_exists($value["obj"], "onEditSystemFile")) $value["obj"]->onEditSystemFile($file, $action);
             }
         }
-    }
-    
-    // Normalise text lines, convert line endings
-    public function normaliseLines($text, $endOfLine = "lf") {
-        if ($endOfLine=="lf") {
-            $text = preg_replace("/\R/u", "\n", $text);
-        } else {
-            $text = preg_replace("/\R/u", "\r\n", $text);
-        }
-        return $text;
     }
     
     // Check if meta data has been modified
