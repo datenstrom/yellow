@@ -1,10 +1,10 @@
 <?php
 // Bundle extension, https://github.com/datenstrom/yellow-extensions/tree/master/features/bundle
-// Copyright (c) 2013-2019 Datenstrom, https://datenstrom.se
+// Copyright (c) 2013-2020 Datenstrom, https://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 class YellowBundle {
-    const VERSION = "0.8.7";
+    const VERSION = "0.8.8";
     const TYPE = "feature";
     public $yellow;         //access to API
 
@@ -84,7 +84,7 @@ class YellowBundle {
         $base = $this->yellow->system->get("coreServerBase");
         foreach ($data as $key=>$value) {
             if (preg_match("/^\w+:/", $key)) continue;
-            if (preg_match("/data-bundle=\"none\"/i", $value)) continue;
+            if (preg_match("/data-bundle=\"exclude\"/i", $value)) continue;
             if (substru($key, 0, strlenu($base))!=$base) continue;
             $location = substru($key, strlenu($base));
             $fileName = $this->yellow->lookup->findFileFromSystem($location);

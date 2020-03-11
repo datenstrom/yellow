@@ -1,10 +1,10 @@
 <?php
 // Command extension, https://github.com/datenstrom/yellow-extensions/tree/master/features/command
-// Copyright (c) 2013-2019 Datenstrom, https://datenstrom.se
+// Copyright (c) 2013-2020 Datenstrom, https://datenstrom.se
 // This file may be used and distributed under the terms of the public license.
 
 class YellowCommand {
-    const VERSION = "0.8.10";
+    const VERSION = "0.8.11";
     const TYPE = "feature";
     const PRIORITY = "3";
     public $yellow;                     //access to API
@@ -579,9 +579,9 @@ class YellowCommand {
         list($scheme, $address, $base) = $this->yellow->lookup->getUrlInformation($staticUrl);
         $this->yellow->page->setRequestInformation($scheme, $address, $base, "", "");
         foreach ($this->yellow->content->index(true, true) as $page) {
-            if (($page->get("status")!="ignore" && $page->get("status")!="draft") || $includeAll) {
-                array_push($locations, $page->location);
-            }
+            if (preg_match("/exclude/i", $page->get("build")) && !$includeAll) continue;
+            if ($page->get("status")=="private" || $page->get("status")=="draft") continue;
+            array_push($locations, $page->location);
         }
         if (!$this->yellow->content->find("/") && $this->yellow->system->get("coreMultiLanguageMode")) array_unshift($locations, "/");
         return $locations;

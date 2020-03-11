@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowUpdate {
-    const VERSION = "0.8.17";
+    const VERSION = "0.8.18";
     const TYPE = "feature";
     const PRIORITY = "2";
     public $yellow;                 //access to API
@@ -83,10 +83,11 @@ class YellowUpdate {
                             break;
                         }
                     }
+                    $fileDataNew = preg_replace("/Status: hidden/i", "Status: shared", $fileDataNew);
+                    $fileDataNew = preg_replace("/Status: ignore/i", "Build: exclude", $fileDataNew);
                     if ($fileStatusUnlisted && empty($this->yellow->toolbox->getMetaData($fileDataNew, "status"))) {
                         $fileDataNew = $this->yellow->toolbox->setMetaData($fileDataNew, "status", "unlisted");
                     }
-                    $fileDataNew = preg_replace("/Status: hidden/i", "Status: shared", $fileDataNew);
                     if ($fileData!=$fileDataNew) {
                         $modified = $this->yellow->toolbox->getFileModified($entry);
                         if (!$this->yellow->toolbox->deleteFile($entry) ||
