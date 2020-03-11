@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowEdit {
-    const VERSION = "0.8.23";
+    const VERSION = "0.8.24";
     const TYPE = "feature";
     public $yellow;         //access to API
     public $response;       //web response
@@ -73,8 +73,8 @@ class YellowEdit {
         $output = null;
         if ($name=="header" && $this->response->isActive()) {
             $extensionLocation = $this->yellow->system->get("coreServerBase").$this->yellow->system->get("coreExtensionLocation");
-            $output = "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" data-bundle=\"exclude\" href=\"{$extensionLocation}edit.css\" />\n";
-            $output .= "<script type=\"text/javascript\" data-bundle=\"exclude\" src=\"{$extensionLocation}edit.js\"></script>\n";
+            $output = "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"{$extensionLocation}edit.css\" />\n";
+            $output .= "<script type=\"text/javascript\" src=\"{$extensionLocation}edit.js\"></script>\n";
             $output .= "<script type=\"text/javascript\">\n";
             $output .= "// <![CDATA[\n";
             $output .= "yellow.page = ".json_encode($this->response->getPageData($page)).";\n";

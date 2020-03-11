@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowBundle {
-    const VERSION = "0.8.8";
+    const VERSION = "0.8.9";
     const TYPE = "feature";
     public $yellow;         //access to API
 
@@ -48,7 +48,7 @@ class YellowBundle {
     
     // Normalise page head
     public function normaliseHead($text) {
-        $dataMeta = $dataLink = $dataCss = $dataScript = $dataOther = array();
+        $dataMeta = $dataLink = $dataCss = $dataScriptDefer = $dataScriptNow = $dataOther = array();
         foreach ($this->yellow->toolbox->getTextLines($text) as $line) {
             if (preg_match("/^<meta (.*?)>$/i", $line) || preg_match("/^<title>(.*?)<\/title>$/i", $line)) {
                 array_push($dataMeta, $line);
@@ -60,9 +60,9 @@ class YellowBundle {
                 }
             } elseif (preg_match("/^<script (.*?)src=\"([^\"]+)\"(.*?)><\/script>$/i", $line, $matches)) {
                 if (preg_match("/\"defer\"/i", $line)) {
-                    if (is_null($dataScript[$matches[2]])) $dataScript[$matches[2]] = $line;
+                    if (is_null($dataScriptDefer[$matches[2]])) $dataScriptDefer[$matches[2]] = $line;
                 } else {
-                    array_push($dataOther, $line);
+                    if (is_null($dataScriptNow[$matches[2]])) $dataScriptNow[$matches[2]] = $line;
                 }
             } else {
                 array_push($dataOther, $line);
@@ -70,14 +70,16 @@ class YellowBundle {
         }
         if (!defined("DEBUG") || DEBUG==0) {
             $dataCss = $this->processBundle($dataCss, "css");
-            $dataScript = $this->processBundle($dataScript, "js");
+            $dataScriptDefer = $this->processBundle($dataScriptDefer, "js", "defer");
+            $dataScriptNow = $this->processBundle($dataScriptNow, "js");
         }
-        $output = implode($dataMeta).implode($dataLink).implode($dataCss).implode($dataScript).implode($dataOther);
+        $output = implode($dataMeta).implode($dataLink).implode($dataCss).
+            implode($dataScriptDefer).implode($dataScriptNow).implode($dataOther);
         return $output;
     }
     
     // Process bundle, create file on demand
-    public function processBundle($data, $type) {
+    public function processBundle($data, $type, $attribute = "") {
         $fileNames = array();
         $scheme = $this->yellow->system->get("coreServerScheme");
         $address = $this->yellow->system->get("coreServerAddress");
@@ -95,13 +97,15 @@ class YellowBundle {
             }
         }
         if (!empty($fileNames)) {
-            $id = substru(md5(implode($fileNames).$base), 0, 10);
-            $fileNameBundle = $this->yellow->system->get("coreResourceDir")."bundle-$id.min.$type";;
+            $autoVersioning = intval($modified/(60*60*24));
+            $id = substru(md5($autoVersioning.$base.implode($fileNames)), 0, 10);
+            $fileNameBundle = $this->yellow->system->get("coreResourceDir")."bundle-$id.min.$type";
             $locationBundle = $base.$this->yellow->system->get("coreResourceLocation")."bundle-$id.min.$type";
+            $rawDataAttribute = $attribute=="defer" ? "defer=\"defer\" " : "";
             if ($type=="css") {
                 $data[$locationBundle] = "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"".htmlspecialchars($locationBundle)."\" />\n";
             } else {
-                $data[$locationBundle] = "<script type=\"text/javascript\" defer=\"defer\" src=\"".htmlspecialchars($locationBundle)."\"></script>\n";
+                $data[$locationBundle] = "<script type=\"text/javascript\" ${rawDataAttribute}src=\"".htmlspecialchars($locationBundle)."\"></script>\n";
             }
             if ($this->yellow->toolbox->getFileModified($fileNameBundle)!=$modified) {
                 foreach ($fileNames as $fileName) {
