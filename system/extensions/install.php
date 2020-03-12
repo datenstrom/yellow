@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowInstall {
-    const VERSION = "0.8.20";
+    const VERSION = "0.8.21";
     const TYPE = "feature";
     const PRIORITY = "1";
     public $yellow;                 //access to API
@@ -219,7 +219,6 @@ class YellowInstall {
         if (count($this->yellow->toolbox->getTextLines($fileData))<4) {
             $fileData .= "Language: $language\n";
             $fileData .= "CoreDateFormatMedium: ".$this->yellow->text->getText("coreDateFormatMedium", $language)."\n";
-            $fileData .= "EditLoginTitle: ".$this->yellow->text->getText("editLoginTitle", $language)."\n";
             $fileData .= "picture.jpg: ".$this->yellow->text->getText("installExampleImage", $language)."\n";
             if (!$this->yellow->toolbox->createFile($fileName, $fileData)) {
                 $statusCode = 500;
