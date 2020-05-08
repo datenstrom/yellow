@@ -1,6 +1,6 @@
 # Datenstrom Yellow
 
-Datenstrom Yellow is for people who make websites.
+Datenstrom Yellow is for people who make small websites.
 
 1. [Download Datenstrom Yellow and unzip it](https://github.com/datenstrom/yellow/archive/master.zip).
 2. Copy all files to your web server.

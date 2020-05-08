@@ -8,7 +8,7 @@ We make things for people. Your contribution is very welcome.
 1. [Submit a new issue for each problem](https://github.com/datenstrom/yellow/issues).
 2. Describe your problem, sometimes there are different solutions.
 3. Add a lot of details, the more we know the better we can help.
-4. Complain with kindness and consider working together with us.
+4. Use the latest version. [What version do I have?](https://github.com/datenstrom/yellow-extensions/tree/master/features/update)
 
 ## How to suggest an idea
 
@@ -26,7 +26,7 @@ We make things for people. Your contribution is very welcome.
 
 ## How to stay in touch 
 
-1. [Watch us on GitHub](https://github.com/datenstrom/yellow) or [follow us on Twitter](https://twitter.com/datendesigner).
+1. [Watch us on GitHub](https://github.com/datenstrom/yellow), [Gitter](https://gitter.im/datenstrom/yellow) or [Twitter](https://twitter.com/datendesigner).
 2. Tell about the websites, blogs, wikis and things you made.
 3. Answer questions and discus problems with others, if you enjoy it.
 4. Be notified of new releases in your mailbox. [What's new?](https://github.com/datenstrom/yellow/releases)
