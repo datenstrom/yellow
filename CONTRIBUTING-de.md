@@ -26,8 +26,8 @@ Wir machen Dinge für Menschen. Deine Mitarbeit ist sehr willkommen.
 
 ## Wie man in Verbindung bleibt 
 
-1. [Beobachte uns auf GitHub](https://github.com/datenstrom/yellow), [Gitter](https://gitter.im/datenstrom/yellow) oder [Twitter](https://twitter.com/datendesigner)
-2. Erzähle von den Webseiten, Blogs, Wikis und Dingen, die du gemacht hast.
+1. [Beobachte uns auf GitHub](https://github.com/datenstrom/yellow), [Gitter](https://gitter.im/datenstrom/yellow), [Twitter](https://twitter.com/datendesigner) oder [sende eine Nachricht and die Entwickler](https://datenstrom.se/de/contact/).
+2. Erzähle von deinen Webseiten, Blogs, Wikis und anderen Dingen, die du gemacht hast.
 3. Beantworte Fragen und diskutiere Probleme mit anderen, wenn dir das Spass macht.
 4. Werde über neue Versionen in deiner Mailbox informiert. [Was ist neu?](https://github.com/datenstrom/yellow/releases)
 
