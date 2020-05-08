@@ -22,7 +22,7 @@ We make things for people. Your contribution is very welcome.
 1. [Start with an example feature](https://github.com/schulle4u/yellow-extension-example), [language](https://github.com/datenstrom/yellow-extensions/blob/master/languages/english/english-language.txt) or [theme](https://github.com/schulle4u/yellow-extension-basic).
 2. Imagine what the user wants to do, aim for a simple solution.
 3. Upload your extension to GitHub, let us know if you need help.
-4. Publish your extension in the official repository. [How does it work?](https://github.com/datenstrom/yellow-extensions/tree/master/features/release)
+4. Publish your extension in the official repository. [What's available?](https://github.com/datenstrom/yellow-extensions)
 
 ## How to get in touch 
 
