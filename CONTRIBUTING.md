@@ -24,11 +24,11 @@ We make things for people. Your contribution is very welcome.
 3. Upload your extension to GitHub, let us know if you need help.
 4. Publish your extension in the official repository. [How does it work?](https://github.com/datenstrom/yellow-extensions/tree/master/features/release)
 
-## How to stay in touch 
+## How to get in touch 
 
-1. [Watch us on GitHub](https://github.com/datenstrom/yellow), [Gitter](https://gitter.im/datenstrom/yellow), [Twitter](https://twitter.com/datendesigner) or [send a message to the developers](https://datenstrom.se/contact/).
-2. Tell about your websites, blogs, wikis and other things you made.
-3. Answer questions and discus problems with others, if you enjoy it.
+1. [Watch us on GitHub](https://github.com/datenstrom/yellow), [Gitter](https://gitter.im/datenstrom/yellow), [Twitter](https://twitter.com/datendesigner) or [send a message](https://datenstrom.se/contact/).
+2. Answer questions and discus problems with others, if you enjoy it.
+3. Tell about websites, blogs, wikis and extensions you made.
 4. Be notified of new releases in your mailbox. [What's new?](https://github.com/datenstrom/yellow/releases)
 
 <p>

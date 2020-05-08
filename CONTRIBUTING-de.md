@@ -24,11 +24,11 @@ Wir machen Dinge für Menschen. Deine Mitarbeit ist sehr willkommen.
 2. Lade deine Erweiterung zu GitHub hoch, lass uns wissen, falls du Hilfe brauchst.
 3.  Veröffentliche deine Erweiterung im offiziellen Repository. [Wie geht das?](https://github.com/datenstrom/yellow-extensions/blob/master/features/release/README-de.md)
 
-## Wie man in Verbindung bleibt 
+## Wie man in Kontakt kommt 
 
-1. [Beobachte uns auf GitHub](https://github.com/datenstrom/yellow), [Gitter](https://gitter.im/datenstrom/yellow), [Twitter](https://twitter.com/datendesigner) oder [sende eine Nachricht and die Entwickler](https://datenstrom.se/de/contact/).
-2. Erzähle von deinen Webseiten, Blogs, Wikis und anderen Dingen, die du gemacht hast.
-3. Beantworte Fragen und diskutiere Probleme mit anderen, wenn dir das Spass macht.
+1. [Beobachte uns auf GitHub](https://github.com/datenstrom/yellow), [Gitter](https://gitter.im/datenstrom/yellow), [Twitter](https://twitter.com/datendesigner) oder [sende eine Nachricht](https://datenstrom.se/de/contact/).
+2. Beantworte Fragen und diskutiere Probleme mit anderen, wenn dir das Spass macht.
+3. Erzähle von Webseiten, Blogs, Wikis und Erweiterungen die du gemacht hast.
 4. Werde über neue Versionen in deiner Mailbox informiert. [Was ist neu?](https://github.com/datenstrom/yellow/releases)
 
 <p>
