@@ -26,7 +26,7 @@ Wir machen Dinge für Menschen. Deine Mitarbeit ist sehr willkommen.
 
 ## Wie man in Kontakt kommt 
 
-1. [Beobachte uns auf GitHub](https://github.com/datenstrom/yellow), [Gitter](https://gitter.im/datenstrom/yellow), [Twitter](https://twitter.com/datendesigner) oder [sende eine Nachricht](https://datenstrom.se/de/contact/).
+1. [Beobachte uns auf GitHub](https://github.com/datenstrom/yellow), [Gitter](https://gitter.im/datenstrom/yellow), [Jitsi](https://meet.jit.si/datenstrom/yellow), [Twitter](https://twitter.com/datendesigner) oder [sende eine Nachricht](https://datenstrom.se/de/contact/).
 2. Beantworte Fragen und diskutiere Probleme mit anderen, wenn dir das Spass macht.
 3. Erzähle von Webseiten, Blogs, Wikis und Erweiterungen die du gemacht hast.
 4. Werde über neue Versionen in deiner Mailbox informiert. [Was ist neu?](https://github.com/datenstrom/yellow/releases)
