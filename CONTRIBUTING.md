@@ -26,7 +26,7 @@ We make things for people. Your contribution is very welcome.
 
 ## How to get in touch 
 
-1. [Watch us on GitHub](https://github.com/datenstrom/yellow), [Gitter](https://gitter.im/datenstrom/yellow), [Jitsi](https://meet.jit.si/datenstrom/yellow), [Twitter](https://twitter.com/datendesigner) or [send a message](https://datenstrom.se/contact/).
+1. [Watch us on GitHub](https://github.com/datenstrom/yellow), [Gitter](https://gitter.im/datenstrom/yellow), [Twitter](https://twitter.com/datendesigner), [TeamVideo](https://team.video/datendesigner) or [send a message](https://datenstrom.se/contact/).
 2. Answer questions and discus problems with others, if you enjoy it.
 3. Tell about websites, blogs, wikis and extensions you made.
 4. Be notified of new releases in your mailbox. [What's new?](https://github.com/datenstrom/yellow/releases)
