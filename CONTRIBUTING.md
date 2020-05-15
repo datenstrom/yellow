@@ -30,8 +30,3 @@ We make things for people. Your contribution is very welcome.
 2. Answer questions and discus problems with others, if you enjoy it.
 3. Tell about websites, blogs, wikis and extensions you made.
 4. Be notified of new releases in your mailbox. [What's new?](https://github.com/datenstrom/yellow/releases)
-
-<p>
-<a href="CONTRIBUTING-de.md"><img src="https://raw.githubusercontent.com/datenstrom/yellow-extensions/master/features/help/language-de.png" width="15" height="15" alt="Deutsch">&nbsp; Deutsch</a>&nbsp;
-<a href="CONTRIBUTING.md"><img src="https://raw.githubusercontent.com/datenstrom/yellow-extensions/master/features/help/language-en.png" width="15" height="15" alt="English">&nbsp; English</a>&nbsp;
-</p>
