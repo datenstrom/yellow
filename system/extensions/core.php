@@ -236,7 +236,7 @@ class YellowCore {
             @header($this->toolbox->getHttpStatusFormatted($statusCode));
         } else {
             @header($this->toolbox->getHttpStatusFormatted($statusCode));
-            if (!$cacheable) @header("Cache-Control: no-cache, must-revalidate");
+            if (!$cacheable) @header("Cache-Control: no-cache, no-store");
             @header("Content-Type: ".$this->toolbox->getMimeContentType($fileName));
             @header("Last-Modified: ".$lastModifiedFormatted);
             echo $this->toolbox->readFile($fileName);
@@ -247,7 +247,7 @@ class YellowCore {
     // Send data response
     public function sendData($statusCode, $rawData, $fileName, $cacheable) {
         @header($this->toolbox->getHttpStatusFormatted($statusCode));
-        if (!$cacheable) @header("Cache-Control: no-cache, must-revalidate");
+        if (!$cacheable) @header("Cache-Control: no-cache, no-store");
         @header("Content-Type: ".$this->toolbox->getMimeContentType($fileName));
         @header("Last-Modified: ".$this->toolbox->getHttpDateFormatted(time()));
         echo $rawData;
@@ -572,7 +572,7 @@ class YellowPage {
     // Parse page
     public function parsePage() {
         $this->parsePageLayout($this->get("layout"));
-        if (!$this->isCacheable()) $this->setHeader("Cache-Control", "no-cache, must-revalidate");
+        if (!$this->isCacheable()) $this->setHeader("Cache-Control", "no-cache, no-store");
         if (!$this->isHeader("Content-Type")) $this->setHeader("Content-Type", "text/html; charset=utf-8");
         if (!$this->isHeader("Content-Modified")) $this->setHeader("Content-Modified", $this->getModified(true));
         if (!$this->isHeader("Last-Modified")) $this->setHeader("Last-Modified", $this->getLastModified(true));
@@ -863,7 +863,7 @@ class YellowPage {
             $this->headerData = array();
             if (!empty($location)) {
                 $this->setHeader("Location", $location);
-                $this->setHeader("Cache-Control", "no-cache, must-revalidate");
+                $this->setHeader("Cache-Control", "no-cache, no-store");
             }
             $this->set("pageClean", (string)$statusCode);
         }
