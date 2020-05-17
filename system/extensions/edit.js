@@ -9,6 +9,7 @@ var yellow = {
     onDrop: function(e) { yellow.edit.drop(e); },
     onClick: function(e) { yellow.edit.click(e); },
     onClickAction: function(e) { yellow.edit.clickAction(e); },
+    onPageShow: function(e) { yellow.edit.pageShow(e); },
     onUpdatePane: function() { yellow.edit.updatePane(yellow.edit.paneId, yellow.edit.paneAction, yellow.edit.paneStatus); },
     onResizePane: function() { yellow.edit.resizePane(yellow.edit.paneId, yellow.edit.paneAction, yellow.edit.paneStatus); },
     action: function(action, status, args) { yellow.edit.processAction(action, status, args); }
@@ -73,6 +74,13 @@ yellow.edit = {
         this.processAction(element.getAttribute("data-action"), element.getAttribute("data-status"), element.getAttribute("data-args"));
     },
     
+    // Handle page cache
+    pageShow: function(e) {
+        if (event.persisted && yellow.system.userEmail && !this.getCookie("csrftoken")) {
+            window.location.reload();
+        }
+    },
+    
     // Create bar
     createBar: function(barId) {
         var elementBar = document.createElement("div");
@@ -81,6 +89,7 @@ yellow.edit = {
         if (barId=="yellow-bar") {
             yellow.toolbox.addEvent(document, "click", yellow.onClick);
             yellow.toolbox.addEvent(document, "keydown", yellow.onKeydown);
+            yellow.toolbox.addEvent(window, "pageshow", yellow.onPageShow);
             yellow.toolbox.addEvent(window, "resize", yellow.onResizePane);
         }
         var elementDiv = document.createElement("div");
