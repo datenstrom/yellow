@@ -76,7 +76,7 @@ yellow.edit = {
     
     // Handle page cache
     pageShow: function(e) {
-        if (event.persisted && yellow.system.userEmail && !this.getCookie("csrftoken")) {
+        if (e.persisted && yellow.system.userEmail && !this.getCookie("csrftoken")) {
             window.location.reload();
         }
     },
