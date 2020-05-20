@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowCommand {
-    const VERSION = "0.8.11";
+    const VERSION = "0.8.12";
     const TYPE = "feature";
     const PRIORITY = "3";
     public $yellow;                     //access to API
@@ -46,7 +46,7 @@ class YellowCommand {
     
     // Process command to show available commands
     public function processCommandHelp() {
-        echo "Datenstrom Yellow is for people who make websites.\n";
+        echo "Datenstrom Yellow is for people who make small websites.\n";
         $lineCounter = 0;
         foreach ($this->getCommandHelp() as $line) {
             echo(++$lineCounter>1 ? "        " : "Syntax: ")."php yellow.php $line\n";
