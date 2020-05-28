@@ -24,6 +24,13 @@ We make things for people. Your contribution is very welcome.
 3. Upload your extension to GitHub, let us know if you need help.
 4. Publish your extension in the official repository. [What's available?](https://github.com/datenstrom/yellow-extensions)
 
+## How to improve an extension
+
+1. Fork the extension you want to improve.
+2. First make it work, then make it better.
+3. Upload your changes to GitHub, let us know if you need help.
+4. Send a pull request. [What's a pull request?](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request-from-a-fork)
+
 ## How to get in touch 
 
 1. [Watch us on GitHub](https://github.com/datenstrom/yellow), [Gitter](https://gitter.im/datenstrom/yellow), [Twitter](https://twitter.com/datendeveloper), [TeamVideo](https://team.video/datendeveloper) or [send a message](https://datenstrom.se/contact/).
