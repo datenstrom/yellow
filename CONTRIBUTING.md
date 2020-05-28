@@ -26,10 +26,10 @@ We make things for people. Your contribution is very welcome.
 
 ## How to improve an extension
 
-1. Fork the extension you want to improve.
+1. [Fork the extension you want to improve](https://github.com/datenstrom/yellow-extensions).
 2. First make it work, then make it better.
 3. Upload your changes to GitHub, let us know if you need help.
-4. Send a pull request. [What's a pull request?](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request-from-a-fork)
+4. Send a pull request to the maintainer. [What's a pull request?](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request-from-a-fork)
 
 ## How to get in touch 
 
