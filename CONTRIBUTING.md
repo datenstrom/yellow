@@ -1,7 +1,7 @@
 Contributing guidelines
 =======================
 
-We make things for people. Your contribution is very welcome.
+We are here to make things for people and find like-minded people.
 
 ## How to report a problem
 
