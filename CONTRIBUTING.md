@@ -14,7 +14,7 @@ We make things for people. Your contribution is very welcome.
 
 1. [Submit a new issue for each idea](https://github.com/datenstrom/yellow/issues).
 2. Explain your idea, how it would make your everyday life easier.
-3. Propose a specific solution, this makes it easier to understand.
+3. Propose a specific solution, one that works best for you.
 4. Vote for good ideas and give them a thumbs-up. [What's popular?](https://github.com/datenstrom/yellow/issues?q=is%3Aopen+is%3Aissue+sort%3Areactions-%2B1-desc+label%3Aidea)
 
 ## How to make an extension
