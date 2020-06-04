@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowMarkdown {
-    const VERSION = "0.8.12";
+    const VERSION = "0.8.13";
     const TYPE = "feature";
     public $yellow;         //access to API
     
@@ -3913,7 +3913,7 @@ class YellowMarkdownParser extends MarkdownExtraParser {
     // Handle fenced code blocks
     public function _doFencedCodeBlocks_callback($matches) {
         $text = $matches[4];
-        $name = empty($matches[2]) ? "" : "$matches[2] $matches[3]";
+        $name = empty($matches[2]) ? "" : trim("$matches[2] $matches[3]");
         $output = $this->page->parseContentShortcut($name, $text, "code");
         if (is_null($output)) {
             $attr = $this->doExtraAttributes("pre", ".$matches[2] $matches[3]");
