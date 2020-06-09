@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowBundle {
-    const VERSION = "0.8.10";
+    const VERSION = "0.8.11";
     const TYPE = "feature";
     public $yellow;         //access to API
 
@@ -54,15 +54,15 @@ class YellowBundle {
                 array_push($dataMeta, $line);
             } elseif (preg_match("/^<link (.*?)href=\"([^\"]+)\"(.*?)>$/i", $line, $matches)) {
                 if (preg_match("/\"stylesheet\"/i", $line)) {
-                    if (is_null($dataCss[$matches[2]])) $dataCss[$matches[2]] = $line;
+                    if (!isset($dataCss[$matches[2]])) $dataCss[$matches[2]] = $line;
                 } else {
                     array_push($dataLink, $line);
                 }
             } elseif (preg_match("/^<script (.*?)src=\"([^\"]+)\"(.*?)><\/script>$/i", $line, $matches)) {
                 if (preg_match("/\"defer\"/i", $line)) {
-                    if (is_null($dataScriptDefer[$matches[2]])) $dataScriptDefer[$matches[2]] = $line;
+                    if (!isset($dataScriptDefer[$matches[2]])) $dataScriptDefer[$matches[2]] = $line;
                 } else {
-                    if (is_null($dataScriptNow[$matches[2]])) $dataScriptNow[$matches[2]] = $line;
+                    if (!isset($dataScriptNow[$matches[2]])) $dataScriptNow[$matches[2]] = $line;
                 }
             } else {
                 array_push($dataOther, $line);
@@ -81,6 +81,7 @@ class YellowBundle {
     // Process bundle, create file on demand
     public function processBundle($data, $type, $attribute = "") {
         $fileNames = array();
+        $modified = 0;
         $scheme = $this->yellow->system->get("coreServerScheme");
         $address = $this->yellow->system->get("coreServerAddress");
         $base = $this->yellow->system->get("coreServerBase");
@@ -108,18 +109,19 @@ class YellowBundle {
                 $data[$locationBundle] = "<script type=\"text/javascript\" ${rawDataAttribute}src=\"".htmlspecialchars($locationBundle)."\"></script>\n";
             }
             if ($this->yellow->toolbox->getFileModified($fileNameBundle)!=$modified) {
+                $fileDataBundle = "";
                 foreach ($fileNames as $fileName) {
                     $fileData = $this->yellow->toolbox->readFile($fileName);
                     $fileData = $this->processBundleConvert($scheme, $address, $base, $fileData, $fileName, $type);
                     $fileData = $this->processBundleMinify($scheme, $address, $base, $fileData, $fileName, $type);
                     if (substrb($fileData, 0, 3)=="\xEF\xBB\xBF") $fileData = substrb($fileData, 3);
                     if (substrb($fileData, 0, 13)=="\"use strict\";" || substrb($fileData, 0, 13)=="'use strict';") $fileData = substrb($fileData, 13);
-                    if (!empty($fileDataNew)) $fileDataNew .= "\n\n";
-                    $fileDataNew .= "/* ".basename($fileName)." */\n";
-                    $fileDataNew .= $fileData;
+                    if (!empty($fileDataBundle)) $fileDataBundle .= "\n\n";
+                    $fileDataBundle .= "/* ".basename($fileName)." */\n";
+                    $fileDataBundle .= $fileData;
                 }
                 if (is_file($fileNameBundle)) $this->yellow->toolbox->deleteFile($fileNameBundle);
-                if (!$this->yellow->toolbox->createFile($fileNameBundle, $fileDataNew) ||
+                if (!$this->yellow->toolbox->createFile($fileNameBundle, $fileDataBundle) ||
                     !$this->yellow->toolbox->modifyFile($fileNameBundle, $modified)) {
                     $this->yellow->page->error(500, "Can't write file '$fileNameBundle'!");
                 }
@@ -155,7 +157,7 @@ class YellowBundle {
         $minifier->add($fileData);
         return $minifier->minify();
     }
- }
+}
     
 /**
  * Abstract minifier class.
