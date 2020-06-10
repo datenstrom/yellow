@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowMarkdown {
-    const VERSION = "0.8.13";
+    const VERSION = "0.8.14";
     const TYPE = "feature";
     public $yellow;         //access to API
     
@@ -3947,7 +3947,7 @@ class YellowMarkdownParser extends MarkdownExtraParser {
     public function _doAnchors_inline_callback($matches) {
         $url = $matches[3]=="" ? $matches[4] : $matches[3];
         $text = $matches[2];
-        $title = $matches[7];
+        $title = isset($matches[7]) ? $matches[7] : "";
         $attr = $this->doExtraAttributes("a", $dummy =& $matches[8]);
         $output = "<a href=\"".$this->encodeURLAttribute($url)."\"";
         if (!empty($title)) $output .= " title=\"".$this->encodeAttribute($title)."\"";
@@ -3963,7 +3963,7 @@ class YellowMarkdownParser extends MarkdownExtraParser {
             $src = $this->yellow->system->get("coreServerBase").$this->yellow->system->get("coreImageLocation").$src;
         }
         $alt = $matches[2];
-        $title = $matches[7]=="" ? $matches[2] : $matches[7];
+        $title = isset($matches[7]) ? $matches[7] : $matches[2];
         $attr = $this->doExtraAttributes("img", $dummy =& $matches[8]);
         $output = "<img src=\"".$this->encodeURLAttribute($src)."\"";
         if (!empty($alt)) $output .= " alt=\"".$this->encodeAttribute($alt)."\"";
@@ -4025,9 +4025,10 @@ class YellowMarkdownParser extends MarkdownExtraParser {
     
     // Return unique id attribute
     public function getIdAttribute($text) {
+        $attr = "";
         $text = $this->yellow->lookup->normaliseName($text, true, false, true);
         $text = trim(preg_replace("/-+/", "-", $text), "-");
-        if (is_null($this->idAttributes[$text])) {
+        if (!isset($this->idAttributes[$text])) {
             $this->idAttributes[$text] = $text;
             $attr = " id=\"$text\"";
         }
