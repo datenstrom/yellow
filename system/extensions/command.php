@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowCommand {
-    const VERSION = "0.8.12";
+    const VERSION = "0.8.13";
     const TYPE = "feature";
     const PRIORITY = "3";
     public $yellow;                     //access to API
@@ -36,7 +36,7 @@ class YellowCommand {
     
     // Handle command help
     public function onCommandHelp() {
-        $help .= "about\n";
+        $help = "about\n";
         $help .= "build [directory location]\n";
         $help .= "check [directory location]\n";
         $help .= "clean [directory location]\n";
@@ -61,7 +61,7 @@ class YellowCommand {
         list($statusCode, $dataCurrent) = $this->getExtensionsVersion();
         list($statusCode, $dataLatest) = $this->getExtensionsVersion(true);
         foreach ($dataCurrent as $key=>$value) {
-            if (strnatcasecmp($dataCurrent[$key], $dataLatest[$key])>=0) {
+            if (!isset($dataLatest[$key]) || strnatcasecmp($dataCurrent[$key], $dataLatest[$key])>=0) {
                 echo ucfirst($key)." $value\n";
             } else {
                 echo ucfirst($key)." $value - Update available\n";
@@ -175,8 +175,10 @@ class YellowCommand {
     
     // Request static file
     public function requestStaticFile($scheme, $address, $base, $location) {
-        list($serverName, $serverPort) = explode(":", $address);
-        if (is_null($serverPort)) $serverPort = $scheme=="https" ? 443 : 80;
+        $parts = explode(":", $address, 2);
+        $serverName = isset($parts[0]) ? $parts[0] : "";
+        $serverPort = isset($parts[1]) ? $parts[1] : "";
+        if (empty($serverPort)) $serverPort = $scheme=="https" ? 443 : 80;
         $_SERVER["HTTPS"] = $scheme=="https" ? "on" : "off";
         $_SERVER["SERVER_PROTOCOL"] = "HTTP/1.1";
         $_SERVER["SERVER_NAME"] = $serverName;
@@ -239,13 +241,13 @@ class YellowCommand {
             if (!$this->yellow->toolbox->isLocationArgs($location)) continue;
             if (!$this->yellow->toolbox->isLocationArgsPagination($location)) {
                 $location = rtrim($location, "/")."/";
-                if (is_null($this->locationsArgs[$location])) {
+                if (!isset($this->locationsArgs[$location])) {
                     $this->locationsArgs[$location] = $location;
                     if (defined("DEBUG") && DEBUG>=2) echo "YellowCommand::analyseLocations detected location:$location<br/>\n";
                 }
             } else {
                 $location = rtrim($location, "0..9");
-                if (is_null($this->locationsArgsPagination[$location])) {
+                if (!isset($this->locationsArgsPagination[$location])) {
                     $this->locationsArgsPagination[$location] = $location;
                     if (defined("DEBUG") && DEBUG>=2) echo "YellowCommand::analyseLocations detected location:$location<br/>\n";
                 }
@@ -309,13 +311,19 @@ class YellowCommand {
                         if (preg_match("/^(.*?)#(.*)$/", $location, $tokens)) $location = $tokens[1];
                         if (preg_match("/^(\w+):\/\/([^\/]+)(.*)$/", $location, $matches)) {
                             $url = $location.(empty($matches[3]) ? "/" : "");
-                            if (!is_null($links[$url])) $links[$url] .= ",";
-                            $links[$url] .= $locationSource;
+                            if (!isset($links[$url])) {
+                                $links[$url] = $locationSource;
+                            } else {
+                                $links[$url] .= ",".$locationSource;
+                            }
                             if (defined("DEBUG") && DEBUG>=2) echo "YellowCommand::analyseLinks detected url:$url<br/>\n";
-                        } elseif ($location[0]=="/") {
+                        } elseif (substru($location, 0, 1)=="/") {
                             $url = "$scheme://$address$location";
-                            if (!is_null($links[$url])) $links[$url] .= ",";
-                            $links[$url] .= $locationSource;
+                            if (!isset($links[$url])) {
+                                $links[$url] = $locationSource;
+                            } else {
+                                $links[$url] .= ",".$locationSource;
+                            }
                             if (defined("DEBUG") && DEBUG>=2) echo "YellowCommand::analyseLinks detected url:$url<br/>\n";
                         }
                     }
@@ -509,7 +517,7 @@ class YellowCommand {
             if (method_exists($value["obj"], "onCommandHelp")) {
                 foreach (preg_split("/[\r\n]+/", $value["obj"]->onCommandHelp()) as $line) {
                     list($command) = explode(" ", $line);
-                    if (!empty($command) && is_null($data[$command])) $data[$command] = $line;
+                    if (!empty($command) && !isset($data[$command])) $data[$command] = $line;
                 }
             }
         }
