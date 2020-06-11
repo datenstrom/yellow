@@ -3215,8 +3215,3 @@ function substrb() {
 function strreplaceu() {
     return call_user_func_array("str_replace", func_get_args());
 }
-
-// Encode string, suitable for JavaScript arguments
-function strencode($string) {
-    return addcslashes($string, "\'\"\\\/");
-}
