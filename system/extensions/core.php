@@ -762,6 +762,11 @@ class YellowPage {
         return !is_null($this->pageRelations[$key]) ? $this->pageRelations[$key] : $this;
     }
     
+    // Return page URL
+    public function getUrl() {
+        return $this->yellow->lookup->normaliseUrl($this->scheme, $this->address, $this->base, $this->location);
+    }
+    
     // Return page base
     public function getBase($multiLanguage = false) {
         return $multiLanguage ? rtrim($this->base.$this->yellow->content->getHomeLocation($this->location), "/") :  $this->base;
@@ -772,9 +777,14 @@ class YellowPage {
         return $absoluteLocation ? $this->base.$this->location : $this->location;
     }
     
-    // Return page URL
-    public function getUrl() {
-        return $this->yellow->lookup->normaliseUrl($this->scheme, $this->address, $this->base, $this->location);
+    // Return page request argument
+    public function getRequest($key) {
+        return isset($_REQUEST[$key]) ? $_REQUEST[$key] : "";
+    }
+    
+    // Return page request argument, HTML encoded
+    public function getRequestHtml($key) {
+        return htmlspecialchars($this->getRequest($key));
     }
     
     // Return page extra data
@@ -892,6 +902,11 @@ class YellowPage {
     // Check if page with error
     public function isError() {
         return $this->statusCode>=400;
+    }
+    
+    // Check if request argument exists
+    public function isRequest($key) {
+        return isset($_REQUEST[$key]);
     }
     
     // Check if response header exists
@@ -2201,6 +2216,22 @@ class YellowLookup {
 
 class YellowToolbox {
     
+    // Return server argument from current HTTP request
+    public function getServer($key) {
+        return isset($_SERVER[$key]) ? $_SERVER[$key] : "";
+    }
+    
+    // Return server URL from current HTTP request
+    public function getServerUrl() {
+        $scheme = $this->isServer("HTTPS") && $this->getServer("HTTPS")!="off" ? "https" : "http";
+        $address = $this->getServer("SERVER_NAME");
+        $port = $this->getServer("SERVER_PORT");
+        if ($port!=80 && $port!=443) $address .= ":$port";
+        $base = "";
+        if (preg_match("/^(.*)\/.*\.php$/", $this->getServer("SCRIPT_NAME"), $matches)) $base = $matches[1];
+        return "$scheme://$address$base/";
+    }
+    
     // Return server version from current HTTP request
     public function getServerVersion($shortFormat = false) {
         $serverVersion = strtoupperu(PHP_SAPI)." ".PHP_OS;
@@ -2208,39 +2239,6 @@ class YellowToolbox {
         if (preg_match("/^(\S+)\/(\S+)/", $_SERVER["SERVER_SOFTWARE"], $matches)) $serverVersion = $matches[1]." ".$matches[2]." ".PHP_OS;
         if ($shortFormat && preg_match("/^(\pL+)/u", $serverVersion, $matches)) $serverVersion = $matches[1];
         return $serverVersion;
-    }
-    
-    // Return server URL from current HTTP request
-    public function getServerUrl() {
-        $scheme = $this->getScheme();
-        $address = $this->getAddress();
-        $base = $this->getBase();
-        return "$scheme://$address$base/";
-    }
-    
-    // Return scheme from current HTTP request
-    public function getScheme() {
-        $scheme = "";
-        if (preg_match("/^HTTP\//", $_SERVER["SERVER_PROTOCOL"])) {
-            $secure = isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"]!="off";
-            $scheme = $secure ? "https" : "http";
-        }
-        return $scheme;
-    }
-    
-    // Return address from current HTTP request
-    public function getAddress() {
-        $address = $_SERVER["SERVER_NAME"];
-        $port = $_SERVER["SERVER_PORT"];
-        if ($port!=80 && $port!=443) $address .= ":$port";
-        return $address;
-    }
-    
-    // Return base from current HTTP request
-    public function getBase() {
-        $base = "";
-        if (preg_match("/^(.*)\/.*\.php$/", $_SERVER["SCRIPT_NAME"], $matches)) $base = $matches[1];
-        return $base;
     }
     
     // Return location from current HTTP request
@@ -3057,6 +3055,11 @@ class YellowToolbox {
     // Stop timer and calculate elapsed time in milliseconds
     public function timerStop(&$time) {
         $time = intval((microtime(true)-$time) * 1000);
+    }
+    
+    // Check if server argument exists
+    public function isServer($key) {
+        return isset($_SERVER[$key]);
     }
 }
     
