@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowInstall {
-    const VERSION = "0.8.21";
+    const VERSION = "0.8.22";
     const TYPE = "feature";
     const PRIORITY = "1";
     public $yellow;                 //access to API
@@ -84,8 +84,8 @@ class YellowInstall {
         $statusCode = 200;
         $fileName = $this->yellow->system->get("coreExtensionDir").$this->yellow->system->get("coreLogFile");
         if (!is_file($fileName)) {
-            $serverVersion = $this->yellow->toolbox->getServerVersion();
-            $this->yellow->log("info", "Datenstrom Yellow ".YellowCore::VERSION.", PHP ".PHP_VERSION.", $serverVersion");
+            list($name, $version) = $this->yellow->toolbox->detectServerInformation();
+            $this->yellow->log("info", "Datenstrom Yellow ".YellowCore::VERSION.", PHP ".PHP_VERSION.", $name $version, ".PHP_OS);
             if (!is_file($fileName)) {
                 $statusCode = 500;
                 $this->yellow->page->error(500, "Can't write file '$fileName'!");
@@ -263,18 +263,18 @@ class YellowInstall {
     
     // Check web server requirements
     public function checkServerRequirements() {
-        $serverVersion = $this->yellow->toolbox->getServerVersion(true);
+        list($name) = $this->yellow->toolbox->detectServerInformation();
         $troubleshooting = "<a href=\"https://datenstrom.se/yellow/help/troubleshooting\">See troubleshooting</a>.";
-        $this->checkServerConfiguration() || die("Datenstrom Yellow requires a configuration file for $serverVersion! $troubleshooting\n");
-        $this->checkServerRewrite() || die("Datenstrom Yellow requires rewrite support for $serverVersion! $troubleshooting\n");
-        $this->checkServerWrite() || die("Datenstrom Yellow requires write access for $serverVersion! $troubleshooting\n");
+        $this->checkServerConfiguration() || die("Datenstrom Yellow requires a configuration file for $name! $troubleshooting\n");
+        $this->checkServerRewrite() || die("Datenstrom Yellow requires rewrite support for $name! $troubleshooting\n");
+        $this->checkServerWrite() || die("Datenstrom Yellow requires write access for $name! $troubleshooting\n");
         return true;
     }
     
     // Check web server configuration file
     public function checkServerConfiguration() {
-        $serverVersion = $this->yellow->toolbox->getServerVersion(true);
-        return strtoloweru($serverVersion)!="apache" || is_file(".htaccess");
+        list($name) = $this->yellow->toolbox->detectServerInformation();
+        return strtoloweru($name)!="apache" || is_file(".htaccess");
     }
     
     // Check web server rewrite support
@@ -322,8 +322,8 @@ class YellowInstall {
             if ($key=="password" || $key=="status") continue;
             $data[$key] = trim($value);
         }
-        $data["coreStaticUrl"] = $this->yellow->toolbox->getServerUrl();
-        $data["coreServerTimezone"] = $this->yellow->toolbox->getTimezone();
+        $data["coreStaticUrl"] = $this->yellow->toolbox->detectServerUrl();
+        $data["coreServerTimezone"] = $this->yellow->toolbox->detectServerTimezone();
         if ($this->yellow->isCommandLine()) $data["coreStaticUrl"] = getenv("URL");
         return $data;
     }
