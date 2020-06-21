@@ -49,7 +49,7 @@ class YellowUpdate {
     
     // Handle command help
     public function onCommandHelp() {
-        $help .= "install [extension]\n";
+        $help = "install [extension]\n";
         $help .= "uninstall [extension]\n";
         $help .= "update [extension]\n";
         return $help;
@@ -142,9 +142,9 @@ class YellowUpdate {
                     preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
                     if (empty($fileDataHeader) && preg_match("/^\#/", $line)) {
                         $fileDataHeader = $line;
-                    } elseif (!empty($matches[1]) && !is_null($settings[$matches[1]])) {
+                    } elseif (!empty($matches[1]) && !empty($matches[2]) && isset($settings[$matches[1]])) {
                         $settings[$matches[1]] = $matches[2];
-                    } elseif (!empty($matches[1]) && $matches[1][0]!="#") {
+                    } elseif (!empty($matches[1]) && substru($matches[1], 0, 1)!="#") {
                         $fileDataFooter .= "# $line";
                     } elseif (!empty($matches[1])) {
                         $fileDataFooter .= $line;
@@ -271,6 +271,7 @@ class YellowUpdate {
     public function getExtensionInformation($args) {
         $command = array_shift($args);
         $extensions = array_unique(array_filter($args, "strlen"));
+        $force = false;
         foreach ($extensions as $key=>$value) {
             if ($value=="force") {
                 $force = true;
