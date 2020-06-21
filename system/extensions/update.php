@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowUpdate {
-    const VERSION = "0.8.18";
+    const VERSION = "0.8.19";
     const TYPE = "feature";
     const PRIORITY = "2";
     public $yellow;                 //access to API
@@ -313,7 +313,7 @@ class YellowUpdate {
         foreach ($extensions as $extension) {
             $found = false;
             foreach ($dataCurrent as $key=>$value) {
-                if (strtoloweru($key)==strtoloweru($extension) && !is_null($dataLatest[$key]) && !is_null($dataRelevant[$key])) {
+                if (strtoloweru($key)==strtoloweru($extension) && isset($dataLatest[$key]) && isset($dataRelevant[$key])) {
                     $data[$key] = $dataRelevant[$key];
                     $found = true;
                     break;
@@ -340,20 +340,24 @@ class YellowUpdate {
         $statusCode = max($statusCodeCurrent, $statusCodeLatest, $statusCodeModified);
         if (empty($extensions)) {
             foreach ($dataCurrent as $key=>$value) {
-                list($version) = explode(",", $dataLatest[$key]);
-                if (strnatcasecmp($dataCurrent[$key], $version)<0) $data[$key] = $dataLatest[$key];
-                if (!is_null($dataModified[$key]) && !empty($version) && $force) $data[$key] = $dataLatest[$key];
+                if (isset($dataLatest[$key])) {
+                    list($version) = explode(",", $dataLatest[$key]);
+                    if (strnatcasecmp($dataCurrent[$key], $version)<0) $data[$key] = $dataLatest[$key];
+                    if (isset($dataModified[$key]) && !empty($version) && $force) $data[$key] = $dataLatest[$key];
+                }
             }
         } else {
             foreach ($extensions as $extension) {
                 $found = false;
                 foreach ($dataCurrent as $key=>$value) {
-                    list($version) = explode(",", $dataLatest[$key]);
-                    if (strtoloweru($key)==strtoloweru($extension) && !empty($version)) {
-                        $data[$key] = $dataLatest[$key];
-                        $dataModified = array_intersect_key($dataModified, $data);
-                        $found = true;
-                        break;
+                    if (isset($dataLatest[$key])) {
+                        list($version) = explode(",", $dataLatest[$key]);
+                        if (strtoloweru($key)==strtoloweru($extension) && !empty($version)) {
+                            $data[$key] = $dataLatest[$key];
+                            $dataModified = array_intersect_key($dataModified, $data);
+                            $found = true;
+                            break;
+                        }
                     }
                 }
                 if (!$found) {
@@ -365,7 +369,7 @@ class YellowUpdate {
         if ($statusCode==200) {
             foreach (array_merge($dataModified, $data) as $key=>$value) {
                 list($version) = explode(",", $value);
-                if (is_null($dataModified[$key]) || $force) {
+                if (!isset($dataModified[$key]) || $force) {
                     echo ucfirst($key)." $version\n";
                 } else {
                     echo ucfirst($key)." $version has been modified - Force update\n";
@@ -434,6 +438,8 @@ class YellowUpdate {
         $zip = new ZipArchive();
         if ($zip->open($path)===true) {
             if (defined("DEBUG") && DEBUG>=2) echo "YellowUpdate::updateExtensionArchive file:$path<br/>\n";
+            $extension = $version = $language = "";
+            $modified = $lastModified = $lastPublished = 0;
             if (preg_match("#^(.*\/).*?$#", $zip->getNameIndex(0), $matches)) $pathBase = $matches[1];
             $fileData = $zip->getFromName($pathBase.$this->yellow->system->get("updateExtensionFile"));
             foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
@@ -451,22 +457,23 @@ class YellowUpdate {
                 if ($page->isAvailable() && $page->isVisible()) array_push($rootPages, $page);
             }
             foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
-                preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
-                if (lcfirst($matches[1])=="extension") $extension = lcfirst($matches[2]);
-                if (lcfirst($matches[1])=="version") $version = lcfirst($matches[2]);
-                if (lcfirst($matches[1])=="published") $modified = strtotime($matches[2]);
-                if (lcfirst($matches[1])=="language") $language = $matches[2];
-                if (!empty($matches[1]) && !empty($matches[2]) && strposu($matches[1], "/")) {
-                    $fileName = $matches[1];
-                    list($dummy, $entry, $flags) = explode(",", $matches[2], 3);
-                    foreach ($rootPages as $page) {
-                        list($fileNameSource, $fileNameDestination) = $this->getExtensionsFileNames($fileName, $entry, $flags, $language, $pathBase, $page);
-                        $fileData = $zip->getFromName($fileNameSource);
-                        $lastModified = $this->yellow->toolbox->getFileModified($fileNameDestination);
-                        $statusCode = $this->updateExtensionFile($fileNameDestination, $fileData,
-                            $modified, $lastModified, $lastPublished, $flags, $force, $extension);
+                if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
+                    if (lcfirst($matches[1])=="extension") $extension = lcfirst($matches[2]);
+                    if (lcfirst($matches[1])=="version") $version = lcfirst($matches[2]);
+                    if (lcfirst($matches[1])=="published") $modified = strtotime($matches[2]);
+                    if (lcfirst($matches[1])=="language") $language = $matches[2];
+                    if (!empty($matches[1]) && !empty($matches[2]) && strposu($matches[1], "/")) {
+                        $fileName = $matches[1];
+                        list($dummy, $entry, $flags) = explode(",", $matches[2], 3);
+                        foreach ($rootPages as $page) {
+                            list($fileNameSource, $fileNameDestination) = $this->getExtensionsFileNames($fileName, $entry, $flags, $language, $pathBase, $page);
+                            $fileData = $zip->getFromName($fileNameSource);
+                            $lastModified = $this->yellow->toolbox->getFileModified($fileNameDestination);
+                            $statusCode = $this->updateExtensionFile($fileNameDestination, $fileData,
+                                $modified, $lastModified, $lastPublished, $flags, $force, $extension);
+                        }
+                        if ($statusCode!=200) break;
                     }
-                    if ($statusCode!=200) break;
                 }
             }
             $zip->close();
@@ -612,8 +619,11 @@ class YellowUpdate {
                 if (!empty($matches[1]) && !empty($matches[2])) {
                     $fileName = $matches[1];
                     list($extension) = explode(",", lcfirst($matches[2]), 3);
-                    if (!is_null($data[$extension])) $data[$extension] .= ",";
-                    $data[$extension] .= $fileName;
+                    if (!isset($data[$extension])) {
+                        $data[$extension] = $fileName;
+                    } else {
+                        $data[$extension] .= ",".$fileName;
+                    }
                 }
             }
         }
@@ -627,6 +637,8 @@ class YellowUpdate {
         $url = $this->yellow->system->get("updateExtensionUrl")."/raw/master/".$this->yellow->system->get("updateWaffleFile");
         list($statusCode, $fileData) = $this->getExtensionFile($url);
         if ($statusCode==200) {
+            $extension = "";
+            $lastModified = $lastPublished = 0;
             foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
                 preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
                 if (!empty($matches[1]) && !empty($matches[2])) {
@@ -636,7 +648,7 @@ class YellowUpdate {
                         $extension = $extensionNew;
                         $lastPublished = $this->yellow->toolbox->getFileModified($fileName);
                     }
-                    if (!is_null($dataCurrent[$extension])) {
+                    if (isset($dataCurrent[$extension])) {
                         $lastModified = $this->yellow->toolbox->getFileModified($fileName);
                         if (preg_match("/update/i", $flags) && preg_match("/careful/i", $flags) && $lastModified!=$lastPublished) {
                             $data[$extension] = $dataCurrent[$extension];
@@ -662,6 +674,7 @@ class YellowUpdate {
         curl_setopt($curlHandle, CURLOPT_CONNECTTIMEOUT, 30);
         $rawData = curl_exec($curlHandle);
         $statusCode = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);
+        $fileData = "";
         curl_close($curlHandle);
         if ($statusCode==200) {
             $fileData = $rawData;
