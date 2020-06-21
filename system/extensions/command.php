@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowCommand {
-    const VERSION = "0.8.13";
+    const VERSION = "0.8.14";
     const TYPE = "feature";
     const PRIORITY = "3";
     public $yellow;                     //access to API
@@ -56,8 +56,7 @@ class YellowCommand {
     
     // Process command to show website version and updates
     public function processCommandAbout($args) {
-        $serverVersion = $this->yellow->toolbox->getServerVersion();
-        echo "Datenstrom Yellow ".YellowCore::VERSION.", PHP ".PHP_VERSION.", $serverVersion\n";
+        echo "Datenstrom Yellow ".YellowCore::VERSION."\n";
         list($statusCode, $dataCurrent) = $this->getExtensionsVersion();
         list($statusCode, $dataLatest) = $this->getExtensionsVersion(true);
         foreach ($dataCurrent as $key=>$value) {
