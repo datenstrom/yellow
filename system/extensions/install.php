@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowInstall {
-    const VERSION = "0.8.22";
+    const VERSION = "0.8.23";
     const TYPE = "feature";
     const PRIORITY = "1";
     public $yellow;                 //access to API
@@ -118,9 +118,12 @@ class YellowInstall {
                     }
                 }
                 $languagesFound = array_slice(array_filter($languagesFound, "strlen"), 0, 3);
+                $extension = $version = "";
+                $modified = 0;
                 foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
                     preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
                     if (lcfirst($matches[1])=="extension") $extension = lcfirst($matches[2]);
+                    if (lcfirst($matches[1])=="version") $version = lcfirst($matches[2]);
                     if (lcfirst($matches[1])=="published") $modified = strtotime($matches[2]);
                     if (!empty($matches[1]) && !empty($matches[2]) && strposu($matches[1], "/")) {
                         $fileName = $matches[1];
@@ -131,7 +134,7 @@ class YellowInstall {
                         }
                         if (preg_match("/^(.*)-language\.txt$/", basename($entry), $tokens) && in_array($tokens[1], $languagesFound) && !is_file($fileName)) {
                             $statusCode = $this->yellow->extensions->get("update")->updateExtensionFile($fileName, $fileData, $modified, 0, 0, "create", false, $extension);
-                            $this->yellow->log($statusCode==200 ? "info" : "error", "Install language '".ucfirst($tokens[1])."'");
+                            $this->yellow->log($statusCode==200 ? "info" : "error", "Install extension '".ucfirst($tokens[1])." $version'");
                         }
                         if ($statusCode!=200) break;
                     }
