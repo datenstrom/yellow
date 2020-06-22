@@ -770,6 +770,11 @@ class YellowPage {
         return $absoluteLocation ? $this->base.$this->location : $this->location;
     }
     
+    // Set page request argument
+    public function setRequest($key, $value) {
+        $_REQUEST[$key] = $value;
+    }
+    
     // Return page request argument
     public function getRequest($key) {
         return isset($_REQUEST[$key]) ? $_REQUEST[$key] : "";
@@ -778,6 +783,16 @@ class YellowPage {
     // Return page request argument, HTML encoded
     public function getRequestHtml($key) {
         return htmlspecialchars($this->getRequest($key));
+    }
+    
+    // Set page response header
+    public function setHeader($key, $value) {
+        $this->headerData[$key] = $value;
+    }
+    
+    // Return page response header
+    public function getHeader($key) {
+        return $this->isHeader($key) ? $this->headerData[$key] : "";
     }
     
     // Return page extra data
@@ -806,24 +821,9 @@ class YellowPage {
         return $output;
     }
     
-    // Set page request argument
-    public function setRequest($key, $value) {
-        $_REQUEST[$key] = $value;
-    }
-    
     // Set page response output
     public function setOutput($output) {
         $this->outputData = $output;
-    }
-    
-    // Set page response header
-    public function setHeader($key, $value) {
-        $this->headerData[$key] = $value;
-    }
-    
-    // Return page response header
-    public function getHeader($key) {
-        return $this->isHeader($key) ? $this->headerData[$key] : "";
     }
     
     // Return page modification date, Unix time or HTTP format
