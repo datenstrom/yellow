@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowInstall {
-    const VERSION = "0.8.23";
+    const VERSION = "0.8.24";
     const TYPE = "feature";
     const PRIORITY = "1";
     public $yellow;                 //access to API
@@ -31,12 +31,12 @@ class YellowInstall {
     // Process request to install website
     public function processRequestInstall($scheme, $address, $base, $location, $fileName) {
         $this->checkServerRequirements();
-        $author = trim(preg_replace("/[^\pL\d\-\. ]/u", "-", $_REQUEST["author"]));
-        $email = trim($_REQUEST["email"]);
-        $password = trim($_REQUEST["password"]);
-        $language = trim($_REQUEST["language"]);
-        $extension = trim($_REQUEST["extension"]);
-        $status = trim($_REQUEST["status"]);
+        $author = trim(preg_replace("/[^\pL\d\-\. ]/u", "-", $this->yellow->page->getRequest("author")));
+        $email = trim($this->yellow->page->getRequest("email"));
+        $password = trim($this->yellow->page->getRequest("password"));
+        $language = trim($this->yellow->page->getRequest("language"));
+        $extension = trim($this->yellow->page->getRequest("extension"));
+        $status = trim($this->yellow->page->getRequest("status"));
         $statusCode = $this->updateLog();
         $statusCode = max($statusCode, $this->updateLanguage());
         $this->yellow->content->pages["root/"] = array();
@@ -268,7 +268,7 @@ class YellowInstall {
     public function checkServerRequirements() {
         list($name) = $this->yellow->toolbox->detectServerInformation();
         $troubleshooting = "<a href=\"https://datenstrom.se/yellow/help/troubleshooting\">See troubleshooting</a>.";
-        $this->checkServerConfiguration() || die("Datenstrom Yellow requires a configuration file for $name! $troubleshooting\n");
+        $this->checkServerConfiguration() || die("Datenstrom Yellow requires configuration file for $name! $troubleshooting\n");
         $this->checkServerRewrite() || die("Datenstrom Yellow requires rewrite support for $name! $troubleshooting\n");
         $this->checkServerWrite() || die("Datenstrom Yellow requires write access for $name! $troubleshooting\n");
         return true;
@@ -302,14 +302,12 @@ class YellowInstall {
         return $this->yellow->system->save($fileName, array());
     }
 
-    // Detect web browser languages
+    // Detect browser languages
     public function detectBrowserLanguages($languagesDefault) {
         $languages = array();
-        if (isset($_SERVER["HTTP_ACCEPT_LANGUAGE"])) {
-            foreach (preg_split("/\s*,\s*/", $_SERVER["HTTP_ACCEPT_LANGUAGE"]) as $string) {
-                list($language) = explode(";", $string);
-                if (!empty($language)) array_push($languages, $language);
-            }
+        foreach (preg_split("/\s*,\s*/", $this->yellow->toolbox->getServer("HTTP_ACCEPT_LANGUAGE")) as $string) {
+            list($language) = explode(";", $string);
+            if (!empty($language)) array_push($languages, $language);
         }
         foreach (preg_split("/\s*,\s*/", $languagesDefault) as $language) {
             if (!empty($language)) array_push($languages, $language);
