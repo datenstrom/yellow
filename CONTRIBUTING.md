@@ -34,6 +34,6 @@ We are here to make things for people and find like-minded people.
 ## How to get in touch 
 
 1. [Watch us on GitHub](https://github.com/datenstrom/yellow), [Gitter](https://gitter.im/datenstrom/yellow), [Twitter](https://twitter.com/datendeveloper), [TeamVideo](https://team.video/datendeveloper) or [send a message](https://datenstrom.se/contact/).
-2. Answer questions and discus problems with others, if you enjoy it.
+2. Answer questions and solve problems, if you enjoy it.
 3. Join our developer meeting on the first day of the month.
 4. Be notified of new releases in your mailbox. [What's new?](https://github.com/datenstrom/yellow/releases)
