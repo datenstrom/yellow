@@ -2271,6 +2271,11 @@ class YellowLookup {
 
 class YellowToolbox {
     
+    // Return browser cookie from from current HTTP request
+    public function getCookie($key) {
+        return isset($_COOKIE[$key]) ? $_COOKIE[$key] : "";
+    }
+    
     // Return server argument from current HTTP request
     public function getServer($key) {
         return isset($_SERVER[$key]) ? $_SERVER[$key] : "";
@@ -2970,7 +2975,7 @@ class YellowToolbox {
     
     // Detect server URL
     public function detectServerUrl() {
-        $scheme = $this->isServer("HTTPS") && $this->getServer("HTTPS")!="off" ? "https" : "http";
+        $scheme = !empty($this->getServer("HTTPS")) && $this->getServer("HTTPS")!="off" ? "https" : "http";
         $address = $this->getServer("SERVER_NAME");
         $port = $this->getServer("SERVER_PORT");
         if ($port!=80 && $port!=443) $address .= ":$port";
@@ -3003,16 +3008,14 @@ class YellowToolbox {
         return array($name, $version);
     }
     
-    // Detect web browser language
+    // Detect browser language
     public function detectBrowserLanguage($languages, $languageDefault) {
         $languageFound = $languageDefault;
-        if ($this->isServer("HTTP_ACCEPT_LANGUAGE")) {
-            foreach (preg_split("/\s*,\s*/", $this->getServer("HTTP_ACCEPT_LANGUAGE")) as $string) {
-                list($language) = explode(";", $string);
-                if (!empty($language) && in_array($language, $languages)) {
-                    $languageFound = $language;
-                    break;
-                }
+        foreach (preg_split("/\s*,\s*/", $this->getServer("HTTP_ACCEPT_LANGUAGE")) as $string) {
+            list($language) = explode(";", $string);
+            if (!empty($language) && in_array($language, $languages)) {
+                $languageFound = $language;
+                break;
             }
         }
         return $languageFound;
@@ -3094,11 +3097,6 @@ class YellowToolbox {
         $time = intval((microtime(true)-$time) * 1000);
     }
     
-    // Check if server argument exists
-    public function isServer($key) {
-        return isset($_SERVER[$key]);
-    }
-    
     // Check if there are location arguments in current HTTP request
     public function isLocationArgs($location = "") {
         if (empty($location)) $location = $this->getServer("LOCATION").$this->getServer("LOCATION_ARGUMENTS");
@@ -3124,7 +3122,7 @@ class YellowToolbox {
 
     // Check if unmodified since last HTTP request
     public function isRequestNotModified($lastModifiedFormatted) {
-        return $this->isServer("HTTP_IF_MODIFIED_SINCE") && $this->getServer("HTTP_IF_MODIFIED_SINCE")==$lastModifiedFormatted;
+        return $this->getServer("HTTP_IF_MODIFIED_SINCE")==$lastModifiedFormatted;
     }
 }
     
@@ -3222,11 +3220,6 @@ class YellowExtensions {
     public function isExisting($name) {
         return isset($this->extensions[$name]);
     }
-}
-
-// Check if variable is empty, string compatible
-function isempty($variable) {
-    return is_string($variable) ? $variable==="" : empty($variable);
 }
 
 // Check if string is empty
