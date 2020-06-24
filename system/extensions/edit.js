@@ -990,9 +990,9 @@ yellow.edit = {
         return (key in yellow.text) ? yellow.text[key] : "["+key+"]";
     },
 
-    // Return cookie string
-    getCookie: function(name) {
-        return yellow.toolbox.getCookie(name);
+    // Return browser cookie
+    getCookie: function(key) {
+        return yellow.toolbox.getCookie(key);
     },
     
     // Check if user with access
@@ -1464,9 +1464,9 @@ yellow.toolbox = {
         return lines;
     },
     
-    // Return cookie string
-    getCookie: function(name) {
-        var matches = document.cookie.match("(^|; )"+name+"=([^;]+)");
+    // Return browser cookie
+    getCookie: function(key) {
+        var matches = document.cookie.match("(^|; )"+key+"=([^;]+)");
         return matches ? unescape(matches[2]) : "";
     },
     
