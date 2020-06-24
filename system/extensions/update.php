@@ -142,7 +142,7 @@ class YellowUpdate {
                     preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
                     if (empty($fileDataHeader) && preg_match("/^\#/", $line)) {
                         $fileDataHeader = $line;
-                    } elseif (!empty($matches[1]) && !empty($matches[2]) && isset($settings[$matches[1]])) {
+                    } elseif (!empty($matches[1]) && isset($settings[$matches[1]])) {
                         $settings[$matches[1]] = $matches[2];
                     } elseif (!empty($matches[1]) && substru($matches[1], 0, 1)!="#") {
                         $fileDataFooter .= "# $line";
