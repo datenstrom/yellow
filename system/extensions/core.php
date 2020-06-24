@@ -131,7 +131,7 @@ class YellowCore {
     public function processRequest($scheme, $address, $base, $location, $fileName, $cacheable) {
         $statusCode = 0;
         if (is_readable($fileName)) {
-            if ($this->toolbox->isRequestCleanUrl($location)) {
+            if ($this->lookup->isRequestCleanUrl($location)) {
                 $location = $location.$this->toolbox->getLocationArgsCleanUrl();
                 $location = $this->lookup->normaliseUrl($scheme, $address, $base, $location);
                 $statusCode = $this->sendStatus(303, $location);
@@ -200,7 +200,7 @@ class YellowCore {
         $this->page->parsePage();
         $statusCode = $this->page->statusCode;
         $lastModifiedFormatted = $this->page->getHeader("Last-Modified");
-        if ($statusCode==200 && $this->page->isCacheable() && $this->toolbox->isRequestNotModified($lastModifiedFormatted)) {
+        if ($statusCode==200 && $this->page->isCacheable() && $this->toolbox->isNotModified($lastModifiedFormatted)) {
             $statusCode = 304;
             @header($this->toolbox->getHttpStatusFormatted($statusCode));
         } else {
@@ -225,7 +225,7 @@ class YellowCore {
     // Send file response
     public function sendFile($statusCode, $fileName, $cacheable) {
         $lastModifiedFormatted = $this->toolbox->getHttpDateFormatted($this->toolbox->getFileModified($fileName));
-        if ($statusCode==200 && $cacheable && $this->toolbox->isRequestNotModified($lastModifiedFormatted)) {
+        if ($statusCode==200 && $cacheable && $this->toolbox->isNotModified($lastModifiedFormatted)) {
             $statusCode = 304;
             @header($this->toolbox->getHttpStatusFormatted($statusCode));
         } else {
@@ -590,7 +590,7 @@ class YellowPage {
         if ($this->yellow->getRequestHandler()=="core" && !$this->isAvailable() && $this->statusCode==200) {
             $this->error(404);
         }
-        if ($this->yellow->toolbox->isRequestSelf()) {
+        if ($this->yellow->lookup->isRequestSelfLocation($this->location)) {
             $this->error(404);
         }
         if ($this->isExisting("pageClean")) $this->outputData = null;
@@ -2041,8 +2041,10 @@ class YellowLookup {
         $pathRoot = $this->yellow->system->get("coreContentRootDir");
         if (!empty($pathRoot)) {
             $fileName = substru($fileName, strlenu($pathBase));
-            if (preg_match("/^(.+?)\//", $fileName, $matches)) $name = $this->normaliseToken($matches[1]);
-            if (strlenu($name)==2) $language = $name;
+            if (preg_match("/^(.+?)\//", $fileName, $matches)) {
+                $name = $this->normaliseToken($matches[1]);
+                if (strlenu($name)==2) $language = $name;
+            }
         }
         return $language;
     }
@@ -2182,6 +2184,16 @@ class YellowLookup {
             $location = "/$language/";
         }
         return $location;
+    }
+    
+    // Check if clean URL is requested
+    public function isRequestCleanUrl($location) {
+        return isset($_REQUEST["clean-url"]) && substru($location, -1, 1)=="/";
+    }
+    
+    // Check if script location is requested
+    public function isRequestSelfLocation($location) {
+        return substru($location, -10, 10)=="yellow.php";
     }
     
     // Check if location is specifying root
@@ -2745,6 +2757,12 @@ class YellowToolbox {
         return $attributes;
     }
     
+    // Return list from text string
+    public function getTextList($text, $separator, $size) {
+        $tokens = explode($separator, $text, $size);
+        return array_pad($tokens, $size, null);
+    }
+    
     // Return arguments from text string, space separated
     public function getTextArgs($text, $optional = "-", $sizeMin = 9) {
         $text = preg_replace("/\s+/s", " ", trim($text));
@@ -2756,7 +2774,7 @@ class YellowToolbox {
     }
     
     // Return text string from arguments, space separated
-    public function getTextImplode($tokens, $optional = "-") {
+    public function getTextString($tokens, $optional = "-") {
         $text = "";
         foreach ($tokens as $token) {
             if (preg_match("/\s/", $token)) $token = "\"$token\"";
@@ -2774,7 +2792,7 @@ class YellowToolbox {
         return str_word_count($text);
     }
     
-    // Return text truncated at word boundary
+    // Return text string truncated at word boundary
     public function getTextTruncated($text, $lengthMax) {
         if (strlenu($text)>$lengthMax-1) {
             $text = substru($text, 0, $lengthMax);
@@ -3110,18 +3128,8 @@ class YellowToolbox {
         return preg_match("/^(.*\/)?page$separator.*$/", $location);
     }
 
-    // Check if script location is requested
-    public function isRequestSelf() {
-        return substru($this->getServer("REQUEST_URI"), -10, 10)=="yellow.php";
-    }
-
-    // Check if clean URL is requested
-    public function isRequestCleanUrl($location) {
-        return isset($_REQUEST["clean-url"]) && substru($location, -1, 1)=="/";
-    }
-
     // Check if unmodified since last HTTP request
-    public function isRequestNotModified($lastModifiedFormatted) {
+    public function isNotModified($lastModifiedFormatted) {
         return $this->getServer("HTTP_IF_MODIFIED_SINCE")==$lastModifiedFormatted;
     }
 }
