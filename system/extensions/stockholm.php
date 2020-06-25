@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowStockholm {
-    const VERSION = "0.8.7";
+    const VERSION = "0.8.8";
     const TYPE = "theme";
     public $yellow;         //access to API
     
@@ -15,7 +15,7 @@ class YellowStockholm {
     
     // Handle update
     public function onUpdate($action) {
-        $fileName = $this->yellow->system->get("coreSettingDir").$this->yellow->system->get("coreSystemFile");
+        $fileName = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreSystemFile");
         if ($action=="install") {
             $this->yellow->system->save($fileName, array("theme" => "stockholm"));
         } elseif ($action=="uninstall" && $this->yellow->system->get("theme")=="stockholm") {
