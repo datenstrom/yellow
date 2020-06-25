@@ -4,15 +4,15 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowCommand {
-    const VERSION = "0.8.14";
+    const VERSION = "0.8.15";
     const TYPE = "feature";
     const PRIORITY = "3";
-    public $yellow;                     //access to API
-    public $files;                      //number of files
-    public $links;                      //number of links
-    public $errors;                     //number of errors
-    public $locationsArgs;              //locations with location arguments detected
-    public $locationsArgsPagination;    //locations with pagination arguments detected
+    public $yellow;                       //access to API
+    public $files;                        //number of files
+    public $links;                        //number of links
+    public $errors;                       //number of errors
+    public $locationsArguments;           //locations with location arguments detected
+    public $locationsArgumentsPagination; //locations with pagination arguments detected
     
     // Handle initialisation
     public function onLoad($yellow) {
@@ -20,15 +20,14 @@ class YellowCommand {
     }
     
     // Handle command
-    public function onCommand($args) {
-        list($command) = $args;
+    public function onCommand($command, $text) {
         switch ($command) {
             case "":        $statusCode = $this->processCommandHelp(); break;
-            case "about":   $statusCode = $this->processCommandAbout($args); break;
-            case "build":   $statusCode = $this->processCommandBuild($args); break;
-            case "check":   $statusCode = $this->processCommandCheck($args); break;
-            case "clean":   $statusCode = $this->processCommandClean($args); break;
-            case "serve":   $statusCode = $this->processCommandServe($args); break;
+            case "about":   $statusCode = $this->processCommandAbout($command, $text); break;
+            case "build":   $statusCode = $this->processCommandBuild($command, $text); break;
+            case "check":   $statusCode = $this->processCommandCheck($command, $text); break;
+            case "clean":   $statusCode = $this->processCommandClean($command, $text); break;
+            case "serve":   $statusCode = $this->processCommandServe($command, $text); break;
             default:        $statusCode = 0;
         }
         return $statusCode;
@@ -55,7 +54,7 @@ class YellowCommand {
     }
     
     // Process command to show website version and updates
-    public function processCommandAbout($args) {
+    public function processCommandAbout($command, $text) {
         echo "Datenstrom Yellow ".YellowCore::VERSION."\n";
         list($statusCode, $dataCurrent) = $this->getExtensionsVersion();
         list($statusCode, $dataLatest) = $this->getExtensionsVersion(true);
@@ -71,17 +70,17 @@ class YellowCommand {
     }
     
     // Process command to build static website
-    public function processCommandBuild($args) {
+    public function processCommandBuild($command, $text) {
         $statusCode = 0;
-        list($command, $path, $location) = $args;
-        if (empty($location) || $location[0]=="/") {
+        list($path, $location) = $this->yellow->toolbox->getTextArguments($text);
+        if (empty($location) || substru($location, 0, 1)=="/") {
             if ($this->checkStaticSettings()) {
                 $statusCode = $this->buildStaticFiles($path, $location);
             } else {
                 $statusCode = 500;
                 $this->files = 0;
                 $this->errors = 1;
-                $fileName = $this->yellow->system->get("coreSettingDir").$this->yellow->system->get("coreSystemFile");
+                $fileName = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreSystemFile");
                 echo "ERROR building files: Please configure CoreStaticUrl in file '$fileName'!\n";
             }
             echo "Yellow $command: $this->files file".($this->files!=1 ? "s" : "");
@@ -95,9 +94,9 @@ class YellowCommand {
     
     // Build static files
     public function buildStaticFiles($path, $locationFilter) {
-        $path = rtrim(empty($path) ? $this->yellow->system->get("coreStaticDir") : $path, "/");
+        $path = rtrim(empty($path) ? $this->yellow->system->get("coreStaticDirectory") : $path, "/");
         $this->files = $this->errors = 0;
-        $this->locationsArgs = $this->locationsArgsPagination = array();
+        $this->locationsArguments = $this->locationsArgumentsPagination = array();
         $statusCode = empty($locationFilter) ? $this->cleanStaticFiles($path, $locationFilter) : 200;
         $staticUrl = $this->yellow->system->get("coreStaticUrl");
         list($scheme, $address, $base) = $this->yellow->lookup->getUrlInformation($staticUrl);
@@ -108,16 +107,16 @@ class YellowCommand {
             if (!preg_match("#^$base$locationFilter#", "$base$location")) continue;
             $statusCode = max($statusCode, $this->buildStaticFile($path, $location, true));
         }
-        foreach ($this->locationsArgs as $location) {
+        foreach ($this->locationsArguments as $location) {
             echo "\rBuilding static website ".$this->getProgressPercent($this->files, $filesEstimated, 5, 60)."%... ";
             if (!preg_match("#^$base$locationFilter#", "$base$location")) continue;
             $statusCode = max($statusCode, $this->buildStaticFile($path, $location, true));
         }
-        $filesEstimated = $this->files + count($this->locationsArgs) + count($this->locationsArgsPagination);
-        foreach ($this->locationsArgsPagination as $location) {
+        $filesEstimated = $this->files + count($this->locationsArguments) + count($this->locationsArgumentsPagination);
+        foreach ($this->locationsArgumentsPagination as $location) {
             echo "\rBuilding static website ".$this->getProgressPercent($this->files, $filesEstimated, 5, 95)."%... ";
             if (!preg_match("#^$base$locationFilter#", "$base$location")) continue;
-            if (substru($location, -1)!=$this->yellow->toolbox->getLocationArgsSeparator()) {
+            if (substru($location, -1)!=$this->yellow->toolbox->getLocationArgumentsSeparator()) {
                 $statusCode = max($statusCode, $this->buildStaticFile($path, $location, false, true));
             }
             for ($pageNumber=2; $pageNumber<=999; ++$pageNumber) {
@@ -237,17 +236,17 @@ class YellowCommand {
             }
             if (substru($location, 0, strlenu($base))!=$base) continue;
             $location = substru($location, strlenu($base));
-            if (!$this->yellow->toolbox->isLocationArgs($location)) continue;
-            if (!$this->yellow->toolbox->isLocationArgsPagination($location)) {
+            if (!$this->yellow->toolbox->isLocationArguments($location)) continue;
+            if (!$this->yellow->toolbox->isLocationArgumentsPagination($location)) {
                 $location = rtrim($location, "/")."/";
-                if (!isset($this->locationsArgs[$location])) {
-                    $this->locationsArgs[$location] = $location;
+                if (!isset($this->locationsArguments[$location])) {
+                    $this->locationsArguments[$location] = $location;
                     if (defined("DEBUG") && DEBUG>=2) echo "YellowCommand::analyseLocations detected location:$location<br/>\n";
                 }
             } else {
                 $location = rtrim($location, "0..9");
-                if (!isset($this->locationsArgsPagination[$location])) {
-                    $this->locationsArgsPagination[$location] = $location;
+                if (!isset($this->locationsArgumentsPagination[$location])) {
+                    $this->locationsArgumentsPagination[$location] = $location;
                     if (defined("DEBUG") && DEBUG>=2) echo "YellowCommand::analyseLocations detected location:$location<br/>\n";
                 }
             }
@@ -255,17 +254,17 @@ class YellowCommand {
     }
 
     // Process command to check static files for broken links
-    public function processCommandCheck($args) {
+    public function processCommandCheck($command, $text) {
         $statusCode = 0;
-        list($command, $path, $location) = $args;
-        if (empty($location) || $location[0]=="/") {
+        list($path, $location) = $this->yellow->toolbox->getTextArguments($text);
+        if (empty($location) || substru($location, 0, 1)=="/") {
             if ($this->checkStaticSettings()) {
                 $statusCode = $this->checkStaticFiles($path, $location);
             } else {
                 $statusCode = 500;
                 $this->links = 0;
                 $this->errors = 1;
-                $fileName = $this->yellow->system->get("coreSettingDir").$this->yellow->system->get("coreSystemFile");
+                $fileName = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreSystemFile");
                 echo "ERROR checking files: Please configure CoreStaticUrl in file '$fileName'!\n";
             }
             echo "Yellow $command: $this->links link".($this->links!=1 ? "s" : "");
@@ -279,7 +278,7 @@ class YellowCommand {
     
     // Check static files for broken links
     public function checkStaticFiles($path, $locationFilter) {
-        $path = rtrim(empty($path) ? $this->yellow->system->get("coreStaticDir") : $path, "/");
+        $path = rtrim(empty($path) ? $this->yellow->system->get("coreStaticDirectory") : $path, "/");
         $this->links = $this->errors = 0;
         $regex = "/^[^.]+$|".$this->yellow->system->get("coreStaticDefaultFile")."$/";
         $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($path, $regex, false, false);
@@ -402,10 +401,10 @@ class YellowCommand {
     }
     
     // Process command to clean static files
-    public function processCommandClean($args) {
+    public function processCommandClean($command, $text) {
         $statusCode = 0;
-        list($command, $path, $location) = $args;
-        if (empty($location) || $location[0]=="/") {
+        list($path, $location) = $this->yellow->toolbox->getTextArguments($text);
+        if (empty($location) || substru($location, 0, 1)=="/") {
             $statusCode = $this->cleanStaticFiles($path, $location);
             echo "Yellow $command: Static file".(empty($location) ? "s" : "")." ".($statusCode!=200 ? "not " : "")."cleaned\n";
         } else {
@@ -418,7 +417,7 @@ class YellowCommand {
     // Clean static files and directories
     public function cleanStaticFiles($path, $location) {
         $statusCode = 200;
-        $path = rtrim(empty($path) ? $this->yellow->system->get("coreStaticDir") : $path, "/");
+        $path = rtrim(empty($path) ? $this->yellow->system->get("coreStaticDirectory") : $path, "/");
         if (empty($location)) {
             $statusCode = max($statusCode, $this->broadcastCommand("clean", "all"));
             $statusCode = max($statusCode, $this->cleanStaticDirectory($path));
@@ -458,20 +457,20 @@ class YellowCommand {
     }
     
     // Broadcast command to other extensions
-    public function broadcastCommand($args) {
+    public function broadcastCommand($command, $text) {
         $statusCode = 0;
         foreach ($this->yellow->extensions->extensions as $key=>$value) {
             if (method_exists($value["obj"], "onCommand") && $key!="command") {
-                $statusCode = max($statusCode, $value["obj"]->onCommand(func_get_args()));
+                $statusCode = max($statusCode, $value["obj"]->onCommand($command, $text));
             }
         }
         return $statusCode;
     }
 
     // Process command to start built-in web server
-    public function processCommandServe($args) {
-        list($command, $path, $url) = $args;
-        if (empty($path) && is_dir($this->yellow->system->get("coreStaticDir"))) $path = $this->yellow->system->get("coreStaticDir");
+    public function processCommandServe($command, $text) {
+        list($path, $url) = $this->yellow->toolbox->getTextArguments($text);
+        if (empty($path) && is_dir($this->yellow->system->get("coreStaticDirectory"))) $path = $this->yellow->system->get("coreStaticDirectory");
         if (empty($url)) $url = "http://localhost:8000";
         list($scheme, $address, $base) = $this->yellow->lookup->getUrlInformation($url);
         if ($scheme=="http" && !empty($address)) {
@@ -501,8 +500,8 @@ class YellowCommand {
     public function checkStaticDirectory($path) {
         $ok = false;
         if (!empty($path)) {
-            if ($path==rtrim($this->yellow->system->get("coreStaticDir"), "/")) $ok = true;
-            if ($path==rtrim($this->yellow->system->get("coreTrashDir"), "/")) $ok = true;
+            if ($path==rtrim($this->yellow->system->get("coreStaticDirectory"), "/")) $ok = true;
+            if ($path==rtrim($this->yellow->system->get("coreTrashDirectory"), "/")) $ok = true;
             if (is_file("$path/".$this->yellow->system->get("coreStaticDefaultFile"))) $ok = true;
             if (is_file("$path/yellow.php")) $ok = false;
         }
@@ -597,7 +596,7 @@ class YellowCommand {
     // Return media locations
     public function getMediaLocations() {
         $locations = array();
-        $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($this->yellow->system->get("coreMediaDir"), "/.*/", false, false);
+        $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($this->yellow->system->get("coreMediaDirectory"), "/.*/", false, false);
         foreach ($fileNames as $fileName) {
             array_push($locations, "/".$fileName);
         }
@@ -608,15 +607,15 @@ class YellowCommand {
     public function getSystemLocations() {
         $locations = array();
         $regex = "/\.(css|gif|ico|js|jpg|png|svg|txt|woff|woff2)$/";
-        $extensionDirLength = strlenu($this->yellow->system->get("coreExtensionDir"));
-        $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($this->yellow->system->get("coreExtensionDir"), $regex, false, false);
+        $extensionDirectoryLength = strlenu($this->yellow->system->get("coreExtensionDirectory"));
+        $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($this->yellow->system->get("coreExtensionDirectory"), $regex, false, false);
         foreach ($fileNames as $fileName) {
-            array_push($locations, $this->yellow->system->get("coreExtensionLocation").substru($fileName, $extensionDirLength));
+            array_push($locations, $this->yellow->system->get("coreExtensionLocation").substru($fileName, $extensionDirectoryLength));
         }
-        $resourceDirLength = strlenu($this->yellow->system->get("coreResourceDir"));
-        $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($this->yellow->system->get("coreResourceDir"), $regex, false, false);
+        $resourceDirectoryLength = strlenu($this->yellow->system->get("coreResourceDirectory"));
+        $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($this->yellow->system->get("coreResourceDirectory"), $regex, false, false);
         foreach ($fileNames as $fileName) {
-            array_push($locations, $this->yellow->system->get("coreResourceLocation").substru($fileName, $resourceDirLength));
+            array_push($locations, $this->yellow->system->get("coreResourceLocation").substru($fileName, $resourceDirectoryLength));
         }
         return $locations;
     }
@@ -625,11 +624,11 @@ class YellowCommand {
     public function getExtraLocations($path) {
         $locations = array();
         $pathIgnore = "($path/|".
-            $this->yellow->system->get("coreStaticDir")."|".
-            $this->yellow->system->get("coreCacheDir")."|".
-            $this->yellow->system->get("coreContentDir")."|".
-            $this->yellow->system->get("coreMediaDir")."|".
-            $this->yellow->system->get("coreSystemDir").")";
+            $this->yellow->system->get("coreStaticDirectory")."|".
+            $this->yellow->system->get("coreCacheDirectory")."|".
+            $this->yellow->system->get("coreContentDirectory")."|".
+            $this->yellow->system->get("coreMediaDirectory")."|".
+            $this->yellow->system->get("coreSystemDirectory").")";
         $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive(".", "/.*/", false, false);
         foreach ($fileNames as $fileName) {
             $fileName = substru($fileName, 2);

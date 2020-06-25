@@ -12,5 +12,5 @@ if (PHP_SAPI!="cli") {
 } else {
     $yellow = new YellowCore();
     $yellow->load();
-    exit($yellow->command($argv[1], $argv[2], $argv[3], $argv[4], $argv[5], $argv[6], $argv[7]));
+    exit($yellow->command());
 }

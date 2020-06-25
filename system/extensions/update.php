@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowUpdate {
-    const VERSION = "0.8.19";
+    const VERSION = "0.8.20";
     const TYPE = "feature";
     const PRIORITY = "2";
     public $yellow;                 //access to API
@@ -14,7 +14,7 @@ class YellowUpdate {
     public function onLoad($yellow) {
         $this->yellow = $yellow;
         $this->yellow->system->setDefault("updateExtensionUrl", "https://github.com/datenstrom/yellow-extensions");
-        $this->yellow->system->setDefault("updateExtensionDir", "/Users/yourname/Documents/GitHub/");
+        $this->yellow->system->setDefault("updateExtensionDirectory", "/Users/yourname/Documents/GitHub/");
         $this->yellow->system->setDefault("updateExtensionFile", "extension.ini");
         $this->yellow->system->setDefault("updateVersionFile", "version.ini");
         $this->yellow->system->setDefault("updateWaffleFile", "waffle.ini");
@@ -31,16 +31,15 @@ class YellowUpdate {
     }
     
     // Handle command
-    public function onCommand($args) {
+    public function onCommand($command, $text) {
         $statusCode = 0;
         if ($this->isExtensionPending()) $statusCode = $this->processCommandPending();
         if ($statusCode==0) {
-            list($command) = $args;
             switch ($command) {
-                case "clean":       $statusCode = $this->processCommandClean($args); break;
-                case "install":     $statusCode = $this->processCommandInstall($args); break;
-                case "uninstall":   $statusCode = $this->processCommandUninstall($args); break;
-                case "update":      $statusCode = $this->processCommandUpdate($args); break;
+                case "clean":       $statusCode = $this->processCommandClean($command, $text); break;
+                case "install":     $statusCode = $this->processCommandInstall($command, $text); break;
+                case "uninstall":   $statusCode = $this->processCommandUninstall($command, $text); break;
+                case "update":      $statusCode = $this->processCommandUpdate($command, $text); break;
                 default:            $statusCode = 0; break;
             }
         }
@@ -62,7 +61,7 @@ class YellowUpdate {
                 $coreStaticUrl = $this->yellow->system->get("staticUrl");
                 $coreServerUrl = empty($this->yellow->system->get("serverUrl")) ? "auto" : $this->yellow->system->get("serverUrl");
                 $coreServerTimezone = $this->yellow->system->get("timezone");
-                $fileName = $this->yellow->system->get("coreSettingDir").$this->yellow->system->get("coreSystemFile");
+                $fileName = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreSystemFile");
                 $this->yellow->system->save($fileName, array("coreStaticUrl" => $coreStaticUrl, "coreServerUrl" => $coreServerUrl,
                     "coreServerTimezone" => $coreServerTimezone));
             }
@@ -70,9 +69,9 @@ class YellowUpdate {
         if ($action=="update") {  //TODO: remove later, converts old content settings
             if ($this->yellow->system->isExisting("multiLanguageMode")) {
                 $coreMultiLanguageMode = $this->yellow->system->get("multiLanguageMode");
-                $fileName = $this->yellow->system->get("coreSettingDir").$this->yellow->system->get("coreSystemFile");
+                $fileName = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreSystemFile");
                 $this->yellow->system->save($fileName, array("coreMultiLanguageMode" => $coreMultiLanguageMode));
-                $path = $this->yellow->system->get("coreContentDir");
+                $path = $this->yellow->system->get("coreContentDirectory");
                 foreach ($this->yellow->toolbox->getDirectoryEntriesRecursive($path, "/^.*\.md$/", true, false) as $entry) {
                     $fileData = $fileDataNew = $this->yellow->toolbox->readFile($entry);
                     $fileStatusUnlisted = false;
@@ -102,7 +101,7 @@ class YellowUpdate {
         if ($action=="update") {  //TODO: remove later, converts old layout files
             if ($this->yellow->system->isExisting("navigation")) {
                 $navigation = $this->yellow->system->get("navigation");
-                $path = $this->yellow->system->get("coreLayoutDir");
+                $path = $this->yellow->system->get("coreLayoutDirectory");
                 foreach ($this->yellow->toolbox->getDirectoryEntriesRecursive($path, "/^.*\.html$/", true, false) as $entry) {
                     $fileData = $fileDataNew = $this->yellow->toolbox->readFile($entry);
                     $fileDataNew = str_replace("system->get(\"serverScheme\")", "system->get(\"coreServerScheme\")", $fileDataNew);
@@ -132,7 +131,7 @@ class YellowUpdate {
                         if (method_exists($value["obj"], "onUpdate")) $value["obj"]->onUpdate($action);
                     }
                 }
-                $fileName = $this->yellow->system->get("coreSettingDir").$this->yellow->system->get("coreSystemFile");
+                $fileName = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreSystemFile");
                 $this->yellow->system->save($fileName, array("updateNotification" => "none"));
                 $fileData = $this->yellow->toolbox->readFile($fileName);
                 $fileDataHeader = $fileDataSettings = $fileDataFooter = "";
@@ -166,11 +165,10 @@ class YellowUpdate {
     }
     
     // Process command to clean downloads
-    public function processCommandClean($args) {
+    public function processCommandClean($command, $text) {
         $statusCode = 0;
-        list($command, $path) = $args;
-        if ($path=="all") {
-            $path = $this->yellow->system->get("coreExtensionDir");
+        if ($command=="clean" && $text=="all") {
+            $path = $this->yellow->system->get("coreExtensionDirectory");
             $regex = "/^.*\\".$this->yellow->system->get("coreDownloadExtension")."$/";
             foreach ($this->yellow->toolbox->getDirectoryEntries($path, $regex, false, false) as $entry) {
                 if (!$this->yellow->toolbox->deleteFile($entry)) $statusCode = 500;
@@ -181,8 +179,8 @@ class YellowUpdate {
     }
     
     // Process command to install extensions
-    public function processCommandInstall($args) {
-        list($command, $extensions) = $this->getExtensionInformation($args);
+    public function processCommandInstall($command, $text) {
+        list($extensions) = $this->getExtensionInformation($text);
         if (!empty($extensions)) {
             $this->updates = 0;
             list($statusCode, $data) = $this->getInstallInformation($extensions);
@@ -198,8 +196,8 @@ class YellowUpdate {
     }
     
     // Process command to uninstall extensions
-    public function processCommandUninstall($args) {
-        list($command, $extensions) = $this->getExtensionInformation($args);
+    public function processCommandUninstall($command, $text) {
+        list($extensions) = $this->getExtensionInformation($text);
         if (!empty($extensions)) {
             $this->updates = 0;
             list($statusCode, $data) = $this->getUninstallInformation($extensions, "core, command, update");
@@ -214,8 +212,8 @@ class YellowUpdate {
     }
     
     // Process command to update website
-    public function processCommandUpdate($args) {
-        list($command, $extensions, $force) = $this->getExtensionInformation($args);
+    public function processCommandUpdate($command, $text) {
+        list($extensions, $force) = $this->getExtensionInformation($text);
         list($statusCode, $data) = $this->getUpdateInformation($extensions, $force);
         if ($statusCode!=200 || !empty($data)) {
             $this->updates = 0;
@@ -259,7 +257,7 @@ class YellowUpdate {
         if ($updateNotification=="none") $updateNotification = "";
         if (!empty($updateNotification)) $updateNotification .= ",";
         $updateNotification .= "$extension/$action";
-        $fileName = $this->yellow->system->get("coreSettingDir").$this->yellow->system->get("coreSystemFile");
+        $fileName = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreSystemFile");
         if (!$this->yellow->system->save($fileName, array("updateNotification" => $updateNotification))) {
             $statusCode = 500;
             $this->yellow->page->error(500, "Can't write file '$fileName'!");
@@ -268,9 +266,8 @@ class YellowUpdate {
     }
     
     // Return extension information
-    public function getExtensionInformation($args) {
-        $command = array_shift($args);
-        $extensions = array_unique(array_filter($args, "strlen"));
+    public function getExtensionInformation($text) {
+        $extensions = array_unique(array_filter($this->yellow->toolbox->getTextArguments($text), "strlen"));
         $force = false;
         foreach ($extensions as $key=>$value) {
             if ($value=="force") {
@@ -278,7 +275,7 @@ class YellowUpdate {
                 unset($extensions[$key]);
             }
         }
-        return array($command, $extensions, $force);
+        return array($extensions, $force);
     }
 
     // Return install information
@@ -394,7 +391,7 @@ class YellowUpdate {
     // Download extensions
     public function downloadExtensions($data) {
         $statusCode = 200;
-        $path = $this->yellow->system->get("coreExtensionDir");
+        $path = $this->yellow->system->get("coreExtensionDirectory");
         $fileExtension = $this->yellow->system->get("coreDownloadExtension");
         foreach ($data as $key=>$value) {
             $fileName = $path.$this->yellow->lookup->normaliseName($key, true, false, true).".zip";
@@ -422,7 +419,7 @@ class YellowUpdate {
     public function updateExtensions($action, $force = false) {
         $statusCode = 200;
         if (function_exists("opcache_reset")) opcache_reset();
-        $path = $this->yellow->system->get("coreExtensionDir");
+        $path = $this->yellow->system->get("coreExtensionDirectory");
         foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.zip$/", true, false) as $entry) {
             $statusCode = max($statusCode, $this->updateExtensionArchive($entry, $action, $force));
             if (!$this->yellow->toolbox->deleteFile($entry)) {
@@ -507,7 +504,7 @@ class YellowUpdate {
                 }
             }
             if ($update) {
-                if (!$this->yellow->toolbox->deleteFile($fileName, $this->yellow->system->get("coreTrashDir")) ||
+                if (!$this->yellow->toolbox->deleteFile($fileName, $this->yellow->system->get("coreTrashDirectory")) ||
                     !$this->yellow->toolbox->createFile($fileName, $fileData) ||
                     !$this->yellow->toolbox->modifyFile($fileName, $modified)) {
                     $statusCode = 500;
@@ -515,7 +512,7 @@ class YellowUpdate {
                 }
             }
             if ($delete) {
-                if (!$this->yellow->toolbox->deleteFile($fileName, $this->yellow->system->get("coreTrashDir"))) {
+                if (!$this->yellow->toolbox->deleteFile($fileName, $this->yellow->system->get("coreTrashDirectory"))) {
                     $statusCode = 500;
                     $this->yellow->page->error($statusCode, "Can't delete file '$fileName'!");
                 }
@@ -546,8 +543,8 @@ class YellowUpdate {
             $fileNameSource = $pathBase.basename($entry);
         }
         if ($this->yellow->system->get("coreMultiLanguageMode") && $this->yellow->lookup->isContentFile($fileName)) {
-            $contentDirLength = strlenu($this->yellow->system->get("coreContentDir"));
-            $fileNameDestination = $page->fileName.substru($fileName, $contentDirLength);
+            $contentDirectoryLength = strlenu($this->yellow->system->get("coreContentDirectory"));
+            $fileNameDestination = $page->fileName.substru($fileName, $contentDirectoryLength);
         } else {
             $fileNameDestination = $fileName;
         }
@@ -575,7 +572,7 @@ class YellowUpdate {
         $statusCode = 200;
         $fileName = $this->yellow->toolbox->normaliseTokens($fileName);
         if ($this->yellow->lookup->isValidFile($fileName) && !empty($extension)) {
-            if (!$this->yellow->toolbox->deleteFile($fileName, $this->yellow->system->get("coreTrashDir"))) {
+            if (!$this->yellow->toolbox->deleteFile($fileName, $this->yellow->system->get("coreTrashDirectory"))) {
                 $statusCode = 500;
                 $this->yellow->page->error($statusCode, "Can't delete file '$fileName'!");
             }
@@ -693,7 +690,7 @@ class YellowUpdate {
 
     // Check if extension pending
     public function isExtensionPending() {
-        $path = $this->yellow->system->get("coreExtensionDir");
+        $path = $this->yellow->system->get("coreExtensionDirectory");
         return count($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.zip$/", false, false))>0;
     }
 }

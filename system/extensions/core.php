@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowCore {
-    const VERSION = "0.8.12";
+    const VERSION = "0.8.13";
     const TYPE = "feature";
     public $page;           //current page
     public $content;        //content files from file system
@@ -263,20 +263,20 @@ class YellowCore {
     }
     
     // Handle command
-    public function command($args = null) {
+    public function command($line = "") {
         $statusCode = 0;
         $this->toolbox->timerStart($time);
+        list($command, $text) = $this->getCommandInformation($line);
         foreach ($this->extensions->extensions as $key=>$value) {
             if (method_exists($value["obj"], "onCommand")) {
                 $this->lookup->commandHandler = $key;
-                $statusCode = $value["obj"]->onCommand(func_get_args());
+                $statusCode = $value["obj"]->onCommand($command, $text);
                 if ($statusCode!=0) break;
             }
         }
         if ($statusCode==0) {
             $this->lookup->commandHandler = "core";
             $statusCode = 400;
-            list($command) = func_get_args();
             echo "Yellow $command: Command not found\n";
         }
         $this->toolbox->timerStop($time);
@@ -356,6 +356,15 @@ class YellowCore {
         if (empty($fileName)) $fileName = $this->lookup->findFileFromMedia($location);
         if (empty($fileName)) $fileName = $this->lookup->findFileFromLocation($location);
         return array($scheme, $address, $base, $location, $fileName);
+    }
+
+    // Return command information
+    public function getCommandInformation($line = "") {
+        if (empty($line)) {
+            $line = $this->toolbox->getTextString(array_slice($this->toolbox->getServer("argv"), 1));
+            if (defined("DEBUG") && DEBUG>=3) echo "YellowCore::getCommandInformation $line<br/>\n";
+        }
+        return $this->toolbox->getTextList($line, " ", 2);
     }
     
     // Return request handler

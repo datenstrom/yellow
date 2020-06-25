@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowInstall {
-    const VERSION = "0.8.24";
+    const VERSION = "0.8.25";
     const TYPE = "feature";
     const PRIORITY = "1";
     public $yellow;                 //access to API
@@ -24,7 +24,7 @@ class YellowInstall {
     }
     
     // Handle command
-    public function onCommand($args) {
+    public function onCommand($command, $text) {
         return $this->processCommandInstall();
     }
     
@@ -82,7 +82,7 @@ class YellowInstall {
     // Update log
     public function updateLog() {
         $statusCode = 200;
-        $fileName = $this->yellow->system->get("coreExtensionDir").$this->yellow->system->get("coreLogFile");
+        $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreLogFile");
         if (!is_file($fileName)) {
             list($name, $version) = $this->yellow->toolbox->detectServerInformation();
             $this->yellow->log("info", "Datenstrom Yellow ".YellowCore::VERSION.", PHP ".PHP_VERSION.", $name $version, ".PHP_OS);
@@ -97,7 +97,7 @@ class YellowInstall {
     // Update language
     public function updateLanguage() {
         $statusCode = 200;
-        $path = $this->yellow->system->get("coreExtensionDir")."install-languages.zip";
+        $path = $this->yellow->system->get("coreExtensionDirectory")."install-languages.zip";
         if (is_file($path) && $this->yellow->extensions->isExisting("update")) {
             $zip = new ZipArchive();
             if ($zip->open($path)===true) {
@@ -141,7 +141,7 @@ class YellowInstall {
                 }
                 $zip->close();
                 if ($statusCode==200) {
-                    $this->yellow->text->load($this->yellow->system->get("coreExtensionDir").$this->yellow->system->get("coreLanguageFile"), "");
+                    $this->yellow->text->load($this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreLanguageFile"), "");
                 }
             } else {
                 $statusCode = 500;
@@ -154,7 +154,7 @@ class YellowInstall {
     // Update extension
     public function updateExtension($extension) {
         $statusCode = 200;
-        $path = $this->yellow->system->get("coreExtensionDir");
+        $path = $this->yellow->system->get("coreExtensionDirectory");
         if (!empty($extension) && $this->yellow->extensions->isExisting("update")) {
             foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.zip$/", true, false) as $entry) {
                 if (preg_match("/^install-(.*?)\./", basename($entry), $matches)) {
@@ -173,7 +173,7 @@ class YellowInstall {
         $statusCode = 200;
         if (!empty($email) && !empty($password) && $this->yellow->extensions->isExisting("edit")) {
             if (empty($name)) $name = $this->yellow->system->get("sitename");
-            $fileNameUser = $this->yellow->system->get("coreSettingDir").$this->yellow->system->get("editUserFile");
+            $fileNameUser = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("editUserFile");
             $settings = array(
                 "name" => $name,
                 "language" => $language,
@@ -217,7 +217,7 @@ class YellowInstall {
     // Update text settings
     public function updateText($language) {
         $statusCode = 200;
-        $fileName = $this->yellow->system->get("coreSettingDir").$this->yellow->system->get("coreTextFile");
+        $fileName = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreTextFile");
         $fileData = $this->yellow->toolbox->readFile($fileName);
         if (count($this->yellow->toolbox->getTextLines($fileData))<4) {
             $fileData .= "Language: $language\n";
@@ -234,7 +234,7 @@ class YellowInstall {
     // Update system settings
     public function updateSystem($settings) {
         $statusCode = 200;
-        $fileName = $this->yellow->system->get("coreSettingDir").$this->yellow->system->get("coreSystemFile");
+        $fileName = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreSystemFile");
         if (!$this->yellow->system->save($fileName, $settings)) {
             $statusCode = 500;
             $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
@@ -246,7 +246,7 @@ class YellowInstall {
     public function removeInstall() {
         $statusCode = 200;
         if (function_exists("opcache_reset")) opcache_reset();
-        $path = $this->yellow->system->get("coreExtensionDir");
+        $path = $this->yellow->system->get("coreExtensionDirectory");
         foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.zip$/", true, false) as $entry) {
             if (preg_match("/^install-(.*?)\./", basename($entry), $matches)) {
                 if (!$this->yellow->toolbox->deleteFile($entry)) {
@@ -255,7 +255,7 @@ class YellowInstall {
                 }
             }
         }
-        $path = $this->yellow->system->get("coreExtensionDir")."install.php";
+        $path = $this->yellow->system->get("coreExtensionDirectory")."install.php";
         if ($statusCode==200 && !$this->yellow->toolbox->deleteFile($path)) {
             $statusCode = 500;
             $this->yellow->page->error($statusCode, "Can't delete file '$path'!");
@@ -298,7 +298,7 @@ class YellowInstall {
     
     // Check web server write access
     public function checkServerWrite() {
-        $fileName = $this->yellow->system->get("coreSettingDir").$this->yellow->system->get("coreSystemFile");
+        $fileName = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreSystemFile");
         return $this->yellow->system->save($fileName, array());
     }
 
@@ -363,7 +363,7 @@ class YellowInstall {
     // Return extensions for install page
     public function getExtensionsInstall() {
         $extensions = array("website");
-        $path = $this->yellow->system->get("coreExtensionDir");
+        $path = $this->yellow->system->get("coreExtensionDirectory");
         foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.zip$/", true, false, false) as $entry) {
             if (preg_match("/^install-(.*?)\./", $entry, $matches) && $matches[1]!="languages") array_push($extensions, $matches[1]);
         }
