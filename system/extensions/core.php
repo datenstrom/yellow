@@ -95,7 +95,6 @@ class YellowCore {
         $this->extensions->load($this->system->get("coreExtensionDir"));
         $this->text->load($this->system->get("coreExtensionDir"));
         $this->text->load($this->system->get("coreSettingDir"), $this->system->get("coreTextFile"), $this->system->get("language"));
-        $this->lookup->detectLocationArguments();
         $this->lookup->detectFileSystem();
         $this->startup();
     }
@@ -348,7 +347,7 @@ class YellowCore {
             $this->system->set("serverBase", $base);
             if (defined("DEBUG") && DEBUG>=3) echo "YellowCore::getRequestInformation $scheme://$address$base<br/>\n";
         }
-        $location = substru($this->toolbox->getLocation(), strlenu($base));
+        $location = substru($this->toolbox->detectServerLocation(), strlenu($base));
         if (empty($fileName)) $fileName = $this->lookup->findFileFromSystem($location);
         if (empty($fileName)) $fileName = $this->lookup->findFileFromMedia($location);
         if (empty($fileName)) $fileName = $this->lookup->findFileFromLocation($location);
@@ -588,9 +587,6 @@ class YellowPage {
             $this->clean(301, $location);
         }
         if ($this->yellow->getRequestHandler()=="core" && !$this->isAvailable() && $this->statusCode==200) {
-            $this->error(404);
-        }
-        if ($this->yellow->lookup->isRequestSelfLocation($this->location)) {
             $this->error(404);
         }
         if ($this->isExisting("pageClean")) $this->outputData = null;
@@ -1798,32 +1794,6 @@ class YellowLookup {
         $this->yellow = $yellow;
     }
     
-    // Detect location arguments
-    public function detectLocationArguments() {
-        if (isset($_SERVER["REQUEST_URI"])) {
-            $location = $_SERVER["REQUEST_URI"];
-            $location = rawurldecode(($pos = strposu($location, "?")) ? substru($location, 0, $pos) : $location);
-            $location = $this->yellow->toolbox->normaliseTokens($location, true);
-            $separator = $this->yellow->toolbox->getLocationArgsSeparator();
-            if (preg_match("/^(.*?\/)([^\/]+$separator.*)$/", $location, $matches)) {
-                $_SERVER["LOCATION"] = $location = $matches[1];
-                $_SERVER["LOCATION_ARGUMENTS"] = $matches[2];
-                foreach (explode("/", $matches[2]) as $token) {
-                    if (preg_match("/^(.*?)$separator(.*)$/", $token, $matches)) {
-                        if (!empty($matches[1]) && !strempty($matches[2])) {
-                            $matches[1] = strreplaceu(array("\x1c", "\x1d", "\x1e"), array("/", ":", "="), $matches[1]);
-                            $matches[2] = strreplaceu(array("\x1c", "\x1d", "\x1e"), array("/", ":", "="), $matches[2]);
-                            $_REQUEST[$matches[1]] = $matches[2];
-                        }
-                    }
-                }
-            } else {
-                $_SERVER["LOCATION"] = $location;
-                $_SERVER["LOCATION_ARGUMENTS"] = "";
-            }
-        }
-    }
-    
     // Detect file system
     public function detectFileSystem() {
         list($pathRoot, $pathHome) = $this->findFileSystemInformation();
@@ -2191,11 +2161,6 @@ class YellowLookup {
         return isset($_REQUEST["clean-url"]) && substru($location, -1, 1)=="/";
     }
     
-    // Check if script location is requested
-    public function isRequestSelfLocation($location) {
-        return substru($location, -10, 10)=="yellow.php";
-    }
-    
     // Check if location is specifying root
     public function isRootLocation($location) {
         return substru($location, 0, 1)!="/";
@@ -2291,11 +2256,6 @@ class YellowToolbox {
     // Return server argument from current HTTP request
     public function getServer($key) {
         return isset($_SERVER[$key]) ? $_SERVER[$key] : "";
-    }
-    
-    // Return location from current HTTP request
-    public function getLocation() {
-        return $this->getServer("LOCATION");
     }
     
     // Return location arguments from current HTTP request
@@ -3000,6 +2960,33 @@ class YellowToolbox {
         $base = "";
         if (preg_match("/^(.*)\/.*\.php$/", $this->getServer("SCRIPT_NAME"), $matches)) $base = $matches[1];
         return "$scheme://$address$base/";
+    }
+    
+    // Detect server location
+    public function detectServerLocation() {
+        if (isset($_SERVER["REQUEST_URI"])) {
+            $location = $_SERVER["REQUEST_URI"];
+            $location = rawurldecode(($pos = strposu($location, "?")) ? substru($location, 0, $pos) : $location);
+            $location = $this->normaliseTokens($location, true);
+            $separator = $this->getLocationArgsSeparator();
+            if (preg_match("/^(.*?\/)([^\/]+$separator.*)$/", $location, $matches)) {
+                $_SERVER["LOCATION"] = $location = $matches[1];
+                $_SERVER["LOCATION_ARGUMENTS"] = $matches[2];
+                foreach (explode("/", $matches[2]) as $token) {
+                    if (preg_match("/^(.*?)$separator(.*)$/", $token, $matches)) {
+                        if (!empty($matches[1]) && !strempty($matches[2])) {
+                            $matches[1] = strreplaceu(array("\x1c", "\x1d", "\x1e"), array("/", ":", "="), $matches[1]);
+                            $matches[2] = strreplaceu(array("\x1c", "\x1d", "\x1e"), array("/", ":", "="), $matches[2]);
+                            $_REQUEST[$matches[1]] = $matches[2];
+                        }
+                    }
+                }
+            } else {
+                $_SERVER["LOCATION"] = $location;
+                $_SERVER["LOCATION_ARGUMENTS"] = "";
+            }
+        }
+        return $this->getServer("LOCATION");
     }
     
     // Detect server timezone
