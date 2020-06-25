@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowImage {
-    const VERSION = "0.8.7";
+    const VERSION = "0.8.8";
     const TYPE = "feature";
     public $yellow;             //access to API
 
@@ -16,7 +16,7 @@ class YellowImage {
         $this->yellow->system->setDefault("imageUploadHeightMax", "1280");
         $this->yellow->system->setDefault("imageUploadJpgQuality", "80");
         $this->yellow->system->setDefault("imageThumbnailLocation", "/media/thumbnails/");
-        $this->yellow->system->setDefault("imageThumbnailDir", "media/thumbnails/");
+        $this->yellow->system->setDefault("imageThumbnailDirectory", "media/thumbnails/");
         $this->yellow->system->setDefault("imageThumbnailJpgQuality", "80");
     }
 
@@ -24,12 +24,12 @@ class YellowImage {
     public function onParseContentShortcut($page, $name, $text, $type) {
         $output = null;
         if ($name=="image" && $type=="inline") {
-            list($name, $alt, $style, $width, $height) = $this->yellow->toolbox->getTextArgs($text);
+            list($name, $alt, $style, $width, $height) = $this->yellow->toolbox->getTextArguments($text);
             if (!preg_match("/^\w+:/", $name)) {
                 if (empty($alt)) $alt = $this->yellow->system->get("imageAlt");
                 if (empty($width)) $width = "100%";
                 if (empty($height)) $height = $width;
-                list($src, $width, $height) = $this->getImageInformation($this->yellow->system->get("coreImageDir").$name, $width, $height);
+                list($src, $width, $height) = $this->getImageInformation($this->yellow->system->get("coreImageDirectory").$name, $width, $height);
             } else {
                 if (empty($alt)) $alt = $this->yellow->system->get("imageAlt");
                 $src = $this->yellow->lookup->normaliseUrl("", "", "", $name);
@@ -64,21 +64,19 @@ class YellowImage {
     }
     
     // Handle command
-    public function onCommand($args) {
-        list($command) = $args;
+    public function onCommand($command, $text) {
         switch ($command) {
-            case "clean":   $statusCode = $this->processCommandClean($args); break;
+            case "clean":   $statusCode = $this->processCommandClean($command, $text); break;
             default:        $statusCode = 0;
         }
         return $statusCode;
     }
 
     // Process command to clean thumbnails
-    public function processCommandClean($args) {
+    public function processCommandClean($command, $text) {
         $statusCode = 0;
-        list($command, $path) = $args;
-        if ($path=="all") {
-            $path = $this->yellow->system->get("imageThumbnailDir");
+        if ($command=="clean" && $text=="all") {
+            $path = $this->yellow->system->get("imageThumbnailDirectory");
             foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/.*/", false, false) as $entry) {
                 if (!$this->yellow->toolbox->deleteFile($entry)) $statusCode = 500;
             }
@@ -89,7 +87,7 @@ class YellowImage {
 
     // Return image info, create thumbnail on demand
     public function getImageInformation($fileName, $widthOutput, $heightOutput) {
-        $fileNameShort = substru($fileName, strlenu($this->yellow->system->get("coreImageDir")));
+        $fileNameShort = substru($fileName, strlenu($this->yellow->system->get("coreImageDirectory")));
         list($widthInput, $heightInput, $type) = $this->yellow->toolbox->detectImageInformation($fileName);
         $widthOutput = $this->convertValueAndUnit($widthOutput, $widthInput);
         $heightOutput = $this->convertValueAndUnit($heightOutput, $heightInput);
@@ -101,7 +99,7 @@ class YellowImage {
             $fileNameThumb = ltrim(str_replace(array("/", "\\", "."), "-", dirname($fileNameShort)."/".pathinfo($fileName, PATHINFO_FILENAME)), "-");
             $fileNameThumb .= "-".$widthOutput."x".$heightOutput;
             $fileNameThumb .= ".".pathinfo($fileName, PATHINFO_EXTENSION);
-            $fileNameOutput = $this->yellow->system->get("imageThumbnailDir").$fileNameThumb;
+            $fileNameOutput = $this->yellow->system->get("imageThumbnailDirectory").$fileNameThumb;
             if ($this->isFileNotUpdated($fileName, $fileNameOutput)) {
                 $image = $this->loadImage($fileName, $type);
                 $image = $this->resizeImage($image, $widthInput, $heightInput, $widthOutput, $heightOutput);

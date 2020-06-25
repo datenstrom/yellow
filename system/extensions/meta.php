@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowMeta {
-    const VERSION = "0.8.11";
+    const VERSION = "0.8.12";
     const TYPE = "feature";
     public $yellow;         //access to API
     
@@ -20,7 +20,7 @@ class YellowMeta {
         if ($name=="header" && !$page->isError()) {
             list($imageUrl, $imageAlt) = $this->getImageInformation($page);
             $locale = $this->yellow->text->getText("languageLocale", $page->get("language"));
-            $output .= "<meta property=\"og:url\" content=\"".htmlspecialchars($page->getUrl().$this->yellow->toolbox->getLocationArgs())."\" />\n";
+            $output .= "<meta property=\"og:url\" content=\"".htmlspecialchars($page->getUrl().$this->yellow->toolbox->getLocationArguments())."\" />\n";
             $output .= "<meta property=\"og:locale\" content=\"".htmlspecialchars($locale)."\" />\n";
             $output .= "<meta property=\"og:type\" content=\"website\" />\n";
             $output .= "<meta property=\"og:title\" content=\"".$page->getHtml("title")."\" />\n";
@@ -47,7 +47,7 @@ class YellowMeta {
             $name = $page->get("image");
             $alt = $page->isExisting("imageAlt") ? $page->get("imageAlt") : $page->get("title");
         } elseif (preg_match("/\[image(\s.*?)\]/", $page->getContent(true), $matches)) {
-            list($name, $alt) = $this->yellow->toolbox->getTextArgs(trim($matches[1]));
+            list($name, $alt) = $this->yellow->toolbox->getTextArguments(trim($matches[1]));
             if (empty($alt)) $alt = $page->get("title");
         } else {
             $name = $this->yellow->system->get("metaDefaultImage");

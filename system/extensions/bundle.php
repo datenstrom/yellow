@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowBundle {
-    const VERSION = "0.8.11";
+    const VERSION = "0.8.12";
     const TYPE = "feature";
     public $yellow;         //access to API
 
@@ -23,21 +23,19 @@ class YellowBundle {
     }
     
     // Handle command
-    public function onCommand($args) {
-        list($command) = $args;
+    public function onCommand($command, $text) {
         switch ($command) {
-            case "clean":   $statusCode = $this->processCommandClean($args); break;
+            case "clean":   $statusCode = $this->processCommandClean($command, $text); break;
             default:        $statusCode = 0;
         }
         return $statusCode;
     }
     
     // Process command to clean bundles
-    public function processCommandClean($args) {
+    public function processCommandClean($command, $text) {
         $statusCode = 0;
-        list($command, $path) = $args;
-        if ($path=="all") {
-            $path = $this->yellow->system->get("coreResourceDir");
+        if ($command=="clean" && $text=="all") {
+            $path = $this->yellow->system->get("coreResourceDirectory");
             foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/bundle-.*/", false, false) as $entry) {
                 if (!$this->yellow->toolbox->deleteFile($entry)) $statusCode = 500;
             }
@@ -100,7 +98,7 @@ class YellowBundle {
         if (!empty($fileNames)) {
             $autoVersioning = intval($modified/(60*60*24));
             $id = substru(md5($autoVersioning.$base.implode($fileNames)), 0, 10);
-            $fileNameBundle = $this->yellow->system->get("coreResourceDir")."bundle-$id.min.$type";
+            $fileNameBundle = $this->yellow->system->get("coreResourceDirectory")."bundle-$id.min.$type";
             $locationBundle = $base.$this->yellow->system->get("coreResourceLocation")."bundle-$id.min.$type";
             $rawDataAttribute = $attribute=="defer" ? "defer=\"defer\" " : "";
             if ($type=="css") {
@@ -133,8 +131,8 @@ class YellowBundle {
     // Process bundle, convert URLs
     public function processBundleConvert($scheme, $address, $base, $fileData, $fileName, $type) {
         if ($type=="css") {
-            $extensionDirLength = strlenu($this->yellow->system->get("coreExtensionDir"));
-            if (substru($fileName, 0, $extensionDirLength) == $this->yellow->system->get("coreExtensionDir")) {
+            $extensionDirectoryLength = strlenu($this->yellow->system->get("coreExtensionDirectory"));
+            if (substru($fileName, 0, $extensionDirectoryLength) == $this->yellow->system->get("coreExtensionDirectory")) {
                 $base .= $this->yellow->system->get("coreExtensionLocation");
             } else {
                 $base .= $this->yellow->system->get("coreResourceLocation");
