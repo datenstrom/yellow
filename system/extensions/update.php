@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowUpdate {
-    const VERSION = "0.8.20";
+    const VERSION = "0.8.21";
     const TYPE = "feature";
     const PRIORITY = "2";
     public $yellow;                 //access to API
@@ -56,16 +56,6 @@ class YellowUpdate {
 
     // Handle update
     public function onUpdate($action) {
-        if ($action=="update") {  //TODO: remove later, converts old server settings
-            if ($this->yellow->system->isExisting("staticUrl")) {
-                $coreStaticUrl = $this->yellow->system->get("staticUrl");
-                $coreServerUrl = empty($this->yellow->system->get("serverUrl")) ? "auto" : $this->yellow->system->get("serverUrl");
-                $coreServerTimezone = $this->yellow->system->get("timezone");
-                $fileName = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreSystemFile");
-                $this->yellow->system->save($fileName, array("coreStaticUrl" => $coreStaticUrl, "coreServerUrl" => $coreServerUrl,
-                    "coreServerTimezone" => $coreServerTimezone));
-            }
-        }
         if ($action=="update") {  //TODO: remove later, converts old content settings
             if ($this->yellow->system->isExisting("multiLanguageMode")) {
                 $coreMultiLanguageMode = $this->yellow->system->get("multiLanguageMode");
@@ -99,26 +89,33 @@ class YellowUpdate {
             }
         }
         if ($action=="update") {  //TODO: remove later, converts old layout files
-            if ($this->yellow->system->isExisting("navigation")) {
-                $navigation = $this->yellow->system->get("navigation");
-                $path = $this->yellow->system->get("coreLayoutDirectory");
+            if ($this->yellow->system->isExisting("coreLayoutDir")) {
+                $path = $this->yellow->system->get("coreLayoutDir");
                 foreach ($this->yellow->toolbox->getDirectoryEntriesRecursive($path, "/^.*\.html$/", true, false) as $entry) {
                     $fileData = $fileDataNew = $this->yellow->toolbox->readFile($entry);
-                    $fileDataNew = str_replace("system->get(\"serverScheme\")", "system->get(\"coreServerScheme\")", $fileDataNew);
-                    $fileDataNew = str_replace("system->get(\"serverAddress\")", "system->get(\"coreServerAddress\")", $fileDataNew);
-                    $fileDataNew = str_replace("system->get(\"serverBase\")", "system->get(\"coreServerBase\")", $fileDataNew);
-                    $fileDataNew = str_replace("system->get(\"imageLocation\")", "system->get(\"coreImageLocation\")", $fileDataNew);
-                    $fileDataNew = str_replace("system->get(\"extensionLocation\")", "system->get(\"coreExtensionLocation\")", $fileDataNew);
-                    $fileDataNew = str_replace("system->get(\"resourceLocation\")", "system->get(\"coreResourceLocation\")", $fileDataNew);
-                    $fileDataNew = str_replace("text->getHtml(\"paginationPrevious\")", "text->getHtml(\"corePaginationPrevious\")", $fileDataNew);
-                    $fileDataNew = str_replace("text->getHtml(\"paginationNext\")", "text->getHtml(\"corePaginationNext\")", $fileDataNew);
+                    $fileDataNew = str_replace("yellow->getLayoutArgs", "yellow->getLayoutArguments", $fileDataNew);
+                    $fileDataNew = str_replace("toolbox->getLocationArgs", "toolbox->getLocationArguments", $fileDataNew);
+                    $fileDataNew = str_replace("toolbox->getTextArgs", "toolbox->getTextArguments", $fileDataNew);
+                    $fileDataNew = str_replace("toolbox->normaliseArgs", "toolbox->normaliseArguments", $fileDataNew);
+                    $fileDataNew = str_replace("toolbox->isLocationArgs", "toolbox->isLocationArguments", $fileDataNew);
+                    $fileDataNew = str_replace("\$this->yellow->page->get(\"navigation\")", "\"navigation\"", $fileDataNew);
                     $fileDataNew = str_replace("\$this->yellow->page->get(\"header\")", "\"header\"", $fileDataNew);
                     $fileDataNew = str_replace("\$this->yellow->page->get(\"sidebar\")", "\"sidebar\"", $fileDataNew);
                     $fileDataNew = str_replace("\$this->yellow->page->get(\"footer\")", "\"footer\"", $fileDataNew);
-                    $fileDataNew = str_replace("\$this->yellow->page->get(\"navigation\")", "\"$navigation\"", $fileDataNew);
                     if ($fileData!=$fileDataNew && !$this->yellow->toolbox->createFile($entry, $fileDataNew)) {
                         $this->yellow->log("error", "Can't write file '$entry'!");
                     }
+                }
+            }
+        }
+        if ($action=="update") {  //TODO: remove later, converts old commandline
+            if ($this->yellow->system->isExisting("coreStaticDir")) {
+                $fileName = "yellow.php";
+                $fileData = $fileDataNew = $this->yellow->toolbox->readFile($fileName);
+                $fileDataNew = str_replace("make websites", "make small websites", $fileDataNew);
+                $fileDataNew = str_replace("command(\$argv[1], \$argv[2], \$argv[3], \$argv[4], \$argv[5], \$argv[6], \$argv[7])", "command()", $fileDataNew);
+                if ($fileData!=$fileDataNew && !$this->yellow->toolbox->createFile($fileName, $fileDataNew)) {
+                    $this->yellow->log("error", "Can't write file '$fileName'!");
                 }
             }
         }

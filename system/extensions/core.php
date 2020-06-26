@@ -346,9 +346,6 @@ class YellowCore {
             $this->system->set("coreServerScheme", $scheme);
             $this->system->set("coreServerAddress", $address);
             $this->system->set("coreServerBase", $base);
-            $this->system->set("serverScheme", $scheme);    //TODO: remove later, for backwards compatibility
-            $this->system->set("serverAddress", $address);
-            $this->system->set("serverBase", $base);
             if (defined("DEBUG") && DEBUG>=3) echo "YellowCore::getRequestInformation $scheme://$address$base<br/>\n";
         }
         $location = substru($this->toolbox->detectServerLocation(), strlenu($base));
@@ -493,10 +490,6 @@ class YellowPage {
             $value = $this->yellow->system->get($key);
             if (!empty($key) && !strempty($value)) $this->set($key, $value);
         }
-        $this->set("navigation", "navigation"); //TODO: remove later, for backwards compatibility
-        $this->set("header", "header");
-        $this->set("sidebar", "sidebar");
-        $this->set("footer", "footer");
         if (preg_match("/^(\xEF\xBB\xBF)?\-\-\-[\r\n]+(.+?)\-\-\-[\r\n]+/s", $this->rawData, $parts)) {
             $this->metaDataOffsetBytes = strlenb($parts[0]);
             foreach (preg_split("/[\r\n]+/", $parts[2]) as $line) {
