@@ -8,7 +8,7 @@ We are here to make things for people and find like-minded people.
 1. [Submit a new issue for each problem](https://github.com/datenstrom/yellow/issues).
 2. Describe your problem, sometimes there are different solutions.
 3. Add a lot of details, the more we know the better we can help.
-4. Use the latest version. [What version do I have?](https://github.com/datenstrom/yellow-extensions/tree/master/features/update)
+4. Tell the version of your website. [What do I have?](https://github.com/datenstrom/yellow-extensions/tree/master/features/update)
 
 ## How to suggest an idea
 
