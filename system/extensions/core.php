@@ -1214,7 +1214,7 @@ class YellowContent {
             if (empty($location)) {
                 $rootLocations = $this->yellow->lookup->findRootLocations();
                 foreach ($rootLocations as $rootLocation) {
-                    list($rootLocation, $fileName) = explode(" ", $rootLocation, 2);
+                    list($rootLocation, $fileName) = $this->yellow->toolbox->getTextList($rootLocation, " ", 2);
                     $page = new YellowPage($this->yellow);
                     $page->setRequestInformation($scheme, $address, $base, $rootLocation, $fileName);
                     $page->parseData("", false, 0);
@@ -3024,7 +3024,7 @@ class YellowToolbox {
     public function detectBrowserLanguage($languages, $languageDefault) {
         $languageFound = $languageDefault;
         foreach (preg_split("/\s*,\s*/", $this->getServer("HTTP_ACCEPT_LANGUAGE")) as $string) {
-            list($language) = explode(";", $string);
+            list($language, $dummy) = $this->getTextList($string, ";", 2);
             if (!empty($language) && in_array($language, $languages)) {
                 $languageFound = $language;
                 break;

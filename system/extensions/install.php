@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowInstall {
-    const VERSION = "0.8.25";
+    const VERSION = "0.8.26";
     const TYPE = "feature";
     const PRIORITY = "1";
     public $yellow;                 //access to API
@@ -109,9 +109,8 @@ class YellowInstall {
                 foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
                     preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
                     if (!empty($matches[1]) && !empty($matches[2]) && strposu($matches[1], "/")) {
-                        list($dummy, $entry) = explode(",", $matches[2], 3);
-                        $flags = explode(",", $matches[2]);
-                        $language = array_pop($flags);
+                        list($dummy, $entry, $flags) = $this->yellow->toolbox->getTextList($matches[2], ",", 3);
+                        $language = array_pop(explode(",", $flags));
                         if (preg_match("/^(.*)\.php$/", basename($entry), $tokens) && in_array($language, $languages)) {
                             $languagesFound[$language] = $tokens[1];
                         }
@@ -127,7 +126,7 @@ class YellowInstall {
                     if (lcfirst($matches[1])=="published") $modified = strtotime($matches[2]);
                     if (!empty($matches[1]) && !empty($matches[2]) && strposu($matches[1], "/")) {
                         $fileName = $matches[1];
-                        list($dummy, $entry) = explode(",", $matches[2], 3);
+                        list($dummy1, $entry, $dummy2) = $this->yellow->toolbox->getTextList($matches[2], ",", 3);
                         $fileData = $zip->getFromName($pathBase.basename($entry));
                         if (preg_match("/^(.*).php$/", basename($entry), $tokens) && in_array($tokens[1], $languagesFound) && !is_file($fileName)) {
                             $statusCode = $this->yellow->extensions->get("update")->updateExtensionFile($fileName, $fileData, $modified, 0, 0, "create", false, $extension);
@@ -306,7 +305,7 @@ class YellowInstall {
     public function detectBrowserLanguages($languagesDefault) {
         $languages = array();
         foreach (preg_split("/\s*,\s*/", $this->yellow->toolbox->getServer("HTTP_ACCEPT_LANGUAGE")) as $string) {
-            list($language) = explode(";", $string);
+            list($language, $dummy) = $this->yellow->toolbox->getTextList($string, ";", 2);
             if (!empty($language)) array_push($languages, $language);
         }
         foreach (preg_split("/\s*,\s*/", $languagesDefault) as $language) {

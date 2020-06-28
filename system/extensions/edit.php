@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowEdit {
-    const VERSION = "0.8.26";
+    const VERSION = "0.8.27";
     const TYPE = "feature";
     public $yellow;         //access to API
     public $response;       //web response
@@ -497,7 +497,7 @@ class YellowEdit {
         $email = $emailSource = trim($this->yellow->page->getRequest("email"));
         $this->response->status = $this->getUserStatus($email, $this->yellow->page->getRequest("action"));
         if ($this->response->status=="ok") {
-            list($email, $hash) = explode(":", $this->users->getUser($email, "pending"), 2);
+            list($email, $hash) = $this->yellow->toolbox->getTextList($this->users->getUser($email, "pending"), ":", 2);
             if (!$this->users->isExisting($email) || empty($hash)) $this->response->status = "done";
         }
         if ($this->response->status=="ok") {

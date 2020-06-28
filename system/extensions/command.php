@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowCommand {
-    const VERSION = "0.8.15";
+    const VERSION = "0.8.16";
     const TYPE = "feature";
     const PRIORITY = "3";
     public $yellow;                       //access to API
@@ -173,9 +173,7 @@ class YellowCommand {
     
     // Request static file
     public function requestStaticFile($scheme, $address, $base, $location) {
-        $parts = explode(":", $address, 2);
-        $serverName = isset($parts[0]) ? $parts[0] : "";
-        $serverPort = isset($parts[1]) ? $parts[1] : "";
+        list($serverName, $serverPort) = $this->yellow->toolbox->getTextList($address, ":", 2);
         if (empty($serverPort)) $serverPort = $scheme=="https" ? 443 : 80;
         $_SERVER["HTTPS"] = $scheme=="https" ? "on" : "off";
         $_SERVER["SERVER_PROTOCOL"] = "HTTP/1.1";
@@ -514,7 +512,7 @@ class YellowCommand {
         foreach ($this->yellow->extensions->extensions as $key=>$value) {
             if (method_exists($value["obj"], "onCommandHelp")) {
                 foreach (preg_split("/[\r\n]+/", $value["obj"]->onCommandHelp()) as $line) {
-                    list($command) = explode(" ", $line);
+                    list($command, $dummy) = $this->yellow->toolbox->getTextList($line, " ", 2);
                     if (!empty($command) && !isset($data[$command])) $data[$command] = $line;
                 }
             }

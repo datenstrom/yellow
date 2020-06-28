@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowUpdate {
-    const VERSION = "0.8.21";
+    const VERSION = "0.8.22";
     const TYPE = "feature";
     const PRIORITY = "2";
     public $yellow;                 //access to API
@@ -122,7 +122,7 @@ class YellowUpdate {
         if ($action=="startup") {
             if ($this->yellow->system->get("updateNotification")!="none") {
                 foreach (explode(",", $this->yellow->system->get("updateNotification")) as $token) {
-                    list($extension, $action) = explode("/", $token, 2);
+                    list($extension, $action) = $this->yellow->toolbox->getTextList($token, "/", 2);
                     if ($this->yellow->extensions->isExisting($extension) && ($action!="startup" && $action!="uninstall")) {
                         $value = $this->yellow->extensions->extensions[$extension];
                         if (method_exists($value["obj"], "onUpdate")) $value["obj"]->onUpdate($action);
@@ -336,7 +336,7 @@ class YellowUpdate {
         if (empty($extensions)) {
             foreach ($dataCurrent as $key=>$value) {
                 if (isset($dataLatest[$key])) {
-                    list($version) = explode(",", $dataLatest[$key]);
+                    list($version, $dummy1, $dummy2) = $this->yellow->toolbox->getTextList($dataLatest[$key], ",", 3);
                     if (strnatcasecmp($dataCurrent[$key], $version)<0) $data[$key] = $dataLatest[$key];
                     if (isset($dataModified[$key]) && !empty($version) && $force) $data[$key] = $dataLatest[$key];
                 }
@@ -346,7 +346,7 @@ class YellowUpdate {
                 $found = false;
                 foreach ($dataCurrent as $key=>$value) {
                     if (isset($dataLatest[$key])) {
-                        list($version) = explode(",", $dataLatest[$key]);
+                        list($version, $dummy1, $dummy2) = $this->yellow->toolbox->getTextList($dataLatest[$key], ",", 3);
                         if (strtoloweru($key)==strtoloweru($extension) && !empty($version)) {
                             $data[$key] = $dataLatest[$key];
                             $dataModified = array_intersect_key($dataModified, $data);
@@ -363,7 +363,7 @@ class YellowUpdate {
         }
         if ($statusCode==200) {
             foreach (array_merge($dataModified, $data) as $key=>$value) {
-                list($version) = explode(",", $value);
+                list($version, $dummy1, $dummy2) = $this->yellow->toolbox->getTextList($value, ",", 3);
                 if (!isset($dataModified[$key]) || $force) {
                     echo ucfirst($key)." $version\n";
                 } else {
@@ -378,8 +378,8 @@ class YellowUpdate {
     public function showExtensions() {
         list($statusCode, $dataLatest) = $this->getExtensionsVersion(true, true);
         foreach ($dataLatest as $key=>$value) {
-            list($version, $url, $description) = explode(",", $value, 3);
-            echo ucfirst($key).": $description\n";
+            list($dummy1, $dummy2, $text) = $this->yellow->toolbox->getTextList($value, ",", 3);
+            echo ucfirst($key).": $text\n";
         }
         if ($statusCode!=200) echo "ERROR checking extensions: ".$this->yellow->page->get("pageError")."\n";
         return $statusCode;
@@ -392,7 +392,7 @@ class YellowUpdate {
         $fileExtension = $this->yellow->system->get("coreDownloadExtension");
         foreach ($data as $key=>$value) {
             $fileName = $path.$this->yellow->lookup->normaliseName($key, true, false, true).".zip";
-            list($version, $url) = explode(",", $value);
+            list($dummy1, $url, $dummy2) = $this->yellow->toolbox->getTextList($value, ",", 3);
             list($statusCode, $fileData) = $this->getExtensionFile($url);
             if (empty($fileData) || !$this->yellow->toolbox->createFile($fileName.$fileExtension, $fileData)) {
                 $statusCode = 500;
@@ -459,7 +459,7 @@ class YellowUpdate {
                     if (lcfirst($matches[1])=="language") $language = $matches[2];
                     if (!empty($matches[1]) && !empty($matches[2]) && strposu($matches[1], "/")) {
                         $fileName = $matches[1];
-                        list($dummy, $entry, $flags) = explode(",", $matches[2], 3);
+                        list($dummy, $entry, $flags) = $this->yellow->toolbox->getTextList($matches[2], ",", 3);
                         foreach ($rootPages as $page) {
                             list($fileNameSource, $fileNameDestination) = $this->getExtensionsFileNames($fileName, $entry, $flags, $language, $pathBase, $page);
                             $fileData = $zip->getFromName($fileNameSource);
@@ -591,7 +591,7 @@ class YellowUpdate {
                     preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
                     if (!empty($matches[1]) && !empty($matches[2])) {
                         $extension = lcfirst($matches[1]);
-                        list($version) = explode(",", $matches[2]);
+                        list($version, $dummy1, $dummy2) = $this->yellow->toolbox->getTextList($matches[2], ",", 3);
                         $data[$extension] = $rawFormat ? $matches[2] : $version;
                     }
                 }
@@ -613,7 +613,7 @@ class YellowUpdate {
                 preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
                 if (!empty($matches[1]) && !empty($matches[2])) {
                     $fileName = $matches[1];
-                    list($extension) = explode(",", lcfirst($matches[2]), 3);
+                    list($extension, $dummy1, $dummy2) = $this->yellow->toolbox->getTextList(lcfirst($matches[2]), ",", 3);
                     if (!isset($data[$extension])) {
                         $data[$extension] = $fileName;
                     } else {
@@ -638,7 +638,7 @@ class YellowUpdate {
                 preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
                 if (!empty($matches[1]) && !empty($matches[2])) {
                     $fileName = $matches[1];
-                    list($extensionNew, $dummy, $flags) = explode(",", lcfirst($matches[2]), 3);
+                    list($extensionNew, $dummy, $flags) = $this->yellow->toolbox->getTextList(lcfirst($matches[2]), ",", 3);
                     if ($extension!=$extensionNew) {
                         $extension = $extensionNew;
                         $lastPublished = $this->yellow->toolbox->getFileModified($fileName);
