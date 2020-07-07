@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowUpdate {
-    const VERSION = "0.8.22";
+    const VERSION = "0.8.23";
     const TYPE = "feature";
     const PRIORITY = "2";
     public $yellow;                 //access to API
@@ -36,6 +36,7 @@ class YellowUpdate {
         if ($this->isExtensionPending()) $statusCode = $this->processCommandPending();
         if ($statusCode==0) {
             switch ($command) {
+                case "about":       $statusCode = $this->processCommandAbout($command, $text); break;
                 case "clean":       $statusCode = $this->processCommandClean($command, $text); break;
                 case "install":     $statusCode = $this->processCommandInstall($command, $text); break;
                 case "uninstall":   $statusCode = $this->processCommandUninstall($command, $text); break;
@@ -48,7 +49,8 @@ class YellowUpdate {
     
     // Handle command help
     public function onCommandHelp() {
-        $help = "install [extension]\n";
+        $help = "about\n";
+        $help .= "install [extension]\n";
         $help .= "uninstall [extension]\n";
         $help .= "update [extension]\n";
         return $help;
@@ -159,6 +161,22 @@ class YellowUpdate {
                 }
             }
         }
+    }
+    
+    // Process command to show website version and updates
+    public function processCommandAbout($command, $text) {
+        echo "Datenstrom Yellow ".YellowCore::VERSION."\n";
+        list($statusCode, $dataCurrent) = $this->getExtensionsVersion();
+        list($statusCode, $dataLatest) = $this->getExtensionsVersion(true);
+        foreach ($dataCurrent as $key=>$value) {
+            if (!isset($dataLatest[$key]) || strnatcasecmp($dataCurrent[$key], $dataLatest[$key])>=0) {
+                echo ucfirst($key)." $value\n";
+            } else {
+                echo ucfirst($key)." $value - Update available\n";
+            }
+        }
+        if ($statusCode!=200) echo "ERROR checking updates: ".$this->yellow->page->get("pageError")."\n";
+        return $statusCode;
     }
     
     // Process command to clean downloads

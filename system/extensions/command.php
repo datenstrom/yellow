@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowCommand {
-    const VERSION = "0.8.16";
+    const VERSION = "0.8.17";
     const TYPE = "feature";
     const PRIORITY = "3";
     public $yellow;                       //access to API
@@ -23,7 +23,6 @@ class YellowCommand {
     public function onCommand($command, $text) {
         switch ($command) {
             case "":        $statusCode = $this->processCommandHelp(); break;
-            case "about":   $statusCode = $this->processCommandAbout($command, $text); break;
             case "build":   $statusCode = $this->processCommandBuild($command, $text); break;
             case "check":   $statusCode = $this->processCommandCheck($command, $text); break;
             case "clean":   $statusCode = $this->processCommandClean($command, $text); break;
@@ -35,7 +34,6 @@ class YellowCommand {
     
     // Handle command help
     public function onCommandHelp() {
-        $help = "about\n";
         $help .= "build [directory location]\n";
         $help .= "check [directory location]\n";
         $help .= "clean [directory location]\n";
@@ -51,22 +49,6 @@ class YellowCommand {
             echo(++$lineCounter>1 ? "        " : "Syntax: ")."php yellow.php $line\n";
         }
         return 200;
-    }
-    
-    // Process command to show website version and updates
-    public function processCommandAbout($command, $text) {
-        echo "Datenstrom Yellow ".YellowCore::VERSION."\n";
-        list($statusCode, $dataCurrent) = $this->getExtensionsVersion();
-        list($statusCode, $dataLatest) = $this->getExtensionsVersion(true);
-        foreach ($dataCurrent as $key=>$value) {
-            if (!isset($dataLatest[$key]) || strnatcasecmp($dataCurrent[$key], $dataLatest[$key])>=0) {
-                echo ucfirst($key)." $value\n";
-            } else {
-                echo ucfirst($key)." $value - Update available\n";
-            }
-        }
-        if ($statusCode!=200) echo "ERROR checking updates: ".$this->yellow->page->get("pageError")."\n";
-        return $statusCode;
     }
     
     // Process command to build static website
@@ -519,18 +501,6 @@ class YellowCommand {
         }
         uksort($data, "strnatcasecmp");
         return $data;
-    }
-
-    // Return extensions version
-    public function getExtensionsVersion($latest = false) {
-        $data = array();
-        if ($this->yellow->extensions->isExisting("update")) {
-            list($statusCode, $data) = $this->yellow->extensions->get("update")->getExtensionsVersion($latest);
-        } else {
-            $statusCode = 200;
-            $data = $this->yellow->extensions->getData();
-        }
-        return array($statusCode, $data);
     }
     
     // Return human readable status
