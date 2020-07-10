@@ -6,7 +6,7 @@ Datenstrom Yellow är för människor som skapar små webbplatser.
 2. Kopiera alla filer till din webbserver.
 3. Öppna din webbplats i en webbläsare.
 
-Har du några frågor? [Hitta hjälp](https://datenstrom.se/yellow/help/) och [engagera dig](CONTRIBUTING.md).
+Har du några frågor? [Hitta hjälp](https://datenstrom.se/yellow/help/) och [engagera dig](https://datenstrom.se/yellow/help/contributing-guidelines).
 
 <p>
 <a href="README-de.md"><img src="https://raw.githubusercontent.com/datenstrom/yellow-extensions/master/features/help/language-de.png" width="15" height="15" alt="Deutsch">&nbsp; Deutsch</a>&nbsp;
