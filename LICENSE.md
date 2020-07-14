@@ -338,4 +338,5 @@ Public License instead of this License.
 
 ## Note
 
-Software in this repository is licensed under GPLv2 unless stated otherwise.
+Files in this repository are licensed under GPLv2 and owned by the 
+author/developer/translator/designer, unless stated otherwise.
