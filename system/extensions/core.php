@@ -2960,7 +2960,9 @@ class YellowToolbox {
     
     // Detect server URL
     public function detectServerUrl() {
-        $scheme = !empty($this->getServer("HTTPS")) && $this->getServer("HTTPS")!="off" ? "https" : "http";
+        $scheme = "http";
+        if ($this->getServer("REQUEST_SCHEME")=="https" || $this->getServer("HTTPS")=="on") $scheme = "https";
+        if ($this->getServer("HTTP_X_FORWARDED_PROTO")=="https") $scheme = "https";
         $address = $this->getServer("SERVER_NAME");
         $port = $this->getServer("SERVER_PORT");
         if ($port!=80 && $port!=443) $address .= ":$port";
