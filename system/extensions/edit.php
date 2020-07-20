@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowEdit {
-    const VERSION = "0.8.27";
+    const VERSION = "0.8.28";
     const TYPE = "feature";
     public $yellow;         //access to API
     public $response;       //web response
@@ -878,7 +878,7 @@ class YellowEdit {
             $email = $this->yellow->page->getRequest("email");
             $action = $this->yellow->page->getRequest("action");
             $expire = $this->yellow->page->getRequest("expire");
-            $langauge = $this->yellow->page->getRequest("language");
+            $language = $this->yellow->page->getRequest("language");
             if ($this->users->checkActionToken($actionToken, $email, $action, $expire)) {
                 $ok = true;
                 $this->response->language = $this->getActionLanguage($language);
