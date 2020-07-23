@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowEdit {
-    const VERSION = "0.8.28";
+    const VERSION = "0.8.29";
     const TYPE = "feature";
     public $yellow;         //access to API
     public $response;       //web response
@@ -1311,7 +1311,7 @@ class YellowEditResponse {
                 $name = $this->yellow->lookup->normaliseName($ancestor->get("layoutNew"));
                 $location = $this->yellow->content->getHomeLocation($page->location).$this->yellow->system->get("coreContentSharedDirectory");
                 $fileName = $this->yellow->lookup->findFileFromLocation($location, true).$this->yellow->system->get("editNewFile");
-                $fileName = strreplaceu("(.*)", $name, $fileName);
+                $fileName = str_replace("(.*)", $name, $fileName);
                 if (is_file($fileName)) break;
             }
         }
@@ -1319,7 +1319,7 @@ class YellowEditResponse {
             $name = $this->yellow->lookup->normaliseName($this->yellow->system->get("layout"));
             $location = $this->yellow->content->getHomeLocation($page->location).$this->yellow->system->get("coreContentSharedDirectory");
             $fileName = $this->yellow->lookup->findFileFromLocation($location, true).$this->yellow->system->get("editNewFile");
-            $fileName = strreplaceu("(.*)", $name, $fileName);
+            $fileName = str_replace("(.*)", $name, $fileName);
         }
         if (is_file($fileName)) {
             $rawData = $this->yellow->toolbox->readFile($fileName);
@@ -1510,14 +1510,14 @@ class YellowEditResponse {
         }
         $prefix = "edit".ucfirst($action);
         $message = $this->yellow->text->getText("{$prefix}Message", $userLanguage);
-        $message = strreplaceu("\\n", "\r\n", $message);
+        $message = str_replace("\\n", "\r\n", $message);
         $message = preg_replace("/@useraccount/i", $email, $message);
         $message = preg_replace("/@usershort/i", strtok($userName, " "), $message);
         $message = preg_replace("/@username/i", $userName, $message);
         $message = preg_replace("/@userlanguage/i", $userLanguage, $message);
         $sitename = $this->yellow->system->get("sitename");
         $footer = $this->yellow->text->getText("editMailFooter", $userLanguage);
-        $footer = strreplaceu("\\n", "\r\n", $footer);
+        $footer = str_replace("\\n", "\r\n", $footer);
         $footer = preg_replace("/@sitename/i", $sitename, $footer);
         $mailTo = mb_encode_mimeheader("$userName")." <$userEmail>";
         $mailSubject = mb_encode_mimeheader($this->yellow->text->getText("{$prefix}Subject", $userLanguage));

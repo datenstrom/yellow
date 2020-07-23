@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowInstall {
-    const VERSION = "0.8.26";
+    const VERSION = "0.8.27";
     const TYPE = "feature";
     const PRIORITY = "1";
     public $yellow;                 //access to API
@@ -197,14 +197,14 @@ class YellowInstall {
     public function updateContent($language, $name, $location) {
         $statusCode = 200;
         $fileName = $this->yellow->lookup->findFileFromLocation($location);
-        $fileData = strreplaceu("\r\n", "\n", $this->yellow->toolbox->readFile($fileName));
+        $fileData = str_replace("\r\n", "\n", $this->yellow->toolbox->readFile($fileName));
         if (!empty($fileData) && $language!="en") {
             $titleOld = "Title: ".$this->yellow->text->getText("{$name}Title", "en");
             $titleNew = "Title: ".$this->yellow->text->getText("{$name}Title", $language);
-            $textOld = strreplaceu("\\n", "\n", $this->yellow->text->getText("{$name}Text", "en"));
-            $textNew = strreplaceu("\\n", "\n", $this->yellow->text->getText("{$name}Text", $language));
-            $fileData = strreplaceu($titleOld, $titleNew, $fileData);
-            $fileData = strreplaceu($textOld, $textNew, $fileData);
+            $textOld = str_replace("\\n", "\n", $this->yellow->text->getText("{$name}Text", "en"));
+            $textNew = str_replace("\\n", "\n", $this->yellow->text->getText("{$name}Text", $language));
+            $fileData = str_replace($titleOld, $titleNew, $fileData);
+            $fileData = str_replace($textOld, $textNew, $fileData);
             if (!$this->yellow->toolbox->createFile($fileName, $fileData)) {
                 $statusCode = 500;
                 $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");

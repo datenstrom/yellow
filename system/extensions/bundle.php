@@ -4,7 +4,7 @@
 // This file may be used and distributed under the terms of the public license.
 
 class YellowBundle {
-    const VERSION = "0.8.12";
+    const VERSION = "0.8.13";
     const TYPE = "feature";
     public $yellow;         //access to API
 
@@ -140,7 +140,7 @@ class YellowBundle {
             $thisCompatible = $this;
             $callback = function ($matches) use ($thisCompatible, $scheme, $address, $base) {
                 $url = $thisCompatible->yellow->lookup->normaliseUrl($scheme, $address, $base, $matches[1], false);
-                $url = strreplaceu("$scheme://$address", "", $url);
+                $url = str_replace("$scheme://$address", "", $url);
                 return "url(\"$url\")";
             };
             $fileData = preg_replace_callback("/url\([\'\"]?(.*?)[\'\"]?\)/", $callback, $fileData);

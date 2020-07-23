@@ -174,7 +174,7 @@ class YellowCore {
         if ($statusCode>=400) {
             $locationError = $this->content->getHomeLocation($this->page->location).$this->system->get("coreContentSharedDirectory");
             $fileNameError = $this->lookup->findFileFromLocation($locationError, true).$this->system->get("coreContentErrorFile");
-            $fileNameError = strreplaceu("(.*)", $statusCode, $fileNameError);
+            $fileNameError = str_replace("(.*)", $statusCode, $fileNameError);
             if (is_file($fileNameError)) {
                 $rawData = $this->toolbox->readFile($fileNameError);
             } else {
@@ -559,7 +559,7 @@ class YellowPage {
                         }
                         fclose($fileHandle);
                     }
-                    $output = strreplaceu("\n", "<br />\n", htmlspecialchars($dataBuffer));
+                    $output = str_replace("\n", "<br />\n", htmlspecialchars($dataBuffer));
                 }
             }
         }
@@ -969,14 +969,14 @@ class YellowPageCollection extends ArrayObject {
     // Filter page collection by setting
     public function filter($key, $value, $exactMatch = true) {
         $array = array();
-        $value = strreplaceu(" ", "-", strtoloweru($value));
+        $value = str_replace(" ", "-", strtoloweru($value));
         $valueLength = strlenu($value);
         $this->filterValue = "";
         foreach ($this->getArrayCopy() as $page) {
             if ($page->isExisting($key)) {
                 foreach (preg_split("/\s*,\s*/", $page->get($key)) as $pageValue) {
                     $pageValueLength = $exactMatch ? strlenu($pageValue) : $valueLength;
-                    if ($value==substru(strreplaceu(" ", "-", strtoloweru($pageValue)), 0, $pageValueLength)) {
+                    if ($value==substru(str_replace(" ", "-", strtoloweru($pageValue)), 0, $pageValueLength)) {
                         if (empty($this->filterValue)) $this->filterValue = substru($pageValue, 0, $pageValueLength);
                         array_push($array, $page);
                         break;
@@ -1953,7 +1953,7 @@ class YellowLookup {
     public function findFileDirectory($path, $token, $fileExtension, $directory, $default, &$found, &$invalid) {
         if ($this->normaliseToken($token, $fileExtension)!=$token) $invalid = true;
         if (!$invalid) {
-            $regex = "/^[\d\-\_\.]*".strreplaceu("-", ".", $token)."$/";
+            $regex = "/^[\d\-\_\.]*".str_replace("-", ".", $token)."$/";
             foreach ($this->yellow->toolbox->getDirectoryEntries($path, $regex, false, $directory, false) as $entry) {
                 if ($this->normaliseToken($entry, $fileExtension)==$token) {
                     $token = $entry;
@@ -2115,8 +2115,8 @@ class YellowLookup {
                     $location = $pageBase.$location;
                 }
             }
-            $location = strreplaceu("/./", "/", $location);
-            $location = strreplaceu(":", $this->yellow->toolbox->getLocationArgumentsSeparator(), $location);
+            $location = str_replace("/./", "/", $location);
+            $location = str_replace(":", $this->yellow->toolbox->getLocationArgumentsSeparator(), $location);
         } else {
             if ($filterStrict && !preg_match("/^(http|https|ftp|mailto):/", $location)) $location = "error-xss-filter";
         }
@@ -2303,8 +2303,8 @@ class YellowToolbox {
         foreach (array_merge($_GET, $_POST) as $key=>$value) {
             if (!empty($key) && !strempty($value)) {
                 if (!empty($locationArguments)) $locationArguments .= "/";
-                $key = strreplaceu(array("/", ":", "="), array("\x1c", "\x1d", "\x1e"), $key);
-                $value = strreplaceu(array("/", ":", "="), array("\x1c", "\x1d", "\x1e"), $value);
+                $key = str_replace(array("/", ":", "="), array("\x1c", "\x1d", "\x1e"), $key);
+                $value = str_replace(array("/", ":", "="), array("\x1c", "\x1d", "\x1e"), $value);
                 $locationArguments .= "$key:$value";
             }
         }
@@ -2347,9 +2347,9 @@ class YellowToolbox {
     // Normalise location arguments
     public function normaliseArguments($text, $appendSlash = true, $filterStrict = true) {
         if ($appendSlash) $text .= "/";
-        if ($filterStrict) $text = strreplaceu(" ", "-", strtoloweru($text));
-        $text = strreplaceu(":", $this->getLocationArgumentsSeparator(), $text);
-        return strreplaceu(array("%2F","%3A","%3D"), array("/",":","="), rawurlencode($text));
+        if ($filterStrict) $text = str_replace(" ", "-", strtoloweru($text));
+        $text = str_replace(":", $this->getLocationArgumentsSeparator(), $text);
+        return str_replace(array("%2F","%3A","%3D"), array("/",":","="), rawurlencode($text));
     }
     
     // Normalise elements and attributes in html/svg data
@@ -2838,7 +2838,7 @@ class YellowToolbox {
     
     // Create title from text string
     public function createTextTitle($text) {
-        if (preg_match("/^.*\/([\pL\d\-\_]+)/u", $text, $matches)) $text = strreplaceu("-", " ", ucfirst($matches[1]));
+        if (preg_match("/^.*\/([\pL\d\-\_]+)/u", $text, $matches)) $text = str_replace("-", " ", ucfirst($matches[1]));
         return $text;
     }
 
@@ -2984,8 +2984,8 @@ class YellowToolbox {
                 foreach (explode("/", $matches[2]) as $token) {
                     if (preg_match("/^(.*?)$separator(.*)$/", $token, $matches)) {
                         if (!empty($matches[1]) && !strempty($matches[2])) {
-                            $matches[1] = strreplaceu(array("\x1c", "\x1d", "\x1e"), array("/", ":", "="), $matches[1]);
-                            $matches[2] = strreplaceu(array("\x1c", "\x1d", "\x1e"), array("/", ":", "="), $matches[2]);
+                            $matches[1] = str_replace(array("\x1c", "\x1d", "\x1e"), array("/", ":", "="), $matches[1]);
+                            $matches[2] = str_replace(array("\x1c", "\x1d", "\x1e"), array("/", ":", "="), $matches[2]);
                             $_REQUEST[$matches[1]] = $matches[2];
                         }
                     }
