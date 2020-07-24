@@ -336,7 +336,7 @@ consider it more useful to permit linking proprietary applications with the
 library.  If this is what you want to do, use the GNU Lesser General
 Public License instead of this License.
 
-## How to apply these terms to this repository 
+## How to apply these terms to this software 
 
 All files are licensed under GPLv2 and copyrighted by the 
 respective author/developer/translator/designer, unless stated otherwise.
