@@ -1,13 +1,11 @@
 <?php
 // Install extension, https://github.com/datenstrom/yellow
-// Copyright (c) 2013-2020 Datenstrom, https://datenstrom.se
-// This file may be used and distributed under the terms of the public license.
 
 class YellowInstall {
     const VERSION = "0.8.27";
     const TYPE = "feature";
     const PRIORITY = "1";
-    public $yellow;                 //access to API
+    public $yellow;                 // access to API
     
     // Handle initialisation
     public function onLoad($yellow) {

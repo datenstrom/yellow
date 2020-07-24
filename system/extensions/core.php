@@ -1,19 +1,17 @@
 <?php
-// Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/features/core
-// Copyright (c) 2013-2020 Datenstrom, https://datenstrom.se
-// This file may be used and distributed under the terms of the public license.
+// Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
     const VERSION = "0.8.13";
     const TYPE = "feature";
-    public $page;           //current page
-    public $content;        //content files from file system
-    public $media;          //media files from file system
-    public $system;         //system settings
-    public $text;           //text settings
-    public $lookup;         //location and file lookup
-    public $toolbox;        //toolbox with helpers
-    public $extensions;     //features and themes
+    public $page;           // current page
+    public $content;        // content files from file system
+    public $media;          // media files from file system
+    public $system;         // system settings
+    public $text;           // text settings
+    public $lookup;         // location and file lookup
+    public $toolbox;        // toolbox with helpers
+    public $extensions;     // features and themes
 
     public function __construct() {
         $this->checkRequirements();
@@ -86,7 +84,7 @@ class YellowCore {
             ini_set("display_errors", 1);
             error_reporting(E_ALL);
         }
-        error_reporting(E_ALL ^ E_NOTICE); //TODO: remove later, for backwards compatibility
+        error_reporting(E_ALL ^ E_NOTICE); // TODO: remove later, for backwards compatibility
     }
     
     // Handle initialisation
@@ -333,7 +331,7 @@ class YellowCore {
         return array_pad($this->lookup->layoutArguments, $sizeMin, null);
     }
     
-    public function getLayoutArgs($sizeMin = 9) { //TODO: remove later, for backwards compatibility
+    public function getLayoutArgs($sizeMin = 9) { // TODO: remove later, for backwards compatibility
         return $this->getLayoutArguments($sizeMin);
     }
 
@@ -386,27 +384,27 @@ class YellowCore {
 }
     
 class YellowPage {
-    public $yellow;                 //access to API
-    public $scheme;                 //server scheme
-    public $address;                //server address
-    public $base;                   //base location
-    public $location;               //page location
-    public $fileName;               //content file name
-    public $rawData;                //raw data of page
-    public $metaDataOffsetBytes;    //meta data offset
-    public $metaData;               //meta data
-    public $pageCollection;         //page collection
-    public $pageRelations;          //page relations
-    public $headerData;             //response header
-    public $outputData;             //response output
-    public $parser;                 //content parser
-    public $parserData;             //content data of page
-    public $available;              //page is available? (boolean)
-    public $visible;                //page is visible location? (boolean)
-    public $active;                 //page is active location? (boolean)
-    public $cacheable;              //page is cacheable? (boolean)
-    public $lastModified;           //last modification date
-    public $statusCode;             //status code
+    public $yellow;                 // access to API
+    public $scheme;                 // server scheme
+    public $address;                // server address
+    public $base;                   // base location
+    public $location;               // page location
+    public $fileName;               // content file name
+    public $rawData;                // raw data of page
+    public $metaDataOffsetBytes;    // meta data offset
+    public $metaData;               // meta data
+    public $pageCollection;         // page collection
+    public $pageRelations;          // page relations
+    public $headerData;             // response header
+    public $outputData;             // response output
+    public $parser;                 // content parser
+    public $parserData;             // content data of page
+    public $available;              // page is available? (boolean)
+    public $visible;                // page is visible location? (boolean)
+    public $active;                 // page is active location? (boolean)
+    public $cacheable;              // page is cacheable? (boolean)
+    public $lastModified;           // last modification date
+    public $statusCode;             // status code
 
     public function __construct($yellow) {
         $this->yellow = $yellow;
@@ -956,10 +954,10 @@ class YellowDataCollection extends ArrayObject {
 }
 
 class YellowPageCollection extends ArrayObject {
-    public $yellow;                 //access to API
-    public $filterValue;            //current page filter value
-    public $paginationNumber;       //current page number in pagination
-    public $paginationCount;        //highest page number in pagination
+    public $yellow;                 // access to API
+    public $filterValue;            // current page filter value
+    public $paginationNumber;       // current page number in pagination
+    public $paginationCount;        // highest page number in pagination
     
     public function __construct($yellow) {
         parent::__construct(array());
@@ -1195,8 +1193,8 @@ class YellowPageCollection extends ArrayObject {
 }
 
 class YellowContent {
-    public $yellow;         //access to API
-    public $pages;          //scanned pages
+    public $yellow;         // access to API
+    public $pages;          // scanned pages
     
     public function __construct($yellow) {
         $this->yellow = $yellow;
@@ -1400,8 +1398,8 @@ class YellowContent {
 }
     
 class YellowMedia {
-    public $yellow;     //access to API
-    public $files;      //scanned files
+    public $yellow;     // access to API
+    public $files;      // scanned files
     
     public function __construct($yellow) {
         $this->yellow = $yellow;
@@ -1514,10 +1512,10 @@ class YellowMedia {
 }
 
 class YellowSystem {
-    public $yellow;             //access to API
-    public $modified;           //settings modification date
-    public $settings;           //settings
-    public $settingsDefaults;   //settings defaults
+    public $yellow;             // access to API
+    public $modified;           // settings modification date
+    public $settings;           // settings
+    public $settingsDefaults;   // settings defaults
     
     public function __construct($yellow) {
         $this->yellow = $yellow;
@@ -1621,10 +1619,10 @@ class YellowSystem {
 }
 
 class YellowText {
-    public $yellow;         //access to API
-    public $modified;       //text modification date
-    public $text;           //text
-    public $language;       //current language
+    public $yellow;         // access to API
+    public $modified;       // text modification date
+    public $text;           // text
+    public $language;       // current language
     
     public function __construct($yellow) {
         $this->yellow = $yellow;
@@ -1791,10 +1789,10 @@ class YellowText {
 }
 
 class YellowLookup {
-    public $yellow;             //access to API
-    public $requestHandler;     //request handler name
-    public $commandHandler;     //command handler name
-    public $layoutArguments;    //layout arguments
+    public $yellow;             // access to API
+    public $requestHandler;     // request handler name
+    public $commandHandler;     // command handler name
+    public $layoutArguments;    // layout arguments
     
     public function __construct($yellow) {
         $this->yellow = $yellow;
@@ -3129,7 +3127,7 @@ class YellowToolbox {
         return $this->getServer("HTTP_IF_MODIFIED_SINCE")==$lastModifiedFormatted;
     }
     
-    //TODO: remove later, for backwards compatibility
+    // TODO: remove later, for backwards compatibility
     public function getLocationArgs() { return $this->getLocationArguments(); }
     public function getLocationArgsNew($key, $value) { return $this->getLocationArgumentsNew($key, $value); }
     public function getLocationArgsCleanUrl() { return $this->getLocationArgumentsCleanUrl(); }
@@ -3141,9 +3139,9 @@ class YellowToolbox {
 }
     
 class YellowExtensions {
-    public $yellow;     //access to API
-    public $modified;   //extension modification date
-    public $extensions; //registered extensions
+    public $yellow;     // access to API
+    public $modified;   // extension modification date
+    public $extensions; // registered extensions
 
     public function __construct($yellow) {
         $this->yellow = $yellow;
@@ -3167,7 +3165,7 @@ class YellowExtensions {
         foreach ($this->extensions as $key=>$value) {
             if (method_exists($this->extensions[$key]["obj"], "onLoad")) $this->extensions[$key]["obj"]->onLoad($this->yellow);
         }
-        $this->yellow->system->set("mediaLocation", "/media/"); //TODO: remove later, for backwards compatibility
+        $this->yellow->system->set("mediaLocation", "/media/"); // TODO: remove later, for backwards compatibility
         $this->yellow->system->set("downloadLocation", "/media/downloads/");
         $this->yellow->system->set("imageLocation", "/media/images/");
         $this->yellow->system->set("extensionLocation", "/media/extensions/");

@@ -1,15 +1,13 @@
 <?php
-// Edit extension, https://github.com/datenstrom/yellow-extensions/tree/master/features/edit
-// Copyright (c) 2013-2020 Datenstrom, https://datenstrom.se
-// This file may be used and distributed under the terms of the public license.
+// Edit extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/edit
 
 class YellowEdit {
     const VERSION = "0.8.29";
     const TYPE = "feature";
-    public $yellow;         //access to API
-    public $response;       //web response
-    public $users;          //user accounts
-    public $merge;          //text merge
+    public $yellow;         // access to API
+    public $response;       // web response
+    public $users;          // user accounts
+    public $merge;          // text merge
 
     // Handle initialisation
     public function onLoad($yellow) {
@@ -979,21 +977,21 @@ class YellowEdit {
 }
     
 class YellowEditResponse {
-    public $yellow;             //access to API
-    public $extension;          //access to extension
-    public $active;             //location is active? (boolean)
-    public $userEmail;          //user email
-    public $userFailedError;    //error of failed authentication
-    public $userFailedEmail;    //email of failed authentication
-    public $userFailedExpire;   //expiration time of failed authentication
-    public $rawDataSource;      //raw data of page for comparison
-    public $rawDataEdit;        //raw data of page for editing
-    public $rawDataOutput;      //raw data of dynamic output
-    public $rawDataReadonly;    //raw data is read only? (boolean)
-    public $rawDataEndOfLine;   //end of line format for raw data
-    public $language;           //response language
-    public $action;             //response action
-    public $status;             //response status
+    public $yellow;             // access to API
+    public $extension;          // access to extension
+    public $active;             // location is active? (boolean)
+    public $userEmail;          // user email
+    public $userFailedError;    // error of failed authentication
+    public $userFailedEmail;    // email of failed authentication
+    public $userFailedExpire;   // expiration time of failed authentication
+    public $rawDataSource;      // raw data of page for comparison
+    public $rawDataEdit;        // raw data of page for editing
+    public $rawDataOutput;      // raw data of dynamic output
+    public $rawDataReadonly;    // raw data is read only? (boolean)
+    public $rawDataEndOfLine;   // end of line format for raw data
+    public $language;           // response language
+    public $action;             // response action
+    public $status;             // response status
     
     public function __construct($yellow) {
         $this->yellow = $yellow;
@@ -1601,8 +1599,8 @@ class YellowEditResponse {
 }
 
 class YellowEditUsers {
-    public $yellow;     //access to API
-    public $users;      //registered users
+    public $yellow;     // access to API
+    public $users;      // registered users
     
     public function __construct($yellow) {
         $this->yellow = $yellow;
@@ -1823,8 +1821,8 @@ class YellowEditUsers {
 }
     
 class YellowEditMerge {
-    public $yellow;     //access to API
-    const ADD = "+";    //merge types
+    public $yellow;     // access to API
+    const ADD = "+";    // merge types
     const MODIFY = "*";
     const REMOVE = "-";
     const SAME = " ";

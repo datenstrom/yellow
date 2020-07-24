@@ -1,18 +1,16 @@
 <?php
-// Command extension, https://github.com/datenstrom/yellow-extensions/tree/master/features/command
-// Copyright (c) 2013-2020 Datenstrom, https://datenstrom.se
-// This file may be used and distributed under the terms of the public license.
+// Command extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/command
 
 class YellowCommand {
     const VERSION = "0.8.17";
     const TYPE = "feature";
     const PRIORITY = "3";
-    public $yellow;                       //access to API
-    public $files;                        //number of files
-    public $links;                        //number of links
-    public $errors;                       //number of errors
-    public $locationsArguments;           //locations with location arguments detected
-    public $locationsArgumentsPagination; //locations with pagination arguments detected
+    public $yellow;                       // access to API
+    public $files;                        // number of files
+    public $links;                        // number of links
+    public $errors;                       // number of errors
+    public $locationsArguments;           // locations with location arguments detected
+    public $locationsArgumentsPagination; // locations with pagination arguments detected
     
     // Handle initialisation
     public function onLoad($yellow) {

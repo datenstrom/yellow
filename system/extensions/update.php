@@ -1,14 +1,12 @@
 <?php
-// Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/features/update
-// Copyright (c) 2013-2020 Datenstrom, https://datenstrom.se
-// This file may be used and distributed under the terms of the public license.
+// Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
     const VERSION = "0.8.23";
     const TYPE = "feature";
     const PRIORITY = "2";
-    public $yellow;                 //access to API
-    public $updates;                //number of updates
+    public $yellow;                 // access to API
+    public $updates;                // number of updates
     
     // Handle initialisation
     public function onLoad($yellow) {
@@ -58,7 +56,7 @@ class YellowUpdate {
 
     // Handle update
     public function onUpdate($action) {
-        if ($action=="update") {  //TODO: remove later, converts old content settings
+        if ($action=="update") {  // TODO: remove later, converts old content settings
             if ($this->yellow->system->isExisting("multiLanguageMode")) {
                 $coreMultiLanguageMode = $this->yellow->system->get("multiLanguageMode");
                 $fileName = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreSystemFile");
@@ -90,7 +88,7 @@ class YellowUpdate {
                 }
             }
         }
-        if ($action=="update") {  //TODO: remove later, converts old layout files
+        if ($action=="update") {  // TODO: remove later, converts old layout files
             if ($this->yellow->system->isExisting("coreLayoutDir")) {
                 $path = $this->yellow->system->get("coreLayoutDir");
                 foreach ($this->yellow->toolbox->getDirectoryEntriesRecursive($path, "/^.*\.html$/", true, false) as $entry) {
@@ -110,7 +108,7 @@ class YellowUpdate {
                 }
             }
         }
-        if ($action=="update") {  //TODO: remove later, converts old commandline
+        if ($action=="update") {  // TODO: remove later, converts old commandline
             if ($this->yellow->system->isExisting("coreStaticDir")) {
                 $fileName = "yellow.php";
                 $fileData = $fileDataNew = $this->yellow->toolbox->readFile($fileName);

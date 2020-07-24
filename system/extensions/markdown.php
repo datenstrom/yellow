@@ -1,12 +1,10 @@
 <?php
-// Markdown extension, https://github.com/datenstrom/yellow-extensions/tree/master/features/markdown
-// Copyright (c) 2013-2020 Datenstrom, https://datenstrom.se
-// This file may be used and distributed under the terms of the public license.
+// Markdown extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/markdown
 
 class YellowMarkdown {
     const VERSION = "0.8.14";
     const TYPE = "feature";
-    public $yellow;         //access to API
+    public $yellow;         // access to API
     
     // Handle initialisation
     public function onLoad($yellow) {
@@ -3831,14 +3829,13 @@ class MarkdownExtraParser extends MarkdownParser {
 	}
 }
 
-// Datenstrom Yellow Markdown parser
-// Copyright (c) 2013-2020 Datenstrom
+// Markdown parser, Copyright Datenstrom, License GPLv2
 
 class YellowMarkdownParser extends MarkdownExtraParser {
-    public $yellow;             //access to API
-    public $page;               //access to page
-    public $idAttributes;       //id attributes
-    public $noticeLevel;        //recursive level
+    public $yellow;             // access to API
+    public $page;               // access to page
+    public $idAttributes;       // id attributes
+    public $noticeLevel;        // recursive level
 
     public function __construct($yellow, $page) {
         $this->yellow = $yellow;

@@ -1,6 +1,4 @@
-// Edit extension, https://github.com/datenstrom/yellow-extensions/tree/master/features/edit
-// Copyright (c) 2013-2020 Datenstrom, https://datenstrom.se
-// This file may be used and distributed under the terms of the public license.
+// Edit extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/edit
 
 var yellow = {
     onLoad: function(e) { yellow.edit.load(e); },
@@ -16,11 +14,11 @@ var yellow = {
 };
 
 yellow.edit = {
-    paneId: 0,          //visible pane ID
-    paneAction: 0,      //current pane action
-    paneStatus: 0,      //current pane status
-    popupId: 0,         //visible popup ID
-    intervalId: 0,      //timer interval ID
+    paneId: 0,          // visible pane ID
+    paneAction: 0,      // current pane action
+    paneStatus: 0,      // current pane status
+    popupId: 0,         // visible popup ID
+    intervalId: 0,      // timer interval ID
 
     // Handle initialisation
     load: function(e) {

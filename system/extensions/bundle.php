@@ -1,12 +1,10 @@
 <?php
-// Bundle extension, https://github.com/datenstrom/yellow-extensions/tree/master/features/bundle
-// Copyright (c) 2013-2020 Datenstrom, https://datenstrom.se
-// This file may be used and distributed under the terms of the public license.
+// Bundle extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/bundle
 
 class YellowBundle {
     const VERSION = "0.8.13";
     const TYPE = "feature";
-    public $yellow;         //access to API
+    public $yellow;         // access to API
 
     // Handle initialisation
     public function onLoad($yellow) {
@@ -1926,14 +1924,12 @@ class Converter implements ConverterInterface {
     }
 }
 
-// Minify extensions
-// Copyright (c) 2013-2019 Datenstrom
+// Bundle extensions, Copyright Datenstrom, License GPLv2
 
 class MinifyCss extends CSS { }
 
 class MinifyJavaScript extends JS {
 
-    // Use hardcoded keywords and operators
     public function __construct() {
         $this->keywordsReserved = array("do", "if", "in", "for", "let", "new", "try", "var", "case", "else", "enum", "eval", "null", "this", "true", "void", "with", "break", "catch", "class", "const", "false", "super", "throw", "while", "yield", "delete", "export", "import", "public", "return", "static", "switch", "typeof", "default", "extends", "finally", "package", "private", "continue", "debugger", "function", "arguments", "interface", "protected", "implements", "instanceof", "abstract", "boolean", "byte", "char", "double", "final", "float", "goto", "int", "long", "native", "short", "synchronized", "throws", "transient", "volatile");
         $this->keywordsBefore = array("do", "in", "let", "new", "var", "case", "else", "enum", "void", "with", "class", "const", "yield", "delete", "export", "import", "public", "static", "typeof", "extends", "package", "private", "function", "protected", "implements", "instanceof");
