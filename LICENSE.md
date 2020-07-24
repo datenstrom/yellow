@@ -57,7 +57,7 @@ patent must be licensed for everyone's free use or not licensed at all.
   The precise terms and conditions for copying, distribution and
 modification follow.
 
-## TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
+## Terms and conditions
 
   **0.** This License applies to any program or other work which contains
 a notice placed by the copyright holder saying it may be distributed
@@ -277,7 +277,7 @@ POSSIBILITY OF SUCH DAMAGES.
 
 END OF TERMS AND CONDITIONS
 
-## How to Apply These Terms to Your New Programs
+## How to apply these terms to your software
 
   If you develop a new program, and you want it to be of the greatest
 possible use to the public, the best way to achieve this is to make it
@@ -336,7 +336,7 @@ consider it more useful to permit linking proprietary applications with the
 library.  If this is what you want to do, use the GNU Lesser General
 Public License instead of this License.
 
-## Note
+## How to apply these terms to this repository 
 
-Files in this repository are licensed under GPLv2 and copyright is owned by 
-the respective author/developer/translator/designer, unless stated otherwise.
+All files are licensed under GPLv2 and copyrighted by the 
+respective author/developer/translator/designer, unless stated otherwise.
