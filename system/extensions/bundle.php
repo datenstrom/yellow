@@ -2,8 +2,7 @@
 // Bundle extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/bundle
 
 class YellowBundle {
-    const VERSION = "0.8.13";
-    const TYPE = "feature";
+    const VERSION = "0.8.14";
     public $yellow;         // access to API
 
     // Handle initialisation
@@ -33,7 +32,7 @@ class YellowBundle {
     public function processCommandClean($command, $text) {
         $statusCode = 0;
         if ($command=="clean" && $text=="all") {
-            $path = $this->yellow->system->get("coreResourceDirectory");
+            $path = $this->yellow->system->get("coreExtensionDirectory");
             foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/bundle-.*/", false, false) as $entry) {
                 if (!$this->yellow->toolbox->deleteFile($entry)) $statusCode = 500;
             }
@@ -96,8 +95,8 @@ class YellowBundle {
         if (!empty($fileNames)) {
             $autoVersioning = intval($modified/(60*60*24));
             $id = substru(md5($autoVersioning.$base.implode($fileNames)), 0, 10);
-            $fileNameBundle = $this->yellow->system->get("coreResourceDirectory")."bundle-$id.min.$type";
-            $locationBundle = $base.$this->yellow->system->get("coreResourceLocation")."bundle-$id.min.$type";
+            $fileNameBundle = $this->yellow->system->get("coreExtensionDirectory")."bundle-$id.min.$type";
+            $locationBundle = $base.$this->yellow->system->get("coreExtensionLocation")."bundle-$id.min.$type";
             $rawDataAttribute = $attribute=="defer" ? "defer=\"defer\" " : "";
             if ($type=="css") {
                 $data[$locationBundle] = "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"".htmlspecialchars($locationBundle)."\" />\n";
@@ -129,11 +128,11 @@ class YellowBundle {
     // Process bundle, convert URLs
     public function processBundleConvert($scheme, $address, $base, $fileData, $fileName, $type) {
         if ($type=="css") {
-            $extensionDirectoryLength = strlenu($this->yellow->system->get("coreExtensionDirectory"));
-            if (substru($fileName, 0, $extensionDirectoryLength) == $this->yellow->system->get("coreExtensionDirectory")) {
-                $base .= $this->yellow->system->get("coreExtensionLocation");
+            $themeDirectoryLength = strlenu($this->yellow->system->get("coreThemeDirectory"));
+            if (substru($fileName, 0, $themeDirectoryLength) == $this->yellow->system->get("coreThemeDirectory")) {
+                $base .= $this->yellow->system->get("coreThemeLocation");
             } else {
-                $base .= $this->yellow->system->get("coreResourceLocation");
+                $base .= $this->yellow->system->get("coreExtensionLocation");
             }
             $thisCompatible = $this;
             $callback = function ($matches) use ($thisCompatible, $scheme, $address, $base) {
@@ -1924,7 +1923,7 @@ class Converter implements ConverterInterface {
     }
 }
 
-// Bundle extensions, Copyright Datenstrom, License GPLv2
+// Bundle extension, Copyright Datenstrom, License GPLv2
 
 class MinifyCss extends CSS { }
 

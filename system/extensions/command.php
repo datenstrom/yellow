@@ -2,8 +2,7 @@
 // Command extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/command
 
 class YellowCommand {
-    const VERSION = "0.8.17";
-    const TYPE = "feature";
+    const VERSION = "0.8.18";
     const PRIORITY = "3";
     public $yellow;                       // access to API
     public $files;                        // number of files
@@ -155,11 +154,11 @@ class YellowCommand {
     public function requestStaticFile($scheme, $address, $base, $location) {
         list($serverName, $serverPort) = $this->yellow->toolbox->getTextList($address, ":", 2);
         if (empty($serverPort)) $serverPort = $scheme=="https" ? 443 : 80;
-        $_SERVER["HTTPS"] = $scheme=="https" ? "on" : "off";
         $_SERVER["SERVER_PROTOCOL"] = "HTTP/1.1";
         $_SERVER["SERVER_NAME"] = $serverName;
         $_SERVER["SERVER_PORT"] = $serverPort;
         $_SERVER["REQUEST_METHOD"] = "GET";
+        $_SERVER["REQUEST_SCHEME"] = $scheme;
         $_SERVER["REQUEST_URI"] = $base.$location;
         $_SERVER["SCRIPT_NAME"] = $base."/yellow.php";
         $_SERVER["REMOTE_ADDR"] = "127.0.0.1";
@@ -437,7 +436,7 @@ class YellowCommand {
     // Broadcast command to other extensions
     public function broadcastCommand($command, $text) {
         $statusCode = 0;
-        foreach ($this->yellow->extensions->extensions as $key=>$value) {
+        foreach ($this->yellow->extension->data as $key=>$value) {
             if (method_exists($value["obj"], "onCommand") && $key!="command") {
                 $statusCode = max($statusCode, $value["obj"]->onCommand($command, $text));
             }
@@ -489,7 +488,7 @@ class YellowCommand {
     // Return command help
     public function getCommandHelp() {
         $data = array();
-        foreach ($this->yellow->extensions->extensions as $key=>$value) {
+        foreach ($this->yellow->extension->data as $key=>$value) {
             if (method_exists($value["obj"], "onCommandHelp")) {
                 foreach (preg_split("/[\r\n]+/", $value["obj"]->onCommandHelp()) as $line) {
                     list($command, $dummy) = $this->yellow->toolbox->getTextList($line, " ", 2);
@@ -572,16 +571,16 @@ class YellowCommand {
     // Return system locations
     public function getSystemLocations() {
         $locations = array();
-        $regex = "/\.(css|gif|ico|js|jpg|png|svg|txt|woff|woff2)$/";
+        $regex = "/\.(css|gif|ico|js|jpg|png|svg|woff|woff2)$/";
         $extensionDirectoryLength = strlenu($this->yellow->system->get("coreExtensionDirectory"));
         $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($this->yellow->system->get("coreExtensionDirectory"), $regex, false, false);
         foreach ($fileNames as $fileName) {
             array_push($locations, $this->yellow->system->get("coreExtensionLocation").substru($fileName, $extensionDirectoryLength));
         }
-        $resourceDirectoryLength = strlenu($this->yellow->system->get("coreResourceDirectory"));
-        $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($this->yellow->system->get("coreResourceDirectory"), $regex, false, false);
+        $themeDirectoryLength = strlenu($this->yellow->system->get("coreThemeDirectory"));
+        $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($this->yellow->system->get("coreThemeDirectory"), $regex, false, false);
         foreach ($fileNames as $fileName) {
-            array_push($locations, $this->yellow->system->get("coreResourceLocation").substru($fileName, $resourceDirectoryLength));
+            array_push($locations, $this->yellow->system->get("coreThemeLocation").substru($fileName, $themeDirectoryLength));
         }
         return $locations;
     }

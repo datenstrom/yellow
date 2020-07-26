@@ -2,8 +2,7 @@
 // Markdown extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/markdown
 
 class YellowMarkdown {
-    const VERSION = "0.8.14";
-    const TYPE = "feature";
+    const VERSION = "0.8.15";
     public $yellow;         // access to API
     
     // Handle initialisation

@@ -2,14 +2,13 @@
 // Meta extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/meta
 
 class YellowMeta {
-    const VERSION = "0.8.12";
-    const TYPE = "feature";
+    const VERSION = "0.8.14";
     public $yellow;         // access to API
     
     // Handle initialisation
     public function onLoad($yellow) {
         $this->yellow = $yellow;
-        $this->yellow->system->setDefault("metaDefaultImage", "icon");
+        $this->yellow->system->setDefault("metaDefaultImage", "favicon");
     }
     
     // Handle page extra data
@@ -17,7 +16,7 @@ class YellowMeta {
         $output = null;
         if ($name=="header" && !$page->isError()) {
             list($imageUrl, $imageAlt) = $this->getImageInformation($page);
-            $locale = $this->yellow->text->getText("languageLocale", $page->get("language"));
+            $locale = $this->yellow->language->getText("languageLocale", $page->get("language"));
             $output .= "<meta property=\"og:url\" content=\"".htmlspecialchars($page->getUrl().$this->yellow->toolbox->getLocationArguments())."\" />\n";
             $output .= "<meta property=\"og:locale\" content=\"".htmlspecialchars($locale)."\" />\n";
             $output .= "<meta property=\"og:type\" content=\"website\" />\n";
@@ -52,8 +51,8 @@ class YellowMeta {
             $alt = $page->isExisting("imageAlt") ? $page->get("imageAlt") : $page->get("title");
         }
         if (!preg_match("/^\w+:/", $name)) {
-            $location = $name!="icon" ? $this->yellow->system->get("coreImageLocation").$name :
-                $this->yellow->system->get("coreResourceLocation").$page->get("theme")."-icon.png";
+            $location = $name!="favicon" ? $this->yellow->system->get("coreImageLocation").$name :
+                $this->yellow->system->get("coreThemeLocation").$this->yellow->lookup->normaliseName($page->get("theme")).".png";
             $url = $this->yellow->lookup->normaliseUrl(
                 $this->yellow->system->get("coreServerScheme"),
                 $this->yellow->system->get("coreServerAddress"),

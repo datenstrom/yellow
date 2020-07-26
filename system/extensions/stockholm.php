@@ -2,8 +2,7 @@
 // Stockholm extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/stockholm
 
 class YellowStockholm {
-    const VERSION = "0.8.8";
-    const TYPE = "theme";
+    const VERSION = "0.8.9";
     public $yellow;         // access to API
     
     // Handle initialisation
@@ -17,7 +16,7 @@ class YellowStockholm {
         if ($action=="install") {
             $this->yellow->system->save($fileName, array("theme" => "stockholm"));
         } elseif ($action=="uninstall" && $this->yellow->system->get("theme")=="stockholm") {
-            $theme = reset(array_diff($this->yellow->extensions->getExtensions("theme"), array("stockholm")));
+            $theme = reset(array_diff($this->yellow->system->getValues("theme"), array("stockholm")));
             $this->yellow->system->save($fileName, array("theme" => $theme));
         }
     }

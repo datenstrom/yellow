@@ -74,7 +74,7 @@ yellow.edit = {
     
     // Handle page cache
     pageShow: function(e) {
-        if (e.persisted && yellow.system.userEmail && !this.getCookie("csrftoken")) {
+        if (e.persisted && yellow.user.email && !this.getCookie("csrftoken")) {
             window.location.reload();
         }
     },
@@ -92,7 +92,7 @@ yellow.edit = {
         }
         var elementDiv = document.createElement("div");
         elementDiv.setAttribute("id", barId+"-content");
-        if (yellow.system.userName) {
+        if (yellow.user.name) {
             elementDiv.innerHTML =
                 "<div class=\"yellow-bar-left\">"+
                 this.getRawDataPaneAction("edit")+
@@ -100,7 +100,7 @@ yellow.edit = {
                 "<div class=\"yellow-bar-right\">"+
                 this.getRawDataPaneAction("create")+
                 this.getRawDataPaneAction("delete")+
-                this.getRawDataPaneAction("menu", yellow.system.userName, true)+
+                this.getRawDataPaneAction("menu", yellow.user.name, true)+
                 "</div>"+
                 "<div class=\"yellow-bar-banner\"></div>";
         } else {
@@ -328,7 +328,7 @@ yellow.edit = {
             case "yellow-pane-menu":
                 elementDiv.innerHTML =
                 "<ul class=\"yellow-dropdown\">"+
-                "<li><span>"+yellow.toolbox.encodeHtml(yellow.system.userEmail)+"</span></li>"+
+                "<li><span>"+yellow.toolbox.encodeHtml(yellow.user.email)+"</span></li>"+
                 "<li><a href=\"#\" data-action=\"settings\">"+this.getText("MenuSettings")+"</a></li>" +
                 "<li><a href=\"#\" data-action=\"help\">"+this.getText("MenuHelp")+"</a></li>" +
                 "<li><a href=\"#\" data-action=\"submit\" data-arguments=\"action:logout\">"+this.getText("MenuLogout")+"</a></li>"+
@@ -374,10 +374,10 @@ yellow.edit = {
                 }
                 if (paneStatus=="none") {
                     document.getElementById("yellow-pane-account-status").innerHTML = this.getText("AccountStatusNone");
-                    document.getElementById("yellow-pane-account-name").value = yellow.system.userName;
-                    document.getElementById("yellow-pane-account-email").value = yellow.system.userEmail;
+                    document.getElementById("yellow-pane-account-name").value = yellow.user.name;
+                    document.getElementById("yellow-pane-account-email").value = yellow.user.email;
                     document.getElementById("yellow-pane-account-password").value = "";
-                    document.getElementById("yellow-pane-account-"+yellow.system.userLanguage).checked = true;
+                    document.getElementById("yellow-pane-account-"+yellow.user.language).checked = true;
                 }
                 break;
             case "yellow-pane-system":
@@ -952,14 +952,14 @@ yellow.edit = {
         return rawDataButtons;
     },
     
-    // Return request string
+    // Return request data
     getRequest: function(key, prefix) {
         if (!prefix) prefix = "request";
         key = prefix + yellow.toolbox.toUpperFirst(key);
         return (key in yellow.page) ? yellow.page[key] : "";
     },
     
-    // Return shortcut string
+    // Return shortcut setting
     getShortcut: function(key) {
         var shortcut = "";
         var tokens = yellow.system.editKeyboardShortcuts.split(/\s*,\s*/);
@@ -970,7 +970,7 @@ yellow.edit = {
                 break;
             }
         }
-        var labels = yellow.text.editKeyboardLabels.split(/\s*,\s*/);
+        var labels = yellow.language.editKeyboardLabels.split(/\s*,\s*/);
         if (navigator.platform.indexOf("Mac")==-1) {
             shortcut = shortcut.toUpperCase().replace("CTRL+", labels[0]).replace("ALT+", labels[1]).replace("SHIFT+", labels[2]);
         } else {
@@ -980,12 +980,12 @@ yellow.edit = {
         return shortcut;
     },
 
-    // Return text string
+    // Return text setting
     getText: function(key, prefix, postfix) {
         if (!prefix) prefix = "edit";
         if (!postfix) postfix = "";
         key = prefix + yellow.toolbox.toUpperFirst(key) + yellow.toolbox.toUpperFirst(postfix);
-        return (key in yellow.text) ? yellow.text[key] : "["+key+"]";
+        return (key in yellow.language) ? yellow.language[key] : "["+key+"]";
     },
 
     // Return browser cookie
@@ -995,8 +995,8 @@ yellow.edit = {
     
     // Check if user with access
     isUserAccess: function(action, location) {
-        var tokens = yellow.system.userAccess.split(/\s*,\s*/);
-        return tokens.indexOf(action)!=-1 && (!location || location.substring(0, yellow.system.userHome.length)==yellow.system.userHome);
+        var tokens = yellow.user.access.split(/\s*,\s*/);
+        return tokens.indexOf(action)!=-1 && (!location || location.substring(0, yellow.user.home.length)==yellow.user.home);
     },
 
     // Check if element is expandable

@@ -2,20 +2,19 @@
 // Image extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/image
 
 class YellowImage {
-    const VERSION = "0.8.8";
-    const TYPE = "feature";
+    const VERSION = "0.8.9";
     public $yellow;             // access to API
 
     // Handle initialisation
     public function onLoad($yellow) {
         $this->yellow = $yellow;
-        $this->yellow->system->setDefault("imageAlt", "Image");
         $this->yellow->system->setDefault("imageUploadWidthMax", "1280");
         $this->yellow->system->setDefault("imageUploadHeightMax", "1280");
         $this->yellow->system->setDefault("imageUploadJpgQuality", "80");
         $this->yellow->system->setDefault("imageThumbnailLocation", "/media/thumbnails/");
         $this->yellow->system->setDefault("imageThumbnailDirectory", "media/thumbnails/");
         $this->yellow->system->setDefault("imageThumbnailJpgQuality", "80");
+        $this->yellow->language->setDefault("imageDefaultAlt");
     }
 
     // Handle page content of shortcut
@@ -24,12 +23,12 @@ class YellowImage {
         if ($name=="image" && $type=="inline") {
             list($name, $alt, $style, $width, $height) = $this->yellow->toolbox->getTextArguments($text);
             if (!preg_match("/^\w+:/", $name)) {
-                if (empty($alt)) $alt = $this->yellow->system->get("imageAlt");
+                if (empty($alt)) $alt = $this->yellow->language->getText("imageDefaultAlt");
                 if (empty($width)) $width = "100%";
                 if (empty($height)) $height = $width;
                 list($src, $width, $height) = $this->getImageInformation($this->yellow->system->get("coreImageDirectory").$name, $width, $height);
             } else {
-                if (empty($alt)) $alt = $this->yellow->system->get("imageAlt");
+                if (empty($alt)) $alt = $this->yellow->language->getText("imageDefaultAlt");
                 $src = $this->yellow->lookup->normaliseUrl("", "", "", $name);
                 $width = $height = 0;
             }
@@ -43,7 +42,7 @@ class YellowImage {
     }
     
     // Handle media file changes
-    public function onEditMediaFile($file, $action) {
+    public function onEditMediaFile($file, $action, $email) {
         if ($action=="upload") {
             $fileName = $file->fileName;
             list($widthInput, $heightInput, $type) = $this->yellow->toolbox->detectImageInformation($fileName, $file->get("type"));
@@ -83,7 +82,7 @@ class YellowImage {
         return $statusCode;
     }
 
-    // Return image info, create thumbnail on demand
+    // Return image information, create thumbnail on demand
     public function getImageInformation($fileName, $widthOutput, $heightOutput) {
         $fileNameShort = substru($fileName, strlenu($this->yellow->system->get("coreImageDirectory")));
         list($widthInput, $heightInput, $type) = $this->yellow->toolbox->detectImageInformation($fileName);
