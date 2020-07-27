@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.25";
+    const VERSION = "0.8.26";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $updates;                // number of updates
@@ -151,6 +151,18 @@ class YellowUpdate {
                 if (is_dir($pathSource) && !is_dir($pathDestination)) {
                     if (!$this->yellow->toolbox->renameDirectory($pathSource, $pathDestination)) {
                         $this->yellow->log("error", "Can't write directory '$pathDestination'!");
+                    }
+                }
+                if (is_dir($pathSource) && is_dir($pathDestination)) {
+                    foreach ($this->yellow->toolbox->getDirectoryEntries($pathSource, "/.*/", true, false, false) as $entry) {
+                        $entrySource = $pathSource.$entry;
+                        $entryDestination = $pathDestination.$entry;
+                        if (!$this->yellow->toolbox->copyFile($entrySource, $entryDestination)) {
+                            $this->yellow->log("error", "Can't write file '$entryDestination'!");
+                        }
+                    }
+                    if (!$this->yellow->toolbox->deleteDirectory($pathSource, $this->yellow->system->get("coreTrashDirectory"))) {
+                        $this->yellow->log("error", "Can't delete directory '$pathSource'!");
                     }
                 }
                 foreach ($this->yellow->toolbox->getDirectoryEntries($pathDestination, "/^.*\-icon\.png$/", true, false) as $entry) {
