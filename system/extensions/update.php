@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.24";
+    const VERSION = "0.8.25";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $updates;                // number of updates
@@ -59,7 +59,7 @@ class YellowUpdate {
             if ($this->yellow->system->isExisting("multiLanguageMode")) {
                 $coreMultiLanguageMode = $this->yellow->system->get("multiLanguageMode");
                 $fileName = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreSystemFile");
-                if ($this->yellow->system->save($fileName, array("coreMultiLanguageMode" => $coreMultiLanguageMode))) {
+                if (!$this->yellow->system->save($fileName, array("coreMultiLanguageMode" => $coreMultiLanguageMode))) {
                     $this->yellow->log("error", "Can't write file '$fileName'!");
                 }
                 $path = $this->yellow->system->get("coreContentDirectory");
@@ -132,6 +132,7 @@ class YellowUpdate {
                     $fileDataNew = str_replace("toolbox->getTextArgs", "toolbox->getTextArguments", $fileDataNew);
                     $fileDataNew = str_replace("toolbox->normaliseArgs", "toolbox->normaliseArguments", $fileDataNew);
                     $fileDataNew = str_replace("toolbox->isLocationArgs", "toolbox->isLocationArguments", $fileDataNew);
+                    $fileDataNew = str_replace("text–>getHtml", "language–>getTextHtml", $fileDataNew);
                     $fileDataNew = str_replace("\$this->yellow->page->get(\"navigation\")", "\"navigation\"", $fileDataNew);
                     $fileDataNew = str_replace("\$this->yellow->page->get(\"header\")", "\"header\"", $fileDataNew);
                     $fileDataNew = str_replace("\$this->yellow->page->get(\"sidebar\")", "\"sidebar\"", $fileDataNew);
@@ -157,6 +158,12 @@ class YellowUpdate {
                     if (!is_file($entryShort) && !$this->yellow->toolbox->copyFile($entry, $entryShort)) {
                         $this->yellow->log("error", "Can't write file '$entryShort'!");
                     }
+                }
+            }
+            if ($this->yellow->system->get("metaDefaultImage")=="icon") {
+                $fileName = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreSystemFile");
+                if (!$this->yellow->system->save($fileName, array("metaDefaultImage" => "favicon"))) {
+                    $this->yellow->log("error", "Can't write file '$fileName'!");
                 }
             }
         }
