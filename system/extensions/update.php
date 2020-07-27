@@ -132,7 +132,7 @@ class YellowUpdate {
                     $fileDataNew = str_replace("toolbox->getTextArgs", "toolbox->getTextArguments", $fileDataNew);
                     $fileDataNew = str_replace("toolbox->normaliseArgs", "toolbox->normaliseArguments", $fileDataNew);
                     $fileDataNew = str_replace("toolbox->isLocationArgs", "toolbox->isLocationArguments", $fileDataNew);
-                    $fileDataNew = str_replace("text–>getHtml", "language–>getTextHtml", $fileDataNew);
+                    $fileDataNew = str_replace("text->getHtml", "language->getTextHtml", $fileDataNew);
                     $fileDataNew = str_replace("\$this->yellow->page->get(\"navigation\")", "\"navigation\"", $fileDataNew);
                     $fileDataNew = str_replace("\$this->yellow->page->get(\"header\")", "\"header\"", $fileDataNew);
                     $fileDataNew = str_replace("\$this->yellow->page->get(\"sidebar\")", "\"sidebar\"", $fileDataNew);
@@ -153,10 +153,15 @@ class YellowUpdate {
                         $this->yellow->log("error", "Can't write directory '$pathDestination'!");
                     }
                 }
-                foreach ($this->yellow->toolbox->getDirectoryEntriesRecursive($pathDestination, "/^.*\-icon\.png$/", true, false) as $entry) {
+                foreach ($this->yellow->toolbox->getDirectoryEntries($pathDestination, "/^.*\-icon\.png$/", true, false) as $entry) {
                     $entryShort = str_replace("-icon.png", ".png", $entry);
                     if (!is_file($entryShort) && !$this->yellow->toolbox->copyFile($entry, $entryShort)) {
                         $this->yellow->log("error", "Can't write file '$entryShort'!");
+                    }
+                }
+                foreach ($this->yellow->toolbox->getDirectoryEntries($pathDestination, "/bundle-.*/", true, false) as $entry) {
+                    if (!$this->yellow->toolbox->deleteFile($entry)) {
+                        $this->yellow->log("error", "Can't delete file '$entry'!");
                     }
                 }
             }
