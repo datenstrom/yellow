@@ -2,7 +2,7 @@
 // Bundle extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/bundle
 
 class YellowBundle {
-    const VERSION = "0.8.14";
+    const VERSION = "0.8.15";
     public $yellow;         // access to API
 
     // Handle initialisation
@@ -1281,7 +1281,8 @@ class CSS extends Minify
             return $placeholder.$rest;
         };
 
-        $this->registerPattern('/calc(\(.+?)(?=$|;|calc\()/', $callback);
+        $this->registerPattern('/calc(\(.+?)(?=$|;|}|calc\()/', $callback);
+        $this->registerPattern('/calc(\(.+?)(?=$|;|}|calc\()/m', $callback);
     }
 
     /**
@@ -1936,6 +1937,11 @@ class MinifyJavaScript extends JS {
         $this->operators = array("+", "-", "*", "/", "%", "=", "+=", "-=", "*=", "/=", "%=", "<<=", ">>=", ">>>=", "&=", "^=", "|=", "&", "|", "^", "~", "<<", ">>", ">>>", "==", "===", "!=", "!==", ">", "<", ">=", "<=", "&&", "||", "!", ".", "[", "]", "?", ":", ",", ";", "(", ")", "{", "}");
         $this->operatorsBefore = array("+", "-", "*", "/", "%", "=", "+=", "-=", "*=", "/=", "%=", "<<=", ">>=", ">>>=", "&=", "^=", "|=", "&", "|", "^", "~", "<<", ">>", ">>>", "==", "===", "!=", "!==", ">", "<", ">=", "<=", "&&", "||", "!", ".", "[", "?", ":", ",", ";", "(", "{");
         $this->operatorsAfter = array("+", "-", "*", "/", "%", "=", "+=", "-=", "*=", "/=", "%=", "<<=", ">>=", ">>>=", "&=", "^=", "|=", "&", "|", "^", "<<", ">>", ">>>", "==", "===", "!=", "!==", ">", "<", ">=", "<=", "&&", "||", ".", "[", "]", "?", ":", ",", ";", "(", ")", "}");
+    }
+    
+    // Minify data, add semicolon as separator between multiple files
+    public function execute($path = null) {
+        return parent::execute($path).";";
     }
 }
 
