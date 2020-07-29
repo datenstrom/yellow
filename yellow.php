@@ -1,7 +1,7 @@
 <?php
 // Datenstrom Yellow, https://datenstrom.se/yellow/
 
-require_once("system/extensions/core.php");
+require("system/extensions/core.php");
 
 if (PHP_SAPI!="cli") {
     $yellow = new YellowCore();

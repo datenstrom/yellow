@@ -2044,7 +2044,7 @@ class YellowExtension {
     public function register($key, $class) {
         if (!$this->isExisting($key) && class_exists($class)) {
             $this->data[$key] = array();
-            $this->data[$key]["obj"] = new $class;
+            $this->data[$key]["obj"] = $class=="YellowCore" ? new stdClass : new $class;
             $this->data[$key]["class"] = $class;
             $this->data[$key]["version"] = defined("$class::VERSION") ? $class::VERSION : 0;
             $this->data[$key]["priority"] = defined("$class::PRIORITY") ? $class::PRIORITY : count($this->data) + 10;
