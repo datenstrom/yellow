@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.26";
+    const VERSION = "0.8.27";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $updates;                // number of updates
@@ -157,7 +157,9 @@ class YellowUpdate {
                     foreach ($this->yellow->toolbox->getDirectoryEntries($pathSource, "/.*/", true, false, false) as $entry) {
                         $entrySource = $pathSource.$entry;
                         $entryDestination = $pathDestination.$entry;
-                        if (!$this->yellow->toolbox->copyFile($entrySource, $entryDestination)) {
+                        $dataSource = $this->yellow->toolbox->readFile($entrySource);
+                        $dataDestination = $this->yellow->toolbox->readFile($entryDestination);
+                        if ($dataSource!=$dataDestination && !$this->yellow->toolbox->copyFile($entrySource, $entryDestination)) {
                             $this->yellow->log("error", "Can't write file '$entryDestination'!");
                         }
                     }
