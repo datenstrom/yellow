@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/edit
 
 class YellowEdit {
-    const VERSION = "0.8.30";
+    const VERSION = "0.8.31";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -768,6 +768,7 @@ class YellowEdit {
             $page = $this->response->getPageDelete($scheme, $address, $base, $location, $fileName,
                 $rawDataFile, $this->response->rawDataEndOfLine);
             if (!$page->isError()) {
+                $this->yellow->toolbox->createFile($fileName, $page->rawData);
                 if ($this->yellow->lookup->isFileLocation($location)) {
                     if ($this->yellow->toolbox->deleteFile($fileName, $this->yellow->system->get("coreTrashDirectory"))) {
                         $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
@@ -1096,6 +1097,7 @@ class YellowEditResponse {
         $page->setRequestInformation($scheme, $address, $base, $location, $fileName);
         $page->parseData($rawData, false, 0);
         $this->editContentFile($page, "delete", $this->userEmail);
+        $page->rawData = $this->yellow->toolbox->setMetaData($page->rawData, "fileNameOriginal", $fileName);
         if (!$this->isUserAccess("delete", $page->location)) {
             $page->error(500, "Page '".$page->get("title")."' is restricted!");
         }
