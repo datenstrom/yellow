@@ -2,7 +2,7 @@
 // Command extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/command
 
 class YellowCommand {
-    const VERSION = "0.8.18";
+    const VERSION = "0.8.19";
     const PRIORITY = "3";
     public $yellow;                       // access to API
     public $files;                        // number of files
@@ -14,6 +14,11 @@ class YellowCommand {
     // Handle initialisation
     public function onLoad($yellow) {
         $this->yellow = $yellow;
+    }
+    
+    // Handle request
+    public function onRequest($scheme, $address, $base, $location, $fileName) {
+       return $this->processRequestCache($scheme, $address, $base, $location, $fileName);
     }
     
     // Handle command
@@ -73,7 +78,7 @@ class YellowCommand {
     
     // Build static files
     public function buildStaticFiles($path, $locationFilter) {
-        $path = rtrim(empty($path) ? $this->yellow->system->get("coreStaticDirectory") : $path, "/");
+        $path = rtrim(empty($path) ? $this->yellow->system->get("coreStaticBuildDirectory") : $path, "/");
         $this->files = $this->errors = 0;
         $this->locationsArguments = $this->locationsArgumentsPagination = array();
         $statusCode = empty($locationFilter) ? $this->cleanStaticFiles($path, $locationFilter) : 200;
@@ -255,7 +260,7 @@ class YellowCommand {
     
     // Check static files for broken links
     public function checkStaticFiles($path, $locationFilter) {
-        $path = rtrim(empty($path) ? $this->yellow->system->get("coreStaticDirectory") : $path, "/");
+        $path = rtrim(empty($path) ? $this->yellow->system->get("coreStaticBuildDirectory") : $path, "/");
         $this->links = $this->errors = 0;
         $regex = "/^[^.]+$|".$this->yellow->system->get("coreStaticDefaultFile")."$/";
         $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($path, $regex, false, false);
@@ -394,7 +399,7 @@ class YellowCommand {
     // Clean static files and directories
     public function cleanStaticFiles($path, $location) {
         $statusCode = 200;
-        $path = rtrim(empty($path) ? $this->yellow->system->get("coreStaticDirectory") : $path, "/");
+        $path = rtrim(empty($path) ? $this->yellow->system->get("coreStaticBuildDirectory") : $path, "/");
         if (empty($location)) {
             $statusCode = max($statusCode, $this->broadcastCommand("clean", "all"));
             $statusCode = max($statusCode, $this->cleanStaticDirectory($path));
@@ -447,7 +452,9 @@ class YellowCommand {
     // Process command to start built-in web server
     public function processCommandServe($command, $text) {
         list($path, $url) = $this->yellow->toolbox->getTextArguments($text);
-        if (empty($path) && is_dir($this->yellow->system->get("coreStaticDirectory"))) $path = $this->yellow->system->get("coreStaticDirectory");
+        if (empty($path) && is_dir($this->yellow->system->get("coreStaticBuildDirectory"))) {
+            $path = $this->yellow->system->get("coreStaticBuildDirectory");
+        }
         if (empty($url)) $url = "http://localhost:8000";
         list($scheme, $address, $base) = $this->yellow->lookup->getUrlInformation($url);
         if ($scheme=="http" && !empty($address)) {
@@ -468,6 +475,18 @@ class YellowCommand {
         return $statusCode;
     }
     
+    // Process request for cached files
+    public function processRequestCache($scheme, $address, $base, $location, $fileName) {
+        $statusCode = 0;
+        $location .= $this->yellow->toolbox->getLocationArguments();
+        $fileName = rtrim($this->yellow->system->get("coreStaticCacheDirectory"), "/").$location;
+        if (!$this->yellow->lookup->isFileLocation($location)) $fileName .= $this->yellow->system->get("coreStaticDefaultFile");
+        if (is_file($fileName) && is_readable($fileName) && !$this->yellow->isCommandLine()) {
+            $statusCode = $this->yellow->sendFile(200, $fileName, true);
+        }
+        return $statusCode;
+    }
+    
     // Check static settings
     public function checkStaticSettings() {
         return !empty($this->yellow->system->get("coreStaticUrl"));
@@ -477,7 +496,7 @@ class YellowCommand {
     public function checkStaticDirectory($path) {
         $ok = false;
         if (!empty($path)) {
-            if ($path==rtrim($this->yellow->system->get("coreStaticDirectory"), "/")) $ok = true;
+            if ($path==rtrim($this->yellow->system->get("coreStaticBuildDirectory"), "/")) $ok = true;
             if ($path==rtrim($this->yellow->system->get("coreTrashDirectory"), "/")) $ok = true;
             if (is_file("$path/".$this->yellow->system->get("coreStaticDefaultFile"))) $ok = true;
             if (is_file("$path/yellow.php")) $ok = false;
@@ -589,8 +608,8 @@ class YellowCommand {
     public function getExtraLocations($path) {
         $locations = array();
         $pathIgnore = "($path/|".
-            $this->yellow->system->get("coreStaticDirectory")."|".
-            $this->yellow->system->get("coreCacheDirectory")."|".
+            $this->yellow->system->get("coreStaticBuildDirectory")."|".
+            $this->yellow->system->get("coreStaticCacheDirectory")."|".
             $this->yellow->system->get("coreContentDirectory")."|".
             $this->yellow->system->get("coreMediaDirectory")."|".
             $this->yellow->system->get("coreSystemDirectory").")";

@@ -39,8 +39,8 @@ class YellowCore {
         $this->system->setDefault("coreStaticUrl", "");
         $this->system->setDefault("coreStaticDefaultFile", "index.html");
         $this->system->setDefault("coreStaticErrorFile", "404.html");
-        $this->system->setDefault("coreStaticDirectory", "public/");
-        $this->system->setDefault("coreCacheDirectory", "cache/");
+        $this->system->setDefault("coreStaticBuildDirectory", "public/");
+        $this->system->setDefault("coreStaticCacheDirectory", "cache/");
         $this->system->setDefault("coreTrashDirectory", "system/trash/");
         $this->system->setDefault("coreServerUrl", "auto");
         $this->system->setDefault("coreServerTimezone", "UTC");
@@ -151,7 +151,6 @@ class YellowCore {
             }
         }
         if ($statusCode==0) {
-            $fileName = $this->lookup->findFileFromCache($location, $fileName, $cacheable && !$this->isCommandLine());
             if ($this->lookup->isContentFile($fileName) || !is_readable($fileName)) {
                 $fileName = $this->readPage($scheme, $address, $base, $location, $fileName, $cacheable,
                     max(is_readable($fileName) ? 200 : 404, $this->page->statusCode), $this->page->get("pageError"));
@@ -2334,17 +2333,6 @@ class YellowLookup {
             } elseif (substru($location, 0, $themeLocationLength)==$this->yellow->system->get("coreThemeLocation")) {
                 $fileName = $this->yellow->system->get("coreThemeDirectory").substru($location, $themeLocationLength);
             }
-        }
-        return $fileName;
-    }
-    
-    // Return file path from cache if possible
-    public function findFileFromCache($location, $fileName, $cacheable) {
-        if ($cacheable) {
-            $location .= $this->yellow->toolbox->getLocationArguments();
-            $fileNameStatic = rtrim($this->yellow->system->get("coreCacheDirectory"), "/").$location;
-            if (!$this->isFileLocation($location)) $fileNameStatic .= $this->yellow->system->get("coreStaticDefaultFile");
-            if (is_readable($fileNameStatic)) $fileName = $fileNameStatic;
         }
         return $fileName;
     }

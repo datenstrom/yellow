@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/edit
 
 class YellowEdit {
-    const VERSION = "0.8.31";
+    const VERSION = "0.8.32";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -1192,7 +1192,7 @@ class YellowEditResponse {
             $data["coreVersion"] = "Datenstrom Yellow ".YellowCore::VERSION;
             $data["coreExtensions"] = array();
             foreach ($this->yellow->extension->data as $key=>$value) {
-                $data["coreExtensions"][$key] = $value["type"];
+                $data["coreExtensions"][$key] = $value["class"];
             }
             $data["coreLanguages"] = array();
             foreach ($this->yellow->system->getValues("language") as $language) {
