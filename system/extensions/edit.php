@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/edit
 
 class YellowEdit {
-    const VERSION = "0.8.32";
+    const VERSION = "0.8.33";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -1301,9 +1301,11 @@ class YellowEditResponse {
             list($statusCodeModified, $dataModified) = $this->yellow->extension->get("update")->getExtensionsModified();
             $statusCode = max($statusCodeCurrent, $statusCodeLatest, $statusCodeModified);
             foreach ($dataCurrent as $key=>$value) {
-                if (strnatcasecmp($dataCurrent[$key], $dataLatest[$key])<0) {
-                    $rawData .= htmlspecialchars(ucfirst($key)." $dataLatest[$key]")."<br />\n";
-                    ++$updates;
+                if (isset($dataLatest[$key])) {
+                    if (strnatcasecmp($dataCurrent[$key], $dataLatest[$key])<0) {
+                        $rawData .= htmlspecialchars(ucfirst($key)." $dataLatest[$key]")."<br />\n";
+                        ++$updates;
+                    }
                 }
             }
             if ($updates==0) {
