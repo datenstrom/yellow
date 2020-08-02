@@ -26,8 +26,8 @@ class YellowCore {
         $this->extension = new YellowExtension($this);
         $this->lookup = new YellowLookup($this);
         $this->toolbox = new YellowToolbox();
-        $this->text = new YellowText($this);
-        $this->extensions = new YellowExtensions($this);
+        $this->text = new YellowText($this); // TODO: remove later, for backwards compatibility
+        $this->extensions = new YellowExtensions($this); // TODO: remove later, for backwards compatibility
         $this->system->setDefault("sitename", "Yellow");
         $this->system->setDefault("author", "Yellow");
         $this->system->setDefault("email", "webmaster");
@@ -3107,18 +3107,19 @@ class YellowToolbox {
         if (preg_match("/^(\xEF\xBB\xBF)?\-\-\-[\r\n]+(.+?)\-\-\-[\r\n]+(.*)$/s", $rawData, $parts)) {
             $found = false;
             $key = lcfirst($key);
+            $rawDataMiddle = "";
             foreach ($this->getTextLines($parts[2]) as $line) {
                 if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
                     if (lcfirst($matches[1])==$key) {
-                        $rawDataNew .= "$matches[1]: $value\n";
+                        $rawDataMiddle .= "$matches[1]: $value\n";
                         $found = true;
                         continue;
                     }
                 }
-                $rawDataNew .= $line;
+                $rawDataMiddle .= $line;
             }
-            if (!$found) $rawDataNew .= ucfirst($key).": $value\n";
-            $rawDataNew = $parts[1]."---\n".$rawDataNew."---\n".$parts[3];
+            if (!$found) $rawDataMiddle .= ucfirst($key).": $value\n";
+            $rawDataNew = $parts[1]."---\n".$rawDataMiddle."---\n".$parts[3];
         } else {
             $rawDataNew = $rawData;
         }
