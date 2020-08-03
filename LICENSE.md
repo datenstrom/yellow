@@ -277,11 +277,6 @@ POSSIBILITY OF SUCH DAMAGES.
 
 END OF TERMS AND CONDITIONS
 
-## How to apply these terms to this software 
-
-All files are licensed under GPLv2 and copyrighted by the respective 
-author/developer/translator/designer, unless stated otherwise.
-
 ## How to apply these terms to your software
 
 At the start of each source file add a link to a website, that contains this 
@@ -292,5 +287,10 @@ license and information on how to contact you. For example:
 If your software is based on modified source code, you also have to keep the 
 original attribution in each source file. For example: 
 
-    ABC software, https://website/abc
+    Coffee extension, https://website/coffee
     Based on Datenstrom Yellow, https://github.com/datenstrom/yellow
+
+## How to apply these terms to this software 
+
+All files are licensed under GPLv2 and copyrighted by the respective 
+author/developer/translator/designer, unless stated otherwise.
