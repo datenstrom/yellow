@@ -288,9 +288,9 @@ If your software is based on modified source code, you also have to keep the
 original attribution in each source file. For example: 
 
     Coffee extension, https://website/coffee
-    Based on Datenstrom Yellow, https://github.com/datenstrom/yellow
+    Based on Fika extension, https://website/fika
 
 ## How to apply these terms to this software 
 
-All files are licensed under GPLv2 and copyrighted by the respective 
-author/developer/translator/designer, unless stated otherwise.
+All files are licensed under GPLv2 and copyrighted by the respective author, 
+unless stated otherwise.
