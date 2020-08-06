@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow
 
 class YellowInstall {
-    const VERSION = "0.8.30";
+    const VERSION = "0.8.31";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -125,10 +125,10 @@ class YellowInstall {
                             list($dummy1, $entry, $dummy2) = $this->yellow->toolbox->getTextList($matches[2], ",", 3);
                             $fileData = $zip->getFromName($pathBase.basename($entry));
                             if (preg_match("/^(.*)\.php$/", basename($entry), $tokens) && in_array($tokens[1], $languagesFound) && !is_file($fileName)) {
-                                $statusCode = $this->yellow->extension->get("update")->updateExtensionFile($fileName, $fileData, $modified, 0, 0, "create", false, $extension);
+                                $statusCode = $this->yellow->extension->get("update")->updateExtensionFile($fileName, $fileData, $modified, 0, 0, "create", $extension);
                             }
                             if (preg_match("/^(.*)\.txt$/", basename($entry), $tokens) && in_array($tokens[1], $languagesFound) && !is_file($fileName)) {
-                                $statusCode = $this->yellow->extension->get("update")->updateExtensionFile($fileName, $fileData, $modified, 0, 0, "create", false, $extension);
+                                $statusCode = $this->yellow->extension->get("update")->updateExtensionFile($fileName, $fileData, $modified, 0, 0, "create", $extension);
                                 $this->yellow->log($statusCode==200 ? "info" : "error", "Install extension '".ucfirst($tokens[1])." $version'");
                             }
                             if ($statusCode!=200) break;
