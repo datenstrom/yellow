@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow
 
 class YellowInstall {
-    const VERSION = "0.8.31";
+    const VERSION = "0.8.32";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -79,7 +79,7 @@ class YellowInstall {
         $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreLogFile");
         if (!is_file($fileName)) {
             list($name, $version) = $this->yellow->toolbox->detectServerInformation();
-            $this->yellow->log("info", "Datenstrom Yellow ".YellowCore::VERSION.", PHP ".PHP_VERSION.", $name $version, ".PHP_OS);
+            $this->yellow->log("info", "Datenstrom Yellow ".YellowCore::RELEASE.", PHP ".PHP_VERSION.", $name $version, ".PHP_OS);
             if (!is_file($fileName)) {
                 $statusCode = 500;
                 $this->yellow->page->error(500, "Can't write file '$fileName'!");
