@@ -670,18 +670,16 @@ class YellowEdit {
         if ($this->response->isUserAccess("update")) {
             $this->response->action = "update";
             $this->response->status = "ok";
-            $extension = trim($this->yellow->page->getRequest("extension"));
-            $option = trim($this->yellow->page->getRequest("option"));
-            if ($option=="check") {
-                list($statusCode, $updates, $rawData) = $this->response->getUpdateInformation();
-                $this->response->status = $updates ? "updates" : "ok";
+            if ($this->yellow->page->getRequest("option")=="check") {
+                list($statusCode, $rawData) = $this->response->getUpdateInformation();
+                $this->response->status = empty($rawData) ? "ok" : "updates";
                 $this->response->rawDataOutput = $rawData;
                 if ($statusCode!=200) {
                     $this->response->status = "error";
                     $this->response->rawDataOutput = "";
                 }
             } else {
-                $this->response->status = $this->yellow->command("update $extension $option")==0 ? "done" : "error";
+                $this->response->status = $this->yellow->command("update")==0 ? "done" : "error";
             }
             if ($this->response->status=="done") {
                 $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
@@ -943,8 +941,8 @@ class YellowEdit {
     public function getUserAccount($action, $email, $password) {
         $status = null;
         foreach ($this->yellow->extension->data as $key=>$value) {
-            if (method_exists($value["obj"], "onEditUserAccount")) {
-                $status = $value["obj"]->onEditUserAccount($action, $email, $password);
+            if (method_exists($value["object"], "onEditUserAccount")) {
+                $status = $value["object"]->onEditUserAccount($action, $email, $password);
                 if (!is_null($status)) break;
             }
         }
@@ -1189,7 +1187,7 @@ class YellowEditResponse {
         $data = array_merge($data, $this->yellow->system->getSettings("", "Location"));
         if ($this->isUser()) {
             $data["coreFileSizeMax"] = $this->yellow->toolbox->getNumberBytes(ini_get("upload_max_filesize"));
-            $data["coreVersion"] = "Datenstrom Yellow ".YellowCore::VERSION;
+            $data["coreProductRelease"] = "Datenstrom Yellow ".YellowCore::RELEASE;
             $data["coreExtensions"] = array();
             foreach ($this->yellow->extension->data as $key=>$value) {
                 $data["coreExtensions"][$key] = $value["class"];
@@ -1293,31 +1291,21 @@ class YellowEditResponse {
     // Return update information
     public function getUpdateInformation() {
         $statusCode = 200;
-        $updates = 0;
         $rawData = "";
         if ($this->yellow->extension->isExisting("update")) {
             list($statusCodeCurrent, $dataCurrent) = $this->yellow->extension->get("update")->getExtensionsVersion();
             list($statusCodeLatest, $dataLatest) = $this->yellow->extension->get("update")->getExtensionsVersion(true);
-            list($statusCodeModified, $dataModified) = $this->yellow->extension->get("update")->getExtensionsModified();
-            $statusCode = max($statusCodeCurrent, $statusCodeLatest, $statusCodeModified);
+            $statusCode = max($statusCodeCurrent, $statusCodeLatest);
             foreach ($dataCurrent as $key=>$value) {
                 if (isset($dataLatest[$key])) {
                     if (strnatcasecmp($dataCurrent[$key], $dataLatest[$key])<0) {
-                        $rawData .= htmlspecialchars(ucfirst($key)." $dataLatest[$key]")."<br />\n";
-                        ++$updates;
+                        $rawData .= htmlspecialchars(ucfirst($key)." $dataLatest[$key]")."<br />";
                     }
                 }
             }
-            if ($updates==0) {
-                foreach ($dataCurrent as $key=>$value) {
-                    if (isset($dataModified[$key]) && isset($dataLatest[$key])) {
-                        $output = $this->yellow->language->getTextHtml("editUpdateModified", $this->language)." - <a href=\"#\" data-action=\"submit\" data-arguments=\"".$this->yellow->toolbox->normaliseArguments("action:update/extension:$key/option:force")."\">".$this->yellow->language->getTextHtml("editUpdateForce", $this->language)."</a><br />\n";
-                        $rawData .= preg_replace("/@extension/i", htmlspecialchars(ucfirst($key)." $dataLatest[$key]"), $output);
-                    }
-                }
-            }
+            if (!empty($rawData)) $rawData = "<p>$rawData</p>\n";
         }
-        return array($statusCode, $updates, $rawData);
+        return array($statusCode, $rawData);
     }
 
     // Return raw data for generated page
@@ -1653,7 +1641,7 @@ class YellowEditResponse {
     public function editContentFile($page, $action, $email) {
         if (!$page->isError()) {
             foreach ($this->yellow->extension->data as $key=>$value) {
-                if (method_exists($value["obj"], "onEditContentFile")) $value["obj"]->onEditContentFile($page, $action, $email);
+                if (method_exists($value["object"], "onEditContentFile")) $value["object"]->onEditContentFile($page, $action, $email);
             }
         }
     }
@@ -1662,7 +1650,7 @@ class YellowEditResponse {
     public function editMediaFile($file, $action, $email) {
         if (!$file->isError()) {
             foreach ($this->yellow->extension->data as $key=>$value) {
-                if (method_exists($value["obj"], "onEditMediaFile")) $value["obj"]->onEditMediaFile($file, $action, $email);
+                if (method_exists($value["object"], "onEditMediaFile")) $value["object"]->onEditMediaFile($file, $action, $email);
             }
         }
     }
@@ -1671,7 +1659,7 @@ class YellowEditResponse {
     public function editSystemFile($file, $action, $email) {
         if (!$file->isError()) {
             foreach ($this->yellow->extension->data as $key=>$value) {
-                if (method_exists($value["obj"], "onEditSystemFile")) $value["obj"]->onEditSystemFile($file, $action, $email);
+                if (method_exists($value["object"], "onEditSystemFile")) $value["object"]->onEditSystemFile($file, $action, $email);
             }
         }
     }

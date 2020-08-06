@@ -269,11 +269,11 @@ yellow.edit = {
                 elementDiv.innerHTML =
                 "<form method=\"post\">"+
                 "<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\"></i></a>"+
-                "<div class=\"yellow-title\"><h1 id=\"yellow-pane-update-title\">"+yellow.toolbox.encodeHtml(yellow.system.coreVersion)+"</h1></div>"+
+                "<div class=\"yellow-title\"><h1 id=\"yellow-pane-update-title\">"+yellow.toolbox.encodeHtml(yellow.system.coreProductRelease)+"</h1></div>"+
                 "<div class=\"yellow-status\"><p id=\"yellow-pane-update-status\" class=\""+paneStatus+"\">"+this.getText("UpdateStatus", "", paneStatus)+"</p></div>"+
                 "<div class=\"yellow-output\" id=\"yellow-pane-update-output\">"+yellow.page.rawDataOutput+"</div>"+
                 "<div class=\"yellow-buttons\" id=\"yellow-pane-update-buttons\">"+
-                "<p><a href=\"#\" class=\"yellow-btn\" data-action=\"close\">"+this.getText("OkButton")+"</a></p>"+
+                "<p><a href=\"#\" id=\"yellow-pane-update-submit\" class=\"yellow-btn\" data-action=\"close\">"+this.getText("OkButton")+"</a></p>"+
                 "</div>"+
                 "</form>";
                 break;
@@ -395,7 +395,9 @@ yellow.edit = {
                     setTimeout("yellow.action('submit', '', 'action:update/option:check/');", 500);
                 }
                 if (paneStatus=="updates") {
-                    document.getElementById("yellow-pane-update-status").innerHTML = "<a href=\"#\" data-action=\"submit\" data-arguments=\"action:update\">"+this.getText("UpdateStatusUpdates")+"</a>";
+                    document.getElementById(paneId+"-submit").innerHTML = this.getText("UpdateButton");
+                    document.getElementById(paneId+"-submit").setAttribute("data-action", "submit");
+                    document.getElementById(paneId+"-submit").setAttribute("data-arguments", "action:update");
                 }
                 break;
             case "yellow-pane-create":

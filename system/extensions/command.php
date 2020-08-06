@@ -2,7 +2,7 @@
 // Command extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/command
 
 class YellowCommand {
-    const VERSION = "0.8.19";
+    const VERSION = "0.8.20";
     const PRIORITY = "3";
     public $yellow;                       // access to API
     public $files;                        // number of files
@@ -442,8 +442,8 @@ class YellowCommand {
     public function broadcastCommand($command, $text) {
         $statusCode = 0;
         foreach ($this->yellow->extension->data as $key=>$value) {
-            if (method_exists($value["obj"], "onCommand") && $key!="command") {
-                $statusCode = max($statusCode, $value["obj"]->onCommand($command, $text));
+            if (method_exists($value["object"], "onCommand") && $key!="command") {
+                $statusCode = max($statusCode, $value["object"]->onCommand($command, $text));
             }
         }
         return $statusCode;
@@ -508,8 +508,8 @@ class YellowCommand {
     public function getCommandHelp() {
         $data = array();
         foreach ($this->yellow->extension->data as $key=>$value) {
-            if (method_exists($value["obj"], "onCommandHelp")) {
-                foreach (preg_split("/[\r\n]+/", $value["obj"]->onCommandHelp()) as $line) {
+            if (method_exists($value["object"], "onCommandHelp")) {
+                foreach (preg_split("/[\r\n]+/", $value["object"]->onCommandHelp()) as $line) {
                     list($command, $dummy) = $this->yellow->toolbox->getTextList($line, " ", 2);
                     if (!empty($command) && !isset($data[$command])) $data[$command] = $line;
                 }
@@ -627,7 +627,7 @@ class YellowCommand {
         $curlHandle = curl_init();
         curl_setopt($curlHandle, CURLOPT_URL, $url);
         curl_setopt($curlHandle, CURLOPT_REFERER, $referer);
-        curl_setopt($curlHandle, CURLOPT_USERAGENT, "Mozilla/5.0 (compatible; DatenstromYellow/".YellowCore::VERSION."; LinkChecker)");
+        curl_setopt($curlHandle, CURLOPT_USERAGENT, "Mozilla/5.0 (compatible; YellowCommand/".YellowCommand::VERSION."; LinkChecker)");
         curl_setopt($curlHandle, CURLOPT_NOBODY, 1);
         curl_setopt($curlHandle, CURLOPT_CONNECTTIMEOUT, 30);
         curl_exec($curlHandle);

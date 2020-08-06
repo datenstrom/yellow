@@ -2,7 +2,8 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.14";
+    const VERSION = "0.8.15";
+    const RELEASE = "2020.6";
     public $page;           // current page
     public $content;        // content files
     public $media;          // media files
@@ -115,9 +116,9 @@ class YellowCore {
         list($scheme, $address, $base, $location, $fileName) = $this->getRequestInformation();
         $this->page->setRequestInformation($scheme, $address, $base, $location, $fileName);
         foreach ($this->extension->data as $key=>$value) {
-            if (method_exists($value["obj"], "onRequest")) {
+            if (method_exists($value["object"], "onRequest")) {
                 $this->lookup->requestHandler = $key;
-                $statusCode = $value["obj"]->onRequest($scheme, $address, $base, $location, $fileName);
+                $statusCode = $value["object"]->onRequest($scheme, $address, $base, $location, $fileName);
                 if ($statusCode!=0) break;
             }
         }
@@ -276,9 +277,9 @@ class YellowCore {
         $this->toolbox->timerStart($time);
         list($command, $text) = $this->getCommandInformation($line);
         foreach ($this->extension->data as $key=>$value) {
-            if (method_exists($value["obj"], "onCommand")) {
+            if (method_exists($value["object"], "onCommand")) {
                 $this->lookup->commandHandler = $key;
-                $statusCode = $value["obj"]->onCommand($command, $text);
+                $statusCode = $value["object"]->onCommand($command, $text);
                 if ($statusCode!=0) break;
             }
         }
@@ -298,10 +299,10 @@ class YellowCore {
     public function startup() {
         if ($this->isLoaded()) {
             foreach ($this->extension->data as $key=>$value) {
-                if (method_exists($value["obj"], "onStartup")) $value["obj"]->onStartup();
+                if (method_exists($value["object"], "onStartup")) $value["object"]->onStartup();
             }
             foreach ($this->extension->data as $key=>$value) {
-                if (method_exists($value["obj"], "onUpdate")) $value["obj"]->onUpdate("startup");
+                if (method_exists($value["object"], "onUpdate")) $value["object"]->onUpdate("startup");
             }
         }
     }
@@ -310,7 +311,7 @@ class YellowCore {
     public function shutdown() {
         if ($this->isLoaded()) {
             foreach ($this->extension->data as $key=>$value) {
-                if (method_exists($value["obj"], "onShutdown")) $value["obj"]->onShutdown();
+                if (method_exists($value["object"], "onShutdown")) $value["object"]->onShutdown();
             }
         }
     }
@@ -319,8 +320,8 @@ class YellowCore {
     public function log($action, $message) {
         $statusCode = 0;
         foreach ($this->extension->data as $key=>$value) {
-            if (method_exists($value["obj"], "onLog")) {
-                $statusCode = $value["obj"]->onLog($action, $message);
+            if (method_exists($value["object"], "onLog")) {
+                $statusCode = $value["object"]->onLog($action, $message);
                 if ($statusCode!=0) break;
             }
         }
@@ -488,7 +489,7 @@ class YellowPage {
         }
         if (!empty($pageError)) $this->set("pageError", $pageError);
         foreach ($this->yellow->extension->data as $key=>$value) {
-            if (method_exists($value["obj"], "onParseMeta")) $value["obj"]->onParseMeta($this);
+            if (method_exists($value["object"], "onParseMeta")) $value["object"]->onParseMeta($this);
         }
     }
     
@@ -516,16 +517,16 @@ class YellowPage {
         if (!is_object($this->parser)) {
             if ($this->yellow->extension->isExisting($this->get("parser"))) {
                 $value = $this->yellow->extension->data[$this->get("parser")];
-                if (method_exists($value["obj"], "onParseContentRaw")) {
-                    $this->parser = $value["obj"];
+                if (method_exists($value["object"], "onParseContentRaw")) {
+                    $this->parser = $value["object"];
                     $this->parserData = $this->getContent(true, $sizeMax);
                     $this->parserData = preg_replace("/@pageRead/i", $this->get("pageRead"), $this->parserData);
                     $this->parserData = preg_replace("/@pageEdit/i", $this->get("pageEdit"), $this->parserData);
                     $this->parserData = $this->parser->onParseContentRaw($this, $this->parserData);
                     $this->parserData = $this->yellow->toolbox->normaliseData($this->parserData, "html");
                     foreach ($this->yellow->extension->data as $key=>$value) {
-                        if (method_exists($value["obj"], "onParseContentHtml")) {
-                            $output = $value["obj"]->onParseContentHtml($this, $this->parserData);
+                        if (method_exists($value["object"], "onParseContentHtml")) {
+                            $output = $value["object"]->onParseContentHtml($this, $this->parserData);
                             if (!is_null($output)) $this->parserData = $output;
                         }
                     }
@@ -546,14 +547,21 @@ class YellowPage {
     public function parseContentShortcut($name, $text, $type) {
         $output = null;
         foreach ($this->yellow->extension->data as $key=>$value) {
-            if (method_exists($value["obj"], "onParseContentShortcut")) {
-                $output = $value["obj"]->onParseContentShortcut($this, $name, $text, $type);
+            if (method_exists($value["object"], "onParseContentShortcut")) {
+                $output = $value["object"]->onParseContentShortcut($this, $name, $text, $type);
                 if (!is_null($output)) break;
             }
         }
         if (is_null($output)) {
             if ($name=="yellow" && $type=="inline") {
-                $output = "Datenstrom Yellow ".YellowCore::VERSION;
+                if ($text=="about") {
+                    $output = "Datenstrom Yellow ".YellowCore::RELEASE."<br />\n";
+                    $dataCurrent = $this->yellow->extension->data;
+                    uksort($dataCurrent, "strnatcasecmp");
+                    foreach ($dataCurrent as $key=>$value) {
+                        $output .= ucfirst($key)." ".$value["version"]."<br />\n";
+                    }
+                }
                 if ($text=="error") $output = $this->get("pageError");
                 if ($text=="log") {
                     $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreLogFile");
@@ -605,8 +613,8 @@ class YellowPage {
         }
         if ($this->isExisting("pageClean")) $this->outputData = null;
         foreach ($this->yellow->extension->data as $key=>$value) {
-            if (method_exists($value["obj"], "onParsePageOutput")) {
-                $output = $value["obj"]->onParsePageOutput($this, $this->outputData);
+            if (method_exists($value["object"], "onParsePageOutput")) {
+                $output = $value["object"]->onParsePageOutput($this, $this->outputData);
                 if (!is_null($output)) $this->outputData = $output;
             }
         }
@@ -616,8 +624,8 @@ class YellowPage {
     public function parsePageLayout($name) {
         $this->outputData = null;
         foreach ($this->yellow->extension->data as $key=>$value) {
-            if (method_exists($value["obj"], "onParsePageLayout")) {
-                $value["obj"]->onParsePageLayout($this, $name);
+            if (method_exists($value["object"], "onParsePageLayout")) {
+                $value["object"]->onParsePageLayout($this, $name);
             }
         }
         if (is_null($this->outputData)) {
@@ -809,8 +817,8 @@ class YellowPage {
     public function getExtra($name) {
         $output = "";
         foreach ($this->yellow->extension->data as $key=>$value) {
-            if (method_exists($value["obj"], "onParsePageExtra")) {
-                $outputExtension = $value["obj"]->onParsePageExtra($this, $name);
+            if (method_exists($value["object"], "onParsePageExtra")) {
+                $outputExtension = $value["object"]->onParsePageExtra($this, $name);
                 if (!is_null($outputExtension)) $output .= $outputExtension;
             }
         }
@@ -2002,7 +2010,7 @@ class YellowExtension {
         };
         uasort($this->data, $callback);
         foreach ($this->data as $key=>$value) {
-            if (method_exists($this->data[$key]["obj"], "onLoad")) $this->data[$key]["obj"]->onLoad($this->yellow);
+            if (method_exists($this->data[$key]["object"], "onLoad")) $this->data[$key]["object"]->onLoad($this->yellow);
         }
         $this->yellow->system->set("mediaLocation", "/media/"); // TODO: remove later, for backwards compatibility
         $this->yellow->system->set("downloadLocation", "/media/downloads/");
@@ -2043,7 +2051,7 @@ class YellowExtension {
     public function register($key, $class) {
         if (!$this->isExisting($key) && class_exists($class)) {
             $this->data[$key] = array();
-            $this->data[$key]["obj"] = $class=="YellowCore" ? new stdClass : new $class;
+            $this->data[$key]["object"] = $class=="YellowCore" ? new stdClass : new $class;
             $this->data[$key]["class"] = $class;
             $this->data[$key]["version"] = defined("$class::VERSION") ? $class::VERSION : 0;
             $this->data[$key]["priority"] = defined("$class::PRIORITY") ? $class::PRIORITY : count($this->data) + 10;
@@ -2052,16 +2060,7 @@ class YellowExtension {
     
     // Return extension
     public function get($key) {
-        return $this->data[$key]["obj"];
-    }
-    
-    // Return extension
-    public function getExtensions() {
-        $extensions = array();
-        foreach ($this->data as $key=>$value) {
-            array_push($extensions, $key);
-        }
-        return $extensions;
+        return $this->data[$key]["object"];
     }
     
     // Return extensions modification date, Unix time or HTTP format
