@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.28";
+    const VERSION = "0.8.29";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $updates;                // number of updates
@@ -10,9 +10,11 @@ class YellowUpdate {
     // Handle initialisation
     public function onLoad($yellow) {
         $this->yellow = $yellow;
+        $this->yellow->system->setDefault("updateSourceCodeDirectory", "/Users/yourname/Documents/GitHub/");
         $this->yellow->system->setDefault("updateExtensionUrl", "https://github.com/datenstrom/yellow-extensions");
-        $this->yellow->system->setDefault("updateExtensionDirectory", "/Users/yourname/Documents/GitHub/");
         $this->yellow->system->setDefault("updateExtensionFile", "extension.ini");
+        $this->yellow->system->setDefault("updateCurrentFile", "update-current.ini");
+        $this->yellow->system->setDefault("updateLatestFile", "update-latest.ini");
         $this->yellow->system->setDefault("updateVersionFile", "version.ini");
         $this->yellow->system->setDefault("updateWaffleFile", "waffle.ini");
         $this->yellow->system->setDefault("updateNotification", "none");
@@ -341,7 +343,7 @@ class YellowUpdate {
         $extensions = $this->getExtensions($text);
         if (!empty($extensions)) {
             $this->updates = 0;
-            list($statusCode, $data) = $this->getUninstallInformation($extensions, "core, command, update");
+            list($statusCode, $data) = $this->getUninstallInformation($extensions, "core, update");
             if ($statusCode==200) $statusCode = $this->removeExtensions($data);
             if ($statusCode>=400) echo "ERROR uninstalling files: ".$this->yellow->page->get("pageError")."\n";
             echo "Yellow $command: Website ".($statusCode!=200 ? "not " : "")."updated";

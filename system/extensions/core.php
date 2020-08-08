@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.16";
+    const VERSION = "0.8.17";
     const RELEASE = "0.8.15";
     public $page;           // current page
     public $content;        // content files
@@ -38,11 +38,6 @@ class YellowCore {
         $this->system->setDefault("parser", "markdown");
         $this->system->setDefault("status", "public");
         $this->system->setDefault("coreStaticUrl", "");
-        $this->system->setDefault("coreStaticDefaultFile", "index.html");
-        $this->system->setDefault("coreStaticErrorFile", "404.html");
-        $this->system->setDefault("coreStaticBuildDirectory", "public/");
-        $this->system->setDefault("coreStaticCacheDirectory", "cache/");
-        $this->system->setDefault("coreTrashDirectory", "system/trash/");
         $this->system->setDefault("coreServerUrl", "auto");
         $this->system->setDefault("coreServerTimezone", "UTC");
         $this->system->setDefault("coreMultiLanguageMode", "0");
@@ -56,9 +51,10 @@ class YellowCore {
         $this->system->setDefault("coreImageDirectory", "media/images/");
         $this->system->setDefault("coreSystemDirectory", "system/");
         $this->system->setDefault("coreExtensionDirectory", "system/extensions/");
+        $this->system->setDefault("coreSettingDirectory", "system/settings/");
         $this->system->setDefault("coreLayoutDirectory", "system/layouts/");
         $this->system->setDefault("coreThemeDirectory", "system/themes/");
-        $this->system->setDefault("coreSettingDirectory", "system/settings/");
+        $this->system->setDefault("coreTrashDirectory", "system/trash/");
         $this->system->setDefault("coreContentDirectory", "content/");
         $this->system->setDefault("coreContentRootDirectory", "default/");
         $this->system->setDefault("coreContentHomeDirectory", "home/");
@@ -283,6 +279,14 @@ class YellowCore {
                 if ($statusCode!=0) break;
             }
         }
+        if ($statusCode==0 && empty($text)) {
+            $lineCounter = 0;
+            echo "Datenstrom Yellow is for people who make small websites.\n";
+            foreach ($this->getCommandHelp() as $line) {
+                echo(++$lineCounter>1 ? "        " : "Syntax: ")."php yellow.php $line\n";
+            }
+            $statusCode = 200;
+        }
         if ($statusCode==0) {
             $this->lookup->commandHandler = "core";
             $statusCode = 400;
@@ -371,6 +375,21 @@ class YellowCore {
             if (defined("DEBUG") && DEBUG>=3) echo "YellowCore::getCommandInformation $line<br/>\n";
         }
         return $this->toolbox->getTextList($line, " ", 2);
+    }
+    
+    // Return command help
+    public function getCommandHelp() {
+        $data = array();
+        foreach ($this->extension->data as $key=>$value) {
+            if (method_exists($value["object"], "onCommandHelp")) {
+                foreach (preg_split("/[\r\n]+/", $value["object"]->onCommandHelp()) as $line) {
+                    list($command, $dummy) = $this->toolbox->getTextList($line, " ", 2);
+                    if (!empty($command) && !isset($data[$command])) $data[$command] = $line;
+                }
+            }
+        }
+        uksort($data, "strnatcasecmp");
+        return $data;
     }
     
     // Return request handler
@@ -1741,12 +1760,14 @@ class YellowUser {
         foreach ($settingsNew as $key=>$value) {
             $fileDataSettings .= ucfirst($key).": $value\n";
         }
-        if (!empty($fileDataSettings)) {
-            $fileDataSettings = preg_replace("/\n+/", "\n", $fileDataSettings);
-            if (!empty($fileDataStart) && substr($fileDataStart, -2)!="\n\n") $fileDataSettings = "\n".$fileDataSettings;
-            if (!empty($fileDataEnd)) $fileDataSettings .= "\n";
+        if (!empty($fileDataMiddle)) {
+            $fileDataMiddle = rtrim($fileDataSettings)."\n";
+            if (!empty($fileDataEnd)) $fileDataMiddle .= "\n";
+        } else {
+            if (!empty($fileDataStart)) $fileDataEnd .= "\n";
+            $fileDataEnd .= $fileDataSettings;
         }
-        $fileDataNew = $fileDataStart.$fileDataSettings.$fileDataEnd;
+        $fileDataNew = $fileDataStart.$fileDataMiddle.$fileDataEnd;
         return $this->yellow->toolbox->createFile($fileName, $fileDataNew);
     }
     
