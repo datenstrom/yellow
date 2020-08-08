@@ -38,7 +38,6 @@ class YellowInstall {
             $this->yellow->page = new YellowPage($this->yellow);
             $this->yellow->page->setRequestInformation($scheme, $address, $base, $location, $fileName);
             $this->yellow->page->parseData($this->getRawDataInstall(), false, $statusCode, $this->yellow->page->get("pageError"));
-            $this->yellow->page->safeMode = false;
             if ($status=="install") $status = $this->updateExtension($extension)==200 ? "ok" : "error";
             if ($status=="ok") $status = $this->updateUser($email, $password, $author, $language)==200 ? "ok" : "error";
             if ($status=="ok") $status = $this->updateContent($language, "installHome", "/")==200 ? "ok" : "error";
