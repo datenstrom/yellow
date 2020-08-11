@@ -2,7 +2,7 @@
 // Command extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/command
 
 class YellowCommand {
-    const VERSION = "0.8.21";
+    const VERSION = "0.8.22";
     public $yellow;                       // access to API
     public $files;                        // number of files
     public $links;                        // number of links
@@ -14,7 +14,6 @@ class YellowCommand {
     public function onLoad($yellow) {
         $this->yellow = $yellow;
         $this->yellow->system->setDefault("commandStaticBuildDirectory", "public/");
-        $this->yellow->system->setDefault("commandStaticCacheDirectory", "cache/");
         $this->yellow->system->setDefault("commandStaticDefaultFile", "index.html");
         $this->yellow->system->setDefault("commandStaticErrorFile", "404.html");
     }
@@ -470,9 +469,9 @@ class YellowCommand {
     // Process request for cached files
     public function processRequestCache($scheme, $address, $base, $location, $fileName) {
         $statusCode = 0;
-        if (is_dir($this->yellow->system->get("commandStaticCacheDirectory"))) {
+        if (is_dir($this->yellow->system->get("coreCacheDirectory"))) {
             $location .= $this->yellow->toolbox->getLocationArguments();
-            $fileName = rtrim($this->yellow->system->get("commandStaticCacheDirectory"), "/").$location;
+            $fileName = rtrim($this->yellow->system->get("coreCacheDirectory"), "/").$location;
             if (!$this->yellow->lookup->isFileLocation($location)) $fileName .= $this->yellow->system->get("commandStaticDefaultFile");
             if (is_file($fileName) && is_readable($fileName) && !$this->yellow->isCommandLine()) {
                 $statusCode = $this->yellow->sendFile(200, $fileName, true);
@@ -588,7 +587,7 @@ class YellowCommand {
         $locations = array();
         $pathIgnore = "($path/|".
             $this->yellow->system->get("commandStaticBuildDirectory")."|".
-            $this->yellow->system->get("commandStaticCacheDirectory")."|".
+            $this->yellow->system->get("coreCacheDirectory")."|".
             $this->yellow->system->get("coreContentDirectory")."|".
             $this->yellow->system->get("coreMediaDirectory")."|".
             $this->yellow->system->get("coreSystemDirectory").")";

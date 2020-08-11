@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.29";
+    const VERSION = "0.8.30";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $updates;                // number of updates
@@ -10,13 +10,10 @@ class YellowUpdate {
     // Handle initialisation
     public function onLoad($yellow) {
         $this->yellow = $yellow;
-        $this->yellow->system->setDefault("updateSourceCodeDirectory", "/Users/yourname/Documents/GitHub/");
         $this->yellow->system->setDefault("updateExtensionUrl", "https://github.com/datenstrom/yellow-extensions");
         $this->yellow->system->setDefault("updateExtensionFile", "extension.ini");
         $this->yellow->system->setDefault("updateCurrentFile", "update-current.ini");
         $this->yellow->system->setDefault("updateLatestFile", "update-latest.ini");
-        $this->yellow->system->setDefault("updateVersionFile", "version.ini");
-        $this->yellow->system->setDefault("updateWaffleFile", "waffle.ini");
         $this->yellow->system->setDefault("updateNotification", "none");
     }
     
@@ -222,7 +219,7 @@ class YellowUpdate {
         $fileName = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreSystemFile");
         $fileData = $this->yellow->toolbox->readFile($fileName);
         $fileDataStart = $fileDataSettings = $fileDataComments = "";
-        $settings = new YellowDataCollection();
+        $settings = new YellowArray();
         $settings->exchangeArray($this->yellow->system->settingsDefaults->getArrayCopy());
         foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
             preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
@@ -253,7 +250,7 @@ class YellowUpdate {
         $fileName = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreLanguageFile");
         $fileData = $this->yellow->toolbox->readFile($fileName);
         $fileDataStart = $fileDataSettings = $language = "";
-        $settings = new YellowDataCollection();
+        $settings = new YellowArray();
         foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
             preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
             if (empty($fileDataStart) && preg_match("/^\#/", $line)) {
@@ -267,7 +264,7 @@ class YellowUpdate {
                         }
                     }
                     $language = $matches[2];
-                    $settings = new YellowDataCollection();
+                    $settings = new YellowArray();
                     $settings["language"] = $language;
                     foreach ($this->yellow->language->settingsDefaults as $key=>$value) {
                         if ($this->yellow->language->isText($key, $language)) {
@@ -290,17 +287,67 @@ class YellowUpdate {
             $this->yellow->log("error", "Can't write file '$fileName'!");
         }
     }
+
+    // Create extension settings from scratch
+    public function createExtensionSettings() {
+        $fileNameCurrent = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateCurrentFile");
+        $fileNameLatest = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateLatestFile");
+        $url = $this->yellow->system->get("updateExtensionUrl")."/raw/master/".$this->yellow->system->get("updateLatestFile");
+        list($statusCode, $fileData) = $this->getExtensionFile($url);
+        if ($statusCode==200) {
+            $fileDataCurrent = $fileDataLatest = $fileData;
+            $settings = $this->yellow->toolbox->getTextSettings($fileDataCurrent, "extension");
+            foreach ($settings as $key=>$value) {
+                if ($this->yellow->extension->isExisting($key)) {
+                    $settingsNew = new YellowArray();
+                    $settingsNew["extension"] = ucfirst($key);
+                    $settingsNew["version"] = $this->yellow->extension->data[$key]["version"];
+                    $fileDataCurrent = $this->yellow->toolbox->setTextSettings($fileDataCurrent, "extension", $key, $settingsNew);
+                } else {
+                    $fileDataCurrent = $this->yellow->toolbox->unsetTextSettings($fileDataCurrent, "extension", $key);
+                }
+            }
+            if(!$this->yellow->toolbox->createFile($fileNameCurrent, $fileDataCurrent)) {
+                $this->yellow->log("error", "Can't write file '$fileNameCurrent'!");
+            }
+            if(!$this->yellow->toolbox->createFile($fileNameLatest, $fileDataLatest)) {
+                 $this->yellow->log("error", "Can't write file '$fileNameLatest'!");
+            }
+        }
+        return $statusCode;
+    }
+
+    // Update extension settings
+    public function updateExtensionSettings($extension, $settings, $action) {
+        $statusCode = 200;
+        $fileNameCurrent = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateCurrentFile");
+        $fileData = $this->yellow->toolbox->readFile($fileNameCurrent);
+        if ($action=="install" || $action=="update") {
+            $settingsNew = new YellowArray();
+            foreach($settings as $key=>$value) $settingsNew[$key] = $value;
+            $fileData = $this->yellow->toolbox->setTextSettings($fileData, "extension", $extension, $settingsNew);
+        } else {
+            $fileData = $this->yellow->toolbox->unsetTextSettings($fileData, "extension", $extension);
+        }
+        if (!$this->yellow->toolbox->createFile($fileNameCurrent, $fileData)) {
+            $statusCode = 500;
+            $this->yellow->page->error(500, "Can't write file '$fileNameCurrent'!");
+        }
+        return $statusCode;
+    }
     
     // Process command to show website version and updates
     public function processCommandAbout($command, $text) {
         echo "Datenstrom Yellow ".YellowCore::RELEASE."\n";
-        list($statusCode, $dataCurrent) = $this->getExtensionsVersion();
-        list($statusCode, $dataLatest) = $this->getExtensionsVersion(true);
-        foreach ($dataCurrent as $key=>$value) {
-            if (!isset($dataLatest[$key]) || strnatcasecmp($dataCurrent[$key], $dataLatest[$key])>=0) {
-                echo ucfirst($key)." $value\n";
+        list($statusCode, $settingsCurrent) = $this->getExtensionSettings(false);
+        list($statusCode, $settingsLatest) = $this->getExtensionSettings(true);
+        foreach ($settingsCurrent as $key=>$value) {
+            $versionCurrent = $versionLatest = $settingsCurrent[$key]->get("version");
+            if ($settingsLatest->isExisting($key)) $versionLatest = $settingsLatest[$key]->get("version");
+            if (strnatcasecmp($versionCurrent, $versionLatest)<0) {
+                echo ucfirst($key)." $versionCurrent - Update available\n";
             } else {
-                echo ucfirst($key)." $value - Update available\n";
+                echo ucfirst($key)." $versionCurrent\n";
             }
         }
         if ($statusCode!=200) echo "ERROR checking updates: ".$this->yellow->page->get("pageError")."\n";
@@ -323,11 +370,11 @@ class YellowUpdate {
     
     // Process command to install extensions
     public function processCommandInstall($command, $text) {
-        $extensions = $this->getExtensions($text);
+        $extensions = $this->getExtensionsFromText($text);
         if (!empty($extensions)) {
             $this->updates = 0;
-            list($statusCode, $data) = $this->getInstallInformation($extensions);
-            if ($statusCode==200) $statusCode = $this->downloadExtensions($data);
+            list($statusCode, $settings) = $this->getExtensionInstallInformation($extensions);
+            if ($statusCode==200) $statusCode = $this->downloadExtensions($settings);
             if ($statusCode==200) $statusCode = $this->updateExtensions("install");
             if ($statusCode>=400) echo "ERROR installing files: ".$this->yellow->page->get("pageError")."\n";
             echo "Yellow $command: Website ".($statusCode!=200 ? "not " : "")."updated";
@@ -340,11 +387,11 @@ class YellowUpdate {
     
     // Process command to uninstall extensions
     public function processCommandUninstall($command, $text) {
-        $extensions = $this->getExtensions($text);
+        $extensions = $this->getExtensionsFromText($text);
         if (!empty($extensions)) {
             $this->updates = 0;
-            list($statusCode, $data) = $this->getUninstallInformation($extensions, "core, update");
-            if ($statusCode==200) $statusCode = $this->removeExtensions($data);
+            list($statusCode, $settings) = $this->getExtensionUninstallInformation($extensions, "core, update");
+            if ($statusCode==200) $statusCode = $this->removeExtensions($settings);
             if ($statusCode>=400) echo "ERROR uninstalling files: ".$this->yellow->page->get("pageError")."\n";
             echo "Yellow $command: Website ".($statusCode!=200 ? "not " : "")."updated";
             echo ", $this->updates extension".($this->updates!=1 ? "s" : "")." uninstalled\n";
@@ -356,11 +403,11 @@ class YellowUpdate {
 
     // Process command to update website
     public function processCommandUpdate($command, $text) {
-        $extensions = $this->getExtensions($text);
-        list($statusCode, $data) = $this->getUpdateInformation($extensions);
-        if ($statusCode!=200 || !empty($data)) {
+        $extensions = $this->getExtensionsFromText($text);
+        list($statusCode, $settings) = $this->getExtensionUpdateInformation($extensions);
+        if ($statusCode!=200 || !empty($settings)) {
             $this->updates = 0;
-            if ($statusCode==200) $statusCode = $this->downloadExtensions($data);
+            if ($statusCode==200) $statusCode = $this->downloadExtensions($settings);
             if ($statusCode==200) $statusCode = $this->updateExtensions("update");
             if ($statusCode>=400) echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
             echo "Yellow $command: Website ".($statusCode!=200 ? "not " : "")."updated";
@@ -388,7 +435,7 @@ class YellowUpdate {
         }
         return $statusCode;
     }
-    
+
     // Process update notification
     public function processUpdateNotification($extension, $action) {
         $statusCode = 200;
@@ -408,114 +455,14 @@ class YellowUpdate {
         return $statusCode;
     }
     
-    // Return extensions from text, space separated
-    public function getExtensions($text) {
-        return array_unique(array_filter($this->yellow->toolbox->getTextArguments($text), "strlen"));
-    }
-
-    // Return install information
-    public function getInstallInformation($extensions) {
-        $data = array();
-        list($statusCodeCurrent, $dataCurrent) = $this->getExtensionsVersion();
-        list($statusCodeLatest, $dataLatest) = $this->getExtensionsVersion(true, true);
-        $statusCode = max($statusCodeCurrent, $statusCodeLatest);
-        foreach ($extensions as $extension) {
-            $found = false;
-            foreach ($dataLatest as $key=>$value) {
-                if (strtoloweru($key)==strtoloweru($extension)) {
-                    $data[$key] = $dataLatest[$key];
-                    $found = true;
-                    break;
-                }
-            }
-            if (!$found) {
-                $statusCode = 500;
-                $this->yellow->page->error($statusCode, "Can't find extension '$extension'!");
-            }
-        }
-        return array($statusCode, $data);
-    }
-
-    // Return uninstall information
-    public function getUninstallInformation($extensions, $extensionsProtected) {
-        $data = array();
-        list($statusCodeCurrent, $dataCurrent) = $this->getExtensionsVersion();
-        list($statusCodeLatest, $dataLatest) = $this->getExtensionsVersion(true, true);
-        list($statusCodeRelevant, $dataRelevant) = $this->getExtensionsRelevant();
-        $statusCode = max($statusCodeCurrent, $statusCodeLatest, $statusCodeRelevant);
-        foreach ($extensions as $extension) {
-            $found = false;
-            foreach ($dataCurrent as $key=>$value) {
-                if (strtoloweru($key)==strtoloweru($extension) && isset($dataLatest[$key]) && isset($dataRelevant[$key])) {
-                    $data[$key] = $dataRelevant[$key];
-                    $found = true;
-                    break;
-                }
-            }
-            if (!$found) {
-                $statusCode = 500;
-                $this->yellow->page->error($statusCode, "Can't find extension '$extension'!");
-            }
-        }
-        $protected = preg_split("/\s*,\s*/", $extensionsProtected);
-        foreach ($data as $key=>$value) {
-            if (in_array($key, $protected)) unset($data[$key]);
-        }
-        return array($statusCode, $data);
-    }
-
-    // Return update information
-    public function getUpdateInformation($extensions) {
-        $data = array();
-        list($statusCodeCurrent, $dataCurrent) = $this->getExtensionsVersion();
-        list($statusCodeLatest, $dataLatest) = $this->getExtensionsVersion(true, true);
-        $statusCode = max($statusCodeCurrent, $statusCodeLatest);
-        if (empty($extensions)) {
-            foreach ($dataCurrent as $key=>$value) {
-                if (isset($dataLatest[$key])) {
-                    list($version, $dummy1, $dummy2) = $this->yellow->toolbox->getTextList($dataLatest[$key], ",", 3);
-                    if (strnatcasecmp($dataCurrent[$key], $version)<0) $data[$key] = $dataLatest[$key];
-                }
-            }
-        } else {
-            $force = false;
-            foreach ($extensions as $extension) {
-                $found = false;
-                if ($extension=="force") { $force = true; continue; }
-                foreach ($dataCurrent as $key=>$value) {
-                    if (isset($dataLatest[$key])) {
-                        list($version, $dummy1, $dummy2) = $this->yellow->toolbox->getTextList($dataLatest[$key], ",", 3);
-                        if (!empty($version) && strtoloweru($key)==strtoloweru($extension)) {
-                            $data[$key] = $dataLatest[$key];
-                            $found = true;
-                            break;
-                        }
-                    }
-                }
-                if (!$found) {
-                    $statusCode = 500;
-                    $this->yellow->page->error($statusCode, "Can't find extension '$extension'!");
-                }
-            }
-            if (!$force) {
-                $statusCode = 500;
-                $this->yellow->page->error($statusCode, "Please use 'force' to update an extension!");
-            }
-        }
-        if ($statusCode==200) {
-            foreach ($data as $key=>$value) {
-                list($version, $dummy1, $dummy2) = $this->yellow->toolbox->getTextList($value, ",", 3);
-                echo ucfirst($key)." $version\n";
-            }
-        }
-        return array($statusCode, $data);
-    }
-    
     // Show extensions
     public function showExtensions() {
-        list($statusCode, $dataLatest) = $this->getExtensionsVersion(true, true);
-        foreach ($dataLatest as $key=>$value) {
-            list($dummy1, $dummy2, $text) = $this->yellow->toolbox->getTextList($value, ",", 3);
+        list($statusCode, $settingsLatest) = $this->getExtensionSettings(true);
+        foreach ($settingsLatest as $key=>$value) {
+            $text = $description = $value->get("description");
+            if ($value->isExisting("developer")) $text = "$description Developed by ".$value["developer"].".";
+            if ($value->isExisting("translator")) $text = "$description Translated by ".$value["translator"].".";
+            if ($value->isExisting("designer")) $text = "$description Designed by ".$value["designer"].".";
             echo ucfirst($key).": $text\n";
         }
         if ($statusCode!=200) echo "ERROR checking extensions: ".$this->yellow->page->get("pageError")."\n";
@@ -523,14 +470,13 @@ class YellowUpdate {
     }
     
     // Download extensions
-    public function downloadExtensions($data) {
+    public function downloadExtensions($settings) {
         $statusCode = 200;
         $path = $this->yellow->system->get("coreExtensionDirectory");
         $fileExtension = $this->yellow->system->get("coreDownloadExtension");
-        foreach ($data as $key=>$value) {
+        foreach ($settings as $key=>$value) {
             $fileName = $path.$this->yellow->lookup->normaliseName($key, true, false, true).".zip";
-            list($dummy1, $url, $dummy2) = $this->yellow->toolbox->getTextList($value, ",", 3);
-            list($statusCode, $fileData) = $this->getExtensionFile($url);
+            list($statusCode, $fileData) = $this->getExtensionFile($value->get("downloadUrl"));
             if (empty($fileData) || !$this->yellow->toolbox->createFile($fileName.$fileExtension, $fileData)) {
                 $statusCode = 500;
                 $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
@@ -538,7 +484,7 @@ class YellowUpdate {
             }
         }
         if ($statusCode==200) {
-            foreach ($data as $key=>$value) {
+            foreach ($settings as $key=>$value) {
                 $fileName = $path.$this->yellow->lookup->normaliseName($key, true, false, true).".zip";
                 if (!$this->yellow->toolbox->renameFile($fileName.$fileExtension, $fileName)) {
                     $statusCode = 500;
@@ -570,48 +516,43 @@ class YellowUpdate {
         $zip = new ZipArchive();
         if ($zip->open($path)===true) {
             if (defined("DEBUG") && DEBUG>=2) echo "YellowUpdate::updateExtensionArchive file:$path<br/>\n";
-            $extension = $version = $language = "";
-            $modified = $lastModified = $lastPublished = 0;
+            $pathBase = "";
             if (preg_match("#^(.*\/).*?$#", $zip->getNameIndex(0), $matches)) $pathBase = $matches[1];
+            $languages = $this->getExtensionArchiveLanguages($zip, $pathBase);
             $fileData = $zip->getFromName($pathBase.$this->yellow->system->get("updateExtensionFile"));
-            foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
-                preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
-                if (!empty($matches[1]) && !empty($matches[2]) && strposu($matches[1], "/")) {
-                    $fileName = $matches[1];
-                    if (is_file($fileName)) {
-                        $lastPublished = filemtime($fileName);
-                        break;
-                    }
-                }
-            }
-            $rootPages = array();
-            foreach ($this->yellow->content->scanLocation("") as $page) {
-                if ($page->isAvailable() && $page->isVisible()) array_push($rootPages, $page);
-            }
-            foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
-                if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
-                    if (lcfirst($matches[1])=="extension") $extension = lcfirst($matches[2]);
-                    if (lcfirst($matches[1])=="version") $version = lcfirst($matches[2]);
-                    if (lcfirst($matches[1])=="published") $modified = strtotime($matches[2]);
-                    if (lcfirst($matches[1])=="language") $language = $matches[2];
-                    if (!empty($matches[1]) && !empty($matches[2]) && strposu($matches[1], "/")) {
-                        $fileName = $matches[1];
-                        list($dummy, $entry, $flags) = $this->yellow->toolbox->getTextList($matches[2], ",", 3);
-                        foreach ($rootPages as $page) {
-                            list($fileNameSource, $fileNameDestination) = $this->getExtensionsFileNames($fileName, $entry, $flags, $language, $pathBase, $page);
-                            $fileData = $zip->getFromName($fileNameSource);
-                            $lastModified = $this->yellow->toolbox->getFileModified($fileNameDestination);
-                            $statusCode = $this->updateExtensionFile($fileNameDestination, $fileData,
-                                $modified, $lastModified, $lastPublished, $flags, $extension);
+            $settings = $this->yellow->toolbox->getTextSettings($fileData, "");
+            list($extension, $version, $newModified, $oldModified) = $this->getExtensionInformation($settings);
+            if (!empty($extension) && !empty($version)) {
+                $statusCode = $this->updateExtensionSettings($extension, $settings, $action);
+                if ($statusCode==200) {
+                    foreach ($this->getExtensionFileNames($settings) as $fileName) {
+                        list($entry, $flags) = $this->yellow->toolbox->getTextList($settings[$fileName], ",", 2);
+                        if (strposu($entry, ".")===false) {
+                            list($dummy, $entry, $flags) = $this->yellow->toolbox->getTextList($settings[$fileName], ",", 3);
+                        }
+                        if (!$this->yellow->lookup->isContentFile($fileName)) {
+                            $fileData = $zip->getFromName($pathBase.$entry);
+                            $lastModified = $this->yellow->toolbox->getFileModified($fileName);
+                            $statusCode = $this->updateExtensionFile($fileName, $fileData,
+                                $newModified, $oldModified, $lastModified, $flags, $extension);
+                        } else {
+                            foreach ($this->getExtensionContentRootPages() as $page) {
+                                list($fileNameSource, $fileNameDestination) = $this->getExtensionContentFileNames(
+                                    $fileName, $pathBase, $entry, $flags, $languages, $page);
+                                $fileData = $zip->getFromName($fileNameSource);
+                                $lastModified = $this->yellow->toolbox->getFileModified($fileNameDestination);
+                                $statusCode = $this->updateExtensionFile($fileNameDestination, $fileData,
+                                    $newModified, $oldModified, $lastModified, $flags, $extension);
+                            }
                         }
                         if ($statusCode!=200) break;
                     }
+                    $statusCode = max($statusCode, $this->processUpdateNotification($extension, $action));
                 }
+                $this->yellow->log($statusCode==200 ? "info" : "error", ucfirst($action)." extension '".ucfirst($extension)." $version'");
+                ++$this->updates;
             }
             $zip->close();
-            $statusCode = max($statusCode, $this->processUpdateNotification($extension, $action));
-            $this->yellow->log($statusCode==200 ? "info" : "error", ucfirst($action)." extension '".ucfirst($extension)." $version'");
-            ++$this->updates;
         } else {
             $statusCode = 500;
             $this->yellow->page->error(500, "Can't open file '$path'!");
@@ -620,19 +561,19 @@ class YellowUpdate {
     }
     
     // Update extension from file
-    public function updateExtensionFile($fileName, $fileData, $modified, $lastModified, $lastPublished, $flags, $extension) {
+    public function updateExtensionFile($fileName, $fileData, $newModified, $oldModified, $lastModified, $flags, $extension) {
         $statusCode = 200;
         $fileName = $this->yellow->toolbox->normaliseTokens($fileName);
-        if ($this->yellow->lookup->isValidFile($fileName) && !empty($extension)) {
+        if ($this->yellow->lookup->isValidFile($fileName)) {
             $create = $update = $delete = false;
             if (preg_match("/create/i", $flags) && !is_file($fileName) && !empty($fileData)) $create = true;
             if (preg_match("/update/i", $flags) && is_file($fileName) && !empty($fileData)) $update = true;
             if (preg_match("/delete/i", $flags) && is_file($fileName)) $delete = true;
             if (preg_match("/optional/i", $flags) && $this->yellow->extension->isExisting($extension)) $create = $update = $delete = false;
-            if (preg_match("/careful/i", $flags) && is_file($fileName) && $lastModified!=$lastPublished) $update = false;
+            if (preg_match("/careful/i", $flags) && is_file($fileName) && $lastModified!=$oldModified) $update = false;
             if ($create) {
                 if (!$this->yellow->toolbox->createFile($fileName, $fileData, true) ||
-                    !$this->yellow->toolbox->modifyFile($fileName, $modified)) {
+                    !$this->yellow->toolbox->modifyFile($fileName, $newModified)) {
                     $statusCode = 500;
                     $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
                 }
@@ -640,7 +581,7 @@ class YellowUpdate {
             if ($update) {
                 if (!$this->yellow->toolbox->deleteFile($fileName, $this->yellow->system->get("coreTrashDirectory")) ||
                     !$this->yellow->toolbox->createFile($fileName, $fileData) ||
-                    !$this->yellow->toolbox->modifyFile($fileName, $modified)) {
+                    !$this->yellow->toolbox->modifyFile($fileName, $newModified)) {
                     $statusCode = 500;
                     $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
                 }
@@ -660,23 +601,246 @@ class YellowUpdate {
         return $statusCode;
     }
     
+    // Remove extensions
+    public function removeExtensions($settings) {
+        $statusCode = 200;
+        if (function_exists("opcache_reset")) opcache_reset();
+        foreach ($settings as $extension=>$block) {
+            $statusCode = max($statusCode, $this->removeExtensionArchive($extension, $block, "uninstall"));
+        }
+        return $statusCode;
+    }
+
+    // Remove extension archive
+    public function removeExtensionArchive($extension, $settings, $action) {
+        $statusCode = 200;
+        $fileNames = $this->getExtensionFileNames($settings, true);
+        if (count($fileNames)) {
+            $statusCode = max($statusCode, $this->processUpdateNotification($extension, $action));
+            foreach ($fileNames as $fileName) {
+                $statusCode = max($statusCode, $this->removeExtensionFile($fileName));
+            }
+            if ($statusCode==200) $statusCode = $this->updateExtensionSettings($extension, $settings, $action);
+            $version = $settings->get("version");
+            $this->yellow->log($statusCode==200 ? "info" : "error", ucfirst($action)." extension '".ucfirst($extension)." $version'");
+            ++$this->updates;
+        } else {
+            $statusCode = 500;
+            $this->yellow->page->error(500, "Can't find information about extension '$extension'!");
+        }
+        return $statusCode;
+    }
+
+    // Remove extension file
+    public function removeExtensionFile($fileName) {
+        $statusCode = 200;
+        $fileName = $this->yellow->toolbox->normaliseTokens($fileName);
+        if ($this->yellow->lookup->isValidFile($fileName) && is_file($fileName)) {
+            if (!$this->yellow->toolbox->deleteFile($fileName, $this->yellow->system->get("coreTrashDirectory"))) {
+                $statusCode = 500;
+                $this->yellow->page->error($statusCode, "Can't delete file '$fileName'!");
+            }
+            if (defined("DEBUG") && DEBUG>=2) {
+                echo "YellowUpdate::removeExtensionFile file:$fileName action:delete<br/>\n";
+            }
+        }
+        return $statusCode;
+    }
+
+    // Return extensions from text, space separated
+    public function getExtensionsFromText($text) {
+        return array_unique(array_filter($this->yellow->toolbox->getTextArguments($text), "strlen"));
+    }
+
+    // Return extension install information
+    public function getExtensionInstallInformation($extensions) {
+        $settings = array();
+        list($statusCodeCurrent, $settingsCurrent) = $this->getExtensionSettings(false);
+        list($statusCodeLatest, $settingsLatest) = $this->getExtensionSettings(true);
+        $statusCode = max($statusCodeCurrent, $statusCodeLatest);
+        foreach ($extensions as $extension) {
+            $found = false;
+            foreach ($settingsLatest as $key=>$value) {
+                if (strtoloweru($key)==strtoloweru($extension)) {
+                    if (!$settingsCurrent->isExisting($key)) $settings[$key] = $settingsLatest[$key];
+                    $found = true;
+                    break;
+                }
+            }
+            if (!$found) {
+                $statusCode = 500;
+                $this->yellow->page->error($statusCode, "Can't find extension '$extension'!");
+            }
+        }
+        return array($statusCode, $settings);
+    }
+
+    // Return extension uninstall information
+    public function getExtensionUninstallInformation($extensions, $extensionsProtected) {
+        $settings = array();
+        list($statusCode, $settingsCurrent) = $this->getExtensionSettings(false);
+        foreach ($extensions as $extension) {
+            $found = false;
+            foreach ($settingsCurrent as $key=>$value) {
+                if (strtoloweru($key)==strtoloweru($extension)) {
+                    $settings[$key] = $settingsCurrent[$key];
+                    $found = true;
+                    break;
+                }
+            }
+            if (!$found) {
+                $statusCode = 500;
+                $this->yellow->page->error($statusCode, "Can't find extension '$extension'!");
+            }
+        }
+        $protected = preg_split("/\s*,\s*/", $extensionsProtected);
+        foreach ($settings as $key=>$value) {
+            if (in_array($key, $protected)) unset($settings[$key]);
+        }
+        return array($statusCode, $settings);
+    }
+
+    // Return extension update information
+    public function getExtensionUpdateInformation($extensions) {
+        $settings = array();
+        list($statusCodeCurrent, $settingsCurrent) = $this->getExtensionSettings(false);
+        list($statusCodeLatest, $settingsLatest) = $this->getExtensionSettings(true);
+        $statusCode = max($statusCodeCurrent, $statusCodeLatest);
+        if (empty($extensions)) {
+            foreach ($settingsCurrent as $key=>$value) {
+                if ($settingsLatest->isExisting($key)) {
+                    $versionCurrent = $settingsCurrent[$key]->get("version");
+                    $versionLatest = $settingsLatest[$key]->get("version");
+                    if (strnatcasecmp($versionCurrent, $versionLatest)<0) {
+                        $settings[$key] = $settingsLatest[$key];
+                    }
+                }
+            }
+        } else {
+            $force = false;
+            foreach ($extensions as $extension) {
+                $found = false;
+                if ($extension=="force") { $force = true; continue; }
+                foreach ($settingsCurrent as $key=>$value) {
+                    if (strtoloweru($key)==strtoloweru($extension) && $settingsLatest->isExisting($key)) {
+                        $settings[$key] = $settingsLatest[$key];
+                        $found = true;
+                        break;
+                    }
+                }
+                if (!$found) {
+                    $statusCode = 500;
+                    $this->yellow->page->error($statusCode, "Can't find extension '$extension'!");
+                }
+            }
+            if (!$force) {
+                $statusCode = 500;
+                $this->yellow->page->error($statusCode, "Please use 'force' to update an extension!");
+            }
+        }
+        if ($statusCode==200) {
+            foreach ($settings as $key=>$value) {
+                echo ucfirst($key)." ".$value->get("version")."\n";
+            }
+        }
+        return array($statusCode, $settings);
+    }
+
+    // Return extension settings
+    public function getExtensionSettings($latest) {
+        $statusCode = 200;
+        $settings = array();
+        if (!$latest) {
+            $fileNameCurrent = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateCurrentFile");
+            if (!is_file($fileNameCurrent)) $statusCode = $this->createExtensionSettings();
+            $fileData = $this->yellow->toolbox->readFile($fileNameCurrent);
+            $settings = $this->yellow->toolbox->getTextSettings($fileData, "extension");
+            foreach ($this->yellow->extension->data as $key=>$value) {
+                if (!$settings->isExisting($key)) $settings[$key] = new YellowArray();
+                $settings[$key]["extension"] = ucfirst($key);
+                $settings[$key]["version"] = $value["version"];
+            }
+        } else {
+            $fileNameLatest = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateLatestFile");
+            $expire = $this->yellow->toolbox->getFileModified($fileNameLatest) + 60*10;
+            if ($expire<=time()) {
+                $url = $this->yellow->system->get("updateExtensionUrl")."/raw/master/".$this->yellow->system->get("updateLatestFile");
+                list($statusCode, $fileData) = $this->getExtensionFile($url);
+                if ($statusCode==200 && !$this->yellow->toolbox->createFile($fileNameLatest, $fileData)) {
+                    $statusCode = 500;
+                    $this->yellow->page->error($statusCode, "Can't write file '$fileNameLatest'!");
+                }
+            }
+            $fileData = $this->yellow->toolbox->readFile($fileNameLatest);
+            $settings = $this->yellow->toolbox->getTextSettings($fileData, "extension");
+        }
+        $settings->uksort("strnatcasecmp");
+        return array($statusCode, $settings);
+    }
+
+    // Return extension archive languages
+    public function getExtensionArchiveLanguages($zip, $pathBase) {
+        $languages = array();
+        for ($index=0; $index<$zip->numFiles; ++$index) {
+            $entry = substru($zip->getNameIndex($index), strlenu($pathBase));
+            if (preg_match("#^(.*)\/.*?$#", $entry, $matches)) {
+                array_push($languages, $matches[1]);
+            }
+        }
+        return array_unique($languages);
+    }
+
+    // Return extension information
+    public function getExtensionInformation($settings) {
+        $extension = lcfirst($settings->get("extension"));
+        $version = $settings->get("version");
+        $newModified = strtotime($settings->get("published"));
+        $oldModified = 0;
+        foreach ($settings as $key=>$value) {
+            if (strposu($key, "/") && is_file($key)) {
+                $oldModified = filemtime($key);
+                break;
+            }
+        }
+        return array($extension, $version, $newModified, $oldModified);
+    }
+
     // Return extension file names
-    public function getExtensionsFileNames($fileName, $entry, $flags, $language, $pathBase, $page) {
+    public function getExtensionFileNames($settings, $reverse = false) {
+        $fileNames = array();
+        foreach ($settings as $key=>$value) {
+            if (strposu($key, "/")) array_push($fileNames, $key);
+        }
+        if ($reverse) $fileNames = array_reverse($fileNames);
+        return $fileNames;
+    }
+
+    // Return extension root pages for content files
+    public function getExtensionContentRootPages() {
+        $rootPages = array();
+        foreach ($this->yellow->content->scanLocation("") as $page) {
+            if ($page->isAvailable() && $page->isVisible()) array_push($rootPages, $page);
+        }
+        return $rootPages;
+    }
+
+    // Return extension files names for content files
+    public function getExtensionContentFileNames($fileName, $pathBase, $entry, $flags, $languages, $page) {
         if (preg_match("/multi-language/i", $flags)) {
-            $languagesAvailable = preg_split("/\s*,\s*/", $language);
+            $languageFound = "";
             $languagesWanted = array($page->get("language"), "en");
             foreach ($languagesWanted as $language) {
-                if (in_array($language, $languagesAvailable)) {
+                if (in_array($language, $languages)) {
                     $languageFound = $language;
                     break;
                 }
             }
             $pathLanguage = $languageFound ? "$languageFound/" : "";
-            $fileNameSource = $pathBase.$pathLanguage.basename($entry);
+            $fileNameSource = $pathBase.$pathLanguage.$entry;
         } else {
-            $fileNameSource = $pathBase.basename($entry);
+            $fileNameSource = $pathBase.$entry;
         }
-        if ($this->yellow->system->get("coreMultiLanguageMode") && $this->yellow->lookup->isContentFile($fileName)) {
+        if ($this->yellow->system->get("coreMultiLanguageMode")) {
             $contentDirectoryLength = strlenu($this->yellow->system->get("coreContentDirectory"));
             $fileNameDestination = $page->fileName.substru($fileName, $contentDirectoryLength);
         } else {
@@ -685,86 +849,6 @@ class YellowUpdate {
         return array($fileNameSource, $fileNameDestination);
     }
 
-    // Remove extensions
-    public function removeExtensions($data) {
-        $statusCode = 200;
-        if (function_exists("opcache_reset")) opcache_reset();
-        foreach ($data as $key=>$value) {
-            foreach (preg_split("/\s*,\s*/", $value) as $fileName) {
-                $statusCode = max($statusCode, $this->removeExtensionsFile($fileName, $key));
-            }
-            $statusCode = max($statusCode, $this->processUpdateNotification($key, "uninstall"));
-            $version = $this->yellow->extension->isExisting($key) ? $this->yellow->extension->data[$key]["version"] : "";
-            $this->yellow->log($statusCode==200 ? "info" : "error", "Uninstall extension '".ucfirst($key)." $version'");
-            ++$this->updates;
-        }
-        return $statusCode;
-    }
-    
-    // Remove extensions file
-    public function removeExtensionsFile($fileName, $extension) {
-        $statusCode = 200;
-        $fileName = $this->yellow->toolbox->normaliseTokens($fileName);
-        if ($this->yellow->lookup->isValidFile($fileName) && !empty($extension)) {
-            if (!$this->yellow->toolbox->deleteFile($fileName, $this->yellow->system->get("coreTrashDirectory"))) {
-                $statusCode = 500;
-                $this->yellow->page->error($statusCode, "Can't delete file '$fileName'!");
-            }
-            if (defined("DEBUG") && DEBUG>=2) {
-                echo "YellowUpdate::removeExtensionsFile file:$fileName action:delete<br/>\n";
-            }
-        }
-        return $statusCode;
-    }
-    
-    // Return extensions version
-    public function getExtensionsVersion($latest = false, $rawFormat = false) {
-        $data = array();
-        if ($latest) {
-            $url = $this->yellow->system->get("updateExtensionUrl")."/raw/master/".$this->yellow->system->get("updateVersionFile");
-            list($statusCode, $fileData) = $this->getExtensionFile($url);
-            if ($statusCode==200) {
-                foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
-                    preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
-                    if (!empty($matches[1]) && !empty($matches[2])) {
-                        $extension = lcfirst($matches[1]);
-                        list($version, $dummy1, $dummy2) = $this->yellow->toolbox->getTextList($matches[2], ",", 3);
-                        $data[$extension] = $rawFormat ? $matches[2] : $version;
-                    }
-                }
-            }
-        } else {
-            $statusCode = 200;
-            foreach ($this->yellow->extension->data as $key=>$value) {
-                $data[$key] = $value["version"];
-            }
-        }
-        uksort($data, "strnatcasecmp");
-        return array($statusCode, $data);
-    }
- 
-    // Return extensions relevant files
-    public function getExtensionsRelevant() {
-        $data = array();
-        $url = $this->yellow->system->get("updateExtensionUrl")."/raw/master/".$this->yellow->system->get("updateWaffleFile");
-        list($statusCode, $fileData) = $this->getExtensionFile($url);
-        if ($statusCode==200) {
-            foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
-                preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches);
-                if (!empty($matches[1]) && !empty($matches[2])) {
-                    $fileName = $matches[1];
-                    list($extension, $dummy1, $dummy2) = $this->yellow->toolbox->getTextList(lcfirst($matches[2]), ",", 3);
-                    if (!isset($data[$extension])) {
-                        $data[$extension] = $fileName;
-                    } else {
-                        $data[$extension] .= ",".$fileName;
-                    }
-                }
-            }
-        }
-        return array($statusCode, $data);
-    }
-    
     // Return extension file
     public function getExtensionFile($url) {
         $urlRequest = $url;

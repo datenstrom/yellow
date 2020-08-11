@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/edit
 
 class YellowEdit {
-    const VERSION = "0.8.34";
+    const VERSION = "0.8.35";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -1293,13 +1293,15 @@ class YellowEditResponse {
         $statusCode = 200;
         $rawData = "";
         if ($this->yellow->extension->isExisting("update")) {
-            list($statusCodeCurrent, $dataCurrent) = $this->yellow->extension->get("update")->getExtensionsVersion();
-            list($statusCodeLatest, $dataLatest) = $this->yellow->extension->get("update")->getExtensionsVersion(true);
+            list($statusCodeCurrent, $settingsCurrent) = $this->yellow->extension->get("update")->getExtensionSettings(false);
+            list($statusCodeLatest, $settingsLatest) = $this->yellow->extension->get("update")->getExtensionSettings(true);
             $statusCode = max($statusCodeCurrent, $statusCodeLatest);
-            foreach ($dataCurrent as $key=>$value) {
-                if (isset($dataLatest[$key])) {
-                    if (strnatcasecmp($dataCurrent[$key], $dataLatest[$key])<0) {
-                        $rawData .= htmlspecialchars(ucfirst($key)." $dataLatest[$key]")."<br />";
+            foreach ($settingsCurrent as $key=>$value) {
+                if ($settingsLatest->isExisting($key)) {
+                    $versionCurrent = $settingsCurrent[$key]->get("version");
+                    $versionLatest = $settingsLatest[$key]->get("version");
+                    if (strnatcasecmp($versionCurrent, $versionLatest)<0) {
+                        $rawData .= htmlspecialchars(ucfirst($key)." $versionLatest")."<br />";
                     }
                 }
             }

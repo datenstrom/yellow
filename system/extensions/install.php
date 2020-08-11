@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow
 
 class YellowInstall {
-    const VERSION = "0.8.33";
+    const VERSION = "0.8.34";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -33,7 +33,7 @@ class YellowInstall {
             $extension = trim($this->yellow->page->getRequest("extension"));
             $status = trim($this->yellow->page->getRequest("status"));
             $statusCode = $this->updateLog();
-            $statusCode = max($statusCode, $this->updateLanguage());
+            $statusCode = max($statusCode, $this->updateLanguages());
             $this->yellow->content->pages["root/"] = array();
             $this->yellow->page = new YellowPage($this->yellow);
             $this->yellow->page->setRequestInformation($scheme, $address, $base, $location, $fileName);
@@ -60,7 +60,7 @@ class YellowInstall {
     // Process command to install website
     public function processCommandInstall() {
         $statusCode = $this->updateLog();
-        if ($statusCode==200) $statusCode = $this->updateLanguage();
+        if ($statusCode==200) $statusCode = $this->updateLanguages();
         if ($statusCode==200) $statusCode = $this->updateSettings("en");
         if ($statusCode==200) $statusCode = $this->removeInstall();
         if ($statusCode==200) {
@@ -87,57 +87,24 @@ class YellowInstall {
         return $statusCode;
     }
     
-    // Update language
-    public function updateLanguage() {
+    // Update languages
+    public function updateLanguages() {
         $statusCode = 200;
         $path = $this->yellow->system->get("coreExtensionDirectory")."install-languages.zip";
         if (is_file($path) && $this->yellow->extension->isExisting("update")) {
             $zip = new ZipArchive();
             if ($zip->open($path)===true) {
-                $languages = $this->detectBrowserLanguages("en, de, fr");
-                $languagesFound = array();
-                foreach ($languages as $language) $languagesFound[$language] = "";
+                $pathBase = "";
                 if (preg_match("#^(.*\/).*?$#", $zip->getNameIndex(0), $matches)) $pathBase = $matches[1];
                 $fileData = $zip->getFromName($pathBase.$this->yellow->system->get("updateExtensionFile"));
-                foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
-                    if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
-                        if (!empty($matches[1]) && !empty($matches[2]) && strposu($matches[1], "/")) {
-                            list($dummy, $entry, $flags) = $this->yellow->toolbox->getTextList($matches[2], ",", 3);
-                            $arguments = explode(",", $flags);
-                            $language = array_pop($arguments);
-                            if (preg_match("/^(.*)\.php$/", basename($entry), $tokens) && in_array($language, $languages)) {
-                                $languagesFound[$language] = $tokens[1];
-                            }
-                        }
-                    }
+                foreach ($this->getExtensionsRequired($fileData) as $extension) {
+                    $fileDataPhp = $zip->getFromName($pathBase."$extension/$extension.php");
+                    $fileDataTxt = $zip->getFromName($pathBase."$extension/$extension.txt");
+                    $fileDataIni = $zip->getFromName($pathBase."$extension/extension.ini");
+                    $statusCode = max($statusCode, $this->updateLanguageArchive($fileDataPhp, $fileDataTxt, $fileDataIni, $pathBase, "install"));
                 }
-                $languagesFound = array_slice(array_filter($languagesFound, "strlen"), 0, 3);
-                $extension = $version = "";
-                $modified = 0;
-                foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
-                    if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
-                        if (lcfirst($matches[1])=="extension") $extension = lcfirst($matches[2]);
-                        if (lcfirst($matches[1])=="version") $version = lcfirst($matches[2]);
-                        if (lcfirst($matches[1])=="published") $modified = strtotime($matches[2]);
-                        if (!empty($matches[1]) && !empty($matches[2]) && strposu($matches[1], "/")) {
-                            $fileName = $matches[1];
-                            list($dummy1, $entry, $dummy2) = $this->yellow->toolbox->getTextList($matches[2], ",", 3);
-                            $fileData = $zip->getFromName($pathBase.basename($entry));
-                            if (preg_match("/^(.*)\.php$/", basename($entry), $tokens) && in_array($tokens[1], $languagesFound) && !is_file($fileName)) {
-                                $statusCode = $this->yellow->extension->get("update")->updateExtensionFile($fileName, $fileData, $modified, 0, 0, "create", $extension);
-                            }
-                            if (preg_match("/^(.*)\.txt$/", basename($entry), $tokens) && in_array($tokens[1], $languagesFound) && !is_file($fileName)) {
-                                $statusCode = $this->yellow->extension->get("update")->updateExtensionFile($fileName, $fileData, $modified, 0, 0, "create", $extension);
-                                $this->yellow->log($statusCode==200 ? "info" : "error", "Install extension '".ucfirst($tokens[1])." $version'");
-                            }
-                            if ($statusCode!=200) break;
-                        }
-                    }
-                }
+                $this->yellow->language->load($this->yellow->system->get("coreExtensionDirectory").".*\.txt");
                 $zip->close();
-                if ($statusCode==200) {
-                    $this->yellow->language->load($this->yellow->system->get("coreExtensionDirectory").".*\.txt");
-                }
             } else {
                 $statusCode = 500;
                 $this->yellow->page->error(500, "Can't open file '$path'!");
@@ -146,19 +113,34 @@ class YellowInstall {
         return $statusCode;
     }
     
+    // Update language archive
+    public function updateLanguageArchive($fileDataPhp, $fileDataTxt, $fileDataIni, $pathBase, $action) {
+        $statusCode = 200;
+        if ($this->yellow->extension->isExisting("update")) {
+            $settings = $this->yellow->toolbox->getTextSettings($fileDataIni, "");
+            $extension = lcfirst($settings->get("extension"));
+            $version = $settings->get("version");
+            $modified = strtotime($settings->get("published"));
+            $fileNamePhp = $this->yellow->system->get("coreExtensionDirectory").$extension.".php";
+            $fileNameTxt = $this->yellow->system->get("coreExtensionDirectory").$extension.".txt";
+            if (!empty($extension) && !empty($version) && !is_file($fileNamePhp)) {
+                $statusCode = $this->yellow->extension->get("update")->updateExtensionSettings($extension, $settings, $action);
+                if ($statusCode==200) $statusCode = $this->yellow->extension->get("update")->updateExtensionFile(
+                    $fileNamePhp, $fileDataPhp, $modified, 0, 0, "create", $extension);
+                if ($statusCode==200) $statusCode = $this->yellow->extension->get("update")->updateExtensionFile(
+                    $fileNameTxt, $fileDataTxt, $modified, 0, 0, "create", $extension);
+                $this->yellow->log($statusCode==200 ? "info" : "error", ucfirst($action)." extension '".ucfirst($extension)." $version'");
+            }
+        }
+        return $statusCode;
+    }
+    
     // Update extension
     public function updateExtension($extension) {
         $statusCode = 200;
-        $path = $this->yellow->system->get("coreExtensionDirectory");
-        if (!empty($extension) && $this->yellow->extension->isExisting("update")) {
-            foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.zip$/", true, false) as $entry) {
-                if (preg_match("/^install-(.*?)\./", basename($entry), $matches)) {
-                    if (strtoloweru($matches[1])==strtoloweru($extension)) {
-                        $statusCode = $this->yellow->extension->get("update")->updateExtensionArchive($entry, "install");
-                        break;
-                    }
-                }
-            }
+        $path = $this->yellow->system->get("coreExtensionDirectory")."install-".$extension.".zip";
+        if (is_file($path) && $this->yellow->extension->isExisting("update")) {
+            $statusCode = $this->yellow->extension->get("update")->updateExtensionArchive($path, "install");
         }
         return $statusCode;
     }
@@ -221,7 +203,8 @@ class YellowInstall {
         }
         $fileName = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreLanguageFile");
         $fileData = $this->yellow->toolbox->readFile($fileName);
-        if (strposu($rawData, "Language:")===false) {
+        if (strposu($fileData, "Language:")===false) {
+            if (!empty($fileData)) $fileData .= "\n";
             $fileData .= "Language: $language\n";
             $fileData .= "media/images/photo.jpg: ".$this->yellow->language->getText("installExampleImage", $language)."\n";
             if (!$this->yellow->toolbox->createFile($fileName, $fileData)) {
@@ -325,9 +308,10 @@ class YellowInstall {
             if ($key=="password" || $key=="status") continue;
             $data[$key] = trim($value);
         }
-        $data["coreStaticUrl"] = $this->yellow->toolbox->detectServerUrl();
         $data["coreServerTimezone"] = $this->yellow->toolbox->detectServerTimezone();
+        $data["coreStaticUrl"] = $this->yellow->toolbox->detectServerUrl();
         if ($this->yellow->isCommandLine()) $data["coreStaticUrl"] = getenv("URL");
+        if ($this->yellow->system->get("updateNotification")=="none") $data["updateNotification"] = "website/install";
         return $data;
     }
 
@@ -371,5 +355,29 @@ class YellowInstall {
             if (preg_match("/^install-(.*?)\./", $entry, $matches) && $matches[1]!="languages") array_push($extensions, $matches[1]);
         }
         return $extensions;
+    }
+    
+    // Return extensions required
+    public function getExtensionsRequired($fileData) {
+        $extensions = array();
+        $languages = $this->detectBrowserLanguages("en, de, fr");
+        foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
+            if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
+                if (!empty($matches[1]) && !empty($matches[2]) && strposu($matches[1], "/")) {
+                    $extension = basename($matches[1]);
+                    $extension = $this->yellow->lookup->normaliseName($extension, true, true);
+                    list($entry, $flags) = $this->yellow->toolbox->getTextList($matches[2], ",", 2);
+                    if (strposu($entry, ".")===false) {
+                        list($dummy1, $entry, $flags) = $this->yellow->toolbox->getTextList($matches[2], ",", 3);
+                    }
+                    $arguments = explode(",", $flags);
+                    $language = array_pop($arguments);
+                    if (preg_match("/^(.*)\.php$/", basename($entry)) && in_array($language, $languages)) {
+                        array_push($extensions, $extension);
+                    }
+                }
+            }
+        }
+        return array_slice($extensions, 0, 3);
     }
 }

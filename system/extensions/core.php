@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.17";
+    const VERSION = "0.8.18";
     const RELEASE = "0.8.15";
     public $page;           // current page
     public $content;        // content files
@@ -55,6 +55,7 @@ class YellowCore {
         $this->system->setDefault("coreLayoutDirectory", "system/layouts/");
         $this->system->setDefault("coreThemeDirectory", "system/themes/");
         $this->system->setDefault("coreTrashDirectory", "system/trash/");
+        $this->system->setDefault("coreCacheDirectory", "cache/");
         $this->system->setDefault("coreContentDirectory", "content/");
         $this->system->setDefault("coreContentRootDirectory", "default/");
         $this->system->setDefault("coreContentHomeDirectory", "home/");
@@ -438,7 +439,7 @@ class YellowPage {
 
     public function __construct($yellow) {
         $this->yellow = $yellow;
-        $this->metaData = new YellowDataCollection();
+        $this->metaData = new YellowArray();
         $this->pageCollection = new YellowPageCollection($yellow);
         $this->pageRelations = array();
         $this->headerData = array();
@@ -478,7 +479,7 @@ class YellowPage {
     
     // Parse page meta data
     public function parseMeta($pageError = "") {
-        $this->metaData = new YellowDataCollection();
+        $this->metaData = new YellowArray();
         if (!is_null($this->rawData)) {
             $this->set("title", $this->yellow->toolbox->createTextTitle($this->location));
             $this->set("language", $this->yellow->lookup->findLanguageFromFile($this->fileName, $this->yellow->system->get("language")));
@@ -963,36 +964,6 @@ class YellowPage {
     // Check if related page exists
     public function isPage($key) {
         return isset($this->pageRelations[$key]);
-    }
-}
-
-class YellowDataCollection extends ArrayObject {
-    public function __construct() {
-        parent::__construct(array());
-    }
-    
-    // Return array element
-    public function offsetGet($key) {
-        if (is_string($key)) $key = lcfirst($key);
-        return parent::offsetGet($key);
-    }
-    
-    // Set array element
-    public function offsetSet($key, $value) {
-        if (is_string($key)) $key = lcfirst($key);
-        parent::offsetSet($key, $value);
-    }
-    
-    // Remove array element
-    public function offsetUnset($key) {
-        if (is_string($key)) $key = lcfirst($key);
-        parent::offsetUnset($key);
-    }
-    
-    // Check if array element exists
-    public function offsetExists($key) {
-        if (is_string($key)) $key = lcfirst($key);
-        return parent::offsetExists($key);
     }
 }
 
@@ -1563,8 +1534,8 @@ class YellowSystem {
     public function __construct($yellow) {
         $this->yellow = $yellow;
         $this->modified = 0;
-        $this->settings = new YellowDataCollection();
-        $this->settingsDefaults = new YellowDataCollection();
+        $this->settings = new YellowArray();
+        $this->settingsDefaults = new YellowArray();
     }
     
     // Load system settings from file
@@ -1572,43 +1543,27 @@ class YellowSystem {
         if (defined("DEBUG") && DEBUG>=2) echo "YellowSystem::load file:$fileName<br/>\n";
         $this->modified = $this->yellow->toolbox->getFileModified($fileName);
         $fileData = $this->yellow->toolbox->readFile($fileName);
-        foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
-            if (preg_match("/^\#/", $line)) continue;
-            if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
-                if (!empty($matches[1]) && !strempty($matches[2])) {
-                    $this->set($matches[1], $matches[2]);
-                    if (defined("DEBUG") && DEBUG>=3) echo "YellowSystem::load $matches[1]:$matches[2]<br/>\n";
-                }
+        $this->settings = $this->yellow->toolbox->getTextSettings($fileData, "");
+        if (defined("DEBUG") && DEBUG>=3) {
+            foreach ($this->settings as $key=>$value) {
+                echo "YellowSystem::load ".ucfirst($key).":$value<br/>\n";
             }
         }
     }
     
     // Save system settings to file
     public function save($fileName, $settings) {
-        $settingsNew = new YellowDataCollection();
+        $this->modified = time();
+        $settingsNew = new YellowArray();
         foreach ($settings as $key=>$value) {
             if (!empty($key) && !strempty($value)) {
                 $this->set($key, $value);
                 $settingsNew[$key] = $value;
             }
         }
-        $this->modified = time();
         $fileData = $this->yellow->toolbox->readFile($fileName);
-        $fileDataNew = "";
-        foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
-            if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
-                if (!empty($matches[1]) && isset($settingsNew[$matches[1]])) {
-                    $fileDataNew .= "$matches[1]: ".$settingsNew[$matches[1]]."\n";
-                    unset($settingsNew[$matches[1]]);
-                    continue;
-                }
-            }
-            $fileDataNew .= $line;
-        }
-        foreach ($settingsNew as $key=>$value) {
-            $fileDataNew .= ucfirst($key).": $value\n";
-        }
-        return $this->yellow->toolbox->createFile($fileName, $fileDataNew);
+        $fileData = $this->yellow->toolbox->setTextSettings($fileData, "", "", $settingsNew);
+        return $this->yellow->toolbox->createFile($fileName, $fileData);
     }
     
     // Set default system setting
@@ -1695,50 +1650,22 @@ class YellowUser {
     public function __construct($yellow) {
         $this->yellow = $yellow;
         $this->modified = 0;
-        $this->settings = array();
+        $this->settings = new YellowArray();
         $this->email = "";
     }
 
     // Load user settings from file
     public function load($fileName) {
         if (defined("DEBUG") && DEBUG>=2) echo "YellowUser::load file:$fileName<br/>\n";
-        $email = "";
         $this->modified = $this->yellow->toolbox->getFileModified($fileName);
         $fileData = $this->yellow->toolbox->readFile($fileName);
-        foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
-            if (preg_match("/^\#/", $line)) continue;
-            if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
-                if (lcfirst($matches[1])=="email" && !strempty($matches[2])) {
-                    $email = $matches[2];
-                    if (defined("DEBUG") && DEBUG>=3) echo "YellowUser::load email:$email<br/>\n";
-                }
-                if (!empty($email) && !empty($matches[1]) && !strempty($matches[2])) {
-                    $this->setUser($matches[1], $matches[2], $email);
-                }
-            }
-        }
+        $this->settings = $this->yellow->toolbox->getTextSettings($fileData, "email");
     }
 
     // Save user settings to file
     public function save($fileName, $email, $settings) {
-        $scan = false;
-        $fileData = $this->yellow->toolbox->readFile($fileName);
-        $fileDataStart = $fileDataMiddle = $fileDataEnd = "";
-        foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
-            if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
-                if (lcfirst($matches[1])=="email" && !strempty($matches[2])) {
-                    $scan = $matches[2]==$email;
-                }
-            }
-            if (!$scan && empty($fileDataMiddle)) {
-                $fileDataStart .= $line;
-            } elseif ($scan) {
-                $fileDataMiddle .= $line;
-            } else {
-                $fileDataEnd .= $line;
-            }
-        }
-        $settingsNew = new YellowDataCollection();
+        $this->modified = time();
+        $settingsNew = new YellowArray();
         $settingsNew["email"] = $email;
         foreach ($settings as $key=>$value) {
             if (!empty($key) && !strempty($value)) {
@@ -1746,53 +1673,18 @@ class YellowUser {
                 $settingsNew[$key] = $value;
             }
         }
-        $fileDataSettings = "";
-        foreach ($this->yellow->toolbox->getTextLines($fileDataMiddle) as $line) {
-            if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
-                if (!empty($matches[1]) && isset($settingsNew[$matches[1]])) {
-                    $fileDataSettings .= "$matches[1]: ".$settingsNew[$matches[1]]."\n";
-                    unset($settingsNew[$matches[1]]);
-                    continue;
-                }
-            }
-            $fileDataSettings .= $line;
-        }
-        foreach ($settingsNew as $key=>$value) {
-            $fileDataSettings .= ucfirst($key).": $value\n";
-        }
-        if (!empty($fileDataMiddle)) {
-            $fileDataMiddle = rtrim($fileDataSettings)."\n";
-            if (!empty($fileDataEnd)) $fileDataMiddle .= "\n";
-        } else {
-            if (!empty($fileDataStart)) $fileDataEnd .= "\n";
-            $fileDataEnd .= $fileDataSettings;
-        }
-        $fileDataNew = $fileDataStart.$fileDataMiddle.$fileDataEnd;
-        return $this->yellow->toolbox->createFile($fileName, $fileDataNew);
+        $fileData = $this->yellow->toolbox->readFile($fileName);
+        $fileData = $this->yellow->toolbox->setTextSettings($fileData, "email", $email, $settingsNew);
+        return $this->yellow->toolbox->createFile($fileName, $fileData);
     }
     
-    // Remove user from file
+    // Remove user settings from file
     public function remove($fileName, $email) {
-        $scan = false;
-        $fileData = $this->yellow->toolbox->readFile($fileName);
-        $fileDataStart = $fileDataMiddle = $fileDataEnd = "";
-        foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
-            if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
-                if (lcfirst($matches[1])=="email" && !strempty($matches[2])) {
-                    $scan = $matches[2]==$email;
-                }
-            }
-            if (!$scan && empty($fileDataMiddle)) {
-                $fileDataStart .= $line;
-            } elseif ($scan) {
-                $fileDataMiddle .= $line;
-            } else {
-                $fileDataEnd .= $line;
-            }
-        }
+        $this->modified = time();
         if (isset($this->settings[$email])) unset($this->settings[$email]);
-        $fileDataNew = rtrim($fileDataStart.$fileDataEnd)."\n";
-        return $this->yellow->toolbox->createFile($fileName, $fileDataNew);
+        $fileData = $this->yellow->toolbox->readFile($fileName);
+        $fileData = $this->yellow->toolbox->unsetTextSettings($fileData, "email", $email);
+        return $this->yellow->toolbox->createFile($fileName, $fileData);
     }
     
     // Set current email
@@ -1802,7 +1694,7 @@ class YellowUser {
     
     // Set user setting
     public function setUser($key, $value, $email) {
-        if (!isset($this->settings[$email])) $this->settings[$email] = new YellowDataCollection();
+        if (!isset($this->settings[$email])) $this->settings[$email] = new YellowArray();
         $this->settings[$email][$key] = $value;
     }
     
@@ -1852,8 +1744,8 @@ class YellowLanguage {
     public function __construct($yellow) {
         $this->yellow = $yellow;
         $this->modified = 0;
-        $this->settings = new YellowDataCollection();
-        $this->settingsDefaults = new YellowDataCollection();
+        $this->settings = new YellowArray();
+        $this->settingsDefaults = new YellowArray();
         $this->language = "";
     }
     
@@ -1863,18 +1755,15 @@ class YellowLanguage {
         $regex = "/^".basename($fileName)."$/";
         foreach ($this->yellow->toolbox->getDirectoryEntries($path, $regex, true, false) as $entry) {
             if (defined("DEBUG") && DEBUG>=2) echo "YellowLanguage::load file:$entry<br/>\n";
-            $language = "";
             $this->modified = max($this->modified, filemtime($entry));
             $fileData = $this->yellow->toolbox->readFile($entry);
-            foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
-                if (preg_match("/^\#/", $line)) continue;
-                if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
-                    if (lcfirst($matches[1])=="language" && !strempty($matches[2])) {
-                        $language = $matches[2];
-                        if (defined("DEBUG") && DEBUG>=3) echo "YellowLanguage::load language:$language<br/>\n";
-                    }
-                    if (!empty($language) && !empty($matches[1]) && !strempty($matches[2])) {
-                        $this->setText($matches[1], $matches[2], $language);
+            $settings = $this->yellow->toolbox->getTextSettings($fileData, "language");
+            foreach($settings as $language=>$block) {
+                if (!isset($this->settings[$language])) {
+                    $this->settings[$language] = $block;
+                } else {
+                    foreach ($block as $key=>$value) {
+                        $this->settings[$language][$key] = $value;
                     }
                 }
             }
@@ -1893,7 +1782,7 @@ class YellowLanguage {
     
     // Set language setting
     public function setText($key, $value, $language) {
-        if (!isset($this->settings[$language])) $this->settings[$language] = new YellowDataCollection();
+        if (!isset($this->settings[$language])) $this->settings[$language] = new YellowArray();
         $this->settings[$language][$key] = $value;
     }
     
@@ -2020,7 +1909,7 @@ class YellowExtension {
     // Load extensions
     public function load($path) {
         foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.php$/", true, false) as $entry) {
-            if (defined("DEBUG") && DEBUG>=2) echo "YellowExtension::load file:$entry<br/>\n";
+            if (defined("DEBUG") && DEBUG>=3) echo "YellowExtension::load file:$entry<br/>\n";
             $this->modified = max($this->modified, filemtime($entry));
             require_once($entry);
             $name = $this->yellow->lookup->normaliseName(basename($entry), true, true);
@@ -2867,6 +2756,122 @@ class YellowToolbox {
         return $lines;
     }
     
+    // Return settings from text
+    function getTextSettings($text, $blockStart) {
+        $settings = new YellowArray();
+        if (empty($blockStart)) {
+            foreach ($this->getTextLines($text) as $line) {
+                if (preg_match("/^\#/", $line)) continue;
+                if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
+                    if (!empty($matches[1]) && !strempty($matches[2])) {
+                        $settings[$matches[1]] = $matches[2];
+                        
+                    }
+                }
+            }
+        } else {
+            $blockKey = "";
+            foreach ($this->getTextLines($text) as $line) {
+                if (preg_match("/^\#/", $line)) continue;
+                if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
+                    if (lcfirst($matches[1])==$blockStart && !strempty($matches[2])) {
+                        $blockKey = $matches[2];
+                        $settings[$blockKey] = new YellowArray();
+                    }
+                    if (!empty($blockKey) && !empty($matches[1]) && !strempty($matches[2])) {
+                        $settings[$blockKey][$matches[1]] = $matches[2];
+                    }
+                }
+            }
+        }
+        return $settings;
+    }
+    
+    // Set settings in text
+    function setTextSettings($text, $blockStart, $blockKey, $settings) {
+        $textNew = "";
+        if (empty($blockStart)) {
+            foreach ($this->getTextLines($text) as $line) {
+                if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
+                    if (!empty($matches[1]) && isset($settings[$matches[1]])) {
+                        $textNew .= "$matches[1]: ".$settings[$matches[1]]."\n";
+                        unset($settings[$matches[1]]);
+                        continue;
+                    }
+                }
+                $textNew .= $line;
+            }
+            foreach ($settings as $key=>$value) {
+                $textNew .= ucfirst($key).": $value\n";
+            }
+        } else {
+            $scan = false;
+            $textStart = $textMiddle = $textEnd = "";
+            foreach ($this->getTextLines($text) as $line) {
+                if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
+                    if (lcfirst($matches[1])==$blockStart && !strempty($matches[2])) {
+                        $scan = lcfirst($matches[2])==lcfirst($blockKey);
+                    }
+                }
+                if (!$scan && empty($textMiddle)) {
+                    $textStart .= $line;
+                } elseif ($scan) {
+                    $textMiddle .= $line;
+                } else {
+                    $textEnd .= $line;
+                }
+            }
+            $textSettings = "";
+            foreach ($this->getTextLines($textMiddle) as $line) {
+                if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
+                    if (!empty($matches[1]) && isset($settings[$matches[1]])) {
+                        $textSettings .= "$matches[1]: ".$settings[$matches[1]]."\n";
+                        unset($settings[$matches[1]]);
+                        continue;
+                    }
+                    $textSettings .= $line;
+                }
+            }
+            foreach ($settings as $key=>$value) {
+                $textSettings .= ucfirst($key).": $value\n";
+            }
+            if (!empty($textMiddle)) {
+                $textMiddle = $textSettings;
+                if (!empty($textEnd)) $textMiddle .= "\n";
+            } else {
+                if (!empty($textStart)) $textEnd .= "\n";
+                $textEnd .= $textSettings;
+            }
+            $textNew = $textStart.$textMiddle.$textEnd;
+        }
+        return $textNew;
+    }
+
+    // Remove settings from text
+    function unsetTextSettings($text, $blockStart, $blockKey) {
+        $textNew = "";
+        if (!empty($blockStart)) {
+            $scan = false;
+            $textStart = $textMiddle = $textEnd = "";
+            foreach ($this->getTextLines($text) as $line) {
+                if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
+                    if (lcfirst($matches[1])==$blockStart && !strempty($matches[2])) {
+                        $scan = lcfirst($matches[2])==lcfirst($blockKey);
+                    }
+                }
+                if (!$scan && empty($textMiddle)) {
+                    $textStart .= $line;
+                } elseif ($scan) {
+                    $textMiddle .= $line;
+                } else {
+                    $textEnd .= $line;
+                }
+            }
+            $textNew = rtrim($textStart.$textEnd)."\n";
+        }
+        return $textNew;
+    }
+    
     // Return attributes from text
     public function getTextAttributes($text) {
         $tokens = array();
@@ -3469,6 +3474,51 @@ class YellowExtensions { // TODO: remove later, for backwards compatibility
     public function getModified($httpFormat = false) { return $this->yellow->extension->getModified($httpFormat); }
     public function getExtensions($type = "") { return array(); }
     public function isExisting($name) { return $this->yellow->extension->isExisting($name); }
+}
+    
+class YellowArray extends ArrayObject {
+    public function __construct() {
+        parent::__construct(array());
+    }
+    
+    // Set array element
+    public function set($key, $value) {
+        $this->offsetSet($key, $value);
+    }
+    
+    // Return array element
+    public function get($key) {
+        return $this->offsetExists($key) ? $this->offsetGet($key) : "";
+    }
+    
+    // Check if array element exists
+    public function isExisting($key) {
+        return $this->offsetExists($key);
+    }
+    
+    // Return array element
+    public function offsetGet($key) {
+        if (is_string($key)) $key = lcfirst($key);
+        return parent::offsetGet($key);
+    }
+    
+    // Set array element
+    public function offsetSet($key, $value) {
+        if (is_string($key)) $key = lcfirst($key);
+        parent::offsetSet($key, $value);
+    }
+    
+    // Remove array element
+    public function offsetUnset($key) {
+        if (is_string($key)) $key = lcfirst($key);
+        parent::offsetUnset($key);
+    }
+    
+    // Check if array element exists
+    public function offsetExists($key) {
+        if (is_string($key)) $key = lcfirst($key);
+        return parent::offsetExists($key);
+    }
 }
 
 // Make string lowercase, UTF-8 compatible
