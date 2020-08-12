@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.18";
+    const VERSION = "0.8.19";
     const RELEASE = "0.8.15";
     public $page;           // current page
     public $content;        // content files
@@ -2802,7 +2802,7 @@ class YellowToolbox {
                 $textNew .= $line;
             }
             foreach ($settings as $key=>$value) {
-                $textNew .= ucfirst($key).": $value\n";
+                $textNew .= (strposu($key, "/") ? $key : ucfirst($key)).": $value\n";
             }
         } else {
             $scan = false;
@@ -2833,7 +2833,7 @@ class YellowToolbox {
                 }
             }
             foreach ($settings as $key=>$value) {
-                $textSettings .= ucfirst($key).": $value\n";
+                $textSettings .= (strposu($key, "/") ? $key : ucfirst($key)).": $value\n";
             }
             if (!empty($textMiddle)) {
                 $textMiddle = $textSettings;
@@ -3143,7 +3143,7 @@ class YellowToolbox {
                 }
                 $rawDataMiddle .= $line;
             }
-            if (!$found) $rawDataMiddle .= ucfirst($key).": $value\n";
+            if (!$found) $rawDataMiddle .= (strposu($key, "/") ? $key : ucfirst($key)).": $value\n";
             $rawDataNew = $parts[1]."---\n".$rawDataMiddle."---\n".$parts[3];
         } else {
             $rawDataNew = $rawData;

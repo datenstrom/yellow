@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.30";
+    const VERSION = "0.8.31";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $updates;                // number of updates
@@ -626,7 +626,7 @@ class YellowUpdate {
             ++$this->updates;
         } else {
             $statusCode = 500;
-            $this->yellow->page->error(500, "Can't find information about extension '$extension'!");
+            $this->yellow->page->error(500, "Please delete extension '$extension' manually!");
         }
         return $statusCode;
     }
@@ -755,6 +755,9 @@ class YellowUpdate {
             if (!is_file($fileNameCurrent)) $statusCode = $this->createExtensionSettings();
             $fileData = $this->yellow->toolbox->readFile($fileNameCurrent);
             $settings = $this->yellow->toolbox->getTextSettings($fileData, "extension");
+            foreach ($settings as $key=>$value) {
+                if (!$this->yellow->extension->isExisting($key)) unset($settings[$key]);
+            }
             foreach ($this->yellow->extension->data as $key=>$value) {
                 if (!$settings->isExisting($key)) $settings[$key] = new YellowArray();
                 $settings[$key]["extension"] = ucfirst($key);
