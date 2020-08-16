@@ -14,8 +14,7 @@
 <div class="header" role="banner">
 <div class="sitename">
 <h1><a href="<?php echo $this->yellow->page->getBase(true)."/" ?>"><i class="sitename-logo"></i><?php echo $this->yellow->page->getHtml("sitename") ?></a></h1>
-<?php if ($page = $this->yellow->content->shared("header")) $this->yellow->page->setPage("header", $page) ?>
-<?php if ($this->yellow->page->isPage("header")) echo $this->yellow->page->getPage("header")->getContent() ?>
+<?php echo $this->yellow->page->getPage("header")->getContent() ?>
 </div>
 <div class="sitename-banner"></div>
 <?php $this->yellow->layout("navigation") ?>

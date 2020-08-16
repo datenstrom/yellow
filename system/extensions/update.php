@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.31";
+    const VERSION = "0.8.33";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $updates;                // number of updates
@@ -54,144 +54,15 @@ class YellowUpdate {
 
     // Handle update
     public function onUpdate($action) {
-        if ($action=="update") {  // TODO: remove later, converts old content settings
-            if ($this->yellow->system->isExisting("multiLanguageMode")) {
-                $coreMultiLanguageMode = $this->yellow->system->get("multiLanguageMode");
-                $fileName = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreSystemFile");
-                if (!$this->yellow->system->save($fileName, array("coreMultiLanguageMode" => $coreMultiLanguageMode))) {
-                    $this->yellow->log("error", "Can't write file '$fileName'!");
-                }
-                $path = $this->yellow->system->get("coreContentDirectory");
-                foreach ($this->yellow->toolbox->getDirectoryEntriesRecursive($path, "/^.*\.md$/", true, false) as $entry) {
-                    $fileData = $fileDataNew = $this->yellow->toolbox->readFile($entry);
-                    $fileStatusUnlisted = false;
-                    $tokens = explode("/", substru($entry, strlenu($path)));
-                    for ($i=0; $i<count($tokens)-1; ++$i) {
-                        if (!preg_match("/^[\d\-\_\.]+(.*)$/", $tokens[$i]) && $tokens[$i]!="shared") {
-                            $fileStatusUnlisted = true;
-                            break;
-                        }
-                    }
-                    $fileDataNew = preg_replace("/Status: hidden/i", "Status: shared", $fileDataNew);
-                    $fileDataNew = preg_replace("/Status: ignore/i", "Build: exclude", $fileDataNew);
-                    if ($fileStatusUnlisted && empty($this->yellow->toolbox->getMetaData($fileDataNew, "status"))) {
-                        $fileDataNew = $this->yellow->toolbox->setMetaData($fileDataNew, "status", "unlisted");
-                    }
-                    if ($fileData!=$fileDataNew) {
-                        $modified = $this->yellow->toolbox->getFileModified($entry);
-                        if (!$this->yellow->toolbox->deleteFile($entry) ||
-                            !$this->yellow->toolbox->createFile($entry, $fileDataNew) ||
-                            !$this->yellow->toolbox->modifyFile($entry, $modified)) {
-                            $this->yellow->log("error", "Can't write file '$entry'!");
-                        }
-                    }
-                }
-            }
-        }
-        if ($action=="update") {  // TODO: remove later, converts old language settings
-            if ($this->yellow->system->isExisting("coreTextFile")) {
-                $fileNameSource = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreTextFile");
-                $fileNameDestination = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreLanguageFile");
-                if (is_file($fileNameSource) && !is_file($fileNameDestination)) {
-                    if (!$this->yellow->toolbox->renameFile($fileNameSource, $fileNameDestination)) {
-                        $this->yellow->log("error", "Can't write file '$fileNameDestination'!");
-                    }
-                }
-                $imageDirectoryLength = strlenu($this->yellow->system->get("coreImageDirectory"));
-                $fileData = $this->yellow->toolbox->readFile($fileNameDestination);
-                $fileDataNew = "";
-                foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
-                    if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
-                        if (strposu($matches[1], ".") &&
-                            substru($matches[1], 0, $imageDirectoryLength)!=$this->yellow->system->get("coreImageDirectory")) {
-                            $line = $this->yellow->system->get("coreImageDirectory").$line;
-                        }
-                    }
-                    $fileDataNew .= $line;
-                }
-                if ($fileData!=$fileDataNew && !$this->yellow->toolbox->createFile($fileNameDestination, $fileDataNew)) {
-                    $this->yellow->log("error", "Can't write file '$fileNameDestination'!");
-                }
-                $path = $this->yellow->system->get("coreExtensionDirectory");
-                foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/.*-language\.txt/", false, false) as $entry) {
-                    $entryShort = str_replace("-language.txt", ".txt", $entry);
-                    if (is_file($entryShort) && !$this->yellow->toolbox->deleteFile($entry, $this->yellow->system->get("coreTrashDirectory"))) {
-                        $this->yellow->log("error", "Can't delete file '$entry'!");
-                    }
-                }
-            }
-        }
         if ($action=="update") {  // TODO: remove later, converts old layout files
-            if ($this->yellow->system->isExisting("coreLayoutDir")) {
-                $path = $this->yellow->system->get("coreLayoutDir");
-                foreach ($this->yellow->toolbox->getDirectoryEntriesRecursive($path, "/^.*\.html$/", true, false) as $entry) {
-                    $fileData = $fileDataNew = $this->yellow->toolbox->readFile($entry);
-                    $fileDataNew = str_replace("yellow->getLayoutArgs", "yellow->getLayoutArguments", $fileDataNew);
-                    $fileDataNew = str_replace("toolbox->getLocationArgs", "toolbox->getLocationArguments", $fileDataNew);
-                    $fileDataNew = str_replace("toolbox->getTextArgs", "toolbox->getTextArguments", $fileDataNew);
-                    $fileDataNew = str_replace("toolbox->normaliseArgs", "toolbox->normaliseArguments", $fileDataNew);
-                    $fileDataNew = str_replace("toolbox->isLocationArgs", "toolbox->isLocationArguments", $fileDataNew);
-                    $fileDataNew = str_replace("text->getHtml", "language->getTextHtml", $fileDataNew);
-                    $fileDataNew = str_replace("\$this->yellow->page->get(\"navigation\")", "\"navigation\"", $fileDataNew);
-                    $fileDataNew = str_replace("\$this->yellow->page->get(\"header\")", "\"header\"", $fileDataNew);
-                    $fileDataNew = str_replace("\$this->yellow->page->get(\"sidebar\")", "\"sidebar\"", $fileDataNew);
-                    $fileDataNew = str_replace("\$this->yellow->page->get(\"footer\")", "\"footer\"", $fileDataNew);
-                    $fileDataNew = str_replace("<link rel=\"icon\" type=\"image/png\" href=\"<?php echo \$resourceLocation.\$this->yellow->page->getHtml(\"theme\").\"-icon.png\" ?>\" />", "<?php /* Add icons and files here */ ?>", $fileDataNew);
-                    if ($fileData!=$fileDataNew && !$this->yellow->toolbox->createFile($entry, $fileDataNew)) {
-                        $this->yellow->log("error", "Can't write file '$entry'!");
-                    }
-                }
-            }
-        }
-        if ($action=="update") {  // TODO: remove later, converts old resource files
-            if ($this->yellow->system->isExisting("coreResourceDir")) {
-                $pathSource = "system/resources/";
-                $pathDestination = $this->yellow->system->get("coreThemeDirectory");
-                if (is_dir($pathSource) && !is_dir($pathDestination)) {
-                    if (!$this->yellow->toolbox->renameDirectory($pathSource, $pathDestination)) {
-                        $this->yellow->log("error", "Can't write directory '$pathDestination'!");
-                    }
-                }
-                if (is_dir($pathSource) && is_dir($pathDestination)) {
-                    foreach ($this->yellow->toolbox->getDirectoryEntries($pathSource, "/.*/", true, false, false) as $entry) {
-                        $entrySource = $pathSource.$entry;
-                        $entryDestination = $pathDestination.$entry;
-                        $dataSource = $this->yellow->toolbox->readFile($entrySource);
-                        $dataDestination = $this->yellow->toolbox->readFile($entryDestination);
-                        if ($dataSource!=$dataDestination && !$this->yellow->toolbox->copyFile($entrySource, $entryDestination)) {
-                            $this->yellow->log("error", "Can't write file '$entryDestination'!");
-                        }
-                    }
-                    if (!$this->yellow->toolbox->deleteDirectory($pathSource, $this->yellow->system->get("coreTrashDirectory"))) {
-                        $this->yellow->log("error", "Can't delete directory '$pathSource'!");
-                    }
-                }
-                foreach ($this->yellow->toolbox->getDirectoryEntries($pathDestination, "/^.*\-icon\.png$/", true, false) as $entry) {
-                    $entryShort = str_replace("-icon.png", ".png", $entry);
-                    if (!is_file($entryShort) && !$this->yellow->toolbox->copyFile($entry, $entryShort)) {
-                        $this->yellow->log("error", "Can't write file '$entryShort'!");
-                    }
-                }
-                foreach ($this->yellow->toolbox->getDirectoryEntries($pathDestination, "/bundle-.*/", true, false) as $entry) {
-                    if (!$this->yellow->toolbox->deleteFile($entry)) {
-                        $this->yellow->log("error", "Can't delete file '$entry'!");
-                    }
-                }
-            }
-            if ($this->yellow->system->get("metaDefaultImage")=="icon") {
-                $fileName = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreSystemFile");
-                if (!$this->yellow->system->save($fileName, array("metaDefaultImage" => "favicon"))) {
-                    $this->yellow->log("error", "Can't write file '$fileName'!");
-                }
-            }
-        }
-        if ($action=="update") {  // TODO: remove later, converts old commandline
-            if ($this->yellow->system->isExisting("coreStaticDir")) {
-                $fileName = "yellow.php";
-                $fileData = $fileDataNew = $this->yellow->toolbox->readFile($fileName);
-                $fileDataNew = str_replace("command(\$argv[1], \$argv[2], \$argv[3], \$argv[4], \$argv[5], \$argv[6], \$argv[7])", "command()", $fileDataNew);
-                if ($fileData!=$fileDataNew && !$this->yellow->toolbox->createFile($fileName, $fileDataNew)) {
-                    $this->yellow->log("error", "Can't write file '$fileName'!");
+            $path = $this->yellow->system->get("coreLayoutDirectory");
+            foreach ($this->yellow->toolbox->getDirectoryEntriesRecursive($path, "/^.*\.html$/", true, false) as $entry) {
+                $fileData = $fileDataNew = $this->yellow->toolbox->readFile($entry);
+                $fileDataNew = str_replace("\$this->yellow->content->shared(\"header\")", "null", $fileDataNew);
+                $fileDataNew = str_replace("\$this->yellow->content->shared(\"footer\")", "null", $fileDataNew);
+                $fileDataNew = str_replace("php if (\$page = null)", "php /* Remove this line */ if (\$page = null)", $fileDataNew);
+                if ($fileData!=$fileDataNew && !$this->yellow->toolbox->createFile($entry, $fileDataNew)) {
+                    $this->yellow->log("error", "Can't write file '$entry'!");
                 }
             }
         }
@@ -527,7 +398,7 @@ class YellowUpdate {
                 if ($statusCode==200) {
                     foreach ($this->getExtensionFileNames($settings) as $fileName) {
                         list($entry, $flags) = $this->yellow->toolbox->getTextList($settings[$fileName], ",", 2);
-                        if (strposu($entry, ".")===false) {
+                        if (strposu($entry, ".")===false) { // TODO: remove later, converts old extension settings
                             list($dummy, $entry, $flags) = $this->yellow->toolbox->getTextList($settings[$fileName], ",", 3);
                         }
                         if (!$this->yellow->lookup->isContentFile($fileName)) {

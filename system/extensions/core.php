@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.19";
+    const VERSION = "0.8.20";
     const RELEASE = "0.8.15";
     public $page;           // current page
     public $content;        // content files
@@ -424,8 +424,8 @@ class YellowPage {
     public $rawData;                // raw data of page
     public $metaDataOffsetBytes;    // meta data offset
     public $metaData;               // meta data
-    public $pageCollection;         // page collection
-    public $pageRelations;          // page relations
+    public $pageCollections;        // additional pages
+    public $sharedPages;            // shared pages
     public $headerData;             // response header
     public $outputData;             // response output
     public $parser;                 // content parser
@@ -440,8 +440,8 @@ class YellowPage {
     public function __construct($yellow) {
         $this->yellow = $yellow;
         $this->metaData = new YellowArray();
-        $this->pageCollection = new YellowPageCollection($yellow);
-        $this->pageRelations = array();
+        $this->pageCollections = array();
+        $this->sharedPages = array();
         $this->headerData = array();
     }
 
@@ -502,6 +502,7 @@ class YellowPage {
                 $this->yellow->system->get("coreServerAddress"),
                 $this->yellow->system->get("coreServerBase"),
                 rtrim($this->yellow->system->get("editLocation"), "/").$this->location));
+            $this->setPage("main", $this);
         } else {
             $this->set("type", $this->yellow->toolbox->getFileType($this->fileName));
             $this->set("group", $this->yellow->toolbox->getFileGroup($this->fileName, $this->yellow->system->get("coreMediaDirectory")));
@@ -534,7 +535,7 @@ class YellowPage {
     
     // Parse page content on demand
     public function parseContent($sizeMax = 0) {
-        if (!is_object($this->parser)) {
+        if (!is_null($this->rawData) && !is_object($this->parser)) {
             if ($this->yellow->extension->isExisting($this->get("parser"))) {
                 $value = $this->yellow->extension->data[$this->get("parser")];
                 if (method_exists($value["object"], "onParseContentRaw")) {
@@ -642,6 +643,10 @@ class YellowPage {
     
     // Parse page layout
     public function parsePageLayout($name) {
+        foreach ($this->yellow->content->getShared($this->location) as $page) {
+            $this->sharedPages[basename($page->location)] = $page;
+            $page->sharedPages["main"] = $this;
+        }
         $this->outputData = null;
         foreach ($this->yellow->extension->data as $key=>$value) {
             if (method_exists($value["object"], "onParsePageLayout")) {
@@ -774,23 +779,23 @@ class YellowPage {
     }
     
     // Set page collection with additional pages
-    public function setPages($pages) {
-        $this->pageCollection = $pages;
+    public function setPages($key, $pages) {
+        $this->pageCollections[$key] = $pages;
     }
 
     // Return page collection with additional pages
-    public function getPages() {
-        return $this->pageCollection;
+    public function getPages($key) {
+        return isset($this->pageCollections[$key]) ? $this->pageCollections[$key] : new YellowPageCollection($this->yellow);
     }
     
-    // Set related page
+    // Set shared page
     public function setPage($key, $page) {
-        $this->pageRelations[$key] = $page;
+        $this->sharedPages[$key] = $page;
     }
     
-    // Return related page
+    // Return shared page
     public function getPage($key) {
-        return isset($this->pageRelations[$key]) ? $this->pageRelations[$key] : $this;
+        return isset($this->sharedPages[$key]) ? $this->sharedPages[$key] : new YellowPage($this->yellow);
     }
     
     // Return page URL
@@ -883,9 +888,10 @@ class YellowPage {
     
     // Return last modification date, Unix time or HTTP format
     public function getLastModified($httpFormat = false) {
-        $lastModified = max($this->lastModified, $this->getModified(), $this->pageCollection->getModified(),
-            $this->yellow->system->getModified(), $this->yellow->language->getModified(), $this->yellow->extension->getModified());
-        foreach ($this->pageRelations as $page) $lastModified = max($lastModified, $page->getModified());
+        $lastModified = max($this->lastModified, $this->getModified(), $this->yellow->system->getModified(),
+            $this->yellow->language->getModified(), $this->yellow->extension->getModified());
+        foreach ($this->pageCollections as $pages) $lastModified = max($lastModified, $pages->getModified());
+        foreach ($this->sharedPages as $page) $lastModified = max($lastModified, $page->getModified());
         return $httpFormat ? $this->yellow->toolbox->getHttpDateFormatted($lastModified) : $lastModified;
     }
     
@@ -961,9 +967,9 @@ class YellowPage {
         return isset($this->headerData[$key]);
     }
     
-    // Check if related page exists
+    // Check if shared page exists
     public function isPage($key) {
-        return isset($this->pageRelations[$key]);
+        return isset($this->sharedPages[$key]);
     }
 }
 
@@ -1320,18 +1326,6 @@ class YellowContent {
         return $pages;
     }
     
-    // Return page with shared content, null if not found
-    public function shared($name) {
-        $location = $this->yellow->lookup->getDirectoryLocation($this->yellow->page->location).$name;
-        $page = $this->find($location);
-        if ($page==null) {
-            $location = $this->getHomeLocation($this->yellow->page->location).$this->yellow->system->get("coreContentSharedDirectory").$name;
-            $page = $this->find($location);
-        }
-        if ($page) $page->setPage("main", $this->yellow->page);
-        return $page;
-    }
-    
     // Return page collection that's empty
     public function clean() {
         return new YellowPageCollection($this->yellow);
@@ -1368,6 +1362,16 @@ class YellowContent {
             if (!$this->yellow->lookup->isFileLocation($page->location) && $levelMax!=0) {
                 $pages->merge($this->getChildrenRecursive($page->location, $showInvisible, $levelMax));
             }
+        }
+        return $pages;
+    }
+    
+    // Return shared pages
+    public function getShared($location) {
+        $pages = new YellowPageCollection($this->yellow);
+        $location = $this->getHomeLocation($location).$this->yellow->system->get("coreContentSharedDirectory");
+        foreach ($this->scanLocation($location) as $page) {
+            if ($page->get("status")=="shared") $pages->append($page);
         }
         return $pages;
     }
@@ -1409,6 +1413,9 @@ class YellowContent {
         if (empty($parentTopLocation)) $parentTopLocation = "$token/";
         return $parentTopLocation;
     }
+    
+    // TODO: remove later, for backwards compatibility
+    public function shared($name) { return null; }
 }
     
 class YellowMedia {
