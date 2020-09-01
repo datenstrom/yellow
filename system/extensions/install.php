@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow
 
 class YellowInstall {
-    const VERSION = "0.8.35";
+    const VERSION = "0.8.36";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -367,9 +367,6 @@ class YellowInstall {
                     $extension = basename($matches[1]);
                     $extension = $this->yellow->lookup->normaliseName($extension, true, true);
                     list($entry, $flags) = $this->yellow->toolbox->getTextList($matches[2], ",", 2);
-                    if (strposu($entry, ".")===false) {
-                        list($dummy1, $entry, $flags) = $this->yellow->toolbox->getTextList($matches[2], ",", 3);
-                    }
                     $arguments = preg_split("/\s*,\s*/", $flags);
                     $language = array_pop($arguments);
                     if (preg_match("/^(.*)\.php$/", basename($entry)) && in_array($language, $languages)) {
