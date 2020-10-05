@@ -2,7 +2,7 @@
 // Command extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/command
 
 class YellowCommand {
-    const VERSION = "0.8.22";
+    const VERSION = "0.8.23";
     public $yellow;                       // access to API
     public $files;                        // number of files
     public $links;                        // number of links
@@ -451,14 +451,18 @@ class YellowCommand {
         if ($scheme=="http" && !empty($address)) {
             if (!preg_match("/\:\d+$/", $address)) $address .= ":8000";
             echo "Starting built-in web server on $scheme://$address/\n";
-            echo "Press Ctrl-C to quit...\n";
+            echo "Press Ctrl+C to quit...\n";
             if (empty($path) || $path=="dynamic") {
-                system("php -S $address yellow.php", $returnStatus);
+                exec("php -S $address yellow.php 2>&1", $outputLines, $returnStatus);
             } else {
-                system("php -S $address -t $path", $returnStatus);
+                exec("php -S $address -t $path 2>&1", $outputLines, $returnStatus);
             }
             $statusCode = $returnStatus!=0 ? 500 : 200;
-            if ($statusCode!=200) echo "ERROR starting web server: Please check your arguments!\n";
+            if ($statusCode!=200) {
+                $output = !empty($outputLines) ? end($outputLines) : "Please check arguments!";
+                if (preg_match("/^\[(.*?)\]\s*(.*)$/", $output, $matches)) $output = $matches[2];
+                echo "ERROR starting web server: $output\n";
+            }
         } else {
             $statusCode = 400;
             echo "Yellow $command: Invalid arguments\n";
