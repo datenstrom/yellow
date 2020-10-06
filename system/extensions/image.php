@@ -2,7 +2,7 @@
 // Image extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/image
 
 class YellowImage {
-    const VERSION = "0.8.9";
+    const VERSION = "0.8.10";
     public $yellow;             // access to API
 
     // Handle initialisation
@@ -88,7 +88,7 @@ class YellowImage {
         list($widthInput, $heightInput, $type) = $this->yellow->toolbox->detectImageInformation($fileName);
         $widthOutput = $this->convertValueAndUnit($widthOutput, $widthInput);
         $heightOutput = $this->convertValueAndUnit($heightOutput, $heightInput);
-        if (($widthInput==$widthOutput && $heightInput==$heightOutput) || $type=="svg") {
+        if (($widthInput==$widthOutput && $heightInput==$heightOutput) || $type=="svg" || $type=="") {
             $src = $this->yellow->system->get("coreServerBase").$this->yellow->system->get("coreImageLocation").$fileNameShort;
             $width = $widthOutput;
             $height = $heightOutput;
