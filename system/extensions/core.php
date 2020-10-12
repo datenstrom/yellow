@@ -3,7 +3,7 @@
 
 class YellowCore {
     const VERSION = "0.8.21";
-    const RELEASE = "0.8.16";
+    const RELEASE = "0.8.17";
     public $page;           // current page
     public $content;        // content files
     public $media;          // media files
@@ -98,7 +98,7 @@ class YellowCore {
     public function load() {
         $this->system->load($this->system->get("coreSettingDirectory").$this->system->get("coreSystemFile"));
         $this->user->load($this->system->get("coreSettingDirectory").$this->system->get("coreUserFile"));
-        $this->language->load($this->system->get("coreExtensionDirectory").".*\.txt");
+        $this->language->load($this->system->get("coreExtensionDirectory")."(.*).txt");
         $this->language->load($this->system->get("coreSettingDirectory").$this->system->get("coreLanguageFile"));
         $this->extension->load($this->system->get("coreExtensionDirectory"));
         $this->lookup->detectFileSystem();
