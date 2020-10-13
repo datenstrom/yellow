@@ -2,7 +2,7 @@
 // Markdown extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/markdown
 
 class YellowMarkdown {
-    const VERSION = "0.8.15";
+    const VERSION = "0.8.16";
     public $yellow;         // access to API
     
     // Handle initialisation
@@ -3924,7 +3924,7 @@ class YellowMarkdownParser extends MarkdownExtraParser {
         $text = $matches[1];
         $level = $matches[3][0]=="=" ? 1 : 2;
         $attr = $this->doExtraAttributes("h$level", $dummy =& $matches[2]);
-        if (empty($attr) && $level>=2 && $level<=3) $attr = $this->getIdAttribute($text);
+        if (empty($attr) && $level>=2) $attr = $this->getIdAttribute($text);
         $output = "<h$level$attr>".$this->runSpanGamut($text)."</h$level>";
         return "\n".$this->hashBlock($output)."\n\n";
     }
@@ -3934,7 +3934,7 @@ class YellowMarkdownParser extends MarkdownExtraParser {
         $text = $matches[2];
         $level = strlen($matches[1]);
         $attr = $this->doExtraAttributes("h$level", $dummy =& $matches[3]);
-        if (empty($attr) && $level>=2 && $level<=3) $attr = $this->getIdAttribute($text);
+        if (empty($attr) && $level>=2) $attr = $this->getIdAttribute($text);
         $output = "<h$level$attr>".$this->runSpanGamut($text)."</h$level>";
         return "\n".$this->hashBlock($output)."\n\n";
     }
