@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.22";
+    const VERSION = "0.8.23";
     const RELEASE = "0.8.16";
     public $page;           // current page
     public $content;        // content files
@@ -13,8 +13,6 @@ class YellowCore {
     public $extension;      // extensions
     public $lookup;         // location and file lookup
     public $toolbox;        // toolbox with helper functions
-    public $text;           // TODO: remove later, for backwards compatibility
-    public $extensions;     // TODO: remove later, for backwards compatibility
 
     public function __construct() {
         $this->checkRequirements();
@@ -27,8 +25,6 @@ class YellowCore {
         $this->extension = new YellowExtension($this);
         $this->lookup = new YellowLookup($this);
         $this->toolbox = new YellowToolbox();
-        $this->text = new YellowText($this); // TODO: remove later, for backwards compatibility
-        $this->extensions = new YellowExtensions($this); // TODO: remove later, for backwards compatibility
         $this->system->setDefault("sitename", "Yellow");
         $this->system->setDefault("author", "Yellow");
         $this->system->setDefault("email", "webmaster");
@@ -91,7 +87,6 @@ class YellowCore {
             ini_set("display_errors", 1);
             error_reporting(E_ALL);
         }
-        error_reporting(E_ALL ^ E_NOTICE); // TODO: remove later, for backwards compatibility
     }
     
     // Handle initialisation
@@ -347,10 +342,6 @@ class YellowCore {
         return array_pad($this->lookup->layoutArguments, $sizeMin, null);
     }
     
-    public function getLayoutArgs($sizeMin = 9) { // TODO: remove later, for backwards compatibility
-        return $this->getLayoutArguments($sizeMin);
-    }
-
     // Return request information
     public function getRequestInformation($scheme = "", $address = "", $base = "") {
         if (empty($scheme) && empty($address) && empty($base)) {
@@ -1413,9 +1404,6 @@ class YellowContent {
         if (empty($parentTopLocation)) $parentTopLocation = "$token/";
         return $parentTopLocation;
     }
-    
-    // TODO: remove later, for backwards compatibility
-    public function shared($name) { return null; }
 }
     
 class YellowMedia {
@@ -1929,39 +1917,6 @@ class YellowExtension {
         foreach ($this->data as $key=>$value) {
             if (method_exists($this->data[$key]["object"], "onLoad")) $this->data[$key]["object"]->onLoad($this->yellow);
         }
-        $this->yellow->system->set("mediaLocation", "/media/"); // TODO: remove later, for backwards compatibility
-        $this->yellow->system->set("downloadLocation", "/media/downloads/");
-        $this->yellow->system->set("imageLocation", "/media/images/");
-        $this->yellow->system->set("extensionLocation", "/media/extensions/");
-        $this->yellow->system->set("resourceLocation", "/media/themes/");
-        $this->yellow->system->set("mediaDir", "media/");
-        $this->yellow->system->set("downloadDir", "media/downloads/");
-        $this->yellow->system->set("imageDir", "media/images/");
-        $this->yellow->system->set("systemDir", "system/");
-        $this->yellow->system->set("extensionDir", "system/extensions/");
-        $this->yellow->system->set("layoutDir", "system/layouts/");
-        $this->yellow->system->set("resourceDir", "system/themes/");
-        $this->yellow->system->set("settingDir", "system/extensions/");
-        $this->yellow->system->set("trashDir", "system/trash/");
-        $this->yellow->system->set("contentDir", "content/");
-        $this->yellow->system->set("contentPagination", "page");
-        $this->yellow->system->set("coreStaticDir", "public/");
-        $this->yellow->system->set("coreCacheDir", "cache/");
-        $this->yellow->system->set("coreTrashDir", "system/trash/");
-        $this->yellow->system->set("coreMediaDir", "media/");
-        $this->yellow->system->set("coreDownloadDir", "media/downloads/");
-        $this->yellow->system->set("coreImageDir", "media/images/");
-        $this->yellow->system->set("coreSystemDir", "system/");
-        $this->yellow->system->set("coreExtensionDir", "system/extensions/");
-        $this->yellow->system->set("coreLayoutDir", "system/layouts/");
-        $this->yellow->system->set("coreResourceDir", "system/themes/");
-        $this->yellow->system->set("coreSettingDir", "system/extensions/");
-        $this->yellow->system->set("coreContentDir", "content/");
-        $this->yellow->system->set("coreContentRootDir", "default/");
-        $this->yellow->system->set("coreContentHomeDir", "home/");
-        $this->yellow->system->set("coreContentSharedDir", "shared/");
-        $this->yellow->system->set("coreResourceLocation", "/media/themes/");
-        $this->yellow->system->set("coreResourceDirectory", "system/themes/");
     }
     
     // Register extension
@@ -3435,54 +3390,8 @@ class YellowToolbox {
     public function isNotModified($lastModifiedFormatted) {
         return $this->getServer("HTTP_IF_MODIFIED_SINCE")==$lastModifiedFormatted;
     }
-    
-    // TODO: remove later, for backwards compatibility
-    public function getLocationArgs() { return $this->getLocationArguments(); }
-    public function getLocationArgsNew($key, $value) { return $this->getLocationArgumentsNew($key, $value); }
-    public function getLocationArgsCleanUrl() { return $this->getLocationArgumentsCleanUrl(); }
-    public function getLocationArgsSeparator() { return $this->getLocationArgumentsSeparator(); }
-    public function getTextArgs($text, $optional = "-", $sizeMin = 9) { return $this->getTextArguments($text, $optional, $sizeMin); }
-    public function normaliseArgs($text, $appendSlash = true, $filterStrict = true) { return $this->normaliseArguments($text, $appendSlash, $filterStrict); }
-    public function isLocationArgs($location = "") { return $this->isLocationArguments($location); }
-    public function isLocationArgsPagination($location) { return $this->isLocationArgumentsPagination($location); }
 }
 
-function strreplaceu() { // TODO: remove later, for backwards compatibility
-    return call_user_func_array("str_replace", func_get_args());
-}
-
-class YellowText { // TODO: remove later, for backwards compatibility
-    public $yellow;
-    public function __construct($yellow) { $this->yellow = $yellow; }
-    public function load($fileName) { $this->yellow->language->load($fileName); }
-    public function setLanguage($language) { $this->yellow->language->set($language); }
-    public function setText($key, $value, $language) { $this->yellow->language->setText($key, $value, $language); }
-    public function get($key) { return $this->yellow->language->getText($key); }
-    public function getHtml($key) { return $this->yellow->language->getTextHtml($key); }
-    public function getText($key, $language) { return $this->yellow->language->getText($key, $language); }
-    public function getTextHtml($key, $language) { return $this->yellow->language->getTextHtml($key, $language); }
-    public function getData($filterStart = "", $language = "") { return $this->yellow->language->getSettings($filterStart, "", $language); }
-    public function getDateFormatted($timestamp, $format) { return $this->yellow->language->getDateFormatted($timestamp, $format); }
-    public function getDateRelative($timestamp, $format, $daysLimit) { return $this->yellow->language->getDateRelative($timestamp, $format, $daysLimit); }
-    public function getModified($httpFormat = false) { return $this->yellow->language->getModified($httpFormat); }
-    public function getLanguages() { return $this->yellow->system->getValues("language"); }
-    public function normaliseDate($text) { return $this->yellow->language->normaliseDate($text); }
-    public function isLanguage($language) { return $this->yellow->language->isExisting($language); }
-    public function isExisting($key, $language = "") { return $this->yellow->language->isText($key, $language); }
-}
-
-class YellowExtensions { // TODO: remove later, for backwards compatibility
-    public $yellow;
-    public function __construct($yellow) { $this->yellow = $yellow; }
-    public function load($path) { $this->yellow->extension->load($path); }
-    public function register($name, $class) { $this->yellow->extension->register($name, $class); }
-    public function get($name) { return $this->yellow->extension->get($name); }
-    public function getData($type = "") { return array(); }
-    public function getModified($httpFormat = false) { return $this->yellow->extension->getModified($httpFormat); }
-    public function getExtensions($type = "") { return array(); }
-    public function isExisting($name) { return $this->yellow->extension->isExisting($name); }
-}
-    
 class YellowArray extends ArrayObject {
     public function __construct() {
         parent::__construct(array());
