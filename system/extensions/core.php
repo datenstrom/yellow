@@ -2243,6 +2243,7 @@ class YellowLookup {
                     break;
                 }
             }
+            if (!isset($array[$key])) $array[$key] = 0;
             $array[$key] += $value;
         }
         return $array;
