@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.23";
+    const VERSION = "0.8.24";
     const RELEASE = "0.8.16";
     public $page;           // current page
     public $content;        // content files
@@ -175,12 +175,15 @@ class YellowCore {
             $locationError = $this->content->getHomeLocation($this->page->location).$this->system->get("coreContentSharedDirectory");
             $fileNameError = $this->lookup->findFileFromLocation($locationError, true).$this->system->get("coreContentErrorFile");
             $fileNameError = str_replace("(.*)", $statusCode, $fileNameError);
+            $languageError = $this->lookup->findLanguageFromFile($fileName, $this->system->get("language"));
             if (is_file($fileNameError)) {
                 $rawData = $this->toolbox->readFile($fileNameError);
+            } elseif ($this->language->isExisting($languageError)) {
+                $rawData = "---\nTitle: ".$this->language->getText("coreError${statusCode}Title", $languageError)."\n";
+                $rawData .= "Layout: error\n---\n".$this->language->getText("coreError${statusCode}Text", $languageError);
             } else {
-                $language = $this->lookup->findLanguageFromFile($fileName, $this->system->get("language"));
-                $rawData = "---\nTitle: ".$this->language->getText("coreError${statusCode}Title", $language)."\n";
-                $rawData .= "Layout: error\n---\n".$this->language->getText("coreError${statusCode}Text", $language);
+                $rawData = "---\nTitle:".$this->toolbox->getHttpStatusFormatted($statusCode, true)."\n";
+                $rawData .= "Layout:error\n---\n[yellow error]";
             }
             $cacheable = false;
         } else {
