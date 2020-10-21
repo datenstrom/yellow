@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow
 
 class YellowInstall {
-    const VERSION = "0.8.37";
+    const VERSION = "0.8.38";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -360,7 +360,7 @@ class YellowInstall {
     // Return extensions required
     public function getExtensionsRequired($fileData) {
         $extensions = array();
-        $languages = $this->detectBrowserLanguages("en, de, fr");
+        $languages = array();
         foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
             if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
                 if (!empty($matches[1]) && !empty($matches[2]) && strposu($matches[1], "/")) {
@@ -369,11 +369,14 @@ class YellowInstall {
                     list($entry, $flags) = $this->yellow->toolbox->getTextList($matches[2], ",", 2);
                     $arguments = preg_split("/\s*,\s*/", $flags);
                     $language = array_pop($arguments);
-                    if (preg_match("/^(.*)\.php$/", basename($entry)) && in_array($language, $languages)) {
-                        array_push($extensions, $extension);
+                    if (preg_match("/^(.*)\.php$/", basename($entry))) {
+                        $languages[$language] = $extension;
                     }
                 }
             }
+        }
+        foreach ($this->detectBrowserLanguages("en, de, fr") as $language) {
+            if (isset($languages[$language])) array_push($extensions, $languages[$language]);
         }
         return array_slice($extensions, 0, 3);
     }
