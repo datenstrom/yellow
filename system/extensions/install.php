@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow
 
 class YellowInstall {
-    const VERSION = "0.8.36";
+    const VERSION = "0.8.37";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -103,7 +103,7 @@ class YellowInstall {
                     $fileDataIni = $zip->getFromName($pathBase."$extension/extension.ini");
                     $statusCode = max($statusCode, $this->updateLanguageArchive($fileDataPhp, $fileDataTxt, $fileDataIni, $pathBase, "install"));
                 }
-                $this->yellow->language->load($this->yellow->system->get("coreExtensionDirectory").".*\.txt");
+                $this->yellow->language->load($this->yellow->system->get("coreExtensionDirectory")."(.*).txt");
                 $zip->close();
             } else {
                 $statusCode = 500;
