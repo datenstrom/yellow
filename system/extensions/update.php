@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.35";
+    const VERSION = "0.8.36";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $updates;                // number of updates
@@ -60,8 +60,10 @@ class YellowUpdate {
                 $key = str_replace("pages", "", $this->yellow->lookup->normaliseName(basename($entry), true, true));
                 $fileData = $fileDataNew = $this->yellow->toolbox->readFile($entry);
                 $fileDataNew = str_replace("yellow->page->getPages()", "yellow->page->getPages(\"$key\")", $fileDataNew);
-                $fileDataNew = str_replace("\$this->yellow->content->shared(\"header\")", "null", $fileDataNew);
-                $fileDataNew = str_replace("\$this->yellow->content->shared(\"footer\")", "null", $fileDataNew);
+                $fileDataNew = str_replace("\$page = \$this->yellow->content->shared(\"header\")", "\$page = null", $fileDataNew);
+                $fileDataNew = str_replace("\$page = \$this->yellow->content->shared(\"footer\")", "\$page = null", $fileDataNew);
+                $fileDataNew = str_replace("\$page = \$this->yellow->content->shared(\"sidebar\")", "\$page = null", $fileDataNew);
+                $fileDataNew = str_replace("\$this->yellow->content->shared(\"sidebar\")", "\$this->yellow->page->isPage(\"sidebar\")", $fileDataNew);
                 $fileDataNew = str_replace("php if (\$page = null)", "php /* Remove this line */ if (\$page = null)", $fileDataNew);
                 if ($fileData!=$fileDataNew && !$this->yellow->toolbox->createFile($entry, $fileDataNew)) {
                     $this->yellow->log("error", "Can't write file '$entry'!");
