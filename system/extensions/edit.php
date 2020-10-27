@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/edit
 
 class YellowEdit {
-    const VERSION = "0.8.35";
+    const VERSION = "0.8.36";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -99,7 +99,7 @@ class YellowEdit {
     public function onUpdate($action) {
         if ($action=="update") {
             $cleanup = false;
-            $fileNameUser = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreUserFile");
+            $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
             $fileData = $this->yellow->toolbox->readFile($fileNameUser);
             $fileDataNew = "";
             foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
@@ -161,7 +161,7 @@ class YellowEdit {
             case "short":       echo "ERROR updating settings: Please enter a longer password!\n"; break;
         }
         if ($status=="ok") {
-            $fileNameUser = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreUserFile");
+            $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
             $settings = array(
                 "name" => $name,
                 "language" => $this->yellow->system->get("language"),
@@ -201,7 +201,7 @@ class YellowEdit {
             case "short":   echo "ERROR updating settings: Please enter a longer password!\n"; break;
         }
         if ($status=="ok") {
-            $fileNameUser = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreUserFile");
+            $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
             $settings = array(
                 "name" => empty($name) ? $this->yellow->user->getUser("name", $email) : $name,
                 "hash" => empty($password) ? $this->yellow->user->getUser("hash", $email) : $this->response->createHash($password),
@@ -229,7 +229,7 @@ class YellowEdit {
             case "unknown": echo "ERROR updating settings: Can't find email '$email'!\n"; break;
         }
         if ($status=="ok") {
-            $fileNameUser = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreUserFile");
+            $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
             $status = $this->yellow->user->remove($fileNameUser, $email) ? "ok" : "error";
             if ($status=="error") echo "ERROR updating settings: Can't write file '$fileNameUser'!\n";
             $this->yellow->log($status=="ok" ? "info" : "error", "Remove user '".strtok($name, " ")."'");
@@ -297,7 +297,7 @@ class YellowEdit {
 
     // Process request for user login
     public function processRequestLogin($scheme, $address, $base, $location, $fileName) {
-        $fileNameUser = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreUserFile");
+        $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
         $settings = array("failed" => "0", "modified" => date("Y-m-d H:i:s", time()));
         if ($this->yellow->user->save($fileNameUser, $this->response->userEmail, $settings)) {
             $home = $this->yellow->user->getUser("home", $this->response->userEmail);
@@ -341,7 +341,7 @@ class YellowEdit {
         if ($this->response->status=="ok" && $this->response->isLoginRestriction()) $this->response->status = "next";
         if ($this->response->status=="ok" && $this->isUserAccountTaken($email)) $this->response->status = "next";
         if ($this->response->status=="ok") {
-            $fileNameUser = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreUserFile");
+            $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
             $settings = array(
                 "name" => $name,
                 "language" => $this->yellow->lookup->findLanguageFromFile($fileName, $this->yellow->system->get("language")),
@@ -376,7 +376,7 @@ class YellowEdit {
         $email = $this->yellow->page->getRequest("email");
         $this->response->status = $this->getUserStatus($email, $this->yellow->page->getRequest("action"));
         if ($this->response->status=="ok") {
-            $fileNameUser = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreUserFile");
+            $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
             $settings = array("failed" => "0", "modified" => date("Y-m-d H:i:s", time()), "status" => "unapproved");
             $this->response->status = $this->yellow->user->save($fileNameUser, $email, $settings) ? "ok" : "error";
             if ($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
@@ -397,7 +397,7 @@ class YellowEdit {
         $this->response->status = $this->getUserStatus($email, $this->yellow->page->getRequest("action"));
         if ($this->response->status=="ok") {
             $name = $this->yellow->user->getUser("name", $email);
-            $fileNameUser = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreUserFile");
+            $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
             $settings = array("failed" => "0", "modified" => date("Y-m-d H:i:s", time()), "status" => "active");
             $this->response->status = $this->yellow->user->save($fileNameUser, $email, $settings) ? "ok" : "error";
             if ($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
@@ -437,7 +437,7 @@ class YellowEdit {
             if (empty($password)) $this->response->status = "password";
             if ($this->response->status=="ok") $this->response->status = $this->getUserAccount($this->response->action, $email, $password);
             if ($this->response->status=="ok") {
-                $fileNameUser = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreUserFile");
+                $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
                 $settings = array("hash" => $this->response->createHash($password), "failed" => "0", "modified" => date("Y-m-d H:i:s", time()));
                 $this->response->status = $this->yellow->user->save($fileNameUser, $email, $settings) ? "ok" : "error";
                 if ($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
@@ -458,7 +458,7 @@ class YellowEdit {
         $email = $this->yellow->page->getRequest("email");
         $this->response->status = $this->getUserStatus($email, $this->yellow->page->getRequest("action"));
         if ($this->response->status=="ok") {
-            $fileNameUser = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreUserFile");
+            $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
             $settings = array("failed" => "0", "modified" => date("Y-m-d H:i:s", time()), "status" => "active");
             $this->response->status = $this->yellow->user->save($fileNameUser, $email, $settings) ? "done" : "error";
             if ($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
@@ -478,7 +478,7 @@ class YellowEdit {
             if ($this->yellow->user->getUser("status", $emailSource)!="active") $this->response->status = "done";
         }
         if ($this->response->status=="ok") {
-            $fileNameUser = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreUserFile");
+            $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
             $settings = array("failed" => "0", "modified" => date("Y-m-d H:i:s", time()), "status" => "unchanged");
             $this->response->status = $this->yellow->user->save($fileNameUser, $email, $settings) ? "ok" : "error";
             if ($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
@@ -502,7 +502,7 @@ class YellowEdit {
             if (!$this->yellow->user->isExisting($email) || empty($hash)) $this->response->status = "done";
         }
         if ($this->response->status=="ok") {
-            $fileNameUser = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreUserFile");
+            $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
             $settings = array(
                 "hash" => $hash,
                 "pending" => "none",
@@ -513,7 +513,7 @@ class YellowEdit {
             if ($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
         }
         if ($this->response->status=="ok" && $email!=$emailSource) {
-            $fileNameUser = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreUserFile");
+            $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
             $this->response->status = $this->yellow->user->remove($fileNameUser, $emailSource) ? "ok" : "error";
             if ($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
         }
@@ -550,7 +550,7 @@ class YellowEdit {
         $this->response->status = $this->getUserStatus($email, $this->yellow->page->getRequest("action"));
         if ($this->response->status=="ok") {
             $name = $this->yellow->user->getUser("name", $email);
-            $fileNameUser = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreUserFile");
+            $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
             $settings = array("failed" => "0", "modified" => date("Y-m-d H:i:s", time()), "status" => "removed");
             $this->response->status = $this->yellow->user->save($fileNameUser, $email, $settings) ? "ok" : "error";
             if ($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
@@ -561,7 +561,7 @@ class YellowEdit {
             if ($this->response->status=="error") $this->yellow->page->error(500, "Can't send email on this server!");
         }
         if ($this->response->status=="ok") {
-            $fileNameUser = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreUserFile");
+            $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
             $this->response->status = $this->yellow->user->remove($fileNameUser, $email) ? "ok" : "error";
             if ($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
         }
@@ -587,7 +587,7 @@ class YellowEdit {
             if ($this->response->status=="ok") $this->response->status = $this->getUserAccount($this->response->action, $email, $password);
             if ($this->response->status=="ok" && $email!=$emailSource && $this->isUserAccountTaken($email)) $this->response->status = "taken";
             if ($this->response->status=="ok" && $email!=$emailSource) {
-                $fileNameUser = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreUserFile");
+                $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
                 $settings = array(
                     "name" => $name,
                     "language" => $language,
@@ -603,7 +603,7 @@ class YellowEdit {
                 if ($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
             }
             if ($this->response->status=="ok") {
-                $fileNameUser = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreUserFile");
+                $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
                 $settings = array(
                     "name" => $name,
                     "language" => $language,
@@ -620,7 +620,7 @@ class YellowEdit {
             }
         } else {
             if ($this->response->status=="ok") {
-                $fileNameUser = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreUserFile");
+                $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
                 $settings = array("name" => $name, "language" => $language, "failed" => "0", "modified" => date("Y-m-d H:i:s", time()));
                 $this->response->status = $this->yellow->user->save($fileNameUser, $email, $settings) ? "done" : "error";
                 if ($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
@@ -648,7 +648,7 @@ class YellowEdit {
                 if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) $this->response->status = "invalid";
             }
             if ($this->response->status=="ok") {
-                $fileName = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreSystemFile");
+                $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
                 $settings = array("sitename" => $sitename, "author" => $author, "email" => $email);
                 $file = $this->response->getFileSystem($scheme, $address, $base, $location, $fileName, $settings);
                 $this->response->status = (!$file->isError() && $this->yellow->system->save($fileName, $settings)) ? "done" : "error";
@@ -896,7 +896,7 @@ class YellowEdit {
             if ($this->response->userFailedExpire>time() && $this->yellow->user->isExisting($this->response->userFailedEmail)) {
                 $email = $this->response->userFailedEmail;
                 $failed = $this->yellow->user->getUser("failed", $email)+1;
-                $fileNameUser = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreUserFile");
+                $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
                 $status = $this->yellow->user->save($fileNameUser, $email, array("failed" => $failed)) ? "ok" : "error";
                 if ($status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
                 if ($failed==$this->yellow->system->get("editBruteForceProtection")) {

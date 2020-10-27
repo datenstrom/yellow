@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow
 
 class YellowInstall {
-    const VERSION = "0.8.38";
+    const VERSION = "0.8.39";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -103,7 +103,7 @@ class YellowInstall {
                     $fileDataIni = $zip->getFromName($pathBase."$extension/extension.ini");
                     $statusCode = max($statusCode, $this->updateLanguageArchive($fileDataPhp, $fileDataTxt, $fileDataIni, $pathBase, "install"));
                 }
-                $this->yellow->language->load($this->yellow->system->get("coreExtensionDirectory")."(.*).txt");
+                $this->yellow->language->load($this->yellow->system->get("coreExtensionDirectory"));
                 $zip->close();
             } else {
                 $statusCode = 500;
@@ -150,7 +150,7 @@ class YellowInstall {
         $statusCode = 200;
         if (!empty($email) && !empty($password) && $this->yellow->extension->isExisting("edit")) {
             if (empty($name)) $name = $this->yellow->system->get("sitename");
-            $fileNameUser = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreUserFile");
+            $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
             $settings = array(
                 "name" => $name,
                 "language" => $language,
@@ -196,12 +196,12 @@ class YellowInstall {
     // Update settings
     public function updateSettings($language) {
         $statusCode = 200;
-        $fileName = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreSystemFile");
+        $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
         if (!$this->yellow->system->save($fileName, $this->getSystemData())) {
             $statusCode = 500;
             $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
         }
-        $fileName = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreLanguageFile");
+        $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreLanguageFile");
         $fileData = $this->yellow->toolbox->readFile($fileName);
         if (strposu($fileData, "Language:")===false) {
             if (!empty($fileData)) $fileData .= "\n";
@@ -271,7 +271,7 @@ class YellowInstall {
     
     // Check web server write access
     public function checkServerWrite() {
-        $fileName = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreSystemFile");
+        $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
         return $this->yellow->system->save($fileName, array());
     }
 

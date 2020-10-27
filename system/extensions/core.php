@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.24";
+    const VERSION = "0.8.25";
     const RELEASE = "0.8.16";
     public $page;           // current page
     public $content;        // content files
@@ -47,7 +47,6 @@ class YellowCore {
         $this->system->setDefault("coreImageDirectory", "media/images/");
         $this->system->setDefault("coreSystemDirectory", "system/");
         $this->system->setDefault("coreExtensionDirectory", "system/extensions/");
-        $this->system->setDefault("coreSettingDirectory", "system/settings/");
         $this->system->setDefault("coreLayoutDirectory", "system/layouts/");
         $this->system->setDefault("coreThemeDirectory", "system/themes/");
         $this->system->setDefault("coreTrashDirectory", "system/trash/");
@@ -60,9 +59,9 @@ class YellowCore {
         $this->system->setDefault("coreContentErrorFile", "page-error-(.*).md");
         $this->system->setDefault("coreContentExtension", ".md");
         $this->system->setDefault("coreDownloadExtension", ".download");
-        $this->system->setDefault("coreSystemFile", "system.ini");
-        $this->system->setDefault("coreUserFile", "user.ini");
-        $this->system->setDefault("coreLanguageFile", "language.ini");
+        $this->system->setDefault("coreSystemFile", "yellow-system.ini");
+        $this->system->setDefault("coreUserFile", "yellow-user.ini");
+        $this->system->setDefault("coreLanguageFile", "yellow-language.ini");
         $this->system->setDefault("coreLogFile", "yellow.log");
         $this->language->setDefault("coreDateFormatShort");
         $this->language->setDefault("coreDateFormatMedium");
@@ -91,10 +90,10 @@ class YellowCore {
     
     // Handle initialisation
     public function load() {
-        $this->system->load($this->system->get("coreSettingDirectory").$this->system->get("coreSystemFile"));
-        $this->user->load($this->system->get("coreSettingDirectory").$this->system->get("coreUserFile"));
-        $this->language->load($this->system->get("coreExtensionDirectory")."(.*).txt");
-        $this->language->load($this->system->get("coreSettingDirectory").$this->system->get("coreLanguageFile"));
+        $this->system->load($this->system->get("coreExtensionDirectory").$this->system->get("coreSystemFile"));
+        $this->user->load($this->system->get("coreExtensionDirectory").$this->system->get("coreUserFile"));
+        $this->language->load($this->system->get("coreExtensionDirectory"));
+        $this->language->load($this->system->get("coreExtensionDirectory").$this->system->get("coreLanguageFile"));
         $this->extension->load($this->system->get("coreExtensionDirectory"));
         $this->lookup->detectFileSystem();
         $this->startup();
@@ -305,7 +304,7 @@ class YellowCore {
                 if (method_exists($value["object"], "onStartup")) $value["object"]->onStartup();
             }
             foreach ($this->extension->data as $key=>$value) {
-                if (method_exists($value["object"], "onUpdate")) $value["object"]->onUpdate("startup");
+                if (method_exists($value["object"], "onUpdate")) $value["object"]->onUpdate("ready");
             }
         }
     }
@@ -1747,10 +1746,15 @@ class YellowLanguage {
         $this->language = "";
     }
     
-    // Load language settings from file
+    // Load language settings from file or directory
     public function load($fileName) {
-        $path = dirname($fileName);
-        $regex = "/^".basename($fileName)."$/";
+        if (substru($fileName, -1, 1)!="/") {
+            $path = dirname($fileName);
+            $regex = "/^".basename($fileName)."$/";
+        } else {
+            $path = $fileName;
+            $regex = "/^.*\.txt$/";
+        }
         foreach ($this->yellow->toolbox->getDirectoryEntries($path, $regex, true, false) as $entry) {
             if (defined("DEBUG") && DEBUG>=2) echo "YellowLanguage::load file:$entry<br/>\n";
             $this->modified = max($this->modified, filemtime($entry));

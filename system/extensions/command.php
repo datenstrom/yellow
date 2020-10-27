@@ -2,7 +2,7 @@
 // Command extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/command
 
 class YellowCommand {
-    const VERSION = "0.8.24";
+    const VERSION = "0.8.25";
     public $yellow;                       // access to API
     public $files;                        // number of files
     public $links;                        // number of links
@@ -55,7 +55,7 @@ class YellowCommand {
                 $statusCode = 500;
                 $this->files = 0;
                 $this->errors = 1;
-                $fileName = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreSystemFile");
+                $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
                 echo "ERROR building files: Please configure CoreStaticUrl in file '$fileName'!\n";
             }
             echo "Yellow $command: $this->files file".($this->files!=1 ? "s" : "");
@@ -237,7 +237,7 @@ class YellowCommand {
                 $statusCode = 500;
                 $this->links = 0;
                 $this->errors = 1;
-                $fileName = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreSystemFile");
+                $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
                 echo "ERROR checking files: Please configure CoreStaticUrl in file '$fileName'!\n";
             }
             echo "Yellow $command: $this->links link".($this->links!=1 ? "s" : "");
@@ -392,7 +392,9 @@ class YellowCommand {
         $statusCode = 200;
         $path = rtrim(empty($path) ? $this->yellow->system->get("commandStaticBuildDirectory") : $path, "/");
         if (empty($location)) {
-            $statusCode = max($statusCode, $this->broadcastCommand("clean", "all"));
+            foreach ($this->yellow->extension->data as $key=>$value) {
+                if (method_exists($value["object"], "onUpdate")) $value["object"]->onUpdate("clean");
+            }
             $statusCode = max($statusCode, $this->cleanStaticDirectory($path));
         } else {
             if ($this->yellow->lookup->isFileLocation($location)) {
@@ -424,17 +426,6 @@ class YellowCommand {
             if (!$this->yellow->toolbox->deleteFile($fileName)) {
                 $statusCode = 500;
                 echo "ERROR cleaning files: Can't delete file '$fileName'!\n";
-            }
-        }
-        return $statusCode;
-    }
-    
-    // Broadcast command to other extensions
-    public function broadcastCommand($command, $text) {
-        $statusCode = 0;
-        foreach ($this->yellow->extension->data as $key=>$value) {
-            if (method_exists($value["object"], "onCommand") && $key!="command") {
-                $statusCode = max($statusCode, $value["object"]->onCommand($command, $text));
             }
         }
         return $statusCode;

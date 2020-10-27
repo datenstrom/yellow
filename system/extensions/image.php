@@ -2,7 +2,7 @@
 // Image extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/image
 
 class YellowImage {
-    const VERSION = "0.8.10";
+    const VERSION = "0.8.11";
     public $yellow;             // access to API
 
     // Handle initialisation
@@ -59,27 +59,17 @@ class YellowImage {
             }
         }
     }
-    
-    // Handle command
-    public function onCommand($command, $text) {
-        switch ($command) {
-            case "clean":   $statusCode = $this->processCommandClean($command, $text); break;
-            default:        $statusCode = 0;
-        }
-        return $statusCode;
-    }
 
-    // Process command to clean thumbnails
-    public function processCommandClean($command, $text) {
-        $statusCode = 0;
-        if ($command=="clean" && $text=="all") {
+    // Handle update
+    public function onUpdate($action) {
+        if ($action=="clean") {
+            $statusCode = 200;
             $path = $this->yellow->system->get("imageThumbnailDirectory");
             foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/.*/", false, false) as $entry) {
                 if (!$this->yellow->toolbox->deleteFile($entry)) $statusCode = 500;
             }
-            if ($statusCode==500) echo "ERROR cleaning thumbnails: Can't delete files in directory '$path'!\n";
+            if ($statusCode==500) $this->yellow->log("error", "Can't delete files in directory '$path'!\n");
         }
-        return $statusCode;
     }
 
     // Return image information, create thumbnail on demand

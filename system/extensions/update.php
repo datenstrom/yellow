@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.36";
+    const VERSION = "0.8.37";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $updates;                // number of updates
@@ -14,6 +14,9 @@ class YellowUpdate {
         $this->yellow->system->setDefault("updateExtensionFile", "extension.ini");
         $this->yellow->system->setDefault("updateCurrentFile", "update-current.ini");
         $this->yellow->system->setDefault("updateLatestFile", "update-latest.ini");
+        $this->yellow->system->setDefault("updateDailyTimestamp", "0");
+        $this->yellow->system->setDefault("updateWeeklyTimestamp", "0");
+        $this->yellow->system->setDefault("updateMonthlyTimestamp", "0");
         $this->yellow->system->setDefault("updateNotification", "none");
     }
     
@@ -33,7 +36,6 @@ class YellowUpdate {
         if ($statusCode==0) {
             switch ($command) {
                 case "about":       $statusCode = $this->processCommandAbout($command, $text); break;
-                case "clean":       $statusCode = $this->processCommandClean($command, $text); break;
                 case "install":     $statusCode = $this->processCommandInstall($command, $text); break;
                 case "uninstall":   $statusCode = $this->processCommandUninstall($command, $text); break;
                 case "update":      $statusCode = $this->processCommandUpdate($command, $text); break;
@@ -54,7 +56,82 @@ class YellowUpdate {
 
     // Handle update
     public function onUpdate($action) {
-        if ($action=="update") {  // TODO: remove later, converts old layout files
+        if ($action=="ready") {
+            if ($this->yellow->system->get("updateNotification")!="none") {
+                foreach (explode(",", $this->yellow->system->get("updateNotification")) as $token) {
+                    list($extension, $action) = $this->yellow->toolbox->getTextList($token, "/", 2);
+                    if ($this->yellow->extension->isExisting($extension) && ($action!="ready" && $action!="uninstall")) {
+                        $value = $this->yellow->extension->data[$extension];
+                        if (method_exists($value["object"], "onUpdate")) $value["object"]->onUpdate($action);
+                    }
+                }
+                $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
+                if (!$this->yellow->system->save($fileName, array("updateNotification" => "none"))) {
+                    $this->yellow->log("error", "Can't write file '$fileName'!");
+                }
+                $this->updateSystemSettings();
+                $this->updateLanguageSettings();
+            }
+            if ($this->yellow->system->get("updateDailyTimestamp") <= time()) {
+                foreach ($this->yellow->extension->data as $key=>$value) {
+                    if (method_exists($value["object"], "onUpdate")) $value["object"]->onUpdate("daily");
+                }
+                $this->updateTimestampSettings("updateDailyTimestamp");
+            }
+            if ($this->yellow->system->get("updateWeeklyTimestamp") <= time()) {
+                foreach ($this->yellow->extension->data as $key=>$value) {
+                    if (method_exists($value["object"], "onUpdate")) $value["object"]->onUpdate("weekly");
+                }
+                $this->updateTimestampSettings("updateWeeklyTimestamp");
+            }
+            if ($this->yellow->system->get("updateMonthlyTimestamp") <= time()) {
+                foreach ($this->yellow->extension->data as $key=>$value) {
+                    if (method_exists($value["object"], "onUpdate")) $value["object"]->onUpdate("monthly");
+                }
+                $this->updateTimestampSettings("updateMonthlyTimestamp");
+            }
+        }
+        if ($action=="clean") {
+            $statusCode = 200;
+            $path = $this->yellow->system->get("coreExtensionDirectory");
+            $regex = "/^.*\\".$this->yellow->system->get("coreDownloadExtension")."$/";
+            foreach ($this->yellow->toolbox->getDirectoryEntries($path, $regex, false, false) as $entry) {
+                if (!$this->yellow->toolbox->deleteFile($entry)) $statusCode = 500;
+            }
+            if ($statusCode==500) $this->yellow->log("error", "Can't delete files in directory '$path'!\n");
+        }
+        if ($action=="update") { // TODO: remove later, convert old settings files
+            if (is_dir("system/settings/")) {
+                $fileNameSource = "system/settings/system.ini";
+                $fileNameDestination = "system/extensions/yellow-system.ini";
+                if (is_file($fileNameSource)) {
+                    $fileData = $fileDataNew = $this->yellow->toolbox->readFile($fileNameSource);
+                    $fileDataNew = str_replace("user.ini", "yellow-user.ini", $fileDataNew);
+                    $fileDataNew = str_replace("language.ini", "yellow-language.ini", $fileDataNew);
+                    if (!$this->yellow->toolbox->createFile($fileNameDestination, $fileDataNew)) {
+                        $this->yellow->log("error", "Can't write file '$fileNameDestination'!");
+                    }
+                }
+                $fileNameSource = "system/settings/user.ini";
+                $fileNameDestination = "system/extensions/yellow-user.ini";
+                if (is_file($fileNameSource) && !$this->yellow->toolbox->copyFile($fileNameSource, $fileNameDestination)) {
+                    $this->yellow->log("error", "Can't write file '$fileNameDestination'!");
+                }
+                $fileNameSource = "system/settings/language.ini";
+                $fileNameDestination = "system/extensions/yellow-language.ini";
+                if (is_file($fileNameSource) && !$this->yellow->toolbox->copyFile($fileNameSource, $fileNameDestination)) {
+                    $this->yellow->log("error", "Can't write file '$fileNameDestination'!");
+                }
+                if (!$this->yellow->toolbox->deleteDirectory("system/settings/",
+                    $this->yellow->system->get("coreTrashDirectory"))) {
+                    $this->yellow->log("error", "Can't delete directory 'system/settings/'!");
+                } else {
+                    $this->yellow->page->error(500, "The flux capacitor is charging, please reload page!");
+                    $this->yellow->log("info", "Convert old settings files");
+                }
+            }
+        }
+        if ($action=="update") { // TODO: remove later, convert old layout files
             $path = $this->yellow->system->get("coreLayoutDirectory");
             foreach ($this->yellow->toolbox->getDirectoryEntriesRecursive($path, "/^.*\.html$/", true, false) as $entry) {
                 $key = str_replace("pages", "", $this->yellow->lookup->normaliseName(basename($entry), true, true));
@@ -70,28 +147,11 @@ class YellowUpdate {
                 }
             }
         }
-        if ($action=="startup") {
-            if ($this->yellow->system->get("updateNotification")!="none") {
-                foreach (explode(",", $this->yellow->system->get("updateNotification")) as $token) {
-                    list($extension, $action) = $this->yellow->toolbox->getTextList($token, "/", 2);
-                    if ($this->yellow->extension->isExisting($extension) && ($action!="startup" && $action!="uninstall")) {
-                        $value = $this->yellow->extension->data[$extension];
-                        if (method_exists($value["object"], "onUpdate")) $value["object"]->onUpdate($action);
-                    }
-                }
-                $fileName = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreSystemFile");
-                if (!$this->yellow->system->save($fileName, array("updateNotification" => "none"))) {
-                    $this->yellow->log("error", "Can't write file '$fileName'!");
-                }
-                $this->updateSystemSettings();
-                $this->updateLanguageSettings();
-            }
-        }
     }
     
     // Update system settings after update notification
     public function updateSystemSettings() {
-        $fileName = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreSystemFile");
+        $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
         $fileData = $this->yellow->toolbox->readFile($fileName);
         $fileDataStart = $fileDataSettings = $fileDataComments = "";
         $settings = new YellowArray();
@@ -122,7 +182,7 @@ class YellowUpdate {
     
     // Update language settings after update notification
     public function updateLanguageSettings() {
-        $fileName = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreLanguageFile");
+        $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreLanguageFile");
         $fileData = $this->yellow->toolbox->readFile($fileName);
         $fileDataStart = $fileDataSettings = $language = "";
         $settings = new YellowArray();
@@ -159,6 +219,25 @@ class YellowUpdate {
         }
         $fileDataNew = $fileDataStart.$fileDataSettings;
         if ($fileData!=$fileDataNew && !$this->yellow->toolbox->createFile($fileName, $fileDataNew)) {
+            $this->yellow->log("error", "Can't write file '$fileName'!");
+        }
+    }
+    
+    // Update timestamp settings in regular intervalls
+    public function updateTimestampSettings($key) {
+        $timestamp = $timeOffset = 0;
+        foreach(str_split($this->yellow->system->get("sitename")) as $char) {
+            $timeOffset = ($timeOffset+ord($char)) % 60;
+        }
+        if ($key=="updateDailyTimestamp") {
+            $timestamp = mktime(0, 0, 0) + 60*60*24 + $timeOffset;
+        } elseif ($key=="updateWeeklyTimestamp") {
+            $timestamp = mktime(0, 0, 0, date("n"), date("j")-date("N")+1) + 60*60*24*7 + $timeOffset;
+        } elseif ($key=="updateMonthlyTimestamp") {
+            $timestamp = mktime(0, 0, 0, date("n")+1, 1) + $timeOffset;
+        }
+        $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
+        if (!$this->yellow->system->save($fileName, array($key => $timestamp))) {
             $this->yellow->log("error", "Can't write file '$fileName'!");
         }
     }
@@ -226,20 +305,6 @@ class YellowUpdate {
             }
         }
         if ($statusCode!=200) echo "ERROR checking updates: ".$this->yellow->page->get("pageError")."\n";
-        return $statusCode;
-    }
-    
-    // Process command to clean downloads
-    public function processCommandClean($command, $text) {
-        $statusCode = 0;
-        if ($command=="clean" && $text=="all") {
-            $path = $this->yellow->system->get("coreExtensionDirectory");
-            $regex = "/^.*\\".$this->yellow->system->get("coreDownloadExtension")."$/";
-            foreach ($this->yellow->toolbox->getDirectoryEntries($path, $regex, false, false) as $entry) {
-                if (!$this->yellow->toolbox->deleteFile($entry)) $statusCode = 500;
-            }
-            if ($statusCode==500) echo "ERROR cleaning downloads: Can't delete files in directory '$path'!\n";
-        }
         return $statusCode;
     }
     
@@ -322,7 +387,7 @@ class YellowUpdate {
         if ($updateNotification=="none") $updateNotification = "";
         if (!empty($updateNotification)) $updateNotification .= ",";
         $updateNotification .= "$extension/$action";
-        $fileName = $this->yellow->system->get("coreSettingDirectory").$this->yellow->system->get("coreSystemFile");
+        $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
         if (!$this->yellow->system->save($fileName, array("updateNotification" => $updateNotification))) {
             $statusCode = 500;
             $this->yellow->page->error(500, "Can't write file '$fileName'!");
