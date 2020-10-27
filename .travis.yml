@@ -7,7 +7,7 @@ php:
   - 7.0
   - 5.6
 install: 
-  - echo "CoreStaticUrl:http://website/" >> system/settings/system.ini
+  - echo "CoreStaticUrl:http://website/" >> system/extensions/yellow-system.ini
   - php yellow.php about
 script: 
   - php yellow.php build test
