@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.37";
+    const VERSION = "0.8.39";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $updates;                // number of updates
@@ -57,6 +57,7 @@ class YellowUpdate {
     // Handle update
     public function onUpdate($action) {
         if ($action=="ready") {
+            $this->convertSystemSettings();
             if ($this->yellow->system->get("updateNotification")!="none") {
                 foreach (explode(",", $this->yellow->system->get("updateNotification")) as $token) {
                     list($extension, $action) = $this->yellow->toolbox->getTextList($token, "/", 2);
@@ -100,38 +101,7 @@ class YellowUpdate {
             }
             if ($statusCode==500) $this->yellow->log("error", "Can't delete files in directory '$path'!\n");
         }
-        if ($action=="update") { // TODO: remove later, convert old settings files
-            if (is_dir("system/settings/")) {
-                $fileNameSource = "system/settings/system.ini";
-                $fileNameDestination = "system/extensions/yellow-system.ini";
-                if (is_file($fileNameSource)) {
-                    $fileData = $fileDataNew = $this->yellow->toolbox->readFile($fileNameSource);
-                    $fileDataNew = str_replace("user.ini", "yellow-user.ini", $fileDataNew);
-                    $fileDataNew = str_replace("language.ini", "yellow-language.ini", $fileDataNew);
-                    if (!$this->yellow->toolbox->createFile($fileNameDestination, $fileDataNew)) {
-                        $this->yellow->log("error", "Can't write file '$fileNameDestination'!");
-                    }
-                }
-                $fileNameSource = "system/settings/user.ini";
-                $fileNameDestination = "system/extensions/yellow-user.ini";
-                if (is_file($fileNameSource) && !$this->yellow->toolbox->copyFile($fileNameSource, $fileNameDestination)) {
-                    $this->yellow->log("error", "Can't write file '$fileNameDestination'!");
-                }
-                $fileNameSource = "system/settings/language.ini";
-                $fileNameDestination = "system/extensions/yellow-language.ini";
-                if (is_file($fileNameSource) && !$this->yellow->toolbox->copyFile($fileNameSource, $fileNameDestination)) {
-                    $this->yellow->log("error", "Can't write file '$fileNameDestination'!");
-                }
-                if (!$this->yellow->toolbox->deleteDirectory("system/settings/",
-                    $this->yellow->system->get("coreTrashDirectory"))) {
-                    $this->yellow->log("error", "Can't delete directory 'system/settings/'!");
-                } else {
-                    $this->yellow->page->error(500, "The flux capacitor is charging, please reload page!");
-                    $this->yellow->log("info", "Convert old settings files");
-                }
-            }
-        }
-        if ($action=="update") { // TODO: remove later, convert old layout files
+        if ($action=="update") { // TODO: remove later, convert layout files
             $path = $this->yellow->system->get("coreLayoutDirectory");
             foreach ($this->yellow->toolbox->getDirectoryEntriesRecursive($path, "/^.*\.html$/", true, false) as $entry) {
                 $key = str_replace("pages", "", $this->yellow->lookup->normaliseName(basename($entry), true, true));
@@ -146,6 +116,38 @@ class YellowUpdate {
                     $this->yellow->log("error", "Can't write file '$entry'!");
                 }
             }
+        }
+    }
+    
+    // Convert system settings
+    public function convertSystemSettings() {
+        if (is_dir("system/settings/")) {   // TODO: remove later, convert settings files
+            $fileNameSource = "system/settings/system.ini";
+            $fileNameDestination = "system/extensions/yellow-system.ini";
+            if (is_file($fileNameSource)) {
+                $fileData = $fileDataNew = $this->yellow->toolbox->readFile($fileNameSource);
+                $fileDataNew = str_replace("user.ini", "yellow-user.ini", $fileDataNew);
+                $fileDataNew = str_replace("language.ini", "yellow-language.ini", $fileDataNew);
+                if (!$this->yellow->toolbox->createFile($fileNameDestination, $fileDataNew)) {
+                    $this->yellow->log("error", "Can't write file '$fileNameDestination'!");
+                }
+            }
+            $fileNameSource = "system/settings/user.ini";
+            $fileNameDestination = "system/extensions/yellow-user.ini";
+            if (is_file($fileNameSource) && !$this->yellow->toolbox->copyFile($fileNameSource, $fileNameDestination)) {
+                $this->yellow->log("error", "Can't write file '$fileNameDestination'!");
+            }
+            $fileNameSource = "system/settings/language.ini";
+            $fileNameDestination = "system/extensions/yellow-language.ini";
+            if (is_file($fileNameSource) && !$this->yellow->toolbox->copyFile($fileNameSource, $fileNameDestination)) {
+                $this->yellow->log("error", "Can't write file '$fileNameDestination'!");
+            }
+            if (!$this->yellow->toolbox->deleteDirectory("system/settings/", $this->yellow->system->get("coreTrashDirectory"))) {
+                $this->yellow->log("error", "Can't delete directory 'system/settings/'!");
+            } else {
+                $this->yellow->log("info", "Convert settings files");
+            }
+            $this->yellow->page->error(503, "The flux capacitor is charging, please reload page!");
         }
     }
     
@@ -223,7 +225,7 @@ class YellowUpdate {
         }
     }
     
-    // Update timestamp settings in regular intervalls
+    // Update timestamp settings in regular intervals
     public function updateTimestampSettings($key) {
         $timestamp = $timeOffset = 0;
         foreach(str_split($this->yellow->system->get("sitename")) as $char) {

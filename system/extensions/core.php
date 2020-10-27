@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.25";
+    const VERSION = "0.8.26";
     const RELEASE = "0.8.16";
     public $page;           // current page
     public $content;        // content files
@@ -177,7 +177,7 @@ class YellowCore {
             $languageError = $this->lookup->findLanguageFromFile($fileName, $this->system->get("language"));
             if (is_file($fileNameError)) {
                 $rawData = $this->toolbox->readFile($fileNameError);
-            } elseif ($this->language->isExisting($languageError)) {
+            } elseif ($this->language->isText("coreError${statusCode}Title", $languageError)) {
                 $rawData = "---\nTitle: ".$this->language->getText("coreError${statusCode}Title", $languageError)."\n";
                 $rawData .= "Layout: error\n---\n".$this->language->getText("coreError${statusCode}Text", $languageError);
             } else {
