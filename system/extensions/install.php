@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow
 
 class YellowInstall {
-    const VERSION = "0.8.40";
+    const VERSION = "0.8.41";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -177,13 +177,14 @@ class YellowInstall {
         $fileName = $this->yellow->lookup->findFileFromLocation($location);
         $fileData = str_replace("\r\n", "\n", $this->yellow->toolbox->readFile($fileName));
         if (!empty($fileData) && $language!="en") {
-            $settingsOld = "Title: ".$this->yellow->language->getText("{$name}Title", "en")."\n".
-                "TitleContent: ".$this->yellow->language->getText("{$name}TitleContent", "en")."\n";
-            $settingsNew = "Title: ".$this->yellow->language->getText("{$name}Title", $language)."\n".
-                "TitleContent: ".$this->yellow->language->getText("{$name}TitleContent", $language)."\n";
+            $settingsOld = "Title: ".$this->yellow->language->getText("{$name}Title", "en")."\n";
+            $settingsNew = "Title: ".$this->yellow->language->getText("{$name}Title", $language)."\n";
+            $fileData = str_replace($settingsOld, $settingsNew, $fileData);
+            $settingsOld = "TitleContent: ".$this->yellow->language->getText("{$name}TitleContent", "en")."\n";
+            $settingsNew = "TitleContent: ".$this->yellow->language->getText("{$name}TitleContent", $language)."\n";
+            $fileData = str_replace($settingsOld, $settingsNew, $fileData);
             $textOld = str_replace("\\n", "\n", $this->yellow->language->getText("{$name}Text", "en"));
             $textNew = str_replace("\\n", "\n", $this->yellow->language->getText("{$name}Text", $language));
-            $fileData = str_replace($settingsOld, $settingsNew, $fileData);
             $fileData = str_replace($textOld, $textNew, $fileData);
             if (!$this->yellow->toolbox->createFile($fileName, $fileData)) {
                 $statusCode = 500;
