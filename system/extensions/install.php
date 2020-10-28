@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow
 
 class YellowInstall {
-    const VERSION = "0.8.39";
+    const VERSION = "0.8.40";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -263,6 +263,7 @@ class YellowInstall {
         curl_setopt($curlHandle, CURLOPT_USERAGENT, "Mozilla/5.0 (compatible; YellowCore/".YellowCore::VERSION).")";
         curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($curlHandle, CURLOPT_CONNECTTIMEOUT, 30);
+        curl_setopt($curlHandle, CURLOPT_SSL_VERIFYPEER, false);
         $rawData = curl_exec($curlHandle);
         $statusCode = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);
         curl_close($curlHandle);
