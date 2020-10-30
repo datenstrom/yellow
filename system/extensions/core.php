@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.26";
+    const VERSION = "0.8.27";
     const RELEASE = "0.8.16";
     public $page;           // current page
     public $content;        // content files
@@ -91,11 +91,11 @@ class YellowCore {
     // Handle initialisation
     public function load() {
         $this->system->load($this->system->get("coreExtensionDirectory").$this->system->get("coreSystemFile"));
+        $this->lookup->detectFileSystem();
         $this->user->load($this->system->get("coreExtensionDirectory").$this->system->get("coreUserFile"));
         $this->language->load($this->system->get("coreExtensionDirectory"));
         $this->language->load($this->system->get("coreExtensionDirectory").$this->system->get("coreLanguageFile"));
         $this->extension->load($this->system->get("coreExtensionDirectory"));
-        $this->lookup->detectFileSystem();
         $this->startup();
     }
     
@@ -329,7 +329,8 @@ class YellowCore {
         }
         if ($statusCode==0) {
             $line = date("Y-m-d H:i:s")." ".trim($action)." ".trim($message)."\n";
-            $this->toolbox->appendFile($this->system->get("coreExtensionDirectory").$this->system->get("coreLogFile"), $line);
+            $this->toolbox->appendFile($this->system->get("coreServerInstallDirectory").
+                $this->system->get("coreExtensionDirectory").$this->system->get("coreLogFile"), $line);
         }
     }
     
@@ -1906,6 +1907,7 @@ class YellowExtension {
         $this->yellow = $yellow;
         $this->modified = 0;
         $this->data = array();
+        register_shutdown_function(array($this, "handleFatalError"));
     }
     
     // Load extensions
@@ -1934,6 +1936,19 @@ class YellowExtension {
             $this->data[$key]["class"] = $class;
             $this->data[$key]["version"] = defined("$class::VERSION") ? $class::VERSION : 0;
             $this->data[$key]["priority"] = defined("$class::PRIORITY") ? $class::PRIORITY : count($this->data) + 10;
+        }
+    }
+    
+    // Handle fatal extension error
+    public function handleFatalError() {
+        $error = error_get_last();
+        $type = $error["type"];
+        $fileName = $error["file"];
+        if ($type==E_ERROR || $type==E_PARSE) {
+            if ($this->yellow->toolbox->getFileType($fileName)=="php") {
+                $fileName = substru($fileName, strlenu($this->yellow->system->get("coreServerInstallDirectory")));
+                $this->yellow->log("error", "Can't run extension file '$fileName'!");
+            }
         }
     }
     
@@ -1968,6 +1983,8 @@ class YellowLookup {
         list($pathRoot, $pathHome) = $this->findFileSystemInformation();
         $this->yellow->system->set("coreContentRootDirectory", $pathRoot);
         $this->yellow->system->set("coreContentHomeDirectory", $pathHome);
+        $this->yellow->system->set("coreServerInstallDirectory",
+            substru(dirname(__FILE__), 0, 1-strlenu($this->yellow->system->get("coreExtensionDirectory"))));
         date_default_timezone_set($this->yellow->system->get("coreServerTimezone"));
     }
     
@@ -2528,17 +2545,6 @@ class YellowToolbox {
         return $contentType;
     }
     
-    // Return number of bytes
-    public function getNumberBytes($string) {
-        $bytes = intval($string);
-        switch (strtoupperu(substru($string, -1))) {
-            case "G": $bytes *= 1024*1024*1024; break;
-            case "M": $bytes *= 1024*1024; break;
-            case "K": $bytes *= 1024; break;
-        }
-        return $bytes;
-    }
-    
     // Return files and directories
     public function getDirectoryEntries($path, $regex = "/.*/", $sort = true, $directories = true, $includePath = true) {
         $entries = array();
@@ -2714,6 +2720,17 @@ class YellowToolbox {
         $group = "none";
         if (preg_match("#^$path(.+?)\/#", $fileName, $matches)) $group = strtoloweru($matches[1]);
         return $group;
+    }
+    
+    // Return number of bytes
+    public function getNumberBytes($string) {
+        $bytes = intval($string);
+        switch (strtoupperu(substru($string, -1))) {
+            case "G": $bytes *= 1024*1024*1024; break;
+            case "M": $bytes *= 1024*1024; break;
+            case "K": $bytes *= 1024; break;
+        }
+        return $bytes;
     }
     
     // Return lines from text, including newline

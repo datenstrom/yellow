@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.40";
+    const VERSION = "0.8.41";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $updates;                // number of updates
@@ -461,13 +461,13 @@ class YellowUpdate {
             if (defined("DEBUG") && DEBUG>=2) echo "YellowUpdate::updateExtensionArchive file:$path<br/>\n";
             $pathBase = "";
             if (preg_match("#^(.*\/).*?$#", $zip->getNameIndex(0), $matches)) $pathBase = $matches[1];
-            $languages = $this->getExtensionArchiveLanguages($zip, $pathBase);
             $fileData = $zip->getFromName($pathBase.$this->yellow->system->get("updateExtensionFile"));
             $settings = $this->yellow->toolbox->getTextSettings($fileData, "");
-            list($extension, $version, $newModified, $oldModified) = $this->getExtensionInformation($settings);
+            list($extension, $version, $newModified, $oldModified) = $this->getExtensionInformation($settings, $path);
             if (!empty($extension) && !empty($version)) {
                 $statusCode = $this->updateExtensionSettings($extension, $settings, $action);
                 if ($statusCode==200) {
+                    $languages = $this->getExtensionArchiveLanguages($zip, $pathBase);
                     foreach ($this->getExtensionFileNames($settings) as $fileName) {
                         list($entry, $flags) = $this->yellow->toolbox->getTextList($settings[$fileName], ",", 2);
                         if (!$this->yellow->lookup->isContentFile($fileName)) {
@@ -734,16 +734,23 @@ class YellowUpdate {
     }
 
     // Return extension information
-    public function getExtensionInformation($settings) {
+    public function getExtensionInformation($settings, $path) {
         $extension = lcfirst($settings->get("extension"));
         $version = $settings->get("version");
         $newModified = strtotime($settings->get("published"));
         $oldModified = 0;
+        $invalid = false;
         foreach ($settings as $key=>$value) {
-            if (strposu($key, "/") && is_file($key)) {
-                $oldModified = filemtime($key);
-                break;
+            if (strposu($key, "/")) {
+                if (!$this->yellow->lookup->isValidFile($key)) $invalid = true;
+                list($entry, $flags) = $this->yellow->toolbox->getTextList($value, ",", 2);
+                if (strposu($entry, ".")===false) $invalid = true;
+                if ($oldModified==0 && is_file($key)) $oldModified = filemtime($key);
             }
+        }
+        if ($invalid) {
+            $this->yellow->log("error", "Can't detect extension file '$path'!");
+            $extension = $version = "";
         }
         return array($extension, $version, $newModified, $oldModified);
     }

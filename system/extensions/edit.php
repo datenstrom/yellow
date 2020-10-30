@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/edit
 
 class YellowEdit {
-    const VERSION = "0.8.36";
+    const VERSION = "0.8.37";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -1260,8 +1260,7 @@ class YellowEditResponse {
     public function getToolbarButtons() {
         $toolbarButtons = $this->yellow->system->get("editToolbarButtons");
         if ($toolbarButtons=="auto") {
-            $toolbarButtons = "";
-            if ($this->yellow->extension->isExisting("markdown")) $toolbarButtons = "format, bold, italic, strikethrough, code, separator, list, link, file";
+            $toolbarButtons = "format, bold, italic, strikethrough, code, separator, list, link, file";
             if ($this->yellow->extension->isExisting("emojiawesome")) $toolbarButtons .= ", emojiawesome";
             if ($this->yellow->extension->isExisting("fontawesome")) $toolbarButtons .= ", fontawesome";
             $toolbarButtons .= ", status, preview";
