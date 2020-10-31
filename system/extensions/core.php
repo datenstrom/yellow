@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.27";
+    const VERSION = "0.8.28";
     const RELEASE = "0.8.16";
     public $page;           // current page
     public $content;        // content files
@@ -1907,11 +1907,11 @@ class YellowExtension {
         $this->yellow = $yellow;
         $this->modified = 0;
         $this->data = array();
-        register_shutdown_function(array($this, "handleFatalError"));
     }
     
     // Load extensions
     public function load($path) {
+        if (empty($this->data)) register_shutdown_function(array($this, "processExtensionError"));
         foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.php$/", true, false) as $entry) {
             if (defined("DEBUG") && DEBUG>=3) echo "YellowExtension::load file:$entry<br/>\n";
             $this->modified = max($this->modified, filemtime($entry));
@@ -1928,6 +1928,19 @@ class YellowExtension {
         }
     }
     
+    // Process extension error
+    public function processExtensionError() {
+        $error = error_get_last();
+        if (!is_null($error)) {
+            $type = $error["type"];
+            $fileName = $error["file"];
+            if (($type==E_ERROR || $type==E_PARSE) && $this->yellow->toolbox->getFileType($fileName)=="php") {
+                $fileName = substru($fileName, strlenu($this->yellow->system->get("coreServerInstallDirectory")));
+                $this->yellow->log("error", "Can't run extension file '$fileName'!");
+            }
+        }
+    }
+    
     // Register extension
     public function register($key, $class) {
         if (!$this->isExisting($key) && class_exists($class)) {
@@ -1936,19 +1949,6 @@ class YellowExtension {
             $this->data[$key]["class"] = $class;
             $this->data[$key]["version"] = defined("$class::VERSION") ? $class::VERSION : 0;
             $this->data[$key]["priority"] = defined("$class::PRIORITY") ? $class::PRIORITY : count($this->data) + 10;
-        }
-    }
-    
-    // Handle fatal extension error
-    public function handleFatalError() {
-        $error = error_get_last();
-        $type = $error["type"];
-        $fileName = $error["file"];
-        if ($type==E_ERROR || $type==E_PARSE) {
-            if ($this->yellow->toolbox->getFileType($fileName)=="php") {
-                $fileName = substru($fileName, strlenu($this->yellow->system->get("coreServerInstallDirectory")));
-                $this->yellow->log("error", "Can't run extension file '$fileName'!");
-            }
         }
     }
     
