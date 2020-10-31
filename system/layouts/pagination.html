@@ -2,10 +2,10 @@
 <?php if ($pages->isPagination()): ?>
 <div class="pagination" role="navigation">
 <?php if ($pages->getPaginationPrevious()): ?>
-<a class="previous" href="<?php echo $pages->getPaginationPrevious() ?>"><?php echo $this->yellow->text->getHtml("corePaginationPrevious") ?></a>
+<a class="previous" href="<?php echo $pages->getPaginationPrevious() ?>"><?php echo $this->yellow->language->getTextHtml("corePaginationPrevious") ?></a>
 <?php endif ?>
 <?php if ($pages->getPaginationNext()): ?>
-<a class="next" href="<?php echo $pages->getPaginationNext() ?>"><?php echo $this->yellow->text->getHtml("corePaginationNext") ?></a>
+<a class="next" href="<?php echo $pages->getPaginationNext() ?>"><?php echo $this->yellow->language->getTextHtml("corePaginationNext") ?></a>
 <?php endif ?>
 </div>
 <?php endif ?>
