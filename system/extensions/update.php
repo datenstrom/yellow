@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.41";
+    const VERSION = "0.8.42";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $updates;                // number of updates
@@ -117,6 +117,34 @@ class YellowUpdate {
                 }
             }
         }
+        if ($action=="update") { // TODO: remove later, create settings files when missing
+            $fileNameCurrent = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateCurrentFile");
+            $fileNameLatest = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateLatestFile");
+            if (!is_file($fileNameCurrent) || !is_file($fileNameLatest)) {
+                $url = $this->yellow->system->get("updateExtensionUrl")."/raw/master/".$this->yellow->system->get("updateLatestFile");
+                list($statusCode, $fileData) = $this->getExtensionFile($url);
+                if ($statusCode==200) {
+                    $fileDataCurrent = $fileDataLatest = $fileData;
+                    $settings = $this->yellow->toolbox->getTextSettings($fileDataCurrent, "extension");
+                    foreach ($settings as $key=>$value) {
+                        if ($this->yellow->extension->isExisting($key)) {
+                            $settingsNew = new YellowArray();
+                            $settingsNew["extension"] = ucfirst($key);
+                            $settingsNew["version"] = $this->yellow->extension->data[$key]["version"];
+                            $fileDataCurrent = $this->yellow->toolbox->setTextSettings($fileDataCurrent, "extension", $key, $settingsNew);
+                        } else {
+                            $fileDataCurrent = $this->yellow->toolbox->unsetTextSettings($fileDataCurrent, "extension", $key);
+                        }
+                    }
+                    if(!is_file($fileNameCurrent) && !$this->yellow->toolbox->createFile($fileNameCurrent, $fileDataCurrent)) {
+                        $this->yellow->log("error", "Can't write file '$fileNameCurrent'!");
+                    }
+                    if(!is_file($fileNameLatest) && !$this->yellow->toolbox->createFile($fileNameLatest, $fileDataLatest)) {
+                        $this->yellow->log("error", "Can't write file '$fileNameLatest'!");
+                    }
+                }
+            }
+        }
     }
     
     // Convert system settings
@@ -226,6 +254,37 @@ class YellowUpdate {
         }
     }
     
+    // Update extension settings
+    public function updateExtensionSettings($extension, $settings, $action) {
+        $statusCode = 200;
+        $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateCurrentFile");
+        $fileData = $this->yellow->toolbox->readFile($fileName);
+        if ($action=="install" || $action=="update") {
+            $settingsCurrent = $this->yellow->toolbox->getTextSettings($fileData, "extension");
+            if (!$settingsCurrent->isExisting($extension)) $settingsCurrent[$extension] = new YellowArray();
+            foreach($settings as $key=>$value) $settingsCurrent[$extension][$key] = $value;
+            $settingsCurrent->uksort("strnatcasecmp");
+            $fileDataNew = "";
+            foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
+                if (preg_match("/^\#/", $line)) $fileDataNew = $line;
+                break;
+            }
+            foreach ($settingsCurrent as $extension=>$block) {
+                if (!empty($fileDataNew)) $fileDataNew .= "\n";
+                foreach ($block as $key=>$value) {
+                    $fileDataNew .= (strposu($key, "/") ? $key : ucfirst($key)).": $value\n";
+                }
+            }
+        } else {
+            $fileDataNew = $this->yellow->toolbox->unsetTextSettings($fileData, "extension", $extension);
+        }
+        if ($fileData!=$fileDataNew && !$this->yellow->toolbox->createFile($fileName, $fileDataNew)) {
+            $statusCode = 500;
+            $this->yellow->page->error(500, "Can't write file '$fileName'!");
+        }
+        return $statusCode;
+    }
+    
     // Update timestamp settings in regular intervals
     public function updateTimestampSettings($key) {
         $timestamp = $timeOffset = 0;
@@ -243,54 +302,6 @@ class YellowUpdate {
         if (!$this->yellow->system->save($fileName, array($key => $timestamp))) {
             $this->yellow->log("error", "Can't write file '$fileName'!");
         }
-    }
-
-    // Create extension settings from scratch
-    public function createExtensionSettings() {
-        $fileNameCurrent = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateCurrentFile");
-        $fileNameLatest = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateLatestFile");
-        $url = $this->yellow->system->get("updateExtensionUrl")."/raw/master/".$this->yellow->system->get("updateLatestFile");
-        list($statusCode, $fileData) = $this->getExtensionFile($url);
-        if ($statusCode==200) {
-            $fileDataCurrent = $fileDataLatest = $fileData;
-            $settings = $this->yellow->toolbox->getTextSettings($fileDataCurrent, "extension");
-            foreach ($settings as $key=>$value) {
-                if ($this->yellow->extension->isExisting($key)) {
-                    $settingsNew = new YellowArray();
-                    $settingsNew["extension"] = ucfirst($key);
-                    $settingsNew["version"] = $this->yellow->extension->data[$key]["version"];
-                    $fileDataCurrent = $this->yellow->toolbox->setTextSettings($fileDataCurrent, "extension", $key, $settingsNew);
-                } else {
-                    $fileDataCurrent = $this->yellow->toolbox->unsetTextSettings($fileDataCurrent, "extension", $key);
-                }
-            }
-            if(!$this->yellow->toolbox->createFile($fileNameCurrent, $fileDataCurrent)) {
-                $this->yellow->log("error", "Can't write file '$fileNameCurrent'!");
-            }
-            if(!$this->yellow->toolbox->createFile($fileNameLatest, $fileDataLatest)) {
-                 $this->yellow->log("error", "Can't write file '$fileNameLatest'!");
-            }
-        }
-        return $statusCode;
-    }
-
-    // Update extension settings
-    public function updateExtensionSettings($extension, $settings, $action) {
-        $statusCode = 200;
-        $fileNameCurrent = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateCurrentFile");
-        $fileData = $this->yellow->toolbox->readFile($fileNameCurrent);
-        if ($action=="install" || $action=="update") {
-            $settingsNew = new YellowArray();
-            foreach($settings as $key=>$value) $settingsNew[$key] = $value;
-            $fileData = $this->yellow->toolbox->setTextSettings($fileData, "extension", $extension, $settingsNew);
-        } else {
-            $fileData = $this->yellow->toolbox->unsetTextSettings($fileData, "extension", $extension);
-        }
-        if (!$this->yellow->toolbox->createFile($fileNameCurrent, $fileData)) {
-            $statusCode = 500;
-            $this->yellow->page->error(500, "Can't write file '$fileNameCurrent'!");
-        }
-        return $statusCode;
     }
     
     // Process command to show website version and updates
@@ -491,6 +502,9 @@ class YellowUpdate {
                 }
                 $this->yellow->log($statusCode==200 ? "info" : "error", ucfirst($action)." extension '".ucfirst($extension)." $version'");
                 ++$this->updates;
+            } else {
+                $statusCode = 500;
+                $this->yellow->page->error(500, "Can't detect file '$path'!");
             }
             $zip->close();
         } else {
@@ -657,13 +671,15 @@ class YellowUpdate {
                 }
             }
         } else {
-            $force = false;
             foreach ($extensions as $extension) {
                 $found = false;
-                if ($extension=="force") { $force = true; continue; }
                 foreach ($settingsCurrent as $key=>$value) {
                     if (strtoloweru($key)==strtoloweru($extension) && $settingsLatest->isExisting($key)) {
-                        $settings[$key] = $settingsLatest[$key];
+                        $versionCurrent = $settingsCurrent[$key]->get("version");
+                        $versionLatest = $settingsLatest[$key]->get("version");
+                        if (strnatcasecmp($versionCurrent, $versionLatest)<0) {
+                            $settings[$key] = $settingsLatest[$key];
+                        }
                         $found = true;
                         break;
                     }
@@ -672,10 +688,6 @@ class YellowUpdate {
                     $statusCode = 500;
                     $this->yellow->page->error($statusCode, "Can't find extension '$extension'!");
                 }
-            }
-            if (!$force) {
-                $statusCode = 500;
-                $this->yellow->page->error($statusCode, "Please use 'force' to update an extension!");
             }
         }
         if ($statusCode==200) {
@@ -692,7 +704,6 @@ class YellowUpdate {
         $settings = array();
         if (!$latest) {
             $fileNameCurrent = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateCurrentFile");
-            if (!is_file($fileNameCurrent)) $statusCode = $this->createExtensionSettings();
             $fileData = $this->yellow->toolbox->readFile($fileNameCurrent);
             $settings = $this->yellow->toolbox->getTextSettings($fileData, "extension");
             foreach ($settings as $key=>$value) {
@@ -748,10 +759,7 @@ class YellowUpdate {
                 if ($oldModified==0 && is_file($key)) $oldModified = filemtime($key);
             }
         }
-        if ($invalid) {
-            $this->yellow->log("error", "Can't detect extension file '$path'!");
-            $extension = $version = "";
-        }
+        if ($invalid) $extension = $version = "";
         return array($extension, $version, $newModified, $oldModified);
     }
 

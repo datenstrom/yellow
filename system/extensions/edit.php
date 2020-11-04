@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/edit
 
 class YellowEdit {
-    const VERSION = "0.8.37";
+    const VERSION = "0.8.38";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -97,7 +97,7 @@ class YellowEdit {
 
     // Handle update
     public function onUpdate($action) {
-        if ($action=="update") {
+        if ($action=="clean" || $action=="daily") {
             $cleanup = false;
             $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
             $fileData = $this->yellow->toolbox->readFile($fileNameUser);
@@ -106,7 +106,8 @@ class YellowEdit {
                 if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
                     if (lcfirst($matches[1])=="email" && !strempty($matches[2])) {
                         $status = $this->yellow->user->getUser("status", $matches[2]);
-                        $cleanup = !empty($status) && $status!="active" && $status!="inactive";
+                        $reserved = strtotime($this->yellow->user->getUser("modified", $matches[2])) + 60*60*24;
+                        $cleanup = $status!="active" && $status!="inactive" && $reserved<=time();
                     }
                 }
                 if (!$cleanup) $fileDataNew .= $line;
@@ -1553,8 +1554,8 @@ class YellowEditResponse {
     
     // Destroy browser cookies
     public function destroyCookies($scheme, $address, $base) {
-        setcookie("authtoken", "", 1, "$base/", "", $scheme=="https", true);
-        setcookie("csrftoken", "", 1, "$base/", "", $scheme=="https", false);
+        setcookie("authtoken", "", 1, "$base/");
+        setcookie("csrftoken", "", 1, "$base/");
     }
     
     // Create authentication token
@@ -1684,8 +1685,8 @@ class YellowEditResponse {
     // Check if user with access
     public function isUserAccess($action, $location = "") {
         $userHome = $this->yellow->user->getUser("home", $this->userEmail);
-        $userAccess = preg_split("/\s*,\s*/", $this->yellow->user->getUser("access", $this->userEmail));
-        return in_array($action, $userAccess) && (empty($location) || substru($location, 0, strlenu($userHome))==$userHome);
+        $tokens = preg_split("/\s*,\s*/", $this->yellow->user->getUser("access", $this->userEmail));
+        return in_array($action, $tokens) && (empty($location) || substru($location, 0, strlenu($userHome))==$userHome);
     }
     
     // Check if login with restriction

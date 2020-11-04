@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.28";
+    const VERSION = "0.8.29";
     const RELEASE = "0.8.16";
     public $page;           // current page
     public $content;        // content files
@@ -77,8 +77,8 @@ class YellowCore {
         $troubleshooting = PHP_SAPI!="cli" ? "<a href=\"https://datenstrom.se/yellow/help/troubleshooting\">See troubleshooting</a>." : "";
         version_compare(PHP_VERSION, "5.6", ">=") || die("Datenstrom Yellow requires PHP 5.6 or higher! $troubleshooting\n");
         extension_loaded("curl") || die("Datenstrom Yellow requires PHP curl extension! $troubleshooting\n");
-        extension_loaded("gd") || die("Datenstrom Yellow requires PHP gd extension! $troubleshooting\n");
         extension_loaded("exif") || die("Datenstrom Yellow requires PHP exif extension! $troubleshooting\n");
+        extension_loaded("gd") || die("Datenstrom Yellow requires PHP gd extension! $troubleshooting\n");
         extension_loaded("mbstring") || die("Datenstrom Yellow requires PHP mbstring extension! $troubleshooting\n");
         extension_loaded("zip") || die("Datenstrom Yellow requires PHP zip extension! $troubleshooting\n");
         mb_internal_encoding("UTF-8");
@@ -1038,7 +1038,7 @@ class YellowPageCollection extends ArrayObject {
             foreach ($this->getArrayCopy() as $page) {
                 $searchScore = 0;
                 foreach ($tokens as $token) {
-                    if (stristr($page->get("title"), $token)) $searchScore += 10;
+                    if (stristr($page->get("title"), $token)) $searchScore += 50;
                     if (stristr($page->get("tag"), $token)) $searchScore += 5;
                     if (stristr($page->get("author"), $token)) $searchScore += 2;
                 }
@@ -1932,11 +1932,17 @@ class YellowExtension {
     public function processExtensionError() {
         $error = error_get_last();
         if (!is_null($error)) {
-            $type = $error["type"];
-            $fileName = $error["file"];
-            if (($type==E_ERROR || $type==E_PARSE) && $this->yellow->toolbox->getFileType($fileName)=="php") {
-                $fileName = substru($fileName, strlenu($this->yellow->system->get("coreServerInstallDirectory")));
-                $this->yellow->log("error", "Can't run extension file '$fileName'!");
+            if ($error["type"]==E_ERROR || $error["type"]==E_PARSE) {
+                $fileName = substru($error["file"], strlenu($this->yellow->system->get("coreServerInstallDirectory")));
+                $extension = $this->yellow->lookup->normaliseName(basename($fileName), true, true);
+                if ($this->isExisting($extension) && $this->yellow->toolbox->getFileType($fileName)=="php") {
+                    $version = $this->data[$extension]["version"];
+                    $this->yellow->log("error", "Can't run extension '".ucfirst($extension)." $version'!");
+                } else {
+                    $this->yellow->log("error", "Can't parse file '$fileName'!");
+                }
+                @header($this->yellow->toolbox->getHttpStatusFormatted(500));
+                echo "Server error<br/>\n";
             }
         }
     }
