@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.29";
+    const VERSION = "0.8.30";
     const RELEASE = "0.8.16";
     public $page;           // current page
     public $content;        // content files
@@ -277,7 +277,7 @@ class YellowCore {
                 if ($statusCode!=0) break;
             }
         }
-        if ($statusCode==0 && empty($text)) {
+        if ($statusCode==0 && empty($command)) {
             $lineCounter = 0;
             echo "Datenstrom Yellow is for people who make small websites.\n";
             foreach ($this->getCommandHelp() as $line) {
@@ -2674,7 +2674,7 @@ class YellowToolbox {
             if (!is_dir($pathTrash)) @mkdir($pathTrash, 0777, true);
             $fileNameDestination = $pathTrash;
             $fileNameDestination .= pathinfo($fileName, PATHINFO_FILENAME);
-            $fileNameDestination .= "-".str_replace(array(" ", ":"), "-", date("Y-m-d H:i:s", filemtime($fileName)));
+            $fileNameDestination .= "-".str_replace(array(" ", ":"), "-", date("Y-m-d H:i:s"));
             $fileNameDestination .= ".".pathinfo($fileName, PATHINFO_EXTENSION);
             $ok = @rename($fileName, $fileNameDestination);
         }
@@ -2699,7 +2699,7 @@ class YellowToolbox {
             if (!is_dir($pathTrash)) @mkdir($pathTrash, 0777, true);
             $pathDestination = $pathTrash;
             $pathDestination .= basename($path);
-            $pathDestination .= "-".str_replace(array(" ", ":"), "-", date("Y-m-d H:i:s", filemtime($path)));
+            $pathDestination .= "-".str_replace(array(" ", ":"), "-", date("Y-m-d H:i:s"));
             $ok = @rename($path, $pathDestination);
         }
         return $ok;
@@ -2711,9 +2711,20 @@ class YellowToolbox {
         return @touch($fileName, $modified);
     }
     
-    // Return file modification date, Unix time
+    // Return file/directory modification date, Unix time
     public function getFileModified($fileName) {
-        return is_file($fileName) ? filemtime($fileName) : 0;
+        return (is_file($fileName) || is_dir($fileName)) ? filemtime($fileName) : 0;
+    }
+    
+    // Return file/directory deletion date, Unix time
+    public function getFileDeleted($fileName) {
+        $deleted = 0;
+        $text = basename($fileName);
+        $text = ($pos = strrposu($text, ".")) ? substru($text, 0, $pos) : $text;
+        if (preg_match("#^(.+)-(\d\d\d\d-\d\d-\d\d)-(\d\d)-(\d\d)-(\d\d)$#", $text, $matches)) {
+            $deleted = strtotime("$matches[2] $matches[3]:$matches[4]:$matches[5]");
+        }
+        return $deleted;
     }
     
     // Return file type
