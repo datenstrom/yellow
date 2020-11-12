@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.30";
+    const VERSION = "0.8.31";
     const RELEASE = "0.8.16";
     public $page;           // current page
     public $content;        // content files
@@ -74,7 +74,7 @@ class YellowCore {
     
     // Check requirements
     public function checkRequirements() {
-        $troubleshooting = PHP_SAPI!="cli" ? "<a href=\"https://datenstrom.se/yellow/help/troubleshooting\">See troubleshooting</a>." : "";
+        $troubleshooting = PHP_SAPI!="cli" ? "<a href=\"".$this->getTroubleshootingUrl()."\">See troubleshooting</a>." : "";
         version_compare(PHP_VERSION, "5.6", ">=") || die("Datenstrom Yellow requires PHP 5.6 or higher! $troubleshooting\n");
         extension_loaded("curl") || die("Datenstrom Yellow requires PHP curl extension! $troubleshooting\n");
         extension_loaded("exif") || die("Datenstrom Yellow requires PHP exif extension! $troubleshooting\n");
@@ -182,7 +182,7 @@ class YellowCore {
                 $rawData .= "Layout: error\n---\n".$this->language->getText("coreError${statusCode}Text", $languageError);
             } else {
                 $rawData = "---\nTitle:".$this->toolbox->getHttpStatusFormatted($statusCode, true)."\n";
-                $rawData .= "Layout:error\n---\n[yellow error]";
+                $rawData .= "Layout:error\n---\n$pageError";
             }
             $cacheable = false;
         } else {
@@ -343,6 +343,11 @@ class YellowCore {
     // Return layout arguments
     public function getLayoutArguments($sizeMin = 9) {
         return array_pad($this->lookup->layoutArguments, $sizeMin, null);
+    }
+    
+    // Return troubleshooting URL
+    public function getTroubleshootingUrl() {
+        return "https://datenstrom.se/yellow/help/troubleshooting";
     }
     
     // Return request information
@@ -903,7 +908,7 @@ class YellowPage {
     public function error($statusCode, $pageError = "") {
         if (!$this->isExisting("pageError") && $statusCode>0) {
             $this->statusCode = $statusCode;
-            $this->set("pageError", empty($pageError) ? "Layout error!" : $pageError);
+            $this->set("pageError", empty($pageError) ? "Page error!" : $pageError);
         }
     }
     
@@ -1942,7 +1947,8 @@ class YellowExtension {
                     $this->yellow->log("error", "Can't parse file '$fileName'!");
                 }
                 @header($this->yellow->toolbox->getHttpStatusFormatted(500));
-                echo "Server error<br/>\n";
+                $troubleshooting = "<a href=\"".$this->yellow->getTroubleshootingUrl()."\">See troubleshooting</a>.";
+                echo "<br/>Something went wrong. Activate debug mode for more information. $troubleshooting\n";
             }
         }
     }

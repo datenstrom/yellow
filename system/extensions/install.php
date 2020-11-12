@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow
 
 class YellowInstall {
-    const VERSION = "0.8.41";
+    const VERSION = "0.8.42";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -241,7 +241,7 @@ class YellowInstall {
     // Check web server requirements
     public function checkServerRequirements() {
         list($name) = $this->yellow->toolbox->detectServerInformation();
-        $troubleshooting = "<a href=\"https://datenstrom.se/yellow/help/troubleshooting\">See troubleshooting</a>.";
+        $troubleshooting = "<a href=\"".$this->yellow->getTroubleshootingUrl()."\">See troubleshooting</a>.";
         $this->checkServerConfiguration() || die("Datenstrom Yellow requires configuration file for $name! $troubleshooting\n");
         $this->checkServerRewrite() || die("Datenstrom Yellow requires rewrite support for $name! $troubleshooting\n");
         $this->checkServerWrite() || die("Datenstrom Yellow requires write access for $name! $troubleshooting\n");
