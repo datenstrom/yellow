@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.42";
+    const VERSION = "0.8.43";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $updates;                // number of updates
@@ -176,6 +176,8 @@ class YellowUpdate {
                 $this->yellow->log("info", "Convert settings files");
             }
             $this->yellow->system->load("system/extensions/yellow-system.ini");
+            $this->yellow->user->load("system/extensions/yellow-user.ini");
+            $this->yellow->language->load("system/extensions/yellow-language.ini");
             $this->yellow->page->error(503, "Flux capacitor is charging to 1.21 gigawatt, please reload page!");
         }
     }
