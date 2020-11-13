@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/edit
 
 class YellowEdit {
-    const VERSION = "0.8.38";
+    const VERSION = "0.8.39";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -992,7 +992,6 @@ class YellowEdit {
 class YellowEditResponse {
     public $yellow;             // access to API
     public $extension;          // access to extension
-    public $active;             // location is active? (boolean)
     public $userEmail;          // user email
     public $userFailedError;    // error of failed authentication
     public $userFailedEmail;    // email of failed authentication
@@ -1002,6 +1001,7 @@ class YellowEditResponse {
     public $rawDataOutput;      // raw data of dynamic output
     public $rawDataReadonly;    // raw data is read only? (boolean)
     public $rawDataEndOfLine;   // end of line format for raw data
+    public $active;             // response is active? (boolean)
     public $language;           // response language
     public $action;             // response action
     public $status;             // response status
@@ -1009,6 +1009,7 @@ class YellowEditResponse {
     public function __construct($yellow) {
         $this->yellow = $yellow;
         $this->extension = $yellow->extension->get("edit");
+        $this->userEmail = "";
     }
     
     // Process page data
@@ -1672,9 +1673,9 @@ class YellowEditResponse {
             substrb($pageOther->rawData, 0, $pageOther->metaDataOffsetBytes);
     }
     
-    // Check if active
-    public function isActive() {
-        return $this->active;
+    // Check if login with restriction
+    public function isLoginRestriction() {
+        return $this->yellow->system->get("editLoginRestriction");
     }
     
     // Check if user is logged in
@@ -1689,9 +1690,9 @@ class YellowEditResponse {
         return in_array($action, $tokens) && (empty($location) || substru($location, 0, strlenu($userHome))==$userHome);
     }
     
-    // Check if login with restriction
-    public function isLoginRestriction() {
-        return $this->yellow->system->get("editLoginRestriction");
+    // Check if page within current HTTP request
+    public function isActive() {
+        return $this->active;
     }
 }
     
