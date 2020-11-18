@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow
 
 class YellowInstall {
-    const VERSION = "0.8.42";
+    const VERSION = "0.8.43";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -77,8 +77,9 @@ class YellowInstall {
         $statusCode = 200;
         $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreLogFile");
         if (!is_file($fileName)) {
-            list($name, $version) = $this->yellow->toolbox->detectServerInformation();
-            $this->yellow->log("info", "Datenstrom Yellow ".YellowCore::RELEASE.", PHP ".PHP_VERSION.", $name $version, ".$this->getOperatingSystem());
+            list($name, $version, $os) = $this->yellow->toolbox->detectServerInformation();
+            $product = "Datenstrom Yellow ".YellowCore::RELEASE;
+            $this->yellow->log("info", "Install $product, PHP ".PHP_VERSION.", $name $version, $os");
             if (!is_file($fileName)) {
                 $statusCode = 500;
                 $this->yellow->page->error(500, "Can't write file '$fileName'!");
@@ -290,18 +291,6 @@ class YellowInstall {
         return array_unique($languages);
     }
     
-    // Return operating system name
-    public function getOperatingSystem() {
-        if (PHP_OS=="Darwin") {
-            $name = "Mac";
-        } else if (strtoupperu(substru(PHP_OS, 0, 3))=="WIN") {
-            $name = "Windows";
-        } else {
-            $name = PHP_OS;
-        }
-        return $name;
-    }
-    
     // Return system data including static information
     public function getSystemData() {
         $data = array();
@@ -314,6 +303,7 @@ class YellowInstall {
         $data["coreStaticUrl"] = $this->yellow->toolbox->detectServerUrl();
         if ($this->yellow->isCommandLine()) $data["coreStaticUrl"] = getenv("URL");
         if ($this->yellow->system->get("updateNotification")=="none") $data["updateNotification"] = "website/install";
+        $data["updateCurrentRelease"] = YellowCore::RELEASE;
         return $data;
     }
 

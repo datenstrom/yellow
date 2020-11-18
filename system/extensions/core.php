@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.31";
+    const VERSION = "0.8.32";
     const RELEASE = "0.8.16";
     public $page;           // current page
     public $content;        // content files
@@ -90,8 +90,8 @@ class YellowCore {
     
     // Handle initialisation
     public function load() {
+        register_shutdown_function(array($this, "processFatalError"));
         $this->system->load($this->system->get("coreExtensionDirectory").$this->system->get("coreSystemFile"));
-        $this->lookup->detectFileSystem();
         $this->user->load($this->system->get("coreExtensionDirectory").$this->system->get("coreUserFile"));
         $this->language->load($this->system->get("coreExtensionDirectory"));
         $this->language->load($this->system->get("coreExtensionDirectory").$this->system->get("coreLanguageFile"));
@@ -166,6 +166,18 @@ class YellowCore {
         $statusCode = $this->sendPage();
         if (defined("DEBUG") && DEBUG>=1) echo "YellowCore::processRequestError file:$fileName<br/>\n";
         return $statusCode;
+    }
+    
+    // Process fatal runtime error
+    public function processFatalError() {
+        $error = error_get_last();
+        if (!is_null($error) && ($error["type"]==E_ERROR || $error["type"]==E_PARSE)) {
+            $fileName = substru($error["file"], strlenu($this->system->get("coreServerInstallDirectory")));
+            $this->log("error", "Can't parse file '$fileName'!");
+            @header($this->toolbox->getHttpStatusFormatted(500));
+            $troubleshooting = PHP_SAPI!="cli" ? "<a href=\"".$this->getTroubleshootingUrl()."\">See troubleshooting</a>." : "";
+            echo "<br/>\nSomething went wrong. Please activate debug mode for more information. $troubleshooting\n";
+        }
     }
     
     // Read page
@@ -666,11 +678,11 @@ class YellowPage {
         $fileNameLayoutTheme = $this->yellow->system->get("coreLayoutDirectory").
             $this->yellow->lookup->normaliseName($this->get("theme"))."-".$this->yellow->lookup->normaliseName($name).".html";
         if (is_file($fileNameLayoutTheme)) {
-            if (defined("DEBUG") && DEBUG>=2) echo "YellowPage::includeLayout file:$fileNameLayoutTheme<br>\n";
+            if (defined("DEBUG") && DEBUG>=2) echo "YellowPage::includeLayout file:$fileNameLayoutTheme<br/>\n";
             $this->setLastModified(filemtime($fileNameLayoutTheme));
             require($fileNameLayoutTheme);
         } elseif (is_file($fileNameLayoutNormal)) {
-            if (defined("DEBUG") && DEBUG>=2) echo "YellowPage::includeLayout file:$fileNameLayoutNormal<br>\n";
+            if (defined("DEBUG") && DEBUG>=2) echo "YellowPage::includeLayout file:$fileNameLayoutNormal<br/>\n";
             $this->setLastModified(filemtime($fileNameLayoutNormal));
             require($fileNameLayoutNormal);
         } else {
@@ -1552,6 +1564,11 @@ class YellowSystem {
                 echo "YellowSystem::load ".ucfirst($key).":$value<br/>\n";
             }
         }
+        list($pathInstall, $pathRoot, $pathHome) = $this->yellow->lookup->findFileSystemInformation();
+        $this->yellow->system->set("coreServerInstallDirectory", $pathInstall);
+        $this->yellow->system->set("coreContentRootDirectory", $pathRoot);
+        $this->yellow->system->set("coreContentHomeDirectory", $pathHome);
+        date_default_timezone_set($this->yellow->system->get("coreServerTimezone"));
     }
     
     // Save system settings to file
@@ -1916,7 +1933,6 @@ class YellowExtension {
     
     // Load extensions
     public function load($path) {
-        if (empty($this->data)) register_shutdown_function(array($this, "processExtensionError"));
         foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.php$/", true, false) as $entry) {
             if (defined("DEBUG") && DEBUG>=3) echo "YellowExtension::load file:$entry<br/>\n";
             $this->modified = max($this->modified, filemtime($entry));
@@ -1930,26 +1946,6 @@ class YellowExtension {
         uasort($this->data, $callback);
         foreach ($this->data as $key=>$value) {
             if (method_exists($this->data[$key]["object"], "onLoad")) $this->data[$key]["object"]->onLoad($this->yellow);
-        }
-    }
-    
-    // Process extension error
-    public function processExtensionError() {
-        $error = error_get_last();
-        if (!is_null($error)) {
-            if ($error["type"]==E_ERROR || $error["type"]==E_PARSE) {
-                $fileName = substru($error["file"], strlenu($this->yellow->system->get("coreServerInstallDirectory")));
-                $extension = $this->yellow->lookup->normaliseName(basename($fileName), true, true);
-                if ($this->isExisting($extension) && $this->yellow->toolbox->getFileType($fileName)=="php") {
-                    $version = $this->data[$extension]["version"];
-                    $this->yellow->log("error", "Can't run extension '".ucfirst($extension)." $version'!");
-                } else {
-                    $this->yellow->log("error", "Can't parse file '$fileName'!");
-                }
-                @header($this->yellow->toolbox->getHttpStatusFormatted(500));
-                $troubleshooting = "<a href=\"".$this->yellow->getTroubleshootingUrl()."\">See troubleshooting</a>.";
-                echo "<br/>Something went wrong. Activate debug mode for more information. $troubleshooting\n";
-            }
         }
     }
     
@@ -1990,25 +1986,16 @@ class YellowLookup {
         $this->yellow = $yellow;
     }
     
-    // Detect file system
-    public function detectFileSystem() {
-        list($pathRoot, $pathHome) = $this->findFileSystemInformation();
-        $this->yellow->system->set("coreContentRootDirectory", $pathRoot);
-        $this->yellow->system->set("coreContentHomeDirectory", $pathHome);
-        $this->yellow->system->set("coreServerInstallDirectory",
-            substru(dirname(__FILE__), 0, 1-strlenu($this->yellow->system->get("coreExtensionDirectory"))));
-        date_default_timezone_set($this->yellow->system->get("coreServerTimezone"));
-    }
-    
     // Return file system information
     public function findFileSystemInformation() {
-        $path = $this->yellow->system->get("coreContentDirectory");
+        $pathInstall = substru(__DIR__, 0, 1-strlenu($this->yellow->system->get("coreExtensionDirectory")));
+        $pathBase = $this->yellow->system->get("coreContentDirectory");
         $pathRoot = $this->yellow->system->get("coreContentRootDirectory");
         $pathHome = $this->yellow->system->get("coreContentHomeDirectory");
         if (!$this->yellow->system->get("coreMultiLanguageMode")) $pathRoot = "";
         if (!empty($pathRoot)) {
             $token = $root = rtrim($pathRoot, "/");
-            foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/.*/", true, true, false) as $entry) {
+            foreach ($this->yellow->toolbox->getDirectoryEntries($pathBase, "/.*/", true, true, false) as $entry) {
                 if (empty($firstRoot)) $firstRoot = $token = $entry;
                 if ($this->normaliseToken($entry)==$root) {
                     $token = $entry;
@@ -2016,11 +2003,11 @@ class YellowLookup {
                 }
             }
             $pathRoot = $this->normaliseToken($token)."/";
-            $path .= "$firstRoot/";
+            $pathBase .= "$firstRoot/";
         }
         if (!empty($pathHome)) {
             $token = $home = rtrim($pathHome, "/");
-            foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/.*/", true, true, false) as $entry) {
+            foreach ($this->yellow->toolbox->getDirectoryEntries($pathBase, "/.*/", true, true, false) as $entry) {
                 if (empty($firstHome)) $firstHome = $token = $entry;
                 if ($this->normaliseToken($entry)==$home) {
                     $token = $entry;
@@ -2029,7 +2016,7 @@ class YellowLookup {
             }
             $pathHome = $this->normaliseToken($token)."/";
         }
-        return array($pathRoot, $pathHome);
+        return array($pathInstall, $pathRoot, $pathHome);
     }
 
     // Return root locations
@@ -2519,8 +2506,10 @@ class YellowToolbox {
             case 400:   $text = "Bad request"; break;
             case 403:   $text = "Forbidden"; break;
             case 404:   $text = "Not found"; break;
+            case 420:   $text = "Not public"; break;
             case 430:   $text = "Login failed"; break;
-            case 434:   $text = "Not existing"; break;
+            case 434:   $text = "Can create"; break;
+            case 435:   $text = "Can restore"; break;
             case 500:   $text = "Server error"; break;
             case 503:   $text = "Service unavailable"; break;
             default:    $text = "Error $statusCode";
@@ -3051,9 +3040,6 @@ class YellowToolbox {
         if (empty($dataBuffer) && function_exists("random_bytes")) {
             $dataBuffer = @random_bytes($dataBufferSize);
         }
-        if (empty($dataBuffer) && function_exists("mcrypt_create_iv")) {
-            $dataBuffer = @mcrypt_create_iv($dataBufferSize, MCRYPT_DEV_URANDOM);
-        }
         if (empty($dataBuffer) && function_exists("openssl_random_pseudo_bytes")) {
             $dataBuffer = @openssl_random_pseudo_bytes($dataBufferSize);
         }
@@ -3210,7 +3196,7 @@ class YellowToolbox {
         return $timezone;
     }
     
-    // Detect server name and version
+    // Detect server name, version and operating system
     public function detectServerInformation() {
         if (preg_match("/^(\S+)\/(\S+)/", $this->getServer("SERVER_SOFTWARE"), $matches)) {
             $name = $matches[1];
@@ -3222,7 +3208,14 @@ class YellowToolbox {
             $name = "CLI";
             $version = PHP_VERSION;
         }
-        return array($name, $version);
+        if (PHP_OS=="Darwin") {
+            $os = "Mac";
+        } else if (strtoupperu(substru(PHP_OS, 0, 3))=="WIN") {
+            $os = "Windows";
+        } else {
+            $os = PHP_OS;
+        }
+        return array($name, $version, $os);
     }
     
     // Detect browser language

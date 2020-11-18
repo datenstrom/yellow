@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.43";
+    const VERSION = "0.8.44";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $updates;                // number of updates
@@ -12,27 +12,22 @@ class YellowUpdate {
         $this->yellow = $yellow;
         $this->yellow->system->setDefault("updateExtensionUrl", "https://github.com/datenstrom/yellow-extensions");
         $this->yellow->system->setDefault("updateExtensionFile", "extension.ini");
-        $this->yellow->system->setDefault("updateCurrentFile", "update-current.ini");
         $this->yellow->system->setDefault("updateLatestFile", "update-latest.ini");
+        $this->yellow->system->setDefault("updateCurrentFile", "update-current.ini");
+        $this->yellow->system->setDefault("updateCurrentRelease", "0");
         $this->yellow->system->setDefault("updateDailyTimestamp", "0");
-        $this->yellow->system->setDefault("updateWeeklyTimestamp", "0");
-        $this->yellow->system->setDefault("updateMonthlyTimestamp", "0");
+        $this->yellow->system->setDefault("updateTrashTimeout", "7776660");
         $this->yellow->system->setDefault("updateNotification", "none");
     }
     
     // Handle request
     public function onRequest($scheme, $address, $base, $location, $fileName) {
-        $statusCode = 0;
-        if ($this->yellow->lookup->isContentFile($fileName) && $this->isExtensionPending()) {
-            $statusCode = $this->processRequestPending($scheme, $address, $base, $location, $fileName);
-        }
-        return $statusCode;
+        return $this->processRequestPending($scheme, $address, $base, $location, $fileName);
     }
     
     // Handle command
     public function onCommand($command, $text) {
-        $statusCode = 0;
-        if ($this->isExtensionPending()) $statusCode = $this->processCommandPending();
+        $statusCode = $this->processCommandPending();
         if ($statusCode==0) {
             switch ($command) {
                 case "about":       $statusCode = $this->processCommandAbout($command, $text); break;
@@ -73,26 +68,25 @@ class YellowUpdate {
                 $this->updateSystemSettings();
                 $this->updateLanguageSettings();
             }
-            if ($this->yellow->system->get("updateDailyTimestamp") <= time()) {
+            if ($this->yellow->system->get("updateDailyTimestamp")<=time()) {
                 foreach ($this->yellow->extension->data as $key=>$value) {
                     if (method_exists($value["object"], "onUpdate")) $value["object"]->onUpdate("daily");
                 }
                 $this->updateTimestampSettings("updateDailyTimestamp");
             }
-            if ($this->yellow->system->get("updateWeeklyTimestamp") <= time()) {
-                foreach ($this->yellow->extension->data as $key=>$value) {
-                    if (method_exists($value["object"], "onUpdate")) $value["object"]->onUpdate("weekly");
-                }
-                $this->updateTimestampSettings("updateWeeklyTimestamp");
-            }
-            if ($this->yellow->system->get("updateMonthlyTimestamp") <= time()) {
-                foreach ($this->yellow->extension->data as $key=>$value) {
-                    if (method_exists($value["object"], "onUpdate")) $value["object"]->onUpdate("monthly");
-                }
-                $this->updateTimestampSettings("updateMonthlyTimestamp");
-            }
         }
-        if ($action=="clean") {
+        if ($action=="clean" || $action=="daily") {
+            $statusCode = 200;
+            $path = $this->yellow->system->get("coreTrashDirectory");
+            foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/.*/", false, false) as $entry) {
+                $expire = $this->yellow->toolbox->getFileDeleted($entry) + $this->yellow->system->get("updateTrashTimeout");
+                if ($expire<=time() && !$this->yellow->toolbox->deleteFile($entry)) $statusCode = 500;
+            }
+            foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/.*/", false, true) as $entry) {
+                $expire = $this->yellow->toolbox->getFileDeleted($entry) + $this->yellow->system->get("updateTrashTimeout");
+                if ($expire<=time() && !$this->yellow->toolbox->deleteDirectory($entry)) $statusCode = 500;
+            }
+            if ($statusCode==500) $this->yellow->log("error", "Can't delete files in directory '$path'!\n");
             $statusCode = 200;
             $path = $this->yellow->system->get("coreExtensionDirectory");
             $regex = "/^.*\\".$this->yellow->system->get("coreDownloadExtension")."$/";
@@ -182,7 +176,7 @@ class YellowUpdate {
         }
     }
     
-    // Update system settings after update notification
+    // Update system settings after update
     public function updateSystemSettings() {
         $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
         $fileData = $this->yellow->toolbox->readFile($fileName);
@@ -211,9 +205,18 @@ class YellowUpdate {
         if ($fileData!=$fileDataNew && !$this->yellow->toolbox->createFile($fileName, $fileDataNew)) {
             $this->yellow->log("error", "Can't write file '$fileName'!");
         }
+        if ($this->yellow->system->get("updateCurrentRelease")!=YellowCore::RELEASE) {
+            if (!$this->yellow->system->save($fileName, array("updateCurrentRelease" => YellowCore::RELEASE))) {
+                $this->yellow->log("error", "Can't write file '$fileName'!");
+            } else {
+                list($name, $version, $os) = $this->yellow->toolbox->detectServerInformation();
+                $product = "Datenstrom Yellow ".YellowCore::RELEASE;
+                $this->yellow->log("info", "Update $product, PHP ".PHP_VERSION.", $name $version, $os");
+            }
+        }
     }
     
-    // Update language settings after update notification
+    // Update language settings after update
     public function updateLanguageSettings() {
         $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreLanguageFile");
         $fileData = $this->yellow->toolbox->readFile($fileName);
@@ -256,7 +259,7 @@ class YellowUpdate {
         }
     }
     
-    // Update extension settings
+    // Update extension settings after update
     public function updateExtensionSettings($extension, $settings, $action) {
         $statusCode = 200;
         $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateCurrentFile");
@@ -295,10 +298,6 @@ class YellowUpdate {
         }
         if ($key=="updateDailyTimestamp") {
             $timestamp = mktime(0, 0, 0) + 60*60*24 + $timeOffset;
-        } elseif ($key=="updateWeeklyTimestamp") {
-            $timestamp = mktime(0, 0, 0, date("n"), date("j")-date("N")+1) + 60*60*24*7 + $timeOffset;
-        } elseif ($key=="updateMonthlyTimestamp") {
-            $timestamp = mktime(0, 0, 0, date("n")+1, 1) + $timeOffset;
         }
         $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
         if (!$this->yellow->system->save($fileName, array($key => $timestamp))) {
@@ -376,18 +375,24 @@ class YellowUpdate {
     
     // Process command to install pending extension
     public function processCommandPending() {
-        $statusCode = $this->updateExtensions("install");
-        if ($statusCode!=200) echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
-        echo "Your website has ".($statusCode!=200 ? "not " : "")."been updated: Please run command again\n";
+        $statusCode = 0;
+        if ($this->isExtensionPending()) {
+            $statusCode = $this->updateExtensions("install");
+            if ($statusCode!=200) echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
+            echo "Your website has ".($statusCode!=200 ? "not " : "")."been updated: Please run command again\n";
+        }
         return $statusCode;
     }
     
     // Process request to install pending extension
     public function processRequestPending($scheme, $address, $base, $location, $fileName) {
-        $statusCode = $this->updateExtensions("install");
-        if ($statusCode==200) {
-            $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
-            $statusCode = $this->yellow->sendStatus(303, $location);
+        $statusCode = 0;
+        if ($this->yellow->lookup->isContentFile($fileName) && $this->isExtensionPending()) {
+            $statusCode = $this->updateExtensions("install");
+            if ($statusCode==200) {
+                $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
+                $statusCode = $this->yellow->sendStatus(303, $location);
+            }
         }
         return $statusCode;
     }
@@ -757,8 +762,8 @@ class YellowUpdate {
             if (strposu($key, "/")) {
                 if (!$this->yellow->lookup->isValidFile($key)) $invalid = true;
                 list($entry, $flags) = $this->yellow->toolbox->getTextList($value, ",", 2);
-                if (strposu($entry, ".")===false) $invalid = true;
-                if ($oldModified==0 && is_file($key)) $oldModified = filemtime($key);
+                if (strposu($entry, ".")===false) $invalid = true; // TODO: remove later, detect old format
+                if ($oldModified==0) $oldModified = $this->yellow->toolbox->getFileModified($key);
             }
         }
         if ($invalid) $extension = $version = "";
