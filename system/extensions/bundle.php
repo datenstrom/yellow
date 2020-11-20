@@ -2,12 +2,25 @@
 // Bundle extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/bundle
 
 class YellowBundle {
-    const VERSION = "0.8.17";
+    const VERSION = "0.8.18";
     public $yellow;         // access to API
 
     // Handle initialisation
     public function onLoad($yellow) {
         $this->yellow = $yellow;
+    }
+    
+    // Handle update
+    public function onUpdate($action) {
+        if ($action=="clean" || $action=="daily" || $action=="uninstall") {
+            $statusCode = 200;
+            $path = $this->yellow->system->get("coreExtensionDirectory");
+            foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/bundle-.*/", false, false) as $entry) {
+                $cleanup = !$this->isBundleRequired($entry) || $action=="uninstall";
+                if ($cleanup && !$this->yellow->toolbox->deleteFile($entry)) $statusCode = 500;
+            }
+            if ($statusCode==500) $this->yellow->log("error", "Can't delete files in directory '$path'!\n");
+        }
     }
     
     // Handle page output data
@@ -17,18 +30,6 @@ class YellowBundle {
             $output = $matches[1].$this->normaliseHead($matches[2]).$matches[3];
         }
         return $output;
-    }
-    
-    // Handle update
-    public function onUpdate($action) {
-        if ($action=="clean" || $action=="daily" || $action=="uninstall") {
-            $statusCode = 200;
-            $path = $this->yellow->system->get("coreExtensionDirectory");
-            foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/bundle-.*/", false, false) as $entry) {
-                if (!$this->yellow->toolbox->deleteFile($entry)) $statusCode = 500;
-            }
-            if ($statusCode==500) $this->yellow->log("error", "Can't delete files in directory '$path'!\n");
-        }
     }
     
     // Normalise page head
@@ -53,7 +54,7 @@ class YellowBundle {
                 array_push($dataOther, $line);
             }
         }
-        if (!defined("DEBUG") || DEBUG==0) {
+        if (!defined("DEBUG")) {
             $dataCss = $this->processBundle($dataCss, "css");
             $dataScriptDefer = $this->processBundle($dataScriptDefer, "js", "defer");
             $dataScriptNow = $this->processBundle($dataScriptNow, "js");
@@ -83,8 +84,7 @@ class YellowBundle {
             }
         }
         if (!empty($fileNames)) {
-            $autoVersioning = intval($modified/(60*60*24));
-            $id = substru(md5($autoVersioning.$base.implode($fileNames)), 0, 10);
+            $id = $this->getBundleId($fileNames, $modified);
             $fileNameBundle = $this->yellow->system->get("coreExtensionDirectory")."bundle-$id.min.$type";
             $locationBundle = $base.$this->yellow->system->get("coreExtensionLocation")."bundle-$id.min.$type";
             $rawDataAttribute = $attribute=="defer" ? "defer=\"defer\" " : "";
@@ -141,6 +141,42 @@ class YellowBundle {
         if (preg_match("/\.min/", $fileName)) $minifier = new MinifyBasic();
         $minifier->add($fileData);
         return $minifier->minify();
+    }
+    
+    // Return bundle information
+    public function getBundleInformation($fileName) {
+        $fileNames = array();
+        $modified = 0;
+        $fileData = $this->yellow->toolbox->readFile($fileName);
+        foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
+            if (preg_match("/^\/\* (\S*) \*\/$/", $line, $matches)) {
+                $fileNameOne = $this->yellow->system->get("coreExtensionDirectory").$matches[1];
+                $fileNameTwo = $this->yellow->system->get("coreThemeDirectory").$matches[1];
+                if (is_readable($fileNameOne)) {
+                    array_push($fileNames, $fileNameOne);
+                    $modified = max($modified, $this->yellow->toolbox->getFileModified($fileNameOne));
+                } elseif (is_readable($fileNameTwo)) {
+                    array_push($fileNames, $fileNameTwo);
+                    $modified = max($modified, $this->yellow->toolbox->getFileModified($fileNameTwo));
+                }
+            }
+        }
+        return array($fileNames, $modified);
+    }
+    
+    // Return bundle ID
+    public function getBundleId($fileNames, $modified) {
+        $autoVersioning = intval($modified/(60*60*24));
+        $base = $this->yellow->system->get("coreServerBase");
+        return substru(md5($autoVersioning.$base.implode($fileNames)), 0, 10);
+    }
+    
+    // Check if bundle is required
+    public function isBundleRequired($fileName) {
+        list($fileNames, $modified) = $this->getBundleInformation($fileName);
+        $idExpected = $idCurrent = $this->getBundleId($fileNames, $modified);
+        if (preg_match("/bundle-(.*)\.min/", $fileName, $matches)) $idCurrent = $matches[1];
+        return $idExpected==$idCurrent;
     }
 }
     

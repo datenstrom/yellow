@@ -2,7 +2,7 @@
 // Image extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/image
 
 class YellowImage {
-    const VERSION = "0.8.11";
+    const VERSION = "0.8.12";
     public $yellow;             // access to API
 
     // Handle initialisation
@@ -15,6 +15,18 @@ class YellowImage {
         $this->yellow->system->setDefault("imageThumbnailDirectory", "media/thumbnails/");
         $this->yellow->system->setDefault("imageThumbnailJpgQuality", "80");
         $this->yellow->language->setDefault("imageDefaultAlt");
+    }
+    
+    // Handle update
+    public function onUpdate($action) {
+        if ($action=="clean") {
+            $statusCode = 200;
+            $path = $this->yellow->system->get("imageThumbnailDirectory");
+            foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/.*/", false, false) as $entry) {
+                if (!$this->yellow->toolbox->deleteFile($entry)) $statusCode = 500;
+            }
+            if ($statusCode==500) $this->yellow->log("error", "Can't delete files in directory '$path'!\n");
+        }
     }
 
     // Handle page content of shortcut
@@ -57,18 +69,6 @@ class YellowImage {
                     $file->error(500, "Can't write file '$fileName'!");
                 }
             }
-        }
-    }
-
-    // Handle update
-    public function onUpdate($action) {
-        if ($action=="clean") {
-            $statusCode = 200;
-            $path = $this->yellow->system->get("imageThumbnailDirectory");
-            foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/.*/", false, false) as $entry) {
-                if (!$this->yellow->toolbox->deleteFile($entry)) $statusCode = 500;
-            }
-            if ($statusCode==500) $this->yellow->log("error", "Can't delete files in directory '$path'!\n");
         }
     }
 

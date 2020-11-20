@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.32";
+    const VERSION = "0.8.33";
     const RELEASE = "0.8.16";
     public $page;           // current page
     public $content;        // content files
@@ -314,9 +314,6 @@ class YellowCore {
         if ($this->isLoaded()) {
             foreach ($this->extension->data as $key=>$value) {
                 if (method_exists($value["object"], "onStartup")) $value["object"]->onStartup();
-            }
-            foreach ($this->extension->data as $key=>$value) {
-                if (method_exists($value["object"], "onUpdate")) $value["object"]->onUpdate("ready");
             }
         }
     }
@@ -2700,7 +2697,7 @@ class YellowToolbox {
         return $ok;
     }
     
-    // Set file modification date, Unix time
+    // Set file/directory modification date, Unix time
     public function modifyFile($fileName, $modified) {
         clearstatcache(true, $fileName);
         return @touch($fileName, $modified);
@@ -2921,7 +2918,7 @@ class YellowToolbox {
         return array_pad($tokens, $size, null);
     }
     
-    // Return array from text, space separated
+    // Return array of variable size from text, space separated
     public function getTextArguments($text, $optional = "-", $sizeMin = 9) {
         $text = preg_replace("/\s+/s", " ", trim($text));
         $tokens = str_getcsv($text, " ", "\"");
