@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow
 
 class YellowInstall {
-    const VERSION = "0.8.43";
+    const VERSION = "0.8.44";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -48,7 +48,7 @@ class YellowInstall {
             if ($status=="ok") $status = $this->updateSettings($language)==200 ? "ok" : "error";
             if ($status=="ok") $status = $this->removeInstall()==200 ? "done" : "error";
             if ($status=="done") {
-                $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
+                $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, "/");
                 $statusCode = $this->yellow->sendStatus(303, $location);
             } else {
                 $statusCode = $this->yellow->sendPage();
