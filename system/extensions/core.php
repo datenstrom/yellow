@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.33";
+    const VERSION = "0.8.34";
     const RELEASE = "0.8.16";
     public $page;           // current page
     public $content;        // content files
@@ -2056,8 +2056,7 @@ class YellowLookup {
                 if ($i || $token!=$pathHome) $location .= $token;
             }
             $token = $this->normaliseToken($tokens[$i], $fileExtension);
-            $fileFolder = $this->normaliseToken($tokens[$i-1], $fileExtension);
-            if ($token!=$fileDefault && $token!=$fileFolder) {
+            if ($token!=$fileDefault) {
                 $location .= $this->normaliseToken($tokens[$i], $fileExtension, true);
             }
             $extension = ($pos = strrposu($fileName, ".")) ? substru($fileName, $pos) : "";
@@ -2110,8 +2109,7 @@ class YellowLookup {
             if (!$directory) {
                 if (!strempty($tokens[$i])) {
                     $token = $tokens[$i].$fileExtension;
-                    $fileFolder = $tokens[$i-1].$fileExtension;
-                    if ($token==$fileDefault || $token==$fileFolder) $invalid = true;
+                    if ($token==$fileDefault) $invalid = true;
                     $path .= $this->findFileDirectory($path, $token, $fileExtension, false, true, $found, $invalid);
                 } else {
                     $path .= $this->findFileDefault($path, $fileDefault, $fileExtension, false);
@@ -2146,14 +2144,9 @@ class YellowLookup {
     public function findFileDefault($path, $fileDefault, $fileExtension, $includePath = true) {
         $token = $fileDefault;
         if (!is_file($path."/".$fileDefault)) {
-            $fileFolder = $this->normaliseToken(basename($path), $fileExtension);
-            $regex = "/^[\d\-\_\.]*($fileDefault|$fileFolder)$/";
+            $regex = "/^[\d\-\_\.]*($fileDefault)$/";
             foreach ($this->yellow->toolbox->getDirectoryEntries($path, $regex, true, false, false) as $entry) {
                 if ($this->normaliseToken($entry, $fileExtension)==$fileDefault) {
-                    $token = $entry;
-                    break;
-                }
-                if ($this->normaliseToken($entry, $fileExtension)==$fileFolder) {
                     $token = $entry;
                     break;
                 }
@@ -2174,11 +2167,9 @@ class YellowLookup {
                 array_push($fileNames, $path.$entry."/".$token);
             }
             if (!$this->isRootLocation($location)) {
-                $fileFolder = $this->normaliseToken(basename($path), $fileExtension);
                 $regex = "/^.*\\".$fileExtension."$/";
                 foreach ($this->yellow->toolbox->getDirectoryEntries($path, $regex, true, false, false) as $entry) {
                     if ($this->normaliseToken($entry, $fileExtension)==$fileDefault) continue;
-                    if ($this->normaliseToken($entry, $fileExtension)==$fileFolder) continue;
                     array_push($fileNames, $path.$entry);
                 }
             }
