@@ -243,22 +243,22 @@ yellow.edit = {
                 "</div>"+
                 "</form>";
                 break;
-            case "yellow-pane-system":
+            case "yellow-pane-configure":
                 elementDiv.innerHTML =
                 "<form method=\"post\">"+
                 "<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\"></i></a>"+
-                "<div class=\"yellow-title\"><h1 id=\"yellow-pane-system-title\">"+this.getText("SystemTitle")+"</h1></div>"+
-                "<div class=\"yellow-status\"><p id=\"yellow-pane-system-status\" class=\""+paneStatus+"\">"+this.getText("SystemStatus", "", paneStatus)+"</p></div>"+
+                "<div class=\"yellow-title\"><h1 id=\"yellow-pane-configure-title\">"+this.getText("ConfigureTitle")+"</h1></div>"+
+                "<div class=\"yellow-status\"><p id=\"yellow-pane-configure-status\" class=\""+paneStatus+"\">"+this.getText("ConfigureStatus", "", paneStatus)+"</p></div>"+
                 "<div class=\"yellow-settings\">"+
-                "<div id=\"yellow-pane-system-settings-actions\" class=\"yellow-settings-left\"><p>"+this.getRawDataSettingsActions(paneAction)+"</p></div>"+
-                "<div id=\"yellow-pane-system-settings-separator\" class=\"yellow-settings-left yellow-settings-separator\">&nbsp;</div>"+
-                "<div id=\"yellow-pane-system-settings-fields\" class=\"yellow-settings-right yellow-fields\">"+
-                "<input type=\"hidden\" name=\"action\" value=\"system\" />"+
+                "<div id=\"yellow-pane-configure-settings-actions\" class=\"yellow-settings-left\"><p>"+this.getRawDataSettingsActions(paneAction)+"</p></div>"+
+                "<div id=\"yellow-pane-configure-settings-separator\" class=\"yellow-settings-left yellow-settings-separator\">&nbsp;</div>"+
+                "<div id=\"yellow-pane-configure-settings-fields\" class=\"yellow-settings-right yellow-fields\">"+
+                "<input type=\"hidden\" name=\"action\" value=\"configure\" />"+
                 "<input type=\"hidden\" name=\"csrftoken\" value=\""+yellow.toolbox.encodeHtml(this.getCookie("csrftoken"))+"\" />"+
-                "<p><label for=\"yellow-pane-system-sitename\">"+this.getText("SystemSitename")+"</label><br /><input class=\"yellow-form-control\" name=\"sitename\" id=\"yellow-pane-system-sitename\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("sitename"))+"\" /></p>"+
-                "<p><label for=\"yellow-pane-system-author\">"+this.getText("SystemAuthor")+"</label><br /><input class=\"yellow-form-control\" name=\"author\" id=\"yellow-pane-system-author\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("author"))+"\" /></p>"+
-                "<p><label for=\"yellow-pane-system-email\">"+this.getText("SystemEmail")+"</label><br /><input class=\"yellow-form-control\" name=\"email\" id=\"yellow-pane-system-email\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("email"))+"\" /></p>"+
-                "<p>"+this.getText("SystemInformation")+"</p>"+
+                "<p><label for=\"yellow-pane-configure-sitename\">"+this.getText("ConfigureSitename")+"</label><br /><input class=\"yellow-form-control\" name=\"sitename\" id=\"yellow-pane-configure-sitename\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("sitename"))+"\" /></p>"+
+                "<p><label for=\"yellow-pane-configure-author\">"+this.getText("ConfigureAuthor")+"</label><br /><input class=\"yellow-form-control\" name=\"author\" id=\"yellow-pane-configure-author\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("author"))+"\" /></p>"+
+                "<p><label for=\"yellow-pane-configure-email\">"+this.getText("ConfigureEmail")+"</label><br /><input class=\"yellow-form-control\" name=\"email\" id=\"yellow-pane-configure-email\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("email"))+"\" /></p>"+
+                "<p>"+this.getText("ConfigureInformation")+"</p>"+
                 "<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("ChangeButton")+"\" /></p>"+
                 "</div>"+
                 "<div class=\"yellow-settings yellow-settings-banner\"></div>"+
@@ -380,12 +380,12 @@ yellow.edit = {
                     document.getElementById("yellow-pane-account-"+yellow.user.language).checked = true;
                 }
                 break;
-            case "yellow-pane-system":
+            case "yellow-pane-configure":
                 if (paneStatus=="none") {
-                    document.getElementById("yellow-pane-system-status").innerHTML = this.getText("SystemStatusNone");
-                    document.getElementById("yellow-pane-system-sitename").value = yellow.system.sitename;
-                    document.getElementById("yellow-pane-system-author").value = yellow.system.author;
-                    document.getElementById("yellow-pane-system-email").value = yellow.system.email;
+                    document.getElementById("yellow-pane-configure-status").innerHTML = this.getText("ConfigureStatusNone");
+                    document.getElementById("yellow-pane-configure-sitename").value = yellow.system.sitename;
+                    document.getElementById("yellow-pane-configure-author").value = yellow.system.author;
+                    document.getElementById("yellow-pane-configure-email").value = yellow.system.email;
                 }
                 break;
             case "yellow-pane-update":
@@ -445,7 +445,7 @@ yellow.edit = {
         var paneHeight = yellow.toolbox.getWindowHeight() - paneTop - Math.min(yellow.toolbox.getOuterHeight(elementBar) + 10, (yellow.toolbox.getWindowWidth()-yellow.toolbox.getOuterWidth(elementBar))/2);
         switch (paneId) {
             case "yellow-pane-account":
-            case "yellow-pane-system":
+            case "yellow-pane-configure":
                 yellow.toolbox.setOuterLeft(document.getElementById(paneId), paneLeft);
                 yellow.toolbox.setOuterTop(document.getElementById(paneId), paneTop);
                 yellow.toolbox.setOuterWidth(document.getElementById(paneId), paneWidth);
@@ -563,7 +563,7 @@ yellow.edit = {
                 case "quit":        this.showPane(paneId, action, status); break;
                 case "remove":      this.showPane(paneId, action, status); break;
                 case "account":     this.showPane(paneId, action, status); break;
-                case "system":      this.showPane(paneId, action, status); break;
+                case "configure":   this.showPane(paneId, action, status); break;
                 case "update":      this.showPane(paneId, action, status); break;
                 case "create":      this.showPane(paneId, action, status, true); break;
                 case "edit":        this.showPane(paneId, action, status, true); break;
@@ -573,6 +573,7 @@ yellow.edit = {
                 case "toolbar":     this.processToolbar(status, arguments); break;
                 case "settings":    this.processSettings(arguments); break;
                 case "submit":      this.processSubmit(arguments); break;
+                case "restore":     this.processSubmit("action:"+action); break;
                 case "help":        this.processHelp(); break;
             }
         }
@@ -829,7 +830,7 @@ yellow.edit = {
             var extension = (file.name.lastIndexOf(".")!=-1 ? file.name.substring(file.name.lastIndexOf("."), file.name.length) : "").toLowerCase();
             var extensions = yellow.system.editUploadExtensions.split(/\s*,\s*/);
             if (file.size<=yellow.system.coreFileSizeMax && extensions.indexOf(extension)!=-1) {
-                var text = this.getText("UploadProgress")+"\u200b";
+                var text = "["+this.getText("UploadProgress")+"]\u200b";
                 yellow.editor.setMarkdown(elementText, text, "insert");
                 var thisObject = this;
                 var formData = new FormData();
@@ -855,7 +856,7 @@ yellow.edit = {
     uploadFileDone: function(elementText, responseText) {
         var result = JSON.parse(responseText);
         if (result) {
-            var textOld = this.getText("UploadProgress")+"\u200b";
+            var textOld = "["+this.getText("UploadProgress")+"]\u200b";
             var textNew;
             if (result.location.substring(0, yellow.system.coreImageLocation.length)==yellow.system.coreImageLocation) {
                 textNew = "[image "+result.location.substring(yellow.system.coreImageLocation.length)+"]";
@@ -870,7 +871,7 @@ yellow.edit = {
     uploadFileError: function(elementText, responseText) {
         var result = JSON.parse(responseText);
         if (result) {
-            var textOld = this.getText("UploadProgress")+"\u200b";
+            var textOld = "["+this.getText("UploadProgress")+"]\u200b";
             var textNew = "["+result.error+"]";
             yellow.editor.replace(elementText, textOld, textNew);
         }
@@ -894,7 +895,7 @@ yellow.edit = {
         var paneAction = paneId.substring(panePrefix.length);
         if (paneAction=="edit") {
             if (document.getElementById("yellow-pane-edit-text").value.length==0) paneAction = "delete";
-            if (yellow.page.statusCode==434) paneAction = "create";
+            if (yellow.page.statusCode==434 || yellow.page.statusCode==435) paneAction = "create";
         }
         return paneAction;
     },

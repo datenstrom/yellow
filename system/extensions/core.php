@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.34";
+    const VERSION = "0.8.35";
     const RELEASE = "0.8.16";
     public $page;           // current page
     public $content;        // content files
@@ -3135,6 +3135,24 @@ class YellowToolbox {
         return $rawDataNew;
     }
     
+    // Remove meta data in raw data
+    public function unsetMetaData($rawData, $key) {
+        if (preg_match("/^(\xEF\xBB\xBF)?\-\-\-[\r\n]+(.+?)\-\-\-[\r\n]+(.*)$/s", $rawData, $parts)) {
+            $key = lcfirst($key);
+            $rawDataMiddle = "";
+            foreach ($this->getTextLines($parts[2]) as $line) {
+                if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
+                    if (lcfirst($matches[1])==$key) continue;
+                }
+                $rawDataMiddle .= $line;
+            }
+            $rawDataNew = $parts[1]."---\n".$rawDataMiddle."---\n".$parts[3];
+        } else {
+            $rawDataNew = $rawData;
+        }
+        return $rawDataNew;
+    }
+
     // Detect server URL
     public function detectServerUrl() {
         $scheme = "http";
