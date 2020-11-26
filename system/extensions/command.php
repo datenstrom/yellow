@@ -2,7 +2,7 @@
 // Command extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/command
 
 class YellowCommand {
-    const VERSION = "0.8.25";
+    const VERSION = "0.8.26";
     public $yellow;                       // access to API
     public $files;                        // number of files
     public $links;                        // number of links
@@ -553,7 +553,8 @@ class YellowCommand {
     // Return media locations
     public function getMediaLocations() {
         $locations = array();
-        $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($this->yellow->system->get("coreMediaDirectory"), "/.*/", false, false);
+        $path = $this->yellow->system->get("coreMediaDirectory");
+        $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($path, "/.*/", false, false);
         foreach ($fileNames as $fileName) {
             array_push($locations, "/".$fileName);
         }
@@ -563,20 +564,44 @@ class YellowCommand {
     // Return system locations
     public function getSystemLocations() {
         $locations = array();
-        $regex = "/\.(css|gif|ico|js|jpg|png|svg|woff|woff2)$/";
+        $extensionPath = $this->yellow->system->get("coreExtensionDirectory");
         $extensionDirectoryLength = strlenu($this->yellow->system->get("coreExtensionDirectory"));
-        $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($this->yellow->system->get("coreExtensionDirectory"), $regex, false, false);
+        $regex = "/\.(css|gif|ico|js|jpg|png|svg|woff|woff2)$/";
+        $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($extensionPath, $regex, false, false);
         foreach ($fileNames as $fileName) {
-            array_push($locations, $this->yellow->system->get("coreExtensionLocation").substru($fileName, $extensionDirectoryLength));
+            $location = $this->yellow->system->get("coreExtensionLocation").substru($fileName, $extensionDirectoryLength);
+            array_push($locations, $location);
         }
+        $themePath = $this->yellow->system->get("coreThemeDirectory");
         $themeDirectoryLength = strlenu($this->yellow->system->get("coreThemeDirectory"));
-        $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($this->yellow->system->get("coreThemeDirectory"), $regex, false, false);
+        $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($themePath, $regex, false, false);
         foreach ($fileNames as $fileName) {
-            array_push($locations, $this->yellow->system->get("coreThemeLocation").substru($fileName, $themeDirectoryLength));
+            $location = $this->yellow->system->get("coreThemeLocation").substru($fileName, $themeDirectoryLength);
+            array_push($locations, $location);
         }
-        return $locations;
+        return array_diff($locations, $this->getSystemLocationsIgnore());
     }
-
+    
+    // Return system locations to ignore
+    public function getSystemLocationsIgnore() {
+        $locations = array();
+        $extensionPath = $this->yellow->system->get("coreExtensionDirectory");
+        $extensionDirectoryLength = strlenu($this->yellow->system->get("coreExtensionDirectory"));
+        if ($this->yellow->extension->isExisting("bundle")) {
+            foreach ($this->yellow->toolbox->getDirectoryEntries($extensionPath, "/^bundle-(.*)/", false, false) as $entry) {
+                list($locationsBundle) = $this->yellow->extension->get("bundle")->getBundleInformation($entry);
+                $locations = array_merge($locations, $locationsBundle);
+            }
+        }
+        if ($this->yellow->extension->isExisting("edit")) {
+            foreach ($this->yellow->toolbox->getDirectoryEntries($extensionPath, "/^edit\.(.*)/", false, false) as $entry) {
+                $location = $this->yellow->system->get("coreExtensionLocation").substru($entry, $extensionDirectoryLength);
+                array_push($locations, $location);
+            }
+        }
+        return array_unique($locations);
+    }
+    
     // Return extra locations
     public function getExtraLocations($path) {
         $locations = array();

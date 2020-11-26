@@ -2,7 +2,7 @@
 // Bundle extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/bundle
 
 class YellowBundle {
-    const VERSION = "0.8.18";
+    const VERSION = "0.8.19";
     public $yellow;         // access to API
 
     // Handle initialisation
@@ -15,7 +15,7 @@ class YellowBundle {
         if ($action=="clean" || $action=="daily" || $action=="uninstall") {
             $statusCode = 200;
             $path = $this->yellow->system->get("coreExtensionDirectory");
-            foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/bundle-.*/", false, false) as $entry) {
+            foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^bundle-(.*)/", false, false) as $entry) {
                 $cleanup = !$this->isBundleRequired($entry) || $action=="uninstall";
                 if ($cleanup && !$this->yellow->toolbox->deleteFile($entry)) $statusCode = 500;
             }
@@ -145,7 +145,7 @@ class YellowBundle {
     
     // Return bundle information
     public function getBundleInformation($fileName) {
-        $fileNames = array();
+        $locations = $fileNames = array();
         $modified = 0;
         $fileData = $this->yellow->toolbox->readFile($fileName);
         foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
@@ -153,15 +153,17 @@ class YellowBundle {
                 $fileNameOne = $this->yellow->system->get("coreExtensionDirectory").$matches[1];
                 $fileNameTwo = $this->yellow->system->get("coreThemeDirectory").$matches[1];
                 if (is_readable($fileNameOne)) {
+                    array_push($locations, $this->yellow->system->get("coreExtensionLocation").$matches[1]);
                     array_push($fileNames, $fileNameOne);
                     $modified = max($modified, $this->yellow->toolbox->getFileModified($fileNameOne));
                 } elseif (is_readable($fileNameTwo)) {
+                    array_push($locations, $this->yellow->system->get("coreThemeLocation").$matches[1]);
                     array_push($fileNames, $fileNameTwo);
                     $modified = max($modified, $this->yellow->toolbox->getFileModified($fileNameTwo));
                 }
             }
         }
-        return array($fileNames, $modified);
+        return array($locations, $fileNames, $modified);
     }
     
     // Return bundle ID
@@ -173,10 +175,10 @@ class YellowBundle {
     
     // Check if bundle is required
     public function isBundleRequired($fileName) {
-        list($fileNames, $modified) = $this->getBundleInformation($fileName);
+        list($dummy, $fileNames, $modified) = $this->getBundleInformation($fileName);
         $idExpected = $idCurrent = $this->getBundleId($fileNames, $modified);
-        if (preg_match("/bundle-(.*)\.min/", $fileName, $matches)) $idCurrent = $matches[1];
-        return $idExpected==$idCurrent;
+        if (preg_match("/^bundle-(.*)\.min/", $fileName, $matches)) $idCurrent = $matches[1];
+        return $idExpected==$idCurrent && !defined("DEBUG");
     }
 }
     
