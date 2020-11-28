@@ -2,7 +2,7 @@
 // Bundle extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/bundle
 
 class YellowBundle {
-    const VERSION = "0.8.19";
+    const VERSION = "0.8.20";
     public $yellow;         // access to API
 
     // Handle initialisation
@@ -16,7 +16,7 @@ class YellowBundle {
             $statusCode = 200;
             $path = $this->yellow->system->get("coreExtensionDirectory");
             foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^bundle-(.*)/", false, false) as $entry) {
-                $cleanup = !$this->isBundleRequired($entry) || $action=="uninstall";
+                $cleanup = $action!="daily" || !$this->isBundleRequired($entry);
                 if ($cleanup && !$this->yellow->toolbox->deleteFile($entry)) $statusCode = 500;
             }
             if ($statusCode==500) $this->yellow->log("error", "Can't delete files in directory '$path'!\n");

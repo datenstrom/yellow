@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.35";
+    const VERSION = "0.8.36";
     const RELEASE = "0.8.16";
     public $page;           // current page
     public $content;        // content files
@@ -171,8 +171,9 @@ class YellowCore {
     // Process fatal runtime error
     public function processFatalError() {
         $error = error_get_last();
-        if (!is_null($error) && ($error["type"]==E_ERROR || $error["type"]==E_PARSE)) {
-            $fileName = substru($error["file"], strlenu($this->system->get("coreServerInstallDirectory")));
+        if (!is_null($error) && isset($error["type"]) && ($error["type"]==E_ERROR || $error["type"]==E_PARSE)) {
+            $fileNameAbsolute = isset($error["file"]) ? $error["file"] : "";
+            $fileName = substru($fileNameAbsolute, strlenu($this->system->get("coreServerInstallDirectory")));
             $this->log("error", "Can't parse file '$fileName'!");
             @header($this->toolbox->getHttpStatusFormatted(500));
             $troubleshooting = PHP_SAPI!="cli" ? "<a href=\"".$this->getTroubleshootingUrl()."\">See troubleshooting</a>." : "";
