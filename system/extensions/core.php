@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.36";
+    const VERSION = "0.8.37";
     const RELEASE = "0.8.16";
     public $page;           // current page
     public $content;        // content files
@@ -1791,6 +1791,12 @@ class YellowLanguage {
                 }
             }
         }
+        $callback = function ($a, $b) {
+            $string1 = isset($a["languageDescription"]) ? $a["languageDescription"] : "";
+            $string2 = isset($b["languageDescription"]) ? $b["languageDescription"] : "";
+            return strnatcmp($string1, $string2);
+        };
+        $this->settings->uasort($callback);
     }
     
     // Set current language
