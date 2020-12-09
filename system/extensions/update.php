@@ -706,7 +706,7 @@ class YellowUpdate {
             $fileNameCurrent = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateCurrentFile");
             $fileData = $this->yellow->toolbox->readFile($fileNameCurrent);
             $settings = $this->yellow->toolbox->getTextSettings($fileData, "extension");
-            foreach ($settings as $key=>$value) {
+            foreach ($settings->getArrayCopy() as $key=>$value) {
                 if (!$this->yellow->extension->isExisting($key)) unset($settings[$key]);
             }
             foreach ($this->yellow->extension->data as $key=>$value) {
