@@ -1,0 +1,26 @@
+name: Tests
+on: [push, pull_request]
+jobs:
+  tests:
+    name: PHP ${{ matrix.php }}
+    strategy:
+      matrix:
+        php: [8.0, 7.4, 7.3, 7.2, 7.1, 7.0, 5.6]
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: curl, exif, gd, mbstring, zip
+          coverage: none
+      - name: Setup tests
+        run: |
+          echo "::add-matcher::${{ runner.tool_cache }}/php.json"
+          php yellow.php about
+        env:
+          URL: http://website/
+      - name: Run tests
+        run: php yellow.php build test
