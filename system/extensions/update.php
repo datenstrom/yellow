@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.46";
+    const VERSION = "0.8.47";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $updates;                // number of updates
@@ -513,7 +513,7 @@ class YellowUpdate {
         if ($action=="install" || $action=="update") {
             $settingsCurrent = $this->yellow->toolbox->getTextSettings($fileData, "extension");
             if (!$settingsCurrent->isExisting($extension)) $settingsCurrent[$extension] = new YellowArray();
-            foreach($settings as $key=>$value) $settingsCurrent[$extension][$key] = $value;
+            foreach ($settings as $key=>$value) $settingsCurrent[$extension][$key] = $value;
             $settingsCurrent->uksort("strnatcasecmp");
             $fileDataNew = "";
             foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
@@ -837,7 +837,7 @@ class YellowUpdate {
     // Return time of next daily update
     public function getTimestampDaily() {
         $timeOffset = 0;
-        foreach(str_split($this->yellow->system->get("sitename")) as $char) {
+        foreach (str_split($this->yellow->system->get("sitename")) as $char) {
             $timeOffset = ($timeOffset+ord($char)) % 60;
         }
         return mktime(0, 0, 0) + 60*60*24 + $timeOffset;

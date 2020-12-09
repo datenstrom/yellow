@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.37";
+    const VERSION = "0.8.38";
     const RELEASE = "0.8.16";
     public $page;           // current page
     public $content;        // content files
@@ -1781,7 +1781,7 @@ class YellowLanguage {
             $this->modified = max($this->modified, filemtime($entry));
             $fileData = $this->yellow->toolbox->readFile($entry);
             $settings = $this->yellow->toolbox->getTextSettings($fileData, "language");
-            foreach($settings as $language=>$block) {
+            foreach ($settings as $language=>$block) {
                 if (!isset($this->settings[$language])) {
                     $this->settings[$language] = $block;
                 } else {
