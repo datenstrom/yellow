@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.38";
+    const VERSION = "0.8.39";
     const RELEASE = "0.8.16";
     public $page;           // current page
     public $content;        // content files
@@ -1828,16 +1828,19 @@ class YellowLanguage {
     
     // Return human readable date
     public function getDateFormatted($timestamp, $format, $language = "") {
-        $dateMonths = preg_split("/\s*,\s*/", $this->getText("coreDateMonths", $language));
+        $dateMonthsNominative = preg_split("/\s*,\s*/", $this->getText("coreDateMonthsNominative", $language));
+        $dateMonthsGenitive = preg_split("/\s*,\s*/", $this->getText("coreDateMonthsGenitive", $language));
         $dateWeekdays = preg_split("/\s*,\s*/", $this->getText("coreDateWeekdays", $language));
-        $month = $dateMonths[date("n", $timestamp) - 1];
+        $monthNominative = $dateMonthsNominative[date("n", $timestamp) - 1];
+        $monthGenitive = $dateMonthsGenitive[date("n", $timestamp) - 1];
         $weekday = $dateWeekdays[date("N", $timestamp) - 1];
         $timeZone = $this->yellow->system->get("coreServerTimezone");
         $timeZoneHelper = new DateTime(null, new DateTimeZone($timeZone));
         $timeZoneOffset = $timeZoneHelper->getOffset();
         $timeZoneAbbreviation = "GMT".($timeZoneOffset<0 ? "-" : "+").abs(intval($timeZoneOffset/3600));
-        $format = preg_replace("/(?<!\\\)F/", addcslashes($month, "A..Za..z"), $format);
-        $format = preg_replace("/(?<!\\\)M/", addcslashes(substru($month, 0, 3), "A..Za..z"), $format);
+        $format = preg_replace("/(?<!\\\)F/", addcslashes($monthNominative, "A..Za..z"), $format);
+        $format = preg_replace("/(?<!\\\)V/", addcslashes($monthGenitive, "A..Za..z"), $format);
+        $format = preg_replace("/(?<!\\\)M/", addcslashes(substru($monthNominative, 0, 3), "A..Za..z"), $format);
         $format = preg_replace("/(?<!\\\)D/", addcslashes(substru($weekday, 0, 3), "A..Za..z"), $format);
         $format = preg_replace("/(?<!\\\)l/", addcslashes($weekday, "A..Za..z"), $format);
         $format = preg_replace("/(?<!\\\)T/", addcslashes($timeZoneAbbreviation, "A..Za..z"), $format);
