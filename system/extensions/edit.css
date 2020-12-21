@@ -248,6 +248,12 @@
     border-color: #666;
     color: #fff;
 }
+.yellow-toolbar .yellow-toolbar-disabled,
+.yellow-toolbar .yellow-toolbar-disabled:hover {
+    background-color: inherit;
+    border-color: #c1c1c1 #c1c1c1 #aaa;
+    color: #aaa;
+}
 .yellow-toolbar-tooltip {
     position: relative;
 }
@@ -340,7 +346,7 @@
     color: #333333;
     background-image: linear-gradient(to bottom, #f8f8f8, #e1e1e1);
     border: 1px solid #bbb;
-    border-color: #c1c1c1 #c1c1c1 #aaaaaa;
+    border-color: #c1c1c1 #c1c1c1 #aaa;
     border-radius: 4px;
     outline-offset: -2px;
     font-size: 0.9em;

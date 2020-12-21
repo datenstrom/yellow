@@ -417,8 +417,12 @@ yellow.edit = {
                         this.updateToolbar(0, "yellow-toolbar-checked");
                     }
                     if (!this.isUserAccess(paneAction, yellow.page.location) || (yellow.page.rawDataReadonly && paneId!="yellow-pane-create")) {
-                        yellow.toolbox.setVisible(document.getElementById(paneId+"-submit"), false);
                         document.getElementById(paneId+"-text").readOnly = true;
+                        var elements = document.getElementsByClassName("yellow-toolbar-btn-icon");
+                        for (var i=0, l=elements.length; i<l; i++) {
+                            yellow.toolbox.addClass(elements[i], "yellow-toolbar-disabled");
+                        }
+                        yellow.toolbox.setVisible(document.getElementById(paneId+"-submit"), false);
                     }
                 }
                 if (!document.getElementById(paneId+"-text").readOnly) {
@@ -608,14 +612,16 @@ yellow.edit = {
                 case "undo":            yellow.editor.undo(); break;
                 case "redo":            yellow.editor.redo(); break;
             }
+            if (this.isExpandable(status)) {
+                this.showPopup("yellow-popup-"+status, status);
+            } else {
+                this.hidePopup(this.popupId);
+            }
         }
-        if (status=="preview" && !elementText.readOnly) this.showPreview(elementText, elementPreview);
-        if (status=="save" && !elementText.readOnly && this.paneAction!="delete") this.processSubmit("action:"+this.paneAction);
-        if (status=="help") window.open(this.getText("YellowHelpUrl"), "_blank");
-        if (this.isExpandable(status)) {
-            this.showPopup("yellow-popup-"+status, status);
-        } else {
-            this.hidePopup(this.popupId);
+        if (!elementText.readOnly) {
+            if (status=="preview") this.showPreview(elementText, elementPreview);
+            if (status=="save" && this.paneAction!="delete") this.processSubmit("action:"+this.paneAction);
+            if (status=="help") window.open(this.getText("YellowHelpUrl"), "_blank");
         }
     },
     
