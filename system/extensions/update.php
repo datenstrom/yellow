@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.47";
+    const VERSION = "0.8.48";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $updates;                // number of updates
@@ -16,7 +16,7 @@ class YellowUpdate {
         $this->yellow->system->setDefault("updateCurrentFile", "update-current.ini");
         $this->yellow->system->setDefault("updateCurrentRelease", "0");
         $this->yellow->system->setDefault("updateTrashTimeout", "7776660");
-        $this->yellow->system->setDefault("updateTimestamp", "0");
+        $this->yellow->system->setDefault("updateDailyTimestamp", "0");
         $this->yellow->system->setDefault("updateNotification", "none");
     }
     
@@ -378,12 +378,12 @@ class YellowUpdate {
             $this->updateSystemSettings();
             $this->updateLanguageSettings();
         }
-        if ($this->yellow->system->get("updateTimestamp")<=time()) {
+        if ($this->yellow->system->get("updateDailyTimestamp")<=time()) {
             foreach ($this->yellow->extension->data as $key=>$value) {
                 if (method_exists($value["object"], "onUpdate")) $value["object"]->onUpdate("daily");
             }
             $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
-            if (!$this->yellow->system->save($fileName, array("updateTimestamp" => $this->getTimestampDaily()))) {
+            if (!$this->yellow->system->save($fileName, array("updateDailyTimestamp" => $this->getDailyTimestamp()))) {
                 $this->yellow->log("error", "Can't write file '$fileName'!");
             }
         }
@@ -835,7 +835,7 @@ class YellowUpdate {
     }
     
     // Return time of next daily update
-    public function getTimestampDaily() {
+    public function getDailyTimestamp() {
         $timeOffset = 0;
         foreach (str_split($this->yellow->system->get("sitename")) as $char) {
             $timeOffset = ($timeOffset+ord($char)) % 60;

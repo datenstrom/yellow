@@ -2,7 +2,7 @@
 // Bundle extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/bundle
 
 class YellowBundle {
-    const VERSION = "0.8.20";
+    const VERSION = "0.8.21";
     public $yellow;         // access to API
 
     // Handle initialisation
@@ -177,7 +177,7 @@ class YellowBundle {
     public function isBundleRequired($fileName) {
         list($dummy, $fileNames, $modified) = $this->getBundleInformation($fileName);
         $idExpected = $idCurrent = $this->getBundleId($fileNames, $modified);
-        if (preg_match("/^bundle-(.*)\.min/", $fileName, $matches)) $idCurrent = $matches[1];
+        if (preg_match("/^bundle-(.*)\.min/", basename($fileName), $matches)) $idCurrent = $matches[1];
         return $idExpected==$idCurrent && !defined("DEBUG");
     }
 }
