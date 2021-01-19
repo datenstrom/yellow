@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.48";
+    const VERSION = "0.8.49";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $updates;                // number of updates
@@ -15,30 +15,29 @@ class YellowUpdate {
         $this->yellow->system->setDefault("updateLatestFile", "update-latest.ini");
         $this->yellow->system->setDefault("updateCurrentFile", "update-current.ini");
         $this->yellow->system->setDefault("updateCurrentRelease", "0");
-        $this->yellow->system->setDefault("updateTrashTimeout", "7776660");
-        $this->yellow->system->setDefault("updateDailyTimestamp", "0");
-        $this->yellow->system->setDefault("updateNotification", "none");
+        $this->yellow->system->setDefault("updateEventPending", "none");
+        $this->yellow->system->setDefault("updateEventDaily", "0");
     }
     
     // Handle update
     public function onUpdate($action) {
         if ($action=="clean" || $action=="daily") {
             $statusCode = 200;
-            $path = $this->yellow->system->get("coreTrashDirectory");
-            foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/.*/", false, false) as $entry) {
-                $expire = $this->yellow->toolbox->getFileDeleted($entry) + $this->yellow->system->get("updateTrashTimeout");
-                if ($expire<=time() && !$this->yellow->toolbox->deleteFile($entry)) $statusCode = 500;
-            }
-            foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/.*/", false, true) as $entry) {
-                $expire = $this->yellow->toolbox->getFileDeleted($entry) + $this->yellow->system->get("updateTrashTimeout");
-                if ($expire<=time() && !$this->yellow->toolbox->deleteDirectory($entry)) $statusCode = 500;
-            }
-            if ($statusCode==500) $this->yellow->log("error", "Can't delete files in directory '$path'!\n");
-            $statusCode = 200;
             $path = $this->yellow->system->get("coreExtensionDirectory");
             $regex = "/^.*\\".$this->yellow->system->get("coreDownloadExtension")."$/";
             foreach ($this->yellow->toolbox->getDirectoryEntries($path, $regex, false, false) as $entry) {
                 if (!$this->yellow->toolbox->deleteFile($entry)) $statusCode = 500;
+            }
+            if ($statusCode==500) $this->yellow->log("error", "Can't delete files in directory '$path'!\n");
+            $statusCode = 200;
+            $path = $this->yellow->system->get("coreTrashDirectory");
+            foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/.*/", false, false) as $entry) {
+                $expire = $this->yellow->toolbox->getFileDeleted($entry) + $this->yellow->system->get("coreTrashTimeout");
+                if ($expire<=time() && !$this->yellow->toolbox->deleteFile($entry)) $statusCode = 500;
+            }
+            foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/.*/", false, true) as $entry) {
+                $expire = $this->yellow->toolbox->getFileDeleted($entry) + $this->yellow->system->get("coreTrashTimeout");
+                if ($expire<=time() && !$this->yellow->toolbox->deleteDirectory($entry)) $statusCode = 500;
             }
             if ($statusCode==500) $this->yellow->log("error", "Can't delete files in directory '$path'!\n");
         }
@@ -189,7 +188,7 @@ class YellowUpdate {
     // Process command for pending events
     public function processCommandPending() {
         $statusCode = 0;
-        $this->updateEventsPending();
+        $this->updateEventPending();
         if ($this->isExtensionPending()) {
             $statusCode = $this->updateExtensions("install");
             if ($statusCode!=200) echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
@@ -202,7 +201,7 @@ class YellowUpdate {
     public function processRequestPending($scheme, $address, $base, $location, $fileName) {
         $statusCode = 0;
         if ($this->yellow->lookup->isContentFile($fileName)) {
-            $this->updateEventsPending();
+            $this->updateEventPending();
             if($this->isExtensionPending()) {
                 $statusCode = $this->updateExtensions("install");
                 if ($statusCode==200) {
@@ -361,10 +360,10 @@ class YellowUpdate {
     }
 
     // Update pending events
-    public function updateEventsPending() {
+    public function updateEventPending() {
         $this->updateSystemFiles();
-        if ($this->yellow->system->get("updateNotification")!="none") {
-            foreach (explode(",", $this->yellow->system->get("updateNotification")) as $token) {
+        if ($this->yellow->system->get("updateEventPending")!="none") {
+            foreach (explode(",", $this->yellow->system->get("updateEventPending")) as $token) {
                 list($extension, $action) = $this->yellow->toolbox->getTextList($token, "/", 2);
                 if ($this->yellow->extension->isExisting($extension) && ($action!="ready" && $action!="uninstall")) {
                     $value = $this->yellow->extension->data[$extension];
@@ -372,18 +371,18 @@ class YellowUpdate {
                 }
             }
             $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
-            if (!$this->yellow->system->save($fileName, array("updateNotification" => "none"))) {
+            if (!$this->yellow->system->save($fileName, array("updateEventPending" => "none"))) {
                 $this->yellow->log("error", "Can't write file '$fileName'!");
             }
             $this->updateSystemSettings();
             $this->updateLanguageSettings();
         }
-        if ($this->yellow->system->get("updateDailyTimestamp")<=time()) {
+        if ($this->yellow->system->get("updateEventDaily")<=time()) {
             foreach ($this->yellow->extension->data as $key=>$value) {
                 if (method_exists($value["object"], "onUpdate")) $value["object"]->onUpdate("daily");
             }
             $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
-            if (!$this->yellow->system->save($fileName, array("updateDailyTimestamp" => $this->getDailyTimestamp()))) {
+            if (!$this->yellow->system->save($fileName, array("updateEventDaily" => $this->getTimestampDaily()))) {
                 $this->yellow->log("error", "Can't write file '$fileName'!");
             }
         }
@@ -543,12 +542,12 @@ class YellowUpdate {
             $value = $this->yellow->extension->data[$extension];
             if (method_exists($value["object"], "onUpdate")) $value["object"]->onUpdate($action);
         }
-        $updateNotification = $this->yellow->system->get("updateNotification");
-        if ($updateNotification=="none") $updateNotification = "";
-        if (!empty($updateNotification)) $updateNotification .= ",";
-        $updateNotification .= "$extension/$action";
+        $updateEventPending = $this->yellow->system->get("updateEventPending");
+        if ($updateEventPending=="none") $updateEventPending = "";
+        if (!empty($updateEventPending)) $updateEventPending .= ",";
+        $updateEventPending .= "$extension/$action";
         $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
-        if (!$this->yellow->system->save($fileName, array("updateNotification" => $updateNotification))) {
+        if (!$this->yellow->system->save($fileName, array("updateEventPending" => $updateEventPending))) {
             $statusCode = 500;
             $this->yellow->page->error(500, "Can't write file '$fileName'!");
         }
@@ -835,7 +834,7 @@ class YellowUpdate {
     }
     
     // Return time of next daily update
-    public function getDailyTimestamp() {
+    public function getTimestampDaily() {
         $timeOffset = 0;
         foreach (str_split($this->yellow->system->get("sitename")) as $char) {
             $timeOffset = ($timeOffset+ord($char)) % 60;

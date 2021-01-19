@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.39";
+    const VERSION = "0.8.40";
     const RELEASE = "0.8.16";
     public $page;           // current page
     public $content;        // content files
@@ -37,6 +37,7 @@ class YellowCore {
         $this->system->setDefault("coreServerUrl", "auto");
         $this->system->setDefault("coreServerTimezone", "UTC");
         $this->system->setDefault("coreMultiLanguageMode", "0");
+        $this->system->setDefault("coreTrashTimeout", "7776660");
         $this->system->setDefault("coreMediaLocation", "/media/");
         $this->system->setDefault("coreDownloadLocation", "/media/downloads/");
         $this->system->setDefault("coreImageLocation", "/media/images/");
