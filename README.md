@@ -6,7 +6,7 @@ Datenstrom Yellow is for people who make small websites.
 2. Unzip and copy all files to your web server.
 3. Open your website in a web browser.
 
-Do you have questions? [Get help](https://datenstrom.se/yellow/help/).
+Do you have questions? [Get help](https://datenstrom.se/yellow/help/)  and [contribute](https://datenstrom.se/yellow/help/contributing-guidelines).
 
 <p>
 <a href="README-de.md"><img src="https://raw.githubusercontent.com/datenstrom/yellow-extensions/master/source/help/language-de.png" width="15" height="15" alt="Deutsch">&nbsp; Deutsch</a>&nbsp;
