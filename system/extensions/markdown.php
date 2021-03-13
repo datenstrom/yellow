@@ -2,7 +2,7 @@
 // Markdown extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/markdown
 
 class YellowMarkdown {
-    const VERSION = "0.8.16";
+    const VERSION = "0.8.17";
     public $yellow;         // access to API
     
     // Handle initialisation
@@ -13,7 +13,9 @@ class YellowMarkdown {
     // Handle page content in raw format
     public function onParseContentRaw($page, $text) {
         $markdown = new YellowMarkdownParser($this->yellow, $page);
-        return $markdown->transform($text);
+        $text = $markdown->transform($text);
+        $text = $this->yellow->toolbox->normaliseData($text, "html");
+        return $text;
     }
 }
 

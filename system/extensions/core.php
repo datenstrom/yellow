@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.40";
+    const VERSION = "0.8.41";
     const RELEASE = "0.8.16";
     public $page;           // current page
     public $content;        // content files
@@ -554,7 +554,6 @@ class YellowPage {
                     $this->parserData = preg_replace("/@pageRead/i", $this->get("pageRead"), $this->parserData);
                     $this->parserData = preg_replace("/@pageEdit/i", $this->get("pageEdit"), $this->parserData);
                     $this->parserData = $this->parser->onParseContentRaw($this, $this->parserData);
-                    $this->parserData = $this->yellow->toolbox->normaliseData($this->parserData, "html");
                     foreach ($this->yellow->extension->data as $key=>$value) {
                         if (method_exists($value["object"], "onParseContentHtml")) {
                             $output = $value["object"]->onParseContentHtml($this, $this->parserData);
