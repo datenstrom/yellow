@@ -2,8 +2,8 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.41";
-    const RELEASE = "0.8.16";
+    const VERSION = "0.8.42";
+    const RELEASE = "0.8.17";
     public $page;           // current page
     public $content;        // content files
     public $media;          // media files
