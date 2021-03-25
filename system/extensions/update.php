@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.49";
+    const VERSION = "0.8.50";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $updates;                // number of updates
@@ -418,6 +418,13 @@ class YellowUpdate {
             $this->yellow->user->load("system/extensions/yellow-user.ini");
             $this->yellow->language->load("system/extensions/yellow-language.ini");
             $this->yellow->page->error(503, "Flux capacitor is charging to 1.21 gigawatt, please reload page!");
+        }
+        if ($this->yellow->system->isExisting("updateNotification")) {  // TODO: remove later, convert old notification
+            $updateEventPending = $this->yellow->system->get("updateNotification");
+            $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
+            if (!$this->yellow->system->save($fileName, array("updateEventPending" => $updateEventPending))) {
+                $this->yellow->log("error", "Can't write file '$fileName'!");
+            }
         }
     }
     
