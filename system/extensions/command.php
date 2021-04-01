@@ -2,7 +2,7 @@
 // Command extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/command
 
 class YellowCommand {
-    const VERSION = "0.8.27";
+    const VERSION = "0.8.28";
     public $yellow;                       // access to API
     public $files;                        // number of files
     public $links;                        // number of links
@@ -208,6 +208,7 @@ class YellowCommand {
                 $location = $tokens[3];
             }
             if (substru($location, 0, strlenu($base))!=$base) continue;
+            if (substru($location, strlenu($base), 1)!="/") continue;
             $location = substru($location, strlenu($base));
             if (!$this->yellow->toolbox->isLocationArguments($location)) continue;
             if (!$this->yellow->toolbox->isLocationArgumentsPagination($location)) {
