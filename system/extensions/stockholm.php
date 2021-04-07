@@ -2,7 +2,7 @@
 // Stockholm extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/stockholm
 
 class YellowStockholm {
-    const VERSION = "0.8.10";
+    const VERSION = "0.8.11";
     public $yellow;         // access to API
     
     // Handle initialisation
