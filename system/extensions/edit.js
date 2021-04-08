@@ -377,7 +377,9 @@ yellow.edit = {
                     document.getElementById("yellow-pane-account-name").value = yellow.user.name;
                     document.getElementById("yellow-pane-account-email").value = yellow.user.email;
                     document.getElementById("yellow-pane-account-password").value = "";
-                    document.getElementById("yellow-pane-account-"+yellow.user.language).checked = true;
+                    if (document.getElementById("yellow-pane-account-"+yellow.user.language)) {
+                        document.getElementById("yellow-pane-account-"+yellow.user.language).checked = true;
+                    }
                 }
                 break;
             case "yellow-pane-configure":
