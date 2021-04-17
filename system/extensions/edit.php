@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/edit
 
 class YellowEdit {
-    const VERSION = "0.8.43";
+    const VERSION = "0.8.44";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -1287,7 +1287,7 @@ class YellowEditResponse {
         $settingsActions = "account";
         if ($this->isUserAccess("configure")) $settingsActions .= ", configure";
         if ($this->isUserAccess("update")) $settingsActions .= ", update";
-        return $settingsActions=="account" ? "" : $settingsActions;
+        return $settingsActions=="account" ? "none" : $settingsActions;
     }
     
     // Return toolbar buttons
