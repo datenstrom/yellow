@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/edit
 
 class YellowEdit {
-    const VERSION = "0.8.44";
+    const VERSION = "0.8.45";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -1489,6 +1489,7 @@ class YellowEditResponse {
     public function getFileNewLocation($fileNameShort, $pageLocation, $fileNewLocation) {
         $location = empty($fileNewLocation) ? $this->yellow->system->get("editUploadNewLocation") : $fileNewLocation;
         $location = preg_replace("/@timestamp/i", time(), $location);
+        $location = preg_replace("/@date/i", date("Y-m-d"), $location);
         $location = preg_replace("/@type/i", $this->yellow->toolbox->getFileType($fileNameShort), $location);
         $location = preg_replace("/@group/i", $this->getFileNewGroup($fileNameShort), $location);
         $location = preg_replace("/@folder/i", $this->getFileNewFolder($pageLocation), $location);
