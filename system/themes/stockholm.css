@@ -91,13 +91,12 @@ a:hover {
 .content th {
     text-align: left;
     padding: 0.3em;
+    border-bottom: 1px solid #ddd;
 }
 .content td {
     text-align: left;
     padding: 0.3em;
     padding-right: 2em;
-    border-top: 1px solid #ddd;
-    border-bottom: 1px solid #ddd;
 }
 .content code,
 .content pre {
@@ -128,7 +127,8 @@ a:hover {
 .content blockquote {
     margin-left: 0;
     padding-left: 1em;
-    border-left: 1px solid #ddd;
+    font-weight: bold;
+    border-left: 3px solid #29f;
 }
 .content .notice1 {
     margin: 1em 0;
