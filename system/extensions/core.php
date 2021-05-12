@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.42";
+    const VERSION = "0.8.43";
     const RELEASE = "0.8.17";
     public $page;           // current page
     public $content;        // content files
@@ -178,7 +178,7 @@ class YellowCore {
             $this->log("error", "Can't parse file '$fileName'!");
             @header($this->toolbox->getHttpStatusFormatted(500));
             $troubleshooting = PHP_SAPI!="cli" ? "<a href=\"".$this->getTroubleshootingUrl()."\">See troubleshooting</a>." : "";
-            echo "<br/>\nSomething went wrong. Please activate debug mode for more information. $troubleshooting\n";
+            echo "<br/>\nCheck the log file. Please activate the debug mode for more information. $troubleshooting\n";
         }
     }
     
