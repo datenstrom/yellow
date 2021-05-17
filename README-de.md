@@ -2,9 +2,9 @@
 
 # Datenstrom Yellow 0.8.17
 
-## Wie man loslegt
-
 Datenstrom Yellow ist für Menschen die kleine Webseiten machen.
+
+## Wie man loslegt
 
 1. [Datenstrom Yellow herunterladen](https://github.com/datenstrom/yellow/archive/master.zip).
 2. Entpacke und kopiere alle Dateien auf deinen Webserver.
