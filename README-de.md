@@ -2,7 +2,7 @@
 
 # Datenstrom Yellow 0.8.17
 
-## Installation
+## Wie man loslegt
 
 Datenstrom Yellow ist für Menschen die kleine Webseiten machen.
 

@@ -4,7 +4,7 @@
 
 Datenstrom Yellow is for people who make small websites.
 
-## Installation
+## How to get started
 
 1. [Download Datenstrom Yellow](https://github.com/datenstrom/yellow/archive/master.zip).
 2. Unzip and copy all files to your web server.
