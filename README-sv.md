@@ -4,6 +4,8 @@
 
 Datenstrom Yellow är för människor som skapar små webbsidor.
 
+## Installation
+
 1. [Ladda ner Datenstrom Yellow](https://github.com/datenstrom/yellow/archive/master.zip).
 2. Packa upp och kopiera alla filer till din webbserver.
 3. Öppna din webbplats i en webbläsare.
