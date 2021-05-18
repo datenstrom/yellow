@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow
 
 class YellowInstall {
-    const VERSION = "0.8.47";
+    const VERSION = "0.8.48";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -257,6 +257,15 @@ class YellowInstall {
         foreach ($this->yellow->toolbox->getDirectoryEntriesRecursive(".", "/.*/", false, false) as $entry) {
             if (filesize($entry)==0) $complete = false;
         }
+        $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateCurrentFile");
+        $fileData = $this->yellow->toolbox->readFile($fileName);
+        $settings = $this->yellow->toolbox->getTextSettings($fileData, "extension");
+        foreach ($settings as $extension=>$block) {
+            foreach ($block as $key=>$value) {
+                if (strposu($key, "/") && !is_file($key)) $complete = false;
+            }
+        }
+        if (count($settings)==0) $complete = false;
         return $complete;
     }
     
@@ -378,7 +387,7 @@ class YellowInstall {
                 }
             }
         }
-        foreach ($this->detectBrowserLanguages("en, de, fr") as $language) {
+        foreach ($this->detectBrowserLanguages("en, de, sv") as $language) {
             if (isset($languages[$language])) array_push($extensions, $languages[$language]);
         }
         return array_slice($extensions, 0, 3);
