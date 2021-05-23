@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow
 
 class YellowInstall {
-    const VERSION = "0.8.48";
+    const VERSION = "0.8.49";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -231,12 +231,19 @@ class YellowInstall {
                 }
             }
         }
-        $path = $this->yellow->system->get("coreExtensionDirectory")."install.php";
-        if ($statusCode==200 && !$this->yellow->toolbox->deleteFile($path)) {
+        $fileName = $this->yellow->system->get("coreExtensionDirectory")."install.php";
+        if ($statusCode==200 && !$this->yellow->toolbox->deleteFile($fileName)) {
             $statusCode = 500;
-            $this->yellow->page->error($statusCode, "Can't delete file '$path'!");
+            $this->yellow->page->error($statusCode, "Can't delete file '$fileName'!");
         }
         if ($statusCode==200) unset($this->yellow->extension->data["install"]);
+        $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateCurrentFile");
+        $fileData = $this->yellow->toolbox->readFile($fileName);
+        $fileDataNew = $this->yellow->toolbox->unsetTextSettings($fileData, "extension", "install");
+        if ($statusCode==200 && !$this->yellow->toolbox->createFile($fileName, $fileDataNew)) {
+            $statusCode = 500;
+            $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
+        }
         return $statusCode;
     }
     
