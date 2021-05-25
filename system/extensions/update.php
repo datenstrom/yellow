@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.50";
+    const VERSION = "0.8.51";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $updates;                // number of updates
@@ -308,12 +308,12 @@ class YellowUpdate {
                 ++$this->updates;
             } else {
                 $statusCode = 500;
-                $this->yellow->page->error(500, "Can't detect file '$path'!");
+                $this->yellow->page->error($statusCode, "Can't detect file '$path'!");
             }
             $zip->close();
         } else {
             $statusCode = 500;
-            $this->yellow->page->error(500, "Can't open file '$path'!");
+            $this->yellow->page->error($statusCode, "Can't open file '$path'!");
         }
         return $statusCode;
     }
@@ -537,7 +537,7 @@ class YellowUpdate {
         }
         if ($fileData!=$fileDataNew && !$this->yellow->toolbox->createFile($fileName, $fileDataNew)) {
             $statusCode = 500;
-            $this->yellow->page->error(500, "Can't write file '$fileName'!");
+            $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
         }
         return $statusCode;
     }
@@ -556,7 +556,7 @@ class YellowUpdate {
         $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
         if (!$this->yellow->system->save($fileName, array("updateEventPending" => $updateEventPending))) {
             $statusCode = 500;
-            $this->yellow->page->error(500, "Can't write file '$fileName'!");
+            $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
         }
         return $statusCode;
     }
@@ -586,7 +586,7 @@ class YellowUpdate {
             ++$this->updates;
         } else {
             $statusCode = 500;
-            $this->yellow->page->error(500, "Please delete extension '$extension' manually!");
+            $this->yellow->page->error($statusCode, "Please delete extension '$extension' manually!");
         }
         return $statusCode;
     }
@@ -760,8 +760,6 @@ class YellowUpdate {
         foreach ($settings as $key=>$value) {
             if (strposu($key, "/")) {
                 if (!$this->yellow->lookup->isValidFile($key)) $invalid = true;
-                list($entry, $flags) = $this->yellow->toolbox->getTextList($value, ",", 2);
-                if (strposu($entry, ".")===false) $invalid = true; // TODO: remove later, detect old format
                 if ($oldModified==0) $oldModified = $this->yellow->toolbox->getFileModified($key);
             }
         }
