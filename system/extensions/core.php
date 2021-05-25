@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.43";
+    const VERSION = "0.8.44";
     const RELEASE = "0.8.17";
     public $page;           // current page
     public $content;        // content files
@@ -78,7 +78,6 @@ class YellowCore {
         $troubleshooting = PHP_SAPI!="cli" ? "<a href=\"".$this->getTroubleshootingUrl()."\">See troubleshooting</a>." : "";
         version_compare(PHP_VERSION, "5.6", ">=") || die("Datenstrom Yellow requires PHP 5.6 or higher! $troubleshooting\n");
         extension_loaded("curl") || die("Datenstrom Yellow requires PHP curl extension! $troubleshooting\n");
-        extension_loaded("exif") || die("Datenstrom Yellow requires PHP exif extension! $troubleshooting\n");
         extension_loaded("gd") || die("Datenstrom Yellow requires PHP gd extension! $troubleshooting\n");
         extension_loaded("mbstring") || die("Datenstrom Yellow requires PHP mbstring extension! $troubleshooting\n");
         extension_loaded("zip") || die("Datenstrom Yellow requires PHP zip extension! $troubleshooting\n");
@@ -3226,7 +3225,7 @@ class YellowToolbox {
         }
         if (PHP_OS=="Darwin") {
             $os = "Mac";
-        } else if (strtoupperu(substru(PHP_OS, 0, 3))=="WIN") {
+        } elseif (strtoupperu(substru(PHP_OS, 0, 3))=="WIN") {
             $os = "Windows";
         } else {
             $os = PHP_OS;
@@ -3247,9 +3246,9 @@ class YellowToolbox {
         return $languageFound;
     }
     
-    // Detect image dimensions and type for gif/jpg/png/svg
+    // Detect image width, height, orientation and type for gif/jpg/png/svg
     public function detectImageInformation($fileName, $fileType = "") {
-        $width = $height = 0;
+        $width = $height = $orientation = 0;
         $type = "";
         $fileHandle = @fopen($fileName, "rb");
         if ($fileHandle) {
@@ -3270,7 +3269,11 @@ class YellowToolbox {
                 if (!feof($fileHandle) && ($dataSignature=="\xff\xd8\xff\xe0" || $dataSignature=="\xff\xd8\xff\xe1")) {
                     for ($pos=2; $pos+8<$dataBufferSize; $pos+=$length) {
                         if ($dataBuffer[$pos]!="\xff") break;
-                        if ($dataBuffer[$pos+1]=="\xc0" || $dataBuffer[$pos+1]=="\xc2") {
+                        $dataMarker = $dataBuffer[$pos+1];
+                        if ($dataMarker=="\xe1") {
+                            $orientation = $this->getImageOrientationFromBuffer($dataBuffer, $pos+4, $dataBufferSize);
+                        }
+                        if ($dataMarker>="\xc0" && $dataMarker<="\xcf") {
                             $width = (ord($dataBuffer[$pos+7])<<8) + ord($dataBuffer[$pos+8]);
                             $height = (ord($dataBuffer[$pos+5])<<8) + ord($dataBuffer[$pos+6]);
                             $type = $fileType;
@@ -3310,7 +3313,61 @@ class YellowToolbox {
             }
             fclose($fileHandle);
         }
-        return array($width, $height, $type);
+        return array($width, $height, $orientation, $type);
+    }
+    
+    // Return image orientation from Exif
+    public function getImageOrientationFromBuffer($dataBuffer, $pos, $size) {
+        $orientation = 0;
+        $dataSignature = substrb($dataBuffer, $pos, 6);
+        if ($dataSignature=="\x45\x78\x69\x66\x00\x00" && $pos+14<=$size) {
+            $startPos = $pos+6;
+            $bigEndian = $dataBuffer[$startPos]=="M";
+            $ifdOffset = $this->getLongFromBuffer($dataBuffer, $startPos+4, $bigEndian);
+            $ifdStartPos = $startPos+$ifdOffset;
+            $ifdCount = $ifdStartPos+2<=$size ? $this->getShortFromBuffer($dataBuffer, $ifdStartPos, $bigEndian) : 0;
+            $pos = $ifdStartPos+2;
+            while ($ifdCount && $pos+12<=$size) {
+                $ifdTag = $this->getShortFromBuffer($dataBuffer, $pos, $bigEndian);
+                $ifdFormat = $this->getShortFromBuffer($dataBuffer, $pos+2, $bigEndian);
+                if ($ifdTag==0x8769 && $ifdFormat==4) {
+                    $ifdOffset = $this->getLongFromBuffer($dataBuffer, $pos+8, $bigEndian);
+                    $ifdStartPos = $startPos+$ifdOffset;
+                    $ifdCount = $ifdStartPos+2<=$size ? $this->getShortFromBuffer($dataBuffer, $ifdStartPos, $bigEndian) : 0;
+                    $pos = $ifdStartPos+2;
+                    continue;
+                }
+                if ($ifdTag==0x0112 && $ifdFormat==3) {
+                    $orientation = $this->getShortFromBuffer($dataBuffer, $pos+8, $bigEndian);
+                    break;
+                }
+                --$ifdCount;
+                $pos += 12;
+            }
+        }
+        return $orientation;
+    }
+    
+    // Return unsigned short value from buffer
+    public  function getShortFromBuffer($dataBuffer, $pos, $bigEndian) {
+        if ($bigEndian) {
+            $value = (ord($dataBuffer[$pos])<<8) + ord($dataBuffer[$pos+1]);
+        } else {
+            $value = (ord($dataBuffer[$pos+1])<<8) + ord($dataBuffer[$pos]);
+        }
+        return $value;
+    }
+    
+    // Return unsigned long value from buffer
+    public function getLongFromBuffer($dataBuffer, $pos, $bigEndian) {
+        if ($bigEndian) {
+            $value = (ord($dataBuffer[$pos])<<24) + (ord($dataBuffer[$pos+1])<<16) +
+                (ord($dataBuffer[$pos+2])<<8) + ord($dataBuffer[$pos+3]);
+        } else {
+            $value = (ord($dataBuffer[$pos+3])<<24) + (ord($dataBuffer[$pos+2])<<16) +
+                (ord($dataBuffer[$pos+1])<<8) + ord($dataBuffer[$pos]);
+        }
+        return $value;
     }
     
     // Normalise location arguments
