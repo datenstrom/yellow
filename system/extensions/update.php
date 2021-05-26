@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.51";
+    const VERSION = "0.8.52";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $updates;                // number of updates
@@ -518,7 +518,7 @@ class YellowUpdate {
         $fileData = $this->yellow->toolbox->readFile($fileName);
         if ($action=="install" || $action=="update") {
             $settingsCurrent = $this->yellow->toolbox->getTextSettings($fileData, "extension");
-            if (!$settingsCurrent->isExisting($extension)) $settingsCurrent[$extension] = new YellowArray();
+            $settingsCurrent[$extension] = new YellowArray();
             foreach ($settings as $key=>$value) $settingsCurrent[$extension][$key] = $value;
             $settingsCurrent->uksort("strnatcasecmp");
             $fileDataNew = "";
