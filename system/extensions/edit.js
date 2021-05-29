@@ -814,7 +814,7 @@ yellow.edit = {
         if (showPreview) {
             this.updateToolbar("preview", "yellow-toolbar-checked");
             elementPreview.innerHTML = responseText;
-            dispatchEvent(new Event("load"));
+            dispatchEvent(new Event("DOMContentLoaded"));
         } else {
             this.updateToolbar(0, "yellow-toolbar-checked");
             elementText.focus();
