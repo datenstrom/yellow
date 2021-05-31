@@ -1,5 +1,5 @@
 <?php
-// Install extension, https://github.com/datenstrom/yellow
+// Install extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/install
 
 class YellowInstall {
     const VERSION = "0.8.49";
