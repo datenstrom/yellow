@@ -154,7 +154,7 @@ yellow.edit = {
             case "yellow-pane-login":
                 elementDiv.innerHTML =
                 "<form method=\"post\">"+
-                "<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\"></i></a>"+
+                "<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\" aria-label=\""+this.getText("CancelButton")+"\"></i></a>"+
                 "<div class=\"yellow-title\"><h1>"+this.getText("LoginTitle")+"</h1></div>"+
                 "<div class=\"yellow-fields\">"+
                 "<input type=\"hidden\" name=\"action\" value=\"login\" />"+
@@ -168,7 +168,7 @@ yellow.edit = {
             case "yellow-pane-signup":
                 elementDiv.innerHTML =
                 "<form method=\"post\">"+
-                "<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\"></i></a>"+
+                "<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\" aria-label=\""+this.getText("CancelButton")+"\"></i></a>"+
                 "<div class=\"yellow-title\"><h1>"+this.getText("SignupTitle")+"</h1></div>"+
                 "<div class=\"yellow-status\"><p id=\"yellow-pane-signup-status\" class=\""+paneStatus+"\">"+this.getText("SignupStatus", "", paneStatus)+"</p></div>"+
                 "<div class=\"yellow-fields\">"+
@@ -184,7 +184,7 @@ yellow.edit = {
             case "yellow-pane-forgot":
                 elementDiv.innerHTML =
                 "<form method=\"post\">"+
-                "<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\"></i></a>"+
+                "<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\" aria-label=\""+this.getText("CancelButton")+"\"></i></a>"+
                 "<div class=\"yellow-title\"><h1>"+this.getText("ForgotTitle")+"</h1></div>"+
                 "<div class=\"yellow-status\"><p id=\"yellow-pane-forgot-status\" class=\""+paneStatus+"\">"+this.getText("ForgotStatus", "", paneStatus)+"</p></div>"+
                 "<div class=\"yellow-fields\">"+
@@ -197,7 +197,7 @@ yellow.edit = {
             case "yellow-pane-recover":
                 elementDiv.innerHTML =
                 "<form method=\"post\">"+
-                "<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\"></i></a>"+
+                "<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\" aria-label=\""+this.getText("CancelButton")+"\"></i></a>"+
                 "<div class=\"yellow-title\"><h1>"+this.getText("RecoverTitle")+"</h1></div>"+
                 "<div class=\"yellow-status\"><p id=\"yellow-pane-recover-status\" class=\""+paneStatus+"\">"+this.getText("RecoverStatus", "", paneStatus)+"</p></div>"+
                 "<div class=\"yellow-fields\">"+
@@ -209,7 +209,7 @@ yellow.edit = {
             case "yellow-pane-quit":
                 elementDiv.innerHTML =
                 "<form method=\"post\">"+
-                "<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\"></i></a>"+
+                "<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\" aria-label=\""+this.getText("CancelButton")+"\"></i></a>"+
                 "<div class=\"yellow-title\"><h1>"+this.getText("QuitTitle")+"</h1></div>"+
                 "<div class=\"yellow-status\"><p id=\"yellow-pane-quit-status\" class=\""+paneStatus+"\">"+this.getText("QuitStatus", "", paneStatus)+"</p></div>"+
                 "<div class=\"yellow-fields\">"+
@@ -223,7 +223,7 @@ yellow.edit = {
             case "yellow-pane-account":
                 elementDiv.innerHTML =
                 "<form method=\"post\">"+
-                "<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\"></i></a>"+
+                "<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\" aria-label=\""+this.getText("CancelButton")+"\"></i></a>"+
                 "<div class=\"yellow-title\"><h1 id=\"yellow-pane-account-title\">"+this.getText("AccountTitle")+"</h1></div>"+
                 "<div class=\"yellow-status\"><p id=\"yellow-pane-account-status\" class=\""+paneStatus+"\">"+this.getText("AccountStatus", "", paneStatus)+"</p></div>"+
                 "<div class=\"yellow-settings\">"+
@@ -246,7 +246,7 @@ yellow.edit = {
             case "yellow-pane-configure":
                 elementDiv.innerHTML =
                 "<form method=\"post\">"+
-                "<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\"></i></a>"+
+                "<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\" aria-label=\""+this.getText("CancelButton")+"\"></i></a>"+
                 "<div class=\"yellow-title\"><h1 id=\"yellow-pane-configure-title\">"+this.getText("ConfigureTitle")+"</h1></div>"+
                 "<div class=\"yellow-status\"><p id=\"yellow-pane-configure-status\" class=\""+paneStatus+"\">"+this.getText("ConfigureStatus", "", paneStatus)+"</p></div>"+
                 "<div class=\"yellow-settings\">"+
@@ -268,7 +268,7 @@ yellow.edit = {
             case "yellow-pane-update":
                 elementDiv.innerHTML =
                 "<form method=\"post\">"+
-                "<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\"></i></a>"+
+                "<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\" aria-label=\""+this.getText("CancelButton")+"\"></i></a>"+
                 "<div class=\"yellow-title\"><h1 id=\"yellow-pane-update-title\">"+yellow.toolbox.encodeHtml(yellow.system.coreProductRelease)+"</h1></div>"+
                 "<div class=\"yellow-status\"><p id=\"yellow-pane-update-status\" class=\""+paneStatus+"\">"+this.getText("UpdateStatus", "", paneStatus)+"</p></div>"+
                 "<div class=\"yellow-output\" id=\"yellow-pane-update-output\">"+yellow.page.rawDataOutput+"</div>"+
@@ -337,7 +337,7 @@ yellow.edit = {
             case "yellow-pane-information":
                 elementDiv.innerHTML =
                 "<form method=\"post\">"+
-                "<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\"></i></a>"+
+                "<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\" aria-label=\""+this.getText("CancelButton")+"\"></i></a>"+
                 "<div class=\"yellow-title\"><h1 id=\"yellow-pane-information-title\">"+this.getText(paneAction+"Title")+"</h1></div>"+
                 "<div class=\"yellow-status\"><p id=\"yellow-pane-information-status\" class=\""+paneStatus+"\">"+this.getText(paneAction+"Status", "", paneStatus)+"</p></div>"+
                 "<div class=\"yellow-buttons\" id=\"yellow-pane-information-buttons\">"+
@@ -346,7 +346,7 @@ yellow.edit = {
                 "</form>";
                 break;
             default: elementDiv.innerHTML =
-                "<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\"></i></a>"+
+                "<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\" aria-label=\""+this.getText("CancelButton")+"\"></i></a>"+
                 "<div class=\"yellow-error\">Pane '"+paneId+"' was not found. Oh no...</div>";
         }
         elementPane.appendChild(elementDiv);
