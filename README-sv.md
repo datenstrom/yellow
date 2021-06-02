@@ -4,11 +4,6 @@
 
 Datenstrom Yellow är för människor som skapar små webbsidor.
 
-## Hur man kommer igång
-
-1. [Ladda ner Datenstrom Yellow](https://github.com/datenstrom/yellow/archive/master.zip).
-2. Packa upp och kopiera alla filer till din webbserver.
-3. Öppna din webbplats i en webbläsare.
-4. Skapa ett användarkonto, när du blir tillfrågad.
+För att installera packa upp en fil och du är redo att gå. Din webbplats är omedelbart tillgänglig. Du kan lägga till fler funktioner, teman och språk. Det finns mer än 50 tillägg att ladda ner. Datenstrom Yellow är programvara med öppen källkod. [Komma igång](https://datenstrom.se/sv/yellow/help/how-to-get-started).
 
 Har du några frågor? [Få hjälp](https://datenstrom.se/sv/yellow/help/) och [engagera dig](https://datenstrom.se/sv/yellow/help/contributing-guidelines).

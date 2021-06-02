@@ -4,11 +4,6 @@
 
 Datenstrom Yellow is for people who make small websites.
 
-## How to get started
-
-1. [Download Datenstrom Yellow](https://github.com/datenstrom/yellow/archive/master.zip).
-2. Unzip and copy all files to your web server.
-3. Open your website in a web browser.
-4. Create a user account, when asked.
+Installing is unzipping one file and you are ready to go. Your website is immediately available. You can add more features, themes and languages. There are more than 50 extensions to download. Datenstrom Yellow is open source software. [Get started](https://datenstrom.se/yellow/help/how-to-get-started).
 
 Do you have questions? [Get help](https://datenstrom.se/yellow/help/) and [contribute](https://datenstrom.se/yellow/help/contributing-guidelines).
