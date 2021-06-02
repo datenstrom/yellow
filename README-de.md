@@ -4,8 +4,6 @@
 
 Datenstrom Yellow ist für Menschen die kleine Webseiten machen.
 
-## Wie man loslegt
-
 Zum Installieren entpackt man eine Datei und los geht's. Deine Webseite ist sofort erreichbar. Du kannst weitere Funktionen, Themen und Sprachen hinzufügen. Es gibt über 50 Erweiterungen zum Herunterladen. Datenstrom Yellow ist Open-Source-Software. [Loslegen](https://datenstrom.se/de/yellow/help/how-to-get-started).
 
 Hast du Fragen? [Hilfe finden](https://datenstrom.se/de/yellow/help/) und [mitmachen](https://datenstrom.se/de/yellow/help/contributing-guidelines).
