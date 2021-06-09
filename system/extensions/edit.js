@@ -575,12 +575,12 @@ yellow.edit = {
                 case "edit":        this.showPane(paneId, action, status, true); break;
                 case "delete":      this.showPane(paneId, action, status, true); break;
                 case "menu":        this.showPane(paneId, action, status); break;
-                case "close":       this.hidePane(this.paneId); break;
                 case "toolbar":     this.processToolbar(status, arguments); break;
                 case "settings":    this.processSettings(arguments); break;
                 case "submit":      this.processSubmit(arguments); break;
                 case "restore":     this.processSubmit("action:"+action); break;
                 case "help":        this.processHelp(); break;
+                case "close":       this.processClose(); break;
             }
         }
     },
@@ -688,6 +688,12 @@ yellow.edit = {
     processHelp: function() {
         this.hidePane(this.paneId);
         window.open(this.getText("YellowHelpUrl"), "_self");
+    },
+    
+    // Process close
+    processClose: function() {
+        this.hidePane(this.paneId);
+        if (yellow.page.action=="login") window.open(yellow.page.pageRead, "_self");
     },
     
     // Create popup

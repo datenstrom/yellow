@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/edit
 
 class YellowEdit {
-    const VERSION = "0.8.47";
+    const VERSION = "0.8.48";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -1205,6 +1205,8 @@ class YellowEditResponse {
             $data["base"] = $this->yellow->page->base;
             $data["location"] = $this->yellow->page->location;
         }
+        $data["pageRead"] = $this->yellow->page->get("pageRead");
+        $data["pageEdit"] = $this->yellow->page->get("pageEdit");
         if ($this->action!="none") $data = array_merge($data, $this->getRequestData());
         $data["action"] = $this->action;
         $data["status"] = $this->status;
