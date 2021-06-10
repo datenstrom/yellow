@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.44";
+    const VERSION = "0.8.45";
     const RELEASE = "0.8.17";
     public $page;           // current page
     public $content;        // content files
@@ -501,12 +501,12 @@ class YellowPage {
             if (!$this->isExisting("titleHeader")) $this->set("titleHeader", $titleHeader);
             if ($this->get("status")=="unlisted") $this->visible = false;
             if ($this->get("status")=="shared") $this->available = false;
-            $this->set("pageRead", $this->yellow->lookup->normaliseUrl(
+            $this->set("pageReadUrl", $this->yellow->lookup->normaliseUrl(
                 $this->yellow->system->get("coreServerScheme"),
                 $this->yellow->system->get("coreServerAddress"),
                 $this->yellow->system->get("coreServerBase"),
                 $this->location));
-            $this->set("pageEdit", $this->yellow->lookup->normaliseUrl(
+            $this->set("pageEditUrl", $this->yellow->lookup->normaliseUrl(
                 $this->yellow->system->get("coreServerScheme"),
                 $this->yellow->system->get("coreServerAddress"),
                 $this->yellow->system->get("coreServerBase"),
@@ -550,8 +550,8 @@ class YellowPage {
                 if (method_exists($value["object"], "onParseContentRaw")) {
                     $this->parser = $value["object"];
                     $this->parserData = $this->getContent(true, $sizeMax);
-                    $this->parserData = preg_replace("/@pageRead/i", $this->get("pageRead"), $this->parserData);
-                    $this->parserData = preg_replace("/@pageEdit/i", $this->get("pageEdit"), $this->parserData);
+                    $this->parserData = preg_replace("/@pageReadUrl/i", $this->get("pageReadUrl"), $this->parserData);
+                    $this->parserData = preg_replace("/@pageEditUrl/i", $this->get("pageEditUrl"), $this->parserData);
                     $this->parserData = $this->parser->onParseContentRaw($this, $this->parserData);
                     foreach ($this->yellow->extension->data as $key=>$value) {
                         if (method_exists($value["object"], "onParseContentHtml")) {

@@ -693,7 +693,7 @@ yellow.edit = {
     // Process close
     processClose: function() {
         this.hidePane(this.paneId);
-        if (yellow.page.action=="login") window.open(yellow.page.pageRead, "_self");
+        if (yellow.page.action=="login") window.open(yellow.page.pageReadUrl, "_self");
     },
     
     // Create popup
