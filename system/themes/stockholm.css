@@ -10,18 +10,21 @@ html, body, div, form, pre, span, tr, th, td, img {
     font-family: "Open Sans";
     font-style: normal;
     font-weight: 300;
+    font-display: swap;
     src: url(stockholm-opensans-light.woff) format("woff");
 }
 @font-face {
     font-family: "Open Sans";
     font-style: normal;
     font-weight: 400;
+    font-display: swap;
     src: url(stockholm-opensans-regular.woff) format("woff");
 }
 @font-face {
     font-family: "Open Sans";
     font-style: normal;
     font-weight: 700;
+    font-display: swap;
     src: url(stockholm-opensans-bold.woff) format("woff");
 }
 body {
