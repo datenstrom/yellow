@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.52";
+    const VERSION = "0.8.53";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $updates;                // number of updates
@@ -120,8 +120,9 @@ class YellowUpdate {
     // Process command to show website version and updates
     public function processCommandAbout($command, $text) {
         echo "Datenstrom Yellow ".YellowCore::RELEASE."\n";
-        list($statusCode, $settingsCurrent) = $this->getExtensionSettings(false);
-        list($statusCode, $settingsLatest) = $this->getExtensionSettings(true);
+        list($statusCodeCurrent, $settingsCurrent) = $this->getExtensionSettings(false);
+        list($statusCodeLatest, $settingsLatest) = $this->getExtensionSettings(true);
+        $statusCode = max($statusCodeCurrent, $statusCodeLatest);
         foreach ($settingsCurrent as $key=>$value) {
             $versionCurrent = $versionLatest = $settingsCurrent[$key]->get("version");
             if ($settingsLatest->isExisting($key)) $versionLatest = $settingsLatest[$key]->get("version");
@@ -217,11 +218,11 @@ class YellowUpdate {
     public function showExtensions() {
         list($statusCode, $settingsLatest) = $this->getExtensionSettings(true);
         foreach ($settingsLatest as $key=>$value) {
-            $text = $description = $value->get("description");
-            if ($value->isExisting("developer")) $text = "$description Developed by ".$value["developer"].".";
-            if ($value->isExisting("translator")) $text = "$description Translated by ".$value["translator"].".";
-            if ($value->isExisting("designer")) $text = "$description Designed by ".$value["designer"].".";
-            echo ucfirst($key).": $text\n";
+            $description = $text = $value->get("description");
+            if ($value->isExisting("developer")) $description = "$text Developed by ".$value["developer"].".";
+            if ($value->isExisting("designer")) $description = "$text Designed by ".$value["designer"].".";
+            if ($value->isExisting("translator")) $description = "$text Translated by ".$value["translator"].".";
+            echo ucfirst($key).": $description\n";
         }
         if ($statusCode!=200) echo "ERROR checking extensions: ".$this->yellow->page->get("pageError")."\n";
         return $statusCode;

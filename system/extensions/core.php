@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.45";
+    const VERSION = "0.8.46";
     const RELEASE = "0.8.17";
     public $page;           // current page
     public $content;        // content files
@@ -28,9 +28,9 @@ class YellowCore {
         $this->system->setDefault("sitename", "Yellow");
         $this->system->setDefault("author", "Yellow");
         $this->system->setDefault("email", "webmaster");
+        $this->system->setDefault("theme", "default");
         $this->system->setDefault("language", "en");
         $this->system->setDefault("layout", "default");
-        $this->system->setDefault("theme", "default");
         $this->system->setDefault("parser", "markdown");
         $this->system->setDefault("status", "public");
         $this->system->setDefault("coreStaticUrl", "");
@@ -76,7 +76,7 @@ class YellowCore {
     // Check requirements
     public function checkRequirements() {
         $troubleshooting = PHP_SAPI!="cli" ? "<a href=\"".$this->getTroubleshootingUrl()."\">See troubleshooting</a>." : "";
-        version_compare(PHP_VERSION, "5.6", ">=") || die("Datenstrom Yellow requires PHP 5.6 or higher! $troubleshooting\n");
+        version_compare(PHP_VERSION, "5.5", ">=") || die("Datenstrom Yellow requires PHP 5.6 or higher! $troubleshooting\n");
         extension_loaded("curl") || die("Datenstrom Yellow requires PHP curl extension! $troubleshooting\n");
         extension_loaded("gd") || die("Datenstrom Yellow requires PHP gd extension! $troubleshooting\n");
         extension_loaded("mbstring") || die("Datenstrom Yellow requires PHP mbstring extension! $troubleshooting\n");
@@ -228,11 +228,11 @@ class YellowCore {
             foreach ($this->page->headerData as $key=>$value) {
                 echo "YellowCore::sendPage $key: $value<br/>\n";
             }
+            $theme = $this->page->get("theme");
             $language = $this->page->get("language");
             $layout = $this->page->get("layout");
-            $theme = $this->page->get("theme");
             $parser = $this->page->get("parser");
-            echo "YellowCore::sendPage language:$language layout:$layout theme:$theme parser:$parser<br/>\n";
+            echo "YellowCore::sendPage theme:$theme language:$language layout:$layout parser:$parser<br/>\n";
         }
         return $statusCode;
     }
@@ -292,7 +292,7 @@ class YellowCore {
         }
         if ($statusCode==0 && empty($command)) {
             $lineCounter = 0;
-            echo "Datenstrom Yellow is for people who make small websites.\n";
+            echo "Datenstrom Yellow is for people who make small websites. https://datenstrom.se/yellow/\n";
             foreach ($this->getCommandHelp() as $line) {
                 echo(++$lineCounter>1 ? "        " : "Syntax: ")."php yellow.php $line\n";
             }
@@ -493,7 +493,7 @@ class YellowPage {
             $this->set("title", $this->yellow->toolbox->createTextTitle($this->location));
             $this->set("language", $this->yellow->lookup->findLanguageFromFile($this->fileName, $this->yellow->system->get("language")));
             $this->set("modified", date("Y-m-d H:i:s", $this->yellow->toolbox->getFileModified($this->fileName)));
-            $this->parseMetaRaw(array("sitename", "author", "layout", "theme", "parser", "status"));
+            $this->parseMetaRaw(array("sitename", "author", "theme", "layout", "parser", "status"));
             $titleHeader = ($this->location==$this->yellow->content->getHomeLocation($this->location)) ?
                 $this->get("sitename") : $this->get("title")." - ".$this->get("sitename");
             if (!$this->isExisting("titleContent")) $this->set("titleContent", $this->get("title"));
@@ -623,11 +623,11 @@ class YellowPage {
         if (!is_file($fileNameTheme)) {
             $this->error(500, "Theme '".$this->get("theme")."' does not exist!");
         }
-        if (!is_object($this->parser)) {
-            $this->error(500, "Parser '".$this->get("parser")."' does not exist!");
-        }
         if (!$this->yellow->language->isExisting($this->get("language"))) {
             $this->error(500, "Language '".$this->get("language")."' does not exist!");
+        }
+        if (!is_object($this->parser)) {
+            $this->error(500, "Parser '".$this->get("parser")."' does not exist!");
         }
         if ($this->yellow->lookup->isNestedLocation($this->location, $this->fileName, true)) {
             $this->error(500, "Folder '".dirname($this->fileName)."' may not contain subfolders!");
@@ -1629,6 +1629,11 @@ class YellowSystem {
             foreach ($this->yellow->user->settings as $userKey=>$userValue) {
                 array_push($values, $userKey);
             }
+        } elseif ($key=="theme") {
+            $path = $this->yellow->system->get("coreThemeDirectory");
+            foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.css$/", true, false, false) as $entry) {
+                array_push($values, lcfirst(substru($entry, 0, -4)));
+            }
         } elseif ($key=="language") {
             foreach ($this->yellow->language->settings as $languageKey=>$languageValue) {
                 array_push($values, $languageKey);
@@ -1637,11 +1642,6 @@ class YellowSystem {
             $path = $this->yellow->system->get("coreLayoutDirectory");
             foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.html$/", true, false, false) as $entry) {
                 array_push($values, lcfirst(substru($entry, 0, -5)));
-            }
-        } elseif ($key=="theme") {
-            $path = $this->yellow->system->get("coreThemeDirectory");
-            foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.css$/", true, false, false) as $entry) {
-                array_push($values, lcfirst(substru($entry, 0, -4)));
             }
         }
         return $values;
