@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/install
 
 class YellowInstall {
-    const VERSION = "0.8.49";
+    const VERSION = "0.8.50";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -329,7 +329,7 @@ class YellowInstall {
         $data["coreServerTimezone"] = $this->yellow->toolbox->detectServerTimezone();
         $data["coreStaticUrl"] = $this->yellow->toolbox->detectServerUrl();
         if ($this->yellow->isCommandLine()) $data["coreStaticUrl"] = getenv("URL");
-        if ($this->yellow->system->get("updateNotification")=="none") $data["updateNotification"] = "website/install";
+        if ($this->yellow->system->get("updateEventPending")=="none") $data["updateEventPending"] = "website/install";
         $data["updateCurrentRelease"] = YellowCore::RELEASE;
         return $data;
     }
