@@ -946,7 +946,7 @@ yellow.edit = {
                 rawDataLanguages += "<label for=\""+paneId+"-"+language+"\"><input type=\"radio\" name=\"language\" id=\""+paneId+"-"+language+"\" value=\""+language+"\""+checked+"> "+yellow.toolbox.encodeHtml(yellow.system.coreLanguages[language])+"</label><br />";
             }
         }
-        return rawDataLanguages
+        return rawDataLanguages;
     },
     
     // Return raw data for buttons

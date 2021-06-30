@@ -448,20 +448,14 @@
 
 /* Icons */
 
-@font-face {
-    font-family: "Edit";
-    font-weight: normal;
-    font-style: normal;
-    font-display: block;
-    src: url("edit.woff") format("woff");
-}
 .yellow-icon {
     display: inline-block;
-    font-family: Edit;
-    font-style: normal;
-    font-weight: normal;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    width: 1em;
+    height: 1em;
+    background-color: currentcolor;
+    background-size: 1em 1em;
+    background-repeat: no-repeat;
+    background-position: center center;
 }
 .yellow-spin {
     -webkit-animation: yellow-spin 1s infinite steps(16);
@@ -487,100 +481,122 @@
         transform: rotate(359deg);
     }
 }
-
-.yellow-icon-preview:before {
-    content: "\f100";
+.yellow-icon-preview {
+    -webkit-mask: url("edit-stack.svg#preview");
+    mask: url("edit-stack.svg#preview");
 }
-.yellow-icon-format:before {
-    content: "\f101";
+.yellow-icon-format,
+.yellow-icon-paragraph {
+    -webkit-mask: url("edit-stack.svg#format");
+    mask: url("edit-stack.svg#format");
 }
-.yellow-icon-paragraph:before {
-    content: "\f101";
+.yellow-icon-heading {
+    -webkit-mask: url("edit-stack.svg#heading");
+    mask: url("edit-stack.svg#heading");
 }
-.yellow-icon-heading:before {
-    content: "\f102";
+.yellow-icon-h1 {
+    -webkit-mask: url("edit-stack.svg#h1");
+    mask: url("edit-stack.svg#h1");
 }
-.yellow-icon-h1:before {
-    content: "\f103";
+.yellow-icon-h2 {
+    -webkit-mask: url("edit-stack.svg#h2");
+    mask: url("edit-stack.svg#h2");
 }
-.yellow-icon-h2:before {
-    content: "\f104";
+.yellow-icon-h3 {
+    -webkit-mask: url("edit-stack.svg#h3");
+    mask: url("edit-stack.svg#h3");
 }
-.yellow-icon-h3:before {
-    content: "\f105";
+.yellow-icon-bold {
+    -webkit-mask: url("edit-stack.svg#bold");
+    mask: url("edit-stack.svg#bold");
 }
-.yellow-icon-bold:before {
-    content: "\f106";
+.yellow-icon-italic {
+    -webkit-mask: url("edit-stack.svg#italic");
+    mask: url("edit-stack.svg#italic");
 }
-.yellow-icon-italic:before {
-    content: "\f0f7";
+.yellow-icon-strikethrough {
+    -webkit-mask: url("edit-stack.svg#strikethrough");
+    mask: url("edit-stack.svg#strikethrough");
 }
-.yellow-icon-strikethrough:before {
-    content: "\f108";
+.yellow-icon-quote {
+    -webkit-mask: url("edit-stack.svg#quote");
+    mask: url("edit-stack.svg#quote");
 }
-.yellow-icon-quote:before {
-    content: "\f109";
+.yellow-icon-code,
+.yellow-icon-pre {
+    -webkit-mask: url("edit-stack.svg#code");
+    mask: url("edit-stack.svg#code");
 }
-.yellow-icon-code:before {
-    content: "\f10a";
+.yellow-icon-link {
+    -webkit-mask: url("edit-stack.svg#link");
+    mask: url("edit-stack.svg#link");
 }
-.yellow-icon-pre:before {
-    content: "\f10a";
+.yellow-icon-file {
+    -webkit-mask: url("edit-stack.svg#file");
+    mask: url("edit-stack.svg#file");
 }
-.yellow-icon-link:before {
-    content: "\f10b";
+.yellow-icon-list,
+.yellow-icon-ul {
+    -webkit-mask: url("edit-stack.svg#list");
+    mask: url("edit-stack.svg#list");
 }
-.yellow-icon-file:before {
-    content: "\f10c";
+.yellow-icon-ol {
+    -webkit-mask: url("edit-stack.svg#ol");
+    mask: url("edit-stack.svg#ol");
 }
-.yellow-icon-list:before {
-    content: "\f10d";
+.yellow-icon-tl {
+    -webkit-mask: url("edit-stack.svg#tl");
+    mask: url("edit-stack.svg#tl");
 }
-.yellow-icon-ul:before {
-    content: "\f10d";
+.yellow-icon-hr {
+    -webkit-mask: url("edit-stack.svg#hr");
+    mask: url("edit-stack.svg#hr");
 }
-.yellow-icon-ol:before {
-    content: "\f10e";
+.yellow-icon-table {
+    -webkit-mask: url("edit-stack.svg#table");
+    mask: url("edit-stack.svg#table");
 }
-.yellow-icon-tl:before {
-    content: "\f10f";
+.yellow-icon-emojiawesome {
+    -webkit-mask: url("edit-stack.svg#emojiawesome");
+    mask: url("edit-stack.svg#emojiawesome");
 }
-.yellow-icon-hr:before {
-    content: "\f110";
+.yellow-icon-fontawesome {
+    -webkit-mask: url("edit-stack.svg#fontawesome");
+    mask: url("edit-stack.svg#fontawesome");
 }
-.yellow-icon-table:before {
-    content: "\f111";
+.yellow-icon-status {
+    -webkit-mask: url("edit-stack.svg#status");
+    mask: url("edit-stack.svg#status");
 }
-.yellow-icon-emojiawesome:before {
-    content: "\f112";
+.yellow-icon-undo {
+    -webkit-mask: url("edit-stack.svg#undo");
+    mask: url("edit-stack.svg#undo");
 }
-.yellow-icon-fontawesome:before {
-    content: "\f113";
+.yellow-icon-redo {
+    -webkit-mask: url("edit-stack.svg#redo");
+    mask: url("edit-stack.svg#redo");
 }
-.yellow-icon-status:before {
-    content: "\f114";
+.yellow-icon-spinner {
+    -webkit-mask: url("edit-stack.svg#spinner");
+    mask: url("edit-stack.svg#spinner");
 }
-.yellow-icon-undo:before {
-    content: "\f115";
+.yellow-icon-select {
+    -webkit-mask: url("edit-stack.svg#select");
+    mask: url("edit-stack.svg#select");
 }
-.yellow-icon-redo:before {
-    content: "\f116";
+.yellow-icon-search {
+    -webkit-mask: url("edit-stack.svg#search");
+    mask: url("edit-stack.svg#search");
 }
-.yellow-icon-spinner:before {
-    content: "\f200";
+.yellow-icon-close {
+    -webkit-mask: url("edit-stack.svg#close");
+    mask: url("edit-stack.svg#close");
 }
-.yellow-icon-search:before {
-    content: "\f201";
+.yellow-icon-help {
+    -webkit-mask: url("edit-stack.svg#close");
+    mask: url("edit-stack.svg#close");
 }
-.yellow-icon-close:before {
-    content: "\f202";
-}
-.yellow-icon-help:before {
-    content: "\f203";
-}
-.yellow-icon-markdown:before {
-    content: "\f203";
-}
-.yellow-icon-logo:before {
-    content: "\f8ff";
+.yellow-icon-logo {
+    -webkit-mask: url("edit-stack.svg#logo");
+    mask: url("edit-stack.svg#logo");
 }
