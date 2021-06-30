@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/install
 
 class YellowInstall {
-    const VERSION = "0.8.50";
+    const VERSION = "0.8.51";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -269,7 +269,11 @@ class YellowInstall {
         $settings = $this->yellow->toolbox->getTextSettings($fileData, "extension");
         foreach ($settings as $extension=>$block) {
             foreach ($block as $key=>$value) {
-                if (strposu($key, "/") && !is_file($key)) $complete = false;
+                if (strposu($key, "/")) {
+                    list($entry, $flags) = $this->yellow->toolbox->getTextList($value, ",", 2);
+                    if (preg_match("/delete/i", $flags)) continue;
+                    if (!is_file($key)) $complete = false;
+                }
             }
         }
         if (count($settings)==0) $complete = false;
