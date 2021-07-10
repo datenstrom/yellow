@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.46";
+    const VERSION = "0.8.47";
     const RELEASE = "0.8.17";
     public $page;           // current page
     public $content;        // content files
@@ -25,8 +25,8 @@ class YellowCore {
         $this->extension = new YellowExtension($this);
         $this->lookup = new YellowLookup($this);
         $this->toolbox = new YellowToolbox();
-        $this->system->setDefault("sitename", "Yellow");
-        $this->system->setDefault("author", "Yellow");
+        $this->system->setDefault("sitename", "Localhost");
+        $this->system->setDefault("author", "Datenstrom");
         $this->system->setDefault("email", "webmaster");
         $this->system->setDefault("theme", "default");
         $this->system->setDefault("language", "en");
@@ -1790,10 +1790,13 @@ class YellowLanguage {
                 }
             }
         }
+        foreach($this->settings as $languageKey=>$languageValue) {
+            if (!isset($this->settings[$languageKey]["languageDescription"])) {
+                unset($this->settings[$languageKey]);
+            }
+        }
         $callback = function ($a, $b) {
-            $string1 = isset($a["languageDescription"]) ? $a["languageDescription"] : "";
-            $string2 = isset($b["languageDescription"]) ? $b["languageDescription"] : "";
-            return strnatcmp($string1, $string2);
+            return strnatcmp($a["languageDescription"], $b["languageDescription"]);
         };
         $this->settings->uasort($callback);
     }
@@ -3200,6 +3203,15 @@ class YellowToolbox {
             }
         }
         return $this->getServer("LOCATION");
+    }
+    
+    // Detect server sitename
+    public function detectServerSitename() {
+        $sitename = "Localhost";
+        if (preg_match("#^(www\.)?([\w\-]+)#", $this->getServer("SERVER_NAME"), $matches)) {
+            $sitename = ucfirst($matches[2]);
+        }
+        return $sitename;
     }
     
     // Detect server timezone

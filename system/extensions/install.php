@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/install
 
 class YellowInstall {
-    const VERSION = "0.8.51";
+    const VERSION = "0.8.52";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -59,6 +59,7 @@ class YellowInstall {
     
     // Process command to install website
     public function processCommandInstall() {
+        $this->checkCommandRequirements();
         $statusCode = $this->updateLog();
         if ($statusCode==200) $statusCode = $this->updateLanguages();
         if ($statusCode==200) $statusCode = $this->updateSettings("en");
@@ -251,11 +252,10 @@ class YellowInstall {
     public function checkServerRequirements() {
         list($name) = $this->yellow->toolbox->detectServerInformation();
         $troubleshooting = "<a href=\"".$this->yellow->getTroubleshootingUrl()."\">See troubleshooting</a>.";
-        $this->checkServerComplete() || die("Datenstrom Yellow requires complete upload for $name! $troubleshooting\n");
+        $this->checkServerComplete() || die("Datenstrom Yellow requires complete upload! $troubleshooting\n");
+        $this->checkServerWrite() || die("Datenstrom Yellow requires write access for $name! $troubleshooting\n");
         $this->checkServerConfiguration() || die("Datenstrom Yellow requires configuration file for $name! $troubleshooting\n");
         $this->checkServerRewrite() || die("Datenstrom Yellow requires rewrite support for $name! $troubleshooting\n");
-        $this->checkServerWrite() || die("Datenstrom Yellow requires write access for $name! $troubleshooting\n");
-        return true;
     }
     
     // Check web server complete upload
@@ -278,6 +278,12 @@ class YellowInstall {
         }
         if (count($settings)==0) $complete = false;
         return $complete;
+    }
+    
+    // Check web server write access
+    public function checkServerWrite() {
+        $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
+        return $this->yellow->system->save($fileName, array());
     }
     
     // Check web server configuration file
@@ -303,12 +309,11 @@ class YellowInstall {
         return $statusCode==200;
     }
     
-    // Check web server write access
-    public function checkServerWrite() {
-        $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
-        return $this->yellow->system->save($fileName, array());
+    // Check command line requirements
+    public function checkCommandRequirements() {
+        $this->checkServerComplete() || die("Datenstrom Yellow requires complete upload!\n");
     }
-
+    
     // Detect browser languages
     public function detectBrowserLanguages($languagesDefault) {
         $languages = array();
@@ -330,6 +335,7 @@ class YellowInstall {
             if ($key=="password" || $key=="status") continue;
             $data[$key] = trim($value);
         }
+        $data["sitename"] = $this->yellow->toolbox->detectServerSitename();
         $data["coreServerTimezone"] = $this->yellow->toolbox->detectServerTimezone();
         $data["coreStaticUrl"] = $this->yellow->toolbox->detectServerUrl();
         if ($this->yellow->isCommandLine()) $data["coreStaticUrl"] = getenv("URL");
@@ -352,7 +358,7 @@ class YellowInstall {
             $rawData .= "<p>";
             foreach ($languages as $language) {
                 $checked = $language==$this->yellow->language->language ? " checked=\"checked\"" : "";
-                $rawData .= "<label for=\"$language\"><input type=\"radio\" name=\"language\" id=\"$language\" value=\"$language\"$checked> ".$this->yellow->language->getTextHtml("languageDescription", $language)."</label><br />";
+                $rawData .= "<label for=\"${language}-language\"><input type=\"radio\" name=\"language\" id=\"${language}-language\" value=\"$language\"$checked> ".$this->yellow->language->getTextHtml("languageDescription", $language)."</label><br />";
             }
             $rawData .= "</p>\n";
         }
@@ -360,7 +366,7 @@ class YellowInstall {
             $rawData .= "<p>".$this->yellow->language->getText("installExtension")."<p>";
             foreach ($this->getExtensionsInstall() as $extension) {
                 $checked = $extension=="website" ? " checked=\"checked\"" : "";
-                $rawData .= "<label for=\"$extension\"><input type=\"radio\" name=\"extension\" id=\"$extension\" value=\"$extension\"$checked> ".$this->yellow->language->getTextHtml("installExtension".ucfirst($extension))."</label><br />";
+                $rawData .= "<label for=\"${extension}-extension\"><input type=\"radio\" name=\"extension\" id=\"${extension}-extension\" value=\"$extension\"$checked> ".$this->yellow->language->getTextHtml("installExtension".ucfirst($extension))."</label><br />";
             }
             $rawData .= "</p>\n";
         }
