@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.48";
+    const VERSION = "0.8.49";
     const RELEASE = "0.8.17";
     public $page;           // current page
     public $content;        // content files
@@ -3183,7 +3183,8 @@ class YellowToolbox {
         if (isset($_SERVER["REQUEST_URI"])) {
             $location = $_SERVER["REQUEST_URI"];
             $location = rawurldecode(($pos = strposu($location, "?")) ? substru($location, 0, $pos) : $location);
-            $location = $this->normaliseTokens($location, true);
+            $location = $this->normalisePath($location);
+            if (substru($location, 0, 1)!="/") $location = "/".$location;
             $separator = $this->getLocationArgumentsSeparator();
             if (preg_match("/^(.*?\/)([^\/]+$separator.*)$/", $location, $matches)) {
                 $_SERVER["LOCATION"] = $location = $matches[1];
@@ -3390,30 +3391,6 @@ class YellowToolbox {
         return str_replace(array("%2F","%3A","%3D"), array("/",":","="), rawurlencode($text));
     }
     
-    // Normalise path or location, take care of relative path tokens
-    public function normaliseTokens($text, $prependSlash = false) {
-        $textFiltered = "";
-        if ($prependSlash && substru($text, 0, 1)!="/") $textFiltered .= "/";
-        $textLength = strlenb($text);
-        for ($pos=0; $pos<$textLength; ++$pos) {
-            if (($text[$pos]=="/" || $pos==0) && $pos+1<$textLength) {
-                if ($text[$pos+1]=="/") continue;
-                if ($text[$pos+1]==".") {
-                    $posNew = $pos+1;
-                    while ($text[$posNew]==".") {
-                        ++$posNew;
-                    }
-                    if ($text[$posNew]=="/" || $text[$posNew]=="") {
-                        $pos = $posNew-1;
-                        continue;
-                    }
-                }
-            }
-            $textFiltered .= $text[$pos];
-        }
-        return $textFiltered;
-    }
-    
     // Normalise elements and attributes in HTML/SVG data
     public function normaliseData($text, $type = "html", $filterStrict = true) {
         $output = "";
@@ -3468,6 +3445,29 @@ class YellowToolbox {
             $offsetBytes = $matches[0][1] + strlenb($matches[0][0]);
         }
         return $output;
+    }
+
+    // Normalise relative path tokens
+    public function normalisePath($text) {
+        $textFiltered = "";
+        $textLength = strlenb($text);
+        for ($pos=0; $pos<$textLength; ++$pos) {
+            if (($text[$pos]=="/" || $pos==0) && $pos+1<$textLength) {
+                if ($text[$pos+1]=="/") continue;
+                if ($text[$pos+1]==".") {
+                    $posNew = $pos+1;
+                    while ($text[$posNew]==".") {
+                        ++$posNew;
+                    }
+                    if ($text[$posNew]=="/" || $text[$posNew]=="") {
+                        $pos = $posNew-1;
+                        continue;
+                    }
+                }
+            }
+            $textFiltered .= $text[$pos];
+        }
+        return $textFiltered;
     }
     
     // Normalise text lines, convert line endings

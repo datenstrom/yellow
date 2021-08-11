@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/install
 
 class YellowInstall {
-    const VERSION = "0.8.52";
+    const VERSION = "0.8.53";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -92,7 +92,7 @@ class YellowInstall {
     // Update languages
     public function updateLanguages() {
         $statusCode = 200;
-        $path = $this->yellow->system->get("coreExtensionDirectory")."install-languages.zip";
+        $path = $this->yellow->system->get("coreExtensionDirectory")."install-language.zip";
         if (is_file($path) && $this->yellow->extension->isExisting("update")) {
             $zip = new ZipArchive();
             if ($zip->open($path)===true) {
@@ -100,9 +100,9 @@ class YellowInstall {
                 if (preg_match("#^(.*\/).*?$#", $zip->getNameIndex(0), $matches)) $pathBase = $matches[1];
                 $fileData = $zip->getFromName($pathBase.$this->yellow->system->get("updateExtensionFile"));
                 foreach ($this->getExtensionsRequired($fileData) as $extension) {
-                    $fileDataPhp = $zip->getFromName($pathBase."$extension/$extension.php");
-                    $fileDataTxt = $zip->getFromName($pathBase."$extension/$extension.txt");
-                    $fileDataIni = $zip->getFromName($pathBase."$extension/extension.ini");
+                    $fileDataPhp = $zip->getFromName($pathBase."source/$extension/$extension.php");
+                    $fileDataTxt = $zip->getFromName($pathBase."source/$extension/$extension.txt");
+                    $fileDataIni = $zip->getFromName($pathBase."source/$extension/extension.ini");
                     $statusCode = max($statusCode, $this->updateLanguageArchive($fileDataPhp, $fileDataTxt, $fileDataIni, $pathBase, "install"));
                 }
                 $this->yellow->language->load($this->yellow->system->get("coreExtensionDirectory"));
@@ -381,7 +381,7 @@ class YellowInstall {
         $extensions = array("website");
         $path = $this->yellow->system->get("coreExtensionDirectory");
         foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.zip$/", true, false, false) as $entry) {
-            if (preg_match("/^install-(.*?)\./", $entry, $matches) && $matches[1]!="languages") array_push($extensions, $matches[1]);
+            if (preg_match("/^install-(.*?)\./", $entry, $matches) && $matches[1]!="language") array_push($extensions, $matches[1]);
         }
         return $extensions;
     }

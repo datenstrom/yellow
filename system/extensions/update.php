@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.53";
+    const VERSION = "0.8.54";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $updates;                // number of updates
@@ -322,7 +322,7 @@ class YellowUpdate {
     // Update extension from file
     public function updateExtensionFile($fileName, $fileData, $newModified, $oldModified, $lastModified, $flags, $extension) {
         $statusCode = 200;
-        $fileName = $this->yellow->toolbox->normaliseTokens($fileName);
+        $fileName = $this->yellow->toolbox->normalisePath($fileName);
         if ($this->yellow->lookup->isValidFile($fileName)) {
             $create = $update = $delete = false;
             if (preg_match("/create/i", $flags) && !is_file($fileName) && !empty($fileData)) $create = true;
@@ -595,7 +595,7 @@ class YellowUpdate {
     // Remove extension file
     public function removeExtensionFile($fileName) {
         $statusCode = 200;
-        $fileName = $this->yellow->toolbox->normaliseTokens($fileName);
+        $fileName = $this->yellow->toolbox->normalisePath($fileName);
         if ($this->yellow->lookup->isValidFile($fileName) && is_file($fileName)) {
             if (!$this->yellow->toolbox->deleteFile($fileName, $this->yellow->system->get("coreTrashDirectory"))) {
                 $statusCode = 500;
