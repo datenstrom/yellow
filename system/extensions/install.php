@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/install
 
 class YellowInstall {
-    const VERSION = "0.8.53";
+    const VERSION = "0.8.54";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -25,28 +25,33 @@ class YellowInstall {
     public function processRequestInstall($scheme, $address, $base, $location, $fileName) {
         $statusCode = 0;
         if ($this->yellow->lookup->isContentFile($fileName) || empty($fileName)) {
-            $this->checkServerRequirements();
-            $author = trim(preg_replace("/[^\pL\d\-\. ]/u", "-", $this->yellow->page->getRequest("author")));
-            $email = trim($this->yellow->page->getRequest("email"));
-            $password = trim($this->yellow->page->getRequest("password"));
-            $language = trim($this->yellow->page->getRequest("language"));
-            $extension = trim($this->yellow->page->getRequest("extension"));
-            $status = trim($this->yellow->page->getRequest("status"));
-            $statusCode = $this->updateLog();
-            $statusCode = max($statusCode, $this->updateLanguages());
-            $this->yellow->content->pages["root/"] = array();
-            $this->yellow->page = new YellowPage($this->yellow);
-            $this->yellow->page->setRequestInformation($scheme, $address, $base, $location, $fileName);
-            $this->yellow->page->parseData($this->getRawDataInstall(), false, $statusCode, $this->yellow->page->get("pageError"));
-            if ($status=="install") $status = $this->updateExtension($extension)==200 ? "ok" : "error";
-            if ($status=="ok") $status = $this->updateUser($email, $password, $author, $language)==200 ? "ok" : "error";
-            if ($status=="ok") $status = $this->updateContent($language, "installHome", "/")==200 ? "ok" : "error";
-            if ($status=="ok") $status = $this->updateContent($language, "installDefault", "/shared/page-new-default")==200 ? "ok" : "error";
-            if ($status=="ok") $status = $this->updateContent($language, "installBlog", "/shared/page-new-blog")==200 ? "ok" : "error";
-            if ($status=="ok") $status = $this->updateContent($language, "installWiki", "/shared/page-new-wiki")==200 ? "ok" : "error";
-            if ($status=="ok") $status = $this->updateContent($language, "coreError404", "/shared/page-error-404")==200 ? "ok" : "error";
-            if ($status=="ok") $status = $this->updateSettings($language)==200 ? "ok" : "error";
-            if ($status=="ok") $status = $this->removeInstall()==200 ? "done" : "error";
+            if (!$this->isAlreadyInstalled()) {
+                $this->checkServerRequirements();
+                $author = trim(preg_replace("/[^\pL\d\-\. ]/u", "-", $this->yellow->page->getRequest("author")));
+                $email = trim($this->yellow->page->getRequest("email"));
+                $password = trim($this->yellow->page->getRequest("password"));
+                $language = trim($this->yellow->page->getRequest("language"));
+                $extension = trim($this->yellow->page->getRequest("extension"));
+                $status = trim($this->yellow->page->getRequest("status"));
+                $statusCode = $this->updateLog();
+                $statusCode = max($statusCode, $this->updateLanguages());
+                $this->yellow->content->pages["root/"] = array();
+                $this->yellow->page = new YellowPage($this->yellow);
+                $this->yellow->page->setRequestInformation($scheme, $address, $base, $location, $fileName);
+                $this->yellow->page->parseData($this->getRawDataInstall(), false, $statusCode, $this->yellow->page->get("pageError"));
+                if ($status=="install") $status = $this->updateExtension($extension)==200 ? "ok" : "error";
+                if ($status=="ok") $status = $this->updateUser($email, $password, $author, $language)==200 ? "ok" : "error";
+                if ($status=="ok") $status = $this->updateContent($language, "installHome", "/")==200 ? "ok" : "error";
+                if ($status=="ok") $status = $this->updateContent($language, "installDefault", "/shared/page-new-default")==200 ? "ok" : "error";
+                if ($status=="ok") $status = $this->updateContent($language, "installBlog", "/shared/page-new-blog")==200 ? "ok" : "error";
+                if ($status=="ok") $status = $this->updateContent($language, "installWiki", "/shared/page-new-wiki")==200 ? "ok" : "error";
+                if ($status=="ok") $status = $this->updateContent($language, "coreError404", "/shared/page-error-404")==200 ? "ok" : "error";
+                if ($status=="ok") $status = $this->updateSettings($language)==200 ? "ok" : "error";
+                if ($status=="ok") $status = $this->removeInstall()==200 ? "done" : "error";
+            } else {
+                $status = $this->removeInstall()==200 ? "done" : "error";
+                $this->yellow->log($status=="done" ? "info" : "error", "Uninstall extension 'Install ".YellowInstall::VERSION."'");
+            }
             if ($status=="done") {
                 $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, "/");
                 $statusCode = $this->yellow->sendStatus(303, $location);
@@ -59,11 +64,16 @@ class YellowInstall {
     
     // Process command to install website
     public function processCommandInstall() {
-        $this->checkCommandRequirements();
-        $statusCode = $this->updateLog();
-        if ($statusCode==200) $statusCode = $this->updateLanguages();
-        if ($statusCode==200) $statusCode = $this->updateSettings("en");
-        if ($statusCode==200) $statusCode = $this->removeInstall();
+        if (!$this->isAlreadyInstalled()) {
+            $this->checkCommandRequirements();
+            $statusCode = $this->updateLog();
+            if ($statusCode==200) $statusCode = $this->updateLanguages();
+            if ($statusCode==200) $statusCode = $this->updateSettings("en");
+            if ($statusCode==200) $statusCode = $this->removeInstall();
+        } else {
+            $statusCode = $this->removeInstall();
+            $this->yellow->log($statusCode==200 ? "info" : "error", "Uninstall extension 'Install ".YellowInstall::VERSION."'");
+        }
         if ($statusCode==200) {
             $statusCode = 0;
         } else {
@@ -408,5 +418,10 @@ class YellowInstall {
             if (isset($languages[$language])) array_push($extensions, $languages[$language]);
         }
         return array_slice($extensions, 0, 3);
+    }
+    
+    // Check if already installed
+    public function isAlreadyInstalled() {
+        return $this->yellow->system->get("updateCurrentRelease")!=0;
     }
 }
