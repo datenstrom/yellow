@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/edit
 
 class YellowEdit {
-    const VERSION = "0.8.51";
+    const VERSION = "0.8.52";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -15,7 +15,7 @@ class YellowEdit {
         $this->merge = new YellowEditMerge($yellow);
         $this->yellow->system->setDefault("editLocation", "/edit/");
         $this->yellow->system->setDefault("editUploadNewLocation", "/media/@group/@filename");
-        $this->yellow->system->setDefault("editUploadExtensions", ".gif, .jpg, .pdf, .png, .svg, .zip");
+        $this->yellow->system->setDefault("editUploadExtensions", ".gif, .jpg, .mp3, .ogg, .pdf, .png, .svg, .zip");
         $this->yellow->system->setDefault("editKeyboardShortcuts", "ctrl+b bold, ctrl+i italic, ctrl+k strikethrough, ctrl+e code, ctrl+s save, ctrl+alt+p preview");
         $this->yellow->system->setDefault("editToolbarButtons", "auto");
         $this->yellow->system->setDefault("editEndOfLine", "auto");
