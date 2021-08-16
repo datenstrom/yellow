@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/install
 
 class YellowInstall {
-    const VERSION = "0.8.54";
+    const VERSION = "0.8.55";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -42,9 +42,10 @@ class YellowInstall {
                 if ($status=="install") $status = $this->updateExtension($extension)==200 ? "ok" : "error";
                 if ($status=="ok") $status = $this->updateUser($email, $password, $author, $language)==200 ? "ok" : "error";
                 if ($status=="ok") $status = $this->updateContent($language, "installHome", "/")==200 ? "ok" : "error";
+                if ($status=="ok") $status = $this->updateContent($language, "installAbout", "/about/")==200 ? "ok" : "error";
                 if ($status=="ok") $status = $this->updateContent($language, "installDefault", "/shared/page-new-default")==200 ? "ok" : "error";
-                if ($status=="ok") $status = $this->updateContent($language, "installBlog", "/shared/page-new-blog")==200 ? "ok" : "error";
                 if ($status=="ok") $status = $this->updateContent($language, "installWiki", "/shared/page-new-wiki")==200 ? "ok" : "error";
+                if ($status=="ok") $status = $this->updateContent($language, "installBlog", "/shared/page-new-blog")==200 ? "ok" : "error";
                 if ($status=="ok") $status = $this->updateContent($language, "coreError404", "/shared/page-error-404")==200 ? "ok" : "error";
                 if ($status=="ok") $status = $this->updateSettings($language)==200 ? "ok" : "error";
                 if ($status=="ok") $status = $this->removeInstall()==200 ? "done" : "error";
@@ -190,12 +191,9 @@ class YellowInstall {
         $fileName = $this->yellow->lookup->findFileFromLocation($location);
         $fileData = str_replace("\r\n", "\n", $this->yellow->toolbox->readFile($fileName));
         if (!empty($fileData) && $language!="en") {
-            $settingsOld = "Title: ".$this->yellow->language->getText("{$name}Title", "en")."\n";
-            $settingsNew = "Title: ".$this->yellow->language->getText("{$name}Title", $language)."\n";
-            $fileData = str_replace($settingsOld, $settingsNew, $fileData);
-            $settingsOld = "TitleContent: ".$this->yellow->language->getText("{$name}TitleContent", "en")."\n";
-            $settingsNew = "TitleContent: ".$this->yellow->language->getText("{$name}TitleContent", $language)."\n";
-            $fileData = str_replace($settingsOld, $settingsNew, $fileData);
+            $titleOld = "Title: ".$this->yellow->language->getText("{$name}Title", "en")."\n";
+            $titleNew = "Title: ".$this->yellow->language->getText("{$name}Title", $language)."\n";
+            $fileData = str_replace($titleOld, $titleNew, $fileData);
             $textOld = str_replace("\\n", "\n", $this->yellow->language->getText("{$name}Text", "en"));
             $textNew = str_replace("\\n", "\n", $this->yellow->language->getText("{$name}Text", $language));
             $fileData = str_replace($textOld, $textNew, $fileData);
@@ -364,36 +362,22 @@ class YellowInstall {
         $rawData .= "<p><label for=\"author\">".$this->yellow->language->getText("editSignupName")."</label><br /><input class=\"form-control\" type=\"text\" maxlength=\"64\" name=\"author\" id=\"author\" value=\"\"></p>\n";
         $rawData .= "<p><label for=\"email\">".$this->yellow->language->getText("editSignupEmail")."</label><br /><input class=\"form-control\" type=\"text\" maxlength=\"64\" name=\"email\" id=\"email\" value=\"\"></p>\n";
         $rawData .= "<p><label for=\"password\">".$this->yellow->language->getText("editSignupPassword")."</label><br /><input class=\"form-control\" type=\"password\" maxlength=\"64\" name=\"password\" id=\"password\" value=\"\"></p>\n";
-        if (count($languages)>1) {
-            $rawData .= "<p>";
-            foreach ($languages as $language) {
-                $checked = $language==$this->yellow->language->language ? " checked=\"checked\"" : "";
-                $rawData .= "<label for=\"${language}-language\"><input type=\"radio\" name=\"language\" id=\"${language}-language\" value=\"$language\"$checked> ".$this->yellow->language->getTextHtml("languageDescription", $language)."</label><br />";
-            }
-            $rawData .= "</p>\n";
+        $rawData .= "<p>".$this->yellow->language->getText("installLanguage")."</p>\n<p>";
+        foreach ($languages as $language) {
+            $checked = $language==$this->yellow->language->language ? " checked=\"checked\"" : "";
+            $rawData .= "<label for=\"${language}-language\"><input type=\"radio\" name=\"language\" id=\"${language}-language\" value=\"$language\"$checked> ".$this->yellow->language->getTextHtml("languageDescription", $language)."</label><br />";
         }
-        if (count($this->getExtensionsInstall())>1) {
-            $rawData .= "<p>".$this->yellow->language->getText("installExtension")."<p>";
-            foreach ($this->getExtensionsInstall() as $extension) {
-                $checked = $extension=="website" ? " checked=\"checked\"" : "";
-                $rawData .= "<label for=\"${extension}-extension\"><input type=\"radio\" name=\"extension\" id=\"${extension}-extension\" value=\"$extension\"$checked> ".$this->yellow->language->getTextHtml("installExtension".ucfirst($extension))."</label><br />";
-            }
-            $rawData .= "</p>\n";
+        $rawData .= "</p>\n";
+        $rawData .= "<p>".$this->yellow->language->getText("installExtension")."</p>\n<p>";
+        foreach (array("website", "wiki", "blog") as $extension) {
+            $checked = $extension=="website" ? " checked=\"checked\"" : "";
+            $rawData .= "<label for=\"${extension}-extension\"><input type=\"radio\" name=\"extension\" id=\"${extension}-extension\" value=\"$extension\"$checked> ".$this->yellow->language->getTextHtml("installExtension".ucfirst($extension))."</label><br />";
         }
+        $rawData .= "</p>\n";
         $rawData .= "<input class=\"btn\" type=\"submit\" value=\"".$this->yellow->language->getText("editOkButton")."\" />\n";
         $rawData .= "<input type=\"hidden\" name=\"status\" value=\"install\" />\n";
         $rawData .= "</form>\n";
         return $rawData;
-    }
-    
-    // Return extensions for install page
-    public function getExtensionsInstall() {
-        $extensions = array("website");
-        $path = $this->yellow->system->get("coreExtensionDirectory");
-        foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.zip$/", true, false, false) as $entry) {
-            if (preg_match("/^install-(.*?)\./", $entry, $matches) && $matches[1]!="language") array_push($extensions, $matches[1]);
-        }
-        return $extensions;
     }
     
     // Return extensions required
@@ -420,7 +404,7 @@ class YellowInstall {
         return array_slice($extensions, 0, 3);
     }
     
-    // Check if already installed
+    // Check if website already installed
     public function isAlreadyInstalled() {
         return $this->yellow->system->get("updateCurrentRelease")!=0;
     }
