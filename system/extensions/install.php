@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/install
 
 class YellowInstall {
-    const VERSION = "0.8.55";
+    const VERSION = "0.8.56";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -41,6 +41,7 @@ class YellowInstall {
                 $this->yellow->page->parseData($this->getRawDataInstall(), false, $statusCode, $this->yellow->page->get("pageError"));
                 if ($status=="install") $status = $this->updateExtension($extension)==200 ? "ok" : "error";
                 if ($status=="ok") $status = $this->updateUser($email, $password, $author, $language)==200 ? "ok" : "error";
+                if ($status=="ok") $status = $this->updateAuthentication($scheme, $address, $base, $email)==200 ? "ok" : "error";
                 if ($status=="ok") $status = $this->updateContent($language, "installHome", "/")==200 ? "ok" : "error";
                 if ($status=="ok") $status = $this->updateContent($language, "installAbout", "/about/")==200 ? "ok" : "error";
                 if ($status=="ok") $status = $this->updateContent($language, "installDefault", "/shared/page-new-default")==200 ? "ok" : "error";
@@ -183,6 +184,15 @@ class YellowInstall {
             $this->yellow->log($statusCode==200 ? "info" : "error", "Add user '".strtok($name, " ")."'");
         }
         return $statusCode;
+    }
+    
+    // Update authentication
+    public function updateAuthentication($scheme, $address, $base, $email) {
+        if ($this->yellow->user->isExisting($email) && $this->yellow->extension->isExisting("edit")) {
+            $base = rtrim($base.$this->yellow->system->get("editLocation"), "/");
+            $this->yellow->extension->get("edit")->response->createCookies($scheme, $address, $base, $email);
+        }
+        return 200;
     }
     
     // Update content
