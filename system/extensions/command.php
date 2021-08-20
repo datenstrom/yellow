@@ -2,7 +2,7 @@
 // Command extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/command
 
 class YellowCommand {
-    const VERSION = "0.8.29";
+    const VERSION = "0.8.30";
     public $yellow;                       // access to API
     public $files;                        // number of files
     public $links;                        // number of links
@@ -26,6 +26,7 @@ class YellowCommand {
     // Handle command
     public function onCommand($command, $text) {
         switch ($command) {
+            case "about":   $statusCode = $this->processCommandAbout($command, $text); break;
             case "build":   $statusCode = $this->processCommandBuild($command, $text); break;
             case "check":   $statusCode = $this->processCommandCheck($command, $text); break;
             case "clean":   $statusCode = $this->processCommandClean($command, $text); break;
@@ -36,12 +37,24 @@ class YellowCommand {
     
     // Handle command help
     public function onCommandHelp() {
-        $help = "build [directory location]\n";
+        $help = "about\n";
+        $help .= "build [directory location]\n";
         $help .= "check [directory location]\n";
         $help .= "clean [directory location]\n";
         return $help;
     }
     
+    // Process command to show current version and extensions
+    public function processCommandAbout($command, $text) {
+        echo "Datenstrom Yellow ".YellowCore::RELEASE."\n";
+        $dataCurrent = $this->yellow->extension->data;
+        uksort($dataCurrent, "strnatcasecmp");
+        foreach ($dataCurrent as $key=>$value) {
+            echo ucfirst($key)." ".$value["version"]."\n";
+        }
+        return 200;
+    }
+
     // Process command to build static website
     public function processCommandBuild($command, $text) {
         $statusCode = 0;

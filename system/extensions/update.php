@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.54";
+    const VERSION = "0.8.55";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $updates;                // number of updates
@@ -98,7 +98,6 @@ class YellowUpdate {
         $statusCode = $this->processCommandPending();
         if ($statusCode==0) {
             switch ($command) {
-                case "about":       $statusCode = $this->processCommandAbout($command, $text); break;
                 case "install":     $statusCode = $this->processCommandInstall($command, $text); break;
                 case "uninstall":   $statusCode = $this->processCommandUninstall($command, $text); break;
                 case "update":      $statusCode = $this->processCommandUpdate($command, $text); break;
@@ -110,30 +109,10 @@ class YellowUpdate {
     
     // Handle command help
     public function onCommandHelp() {
-        $help = "about\n";
-        $help .= "install [extension]\n";
+        $help = "install [extension]\n";
         $help .= "uninstall [extension]\n";
         $help .= "update [extension]\n";
         return $help;
-    }
-
-    // Process command to show website version and updates
-    public function processCommandAbout($command, $text) {
-        echo "Datenstrom Yellow ".YellowCore::RELEASE."\n";
-        list($statusCodeCurrent, $settingsCurrent) = $this->getExtensionSettings(false);
-        list($statusCodeLatest, $settingsLatest) = $this->getExtensionSettings(true);
-        $statusCode = max($statusCodeCurrent, $statusCodeLatest);
-        foreach ($settingsCurrent as $key=>$value) {
-            $versionCurrent = $versionLatest = $settingsCurrent[$key]->get("version");
-            if ($settingsLatest->isExisting($key)) $versionLatest = $settingsLatest[$key]->get("version");
-            if (strnatcasecmp($versionCurrent, $versionLatest)<0) {
-                echo ucfirst($key)." $versionCurrent - Update available\n";
-            } else {
-                echo ucfirst($key)." $versionCurrent\n";
-            }
-        }
-        if ($statusCode!=200) echo "ERROR checking updates: ".$this->yellow->page->get("pageError")."\n";
-        return $statusCode;
     }
     
     // Process command to install extensions
