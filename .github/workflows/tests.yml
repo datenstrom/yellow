@@ -14,7 +14,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: curl, exif, gd, mbstring, zip
+          extensions: curl, gd, mbstring, zip
           coverage: none
       - name: Setup tests
         run: |
