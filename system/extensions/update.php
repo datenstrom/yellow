@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.55";
+    const VERSION = "0.8.56";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $updates;                // number of updates
@@ -86,6 +86,19 @@ class YellowUpdate {
                 }
             }
         }
+        if ($action=="update") { // TODO: remove later, convert extension settings
+            $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
+            if ($this->yellow->system->get("galleryStyle")=="photoswipe") {
+                if (!$this->yellow->system->save($fileName, array("galleryStyle" => "zoom"))) {
+                    $this->yellow->log("error", "Can't write file '$fileName'!");
+                }
+            }
+            if ($this->yellow->system->get("sliderStyle")=="flickity") {
+                if (!$this->yellow->system->save($fileName, array("sliderStyle" => "loop"))) {
+                    $this->yellow->log("error", "Can't write file '$fileName'!");
+                }
+            }
+        }
     }
     
     // Handle request
@@ -151,16 +164,28 @@ class YellowUpdate {
     // Process command to update website
     public function processCommandUpdate($command, $text) {
         $extensions = $this->getExtensionsFromText($text);
-        list($statusCode, $settings) = $this->getExtensionUpdateInformation($extensions);
-        if ($statusCode!=200 || !empty($settings)) {
-            $this->updates = 0;
-            if ($statusCode==200) $statusCode = $this->downloadExtensions($settings);
-            if ($statusCode==200) $statusCode = $this->updateExtensions("update");
-            if ($statusCode>=400) echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
-            echo "Yellow $command: Website ".($statusCode!=200 ? "not " : "")."updated";
-            echo ", $this->updates update".($this->updates!=1 ? "s" : "")." installed\n";
+        if (!empty($extensions)) {
+            list($statusCode, $settings) = $this->getExtensionUpdateInformation($extensions);
+            if ($statusCode!=200 || !empty($settings)) {
+                $this->updates = 0;
+                if ($statusCode==200) $statusCode = $this->downloadExtensions($settings);
+                if ($statusCode==200) $statusCode = $this->updateExtensions("update");
+                if ($statusCode>=400) echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
+                echo "Yellow $command: Website ".($statusCode!=200 ? "not " : "")."updated";
+                echo ", $this->updates update".($this->updates!=1 ? "s" : "")." installed\n";
+            } else {
+                echo "Your website is up to date\n";
+            }
         } else {
-            echo "Your website is up to date\n";
+            list($statusCode, $settings) = $this->getExtensionUpdateInformation(array("all"));
+            if ($statusCode!=200 || !empty($settings)) {
+                if ($statusCode>=400) echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
+                $this->updates = count($settings);
+                echo "Yellow $command: Please type 'php yellow.php update all'";
+                echo ", $this->updates update".($this->updates!=1 ? "s" : "")." available\n";
+            } else {
+                echo "Your website is up to date\n";
+            }
         }
         return $statusCode;
     }
@@ -646,7 +671,7 @@ class YellowUpdate {
         list($statusCodeCurrent, $settingsCurrent) = $this->getExtensionSettings(false);
         list($statusCodeLatest, $settingsLatest) = $this->getExtensionSettings(true);
         $statusCode = max($statusCodeCurrent, $statusCodeLatest);
-        if (empty($extensions)) {
+        if (in_array("all", $extensions)) {
             foreach ($settingsCurrent as $key=>$value) {
                 if ($settingsLatest->isExisting($key)) {
                     $versionCurrent = $settingsCurrent[$key]->get("version");
