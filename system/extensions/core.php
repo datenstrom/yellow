@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.51";
+    const VERSION = "0.8.52";
     const RELEASE = "0.8.18";
     public $page;           // current page
     public $content;        // content files
@@ -591,6 +591,7 @@ class YellowPage {
                         $output .= ucfirst($key)." ".$value["version"]."<br />\n";
                     }
                 }
+                if ($text=="release") $output = "Datenstrom Yellow ".YellowCore::RELEASE;
                 if ($text=="error") $output = $this->get("pageError");
                 if ($text=="log") {
                     $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreLogFile");
