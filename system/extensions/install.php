@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/install
 
 class YellowInstall {
-    const VERSION = "0.8.56";
+    const VERSION = "0.8.57";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -268,33 +268,39 @@ class YellowInstall {
     
     // Check web server requirements
     public function checkServerRequirements() {
-        list($name) = $this->yellow->toolbox->detectServerInformation();
+        if (defined("DEBUG") && DEBUG>=1) {
+            list($name, $version, $os) = $this->yellow->toolbox->detectServerInformation();
+            echo "YellowInstall::checkServerRequirements for $name $version, $os<br/>\n";
+        }
         $troubleshooting = "<a href=\"".$this->yellow->getTroubleshootingUrl()."\">See troubleshooting</a>.";
         $this->checkServerComplete() || die("Datenstrom Yellow requires complete upload! $troubleshooting\n");
-        $this->checkServerWrite() || die("Datenstrom Yellow requires write access for $name! $troubleshooting\n");
-        $this->checkServerConfiguration() || die("Datenstrom Yellow requires configuration file for $name! $troubleshooting\n");
-        $this->checkServerRewrite() || die("Datenstrom Yellow requires rewrite support for $name! $troubleshooting\n");
+        $this->checkServerWrite() || die("Datenstrom Yellow requires write access! $troubleshooting\n");
+        $this->checkServerConfiguration() || die("Datenstrom Yellow requires configuration file! $troubleshooting\n");
+        $this->checkServerRewrite() || die("Datenstrom Yellow requires rewrite support! $troubleshooting\n");
     }
     
     // Check web server complete upload
     public function checkServerComplete() {
         $complete = true;
-        foreach ($this->yellow->toolbox->getDirectoryEntriesRecursive(".", "/.*/", false, false) as $entry) {
-            if (filesize($entry)==0) $complete = false;
-        }
         $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateCurrentFile");
         $fileData = $this->yellow->toolbox->readFile($fileName);
         $settings = $this->yellow->toolbox->getTextSettings($fileData, "extension");
+        $fileNames = array("yellow.php", "robots.txt", $fileName);
         foreach ($settings as $extension=>$block) {
             foreach ($block as $key=>$value) {
                 if (strposu($key, "/")) {
                     list($entry, $flags) = $this->yellow->toolbox->getTextList($value, ",", 2);
                     if (preg_match("/delete/i", $flags)) continue;
-                    if (!is_file($key)) $complete = false;
+                    array_push($fileNames, $key);
                 }
             }
         }
-        if (count($settings)==0) $complete = false;
+        foreach ($fileNames as $fileName) {
+            if (!is_file($fileName) || filesize($fileName)==0) {
+                $complete = false;
+                if (defined("DEBUG") && DEBUG>=1) echo "YellowInstall::checkServerComplete detected missing file:$fileName<br/>\n";
+            }
+        }
         return $complete;
     }
     
@@ -329,6 +335,10 @@ class YellowInstall {
     
     // Check command line requirements
     public function checkCommandRequirements() {
+        if (defined("DEBUG") && DEBUG>=1) {
+            list($name, $version, $os) = $this->yellow->toolbox->detectServerInformation();
+            echo "YellowInstall::checkCommandRequirements for $name $version, $os<br/>\n";
+        }
         $this->checkServerComplete() || die("Datenstrom Yellow requires complete upload!\n");
     }
     
