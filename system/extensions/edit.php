@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/edit
 
 class YellowEdit {
-    const VERSION = "0.8.53";
+    const VERSION = "0.8.54";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -688,7 +688,7 @@ class YellowEdit {
                     $this->response->rawDataOutput = "";
                 }
             } else {
-                $this->response->status = $this->yellow->command("update")==0 ? "done" : "error";
+                $this->response->status = $this->yellow->command("update all")==0 ? "done" : "error";
             }
             if ($this->response->status=="done") {
                 $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
