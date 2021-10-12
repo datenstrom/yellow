@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.52";
+    const VERSION = "0.8.53";
     const RELEASE = "0.8.18";
     public $page;           // current page
     public $content;        // content files
