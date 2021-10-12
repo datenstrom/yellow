@@ -2288,7 +2288,7 @@ class YellowLookup {
             $location = str_replace("/./", "/", $location);
             $location = str_replace(":", $this->yellow->toolbox->getLocationArgumentsSeparator(), $location);
         } else {
-            if ($filterStrict && !preg_match("/^(http|https|ftp|mailto):/", $location)) $location = "error-xss-filter";
+            if ($filterStrict && !preg_match("/^(http|https|ftp|mailto|tel):/", $location)) $location = "error-xss-filter";
         }
         return $location;
     }
@@ -2298,7 +2298,7 @@ class YellowLookup {
         if (!preg_match("/^\w+:/", $location)) {
             $url = "$scheme://$address$base$location";
         } else {
-            if ($filterStrict && !preg_match("/^(http|https|ftp|mailto):/", $location)) $location = "error-xss-filter";
+            if ($filterStrict && !preg_match("/^(http|https|ftp|mailto|tel):/", $location)) $location = "error-xss-filter";
             $url = $location;
         }
         return $url;
@@ -3429,11 +3429,11 @@ class YellowToolbox {
                 }
                 if ($filterStrict) {
                     $href = isset($elementAttributes["href"]) ? $elementAttributes["href"] : "";
-                    if (preg_match("/^\w+:/", $href) && !preg_match("/^(http|https|ftp|mailto):/", $href)) {
+                    if (preg_match("/^\w+:/", $href) && !preg_match("/^(http|https|ftp|mailto|tel):/", $href)) {
                         $elementAttributes["href"] = "error-xss-filter";
                     }
                     $href = isset($elementAttributes["xlink:href"]) ? $elementAttributes["xlink:href"] : "";
-                    if (preg_match("/^\w+:/", $href) && !preg_match("/^(http|https|ftp|mailto):/", $href)) {
+                    if (preg_match("/^\w+:/", $href) && !preg_match("/^(http|https|ftp|mailto|tel):/", $href)) {
                         $elementAttributes["xlink:href"] = "error-xss-filter";
                     }
                 }
