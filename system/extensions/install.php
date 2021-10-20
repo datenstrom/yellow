@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/install
 
 class YellowInstall {
-    const VERSION = "0.8.57";
+    const VERSION = "0.8.58";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -175,7 +175,7 @@ class YellowInstall {
                 "stamp" => $this->yellow->extension->get("edit")->response->createStamp(),
                 "pending" => "none",
                 "failed" => "0",
-                "modified" => time(),
+                "modified" => date("Y-m-d H:i:s", time()),
                 "status" => "active");
             if (!$this->yellow->user->save($fileNameUser, $email, $settings)) {
                 $statusCode = 500;
