@@ -4,6 +4,6 @@
 
 Datenstrom Yellow är för människor som skapar små webbsidor. https://datenstrom.se/sv/yellow/
 
-För att installera packa upp en fil och du är redo att gå. Du kan lägga till funktioner, teman och språk. Du kan också utveckla tilläg med hjälp av API:et. Datenstrom Yellow är en så kallat webbpubliceringssystem och en static-site-generator.
+För att installera packa upp en fil och du är redo att gå. Du kan lägga till funktioner, teman och språk. Det finns mer än 50 tillägg att ladda ner. Datenstrom Yellow är en så kallat webbpubliceringssystem och en static-site-generator. [Komma igång](https://datenstrom.se/sv/yellow/help/how-to-get-started).
 
 Har du några frågor? [Få hjälp](https://datenstrom.se/sv/yellow/help/) och [engagera dig](https://datenstrom.se/sv/yellow/help/contributing-guidelines).
