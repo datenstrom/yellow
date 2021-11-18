@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.56";
+    const VERSION = "0.8.57";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $updates;                // number of updates
@@ -41,23 +41,6 @@ class YellowUpdate {
             }
             if ($statusCode==500) $this->yellow->log("error", "Can't delete files in directory '$path'!\n");
         }
-        if ($action=="update") { // TODO: remove later, convert layout files
-            $path = $this->yellow->system->get("coreLayoutDirectory");
-            foreach ($this->yellow->toolbox->getDirectoryEntriesRecursive($path, "/^.*\.html$/", true, false) as $entry) {
-                $key = str_replace("pages", "", $this->yellow->lookup->normaliseName(basename($entry), true, true));
-                $fileData = $fileDataNew = $this->yellow->toolbox->readFile($entry);
-                $fileDataNew = str_replace("text->getHtml", "language->getTextHtml", $fileDataNew);
-                $fileDataNew = str_replace("yellow->page->getPages()", "yellow->page->getPages(\"$key\")", $fileDataNew);
-                $fileDataNew = str_replace("\$page = \$this->yellow->content->shared(\"header\")", "\$page = null", $fileDataNew);
-                $fileDataNew = str_replace("\$page = \$this->yellow->content->shared(\"footer\")", "\$page = null", $fileDataNew);
-                $fileDataNew = str_replace("\$page = \$this->yellow->content->shared(\"sidebar\")", "\$page = null", $fileDataNew);
-                $fileDataNew = str_replace("\$this->yellow->content->shared(\"sidebar\")", "\$this->yellow->page->isPage(\"sidebar\")", $fileDataNew);
-                $fileDataNew = str_replace("php if (\$page = null)", "php /* Remove this line */ if (\$page = null)", $fileDataNew);
-                if ($fileData!=$fileDataNew && !$this->yellow->toolbox->createFile($entry, $fileDataNew)) {
-                    $this->yellow->log("error", "Can't write file '$entry'!");
-                }
-            }
-        }
         if ($action=="update") { // TODO: remove later, create settings files when missing
             $fileNameCurrent = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateCurrentFile");
             $fileNameLatest = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateLatestFile");
@@ -86,7 +69,22 @@ class YellowUpdate {
                 }
             }
         }
-        if ($action=="update") { // TODO: remove later, convert extension settings
+        if ($action=="update") { // TODO: remove later, convert old content files
+            if ($this->yellow->system->isExisting("blogLocation") || $this->yellow->system->isExisting("wikiLocation")) {
+                $path = $this->yellow->system->get("coreContentDirectory");
+                foreach ($this->yellow->toolbox->getDirectoryEntriesRecursive($path, "/^.*\.md$/", true, false) as $entry) {
+                    $fileData = $fileDataNew = $this->yellow->toolbox->readFile($entry);
+                    $fileDataNew = str_replace("[blogarchive", "[blogmonths", $fileDataNew);
+                    $fileDataNew = preg_replace("/Layout: blogpages/i", "Layout: blog-start", $fileDataNew);
+                    $fileDataNew = preg_replace("/Layout: wikipages/i", "Layout: wiki-start", $fileDataNew);
+                    $fileDataNew = preg_replace("/Layout: draftpages/i", "Layout: draftpages-unsupported", $fileDataNew);
+                    if ($fileData!=$fileDataNew && !$this->yellow->toolbox->createFile($entry, $fileDataNew)) {
+                        $this->yellow->log("error", "Can't write file '$entry'!");
+                    }
+                }
+            }
+        }
+        if ($action=="update") { // TODO: remove later, convert old extension settings
             $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
             if ($this->yellow->system->get("galleryStyle")=="photoswipe") {
                 if (!$this->yellow->system->save($fileName, array("galleryStyle" => "zoom"))) {
@@ -95,6 +93,20 @@ class YellowUpdate {
             }
             if ($this->yellow->system->get("sliderStyle")=="flickity") {
                 if (!$this->yellow->system->save($fileName, array("sliderStyle" => "loop"))) {
+                    $this->yellow->log("error", "Can't write file '$fileName'!");
+                }
+            }
+            if ($this->yellow->system->isExisting("blogLocation")) {
+                $blogStartLocation = $this->yellow->system->get("blogLocation");
+                if (empty($blogStartLocation)) $blogStartLocation = "auto";
+                if (!$this->yellow->system->save($fileName, array("blogStartLocation" => $blogStartLocation))) {
+                    $this->yellow->log("error", "Can't write file '$fileName'!");
+                }
+            }
+            if ($this->yellow->system->isExisting("wikiLocation")) {
+                $wikiStartLocation = $this->yellow->system->get("wikiLocation");
+                if (empty($wikiStartLocation)) $wikiStartLocation = "auto";
+                if (!$this->yellow->system->save($fileName, array("wikiStartLocation" => $wikiStartLocation))) {
                     $this->yellow->log("error", "Can't write file '$fileName'!");
                 }
             }
