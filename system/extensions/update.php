@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.57";
+    const VERSION = "0.8.58";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $updates;                // number of updates
@@ -69,7 +69,7 @@ class YellowUpdate {
                 }
             }
         }
-        if ($action=="update") { // TODO: remove later, convert old content files
+        if ($action=="update") { // TODO: remove later, convert old content/layout files
             if ($this->yellow->system->isExisting("blogLocation") || $this->yellow->system->isExisting("wikiLocation")) {
                 $path = $this->yellow->system->get("coreContentDirectory");
                 foreach ($this->yellow->toolbox->getDirectoryEntriesRecursive($path, "/^.*\.md$/", true, false) as $entry) {
@@ -78,6 +78,15 @@ class YellowUpdate {
                     $fileDataNew = preg_replace("/Layout: blogpages/i", "Layout: blog-start", $fileDataNew);
                     $fileDataNew = preg_replace("/Layout: wikipages/i", "Layout: wiki-start", $fileDataNew);
                     $fileDataNew = preg_replace("/Layout: draftpages/i", "Layout: draftpages-unsupported", $fileDataNew);
+                    if ($fileData!=$fileDataNew && !$this->yellow->toolbox->createFile($entry, $fileDataNew)) {
+                        $this->yellow->log("error", "Can't write file '$entry'!");
+                    }
+                }
+                $path = $this->yellow->system->get("coreLayoutDirectory");
+                foreach ($this->yellow->toolbox->getDirectoryEntriesRecursive($path, "/^.*\.html$/", true, false) as $entry) {
+                    $fileData = $fileDataNew = $this->yellow->toolbox->readFile($entry);
+                    $fileDataNew = str_replace("yellow->page->getPage(\"blog\")", "yellow->page->getPage(\"blogStart\")", $fileDataNew);
+                    $fileDataNew = str_replace("yellow->page->getPage(\"wiki\")", "yellow->page->getPage(\"wikiStart\")", $fileDataNew);
                     if ($fileData!=$fileDataNew && !$this->yellow->toolbox->createFile($entry, $fileDataNew)) {
                         $this->yellow->log("error", "Can't write file '$entry'!");
                     }
