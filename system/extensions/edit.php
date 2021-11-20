@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/edit
 
 class YellowEdit {
-    const VERSION = "0.8.54";
+    const VERSION = "0.8.55";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -81,7 +81,7 @@ class YellowEdit {
     
     // Handle command help
     public function onCommandHelp() {
-        return "user [option email password name]\n";
+        return "user [option email password]\n";
     }
     
     // Handle page content of shortcut
@@ -151,9 +151,8 @@ class YellowEdit {
     // Add user account
     public function userAdd($command, $text) {
         $status = "ok";
-        list($option, $email, $password, $name) = $this->yellow->toolbox->getTextArguments($text);
+        list($option, $email, $password) = $this->yellow->toolbox->getTextArguments($text);
         if (empty($email) || empty($password)) $status = $this->response->status = "incomplete";
-        if (empty($name)) $name = $this->yellow->system->get("sitename");
         if ($status=="ok") $status = $this->getUserAccount("add", $email, $password);
         if ($status=="ok" && $this->isUserAccountTaken($email)) $status = "taken";
         switch ($status) {
@@ -164,6 +163,7 @@ class YellowEdit {
             case "short":       echo "ERROR updating settings: Please enter a longer password!\n"; break;
         }
         if ($status=="ok") {
+            $name = $this->yellow->system->get("sitename");
             $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
             $settings = array(
                 "name" => $name,
@@ -193,7 +193,7 @@ class YellowEdit {
     // Change user account
     public function userChange($command, $text) {
         $status = "ok";
-        list($option, $email, $password, $name) = $this->yellow->toolbox->getTextArguments($text);
+        list($option, $email, $password) = $this->yellow->toolbox->getTextArguments($text);
         if (empty($email)) $status = $this->response->status = "invalid";
         if ($status=="ok") $status = $this->getUserAccount("change", $email, $password);
         if ($status=="ok" && !$this->yellow->user->isExisting($email)) $status = "unknown";
@@ -206,7 +206,6 @@ class YellowEdit {
         if ($status=="ok") {
             $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
             $settings = array(
-                "name" => empty($name) ? $this->yellow->user->getUser("name", $email) : $name,
                 "hash" => empty($password) ? $this->yellow->user->getUser("hash", $email) : $this->response->createHash($password),
                 "failed" => "0",
                 "modified" => date("Y-m-d H:i:s", time()));
@@ -222,9 +221,7 @@ class YellowEdit {
     public function userRemove($command, $text) {
         $status = "ok";
         list($option, $email) = $this->yellow->toolbox->getTextArguments($text);
-        $name = $this->yellow->user->getUser("name", $email);
         if (empty($email)) $status = $this->response->status = "invalid";
-        if (empty($name)) $name = $this->yellow->system->get("sitename");
         if ($status=="ok") $status = $this->getUserAccount("remove", $email, "");
         if ($status=="ok" && !$this->yellow->user->isExisting($email)) $status = "unknown";
         switch ($status) {
@@ -232,6 +229,7 @@ class YellowEdit {
             case "unknown": echo "ERROR updating settings: Can't find email '$email'!\n"; break;
         }
         if ($status=="ok") {
+            $name = $this->yellow->user->getUser("name", $email);
             $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
             $status = $this->yellow->user->remove($fileNameUser, $email) ? "ok" : "error";
             if ($status=="error") echo "ERROR updating settings: Can't write file '$fileNameUser'!\n";
