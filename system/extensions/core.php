@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.53";
+    const VERSION = "0.8.54";
     const RELEASE = "0.8.18";
     public $page;           // current page
     public $content;        // content files
@@ -28,9 +28,9 @@ class YellowCore {
         $this->system->setDefault("sitename", "Localhost");
         $this->system->setDefault("author", "Datenstrom");
         $this->system->setDefault("email", "webmaster");
+        $this->system->setDefault("layout", "default");
         $this->system->setDefault("theme", "default");
         $this->system->setDefault("language", "en");
-        $this->system->setDefault("layout", "default");
         $this->system->setDefault("parser", "markdown");
         $this->system->setDefault("status", "public");
         $this->system->setDefault("coreStaticUrl", "");
@@ -228,11 +228,11 @@ class YellowCore {
             foreach ($this->page->headerData as $key=>$value) {
                 echo "YellowCore::sendPage $key: $value<br/>\n";
             }
+            $layout = $this->page->get("layout");
             $theme = $this->page->get("theme");
             $language = $this->page->get("language");
-            $layout = $this->page->get("layout");
             $parser = $this->page->get("parser");
-            echo "YellowCore::sendPage theme:$theme language:$language layout:$layout parser:$parser<br/>\n";
+            echo "YellowCore::sendPage layout:$layout theme:$theme language:$language parser:$parser<br/>\n";
         }
         return $statusCode;
     }
@@ -493,7 +493,7 @@ class YellowPage {
             $this->set("title", $this->yellow->toolbox->createTextTitle($this->location));
             $this->set("language", $this->yellow->lookup->findLanguageFromFile($this->fileName, $this->yellow->system->get("language")));
             $this->set("modified", date("Y-m-d H:i:s", $this->yellow->toolbox->getFileModified($this->fileName)));
-            $this->parseMetaRaw(array("sitename", "author", "theme", "layout", "parser", "status"));
+            $this->parseMetaRaw(array("sitename", "author", "layout", "theme", "parser", "status"));
             $titleHeader = ($this->location==$this->yellow->content->getHomeLocation($this->location)) ?
                 $this->get("sitename") : $this->get("title")." - ".$this->get("sitename");
             if (!$this->isExisting("titleContent")) $this->set("titleContent", $this->get("title"));
@@ -1630,6 +1630,11 @@ class YellowSystem {
             foreach ($this->yellow->user->settings as $userKey=>$userValue) {
                 array_push($values, $userKey);
             }
+        } elseif ($key=="layout") {
+            $path = $this->yellow->system->get("coreLayoutDirectory");
+            foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.html$/", true, false, false) as $entry) {
+                array_push($values, lcfirst(substru($entry, 0, -5)));
+            }
         } elseif ($key=="theme") {
             $path = $this->yellow->system->get("coreThemeDirectory");
             foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.css$/", true, false, false) as $entry) {
@@ -1638,11 +1643,6 @@ class YellowSystem {
         } elseif ($key=="language") {
             foreach ($this->yellow->language->settings as $languageKey=>$languageValue) {
                 array_push($values, $languageKey);
-            }
-        } elseif ($key=="layout") {
-            $path = $this->yellow->system->get("coreLayoutDirectory");
-            foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.html$/", true, false, false) as $entry) {
-                array_push($values, lcfirst(substru($entry, 0, -5)));
             }
         }
         return $values;
