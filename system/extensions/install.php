@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/install
 
 class YellowInstall {
-    const VERSION = "0.8.59";
+    const VERSION = "0.8.60";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -25,7 +25,7 @@ class YellowInstall {
     public function processRequestInstall($scheme, $address, $base, $location, $fileName) {
         $statusCode = 0;
         if ($this->yellow->lookup->isContentFile($fileName) || empty($fileName)) {
-            if (!$this->isAlreadyInstalled()) {
+            if ($this->yellow->system->get("updateCurrentRelease")=="none") {
                 $this->checkServerRequirements();
                 $author = trim(preg_replace("/[^\pL\d\-\. ]/u", "-", $this->yellow->page->getRequest("author")));
                 $email = trim($this->yellow->page->getRequest("email"));
@@ -66,7 +66,7 @@ class YellowInstall {
     
     // Process command to install website
     public function processCommandInstall($command, $text) {
-        if (!$this->isAlreadyInstalled()) {
+        if ($this->yellow->system->get("updateCurrentRelease")=="none") {
             $this->checkCommandRequirements();
             $statusCode = $this->updateLog();
             if ($command=="build" || $command=="clean") {
@@ -435,10 +435,5 @@ class YellowInstall {
     public function isServerBuiltin() {
         list($name) = $this->yellow->toolbox->detectServerInformation();
         return strtoloweru($name)=="built-in";
-    }
-    
-    // Check if website already installed
-    public function isAlreadyInstalled() {
-        return $this->yellow->system->get("updateCurrentRelease")!=0;
     }
 }

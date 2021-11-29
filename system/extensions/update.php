@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.60";
+    const VERSION = "0.8.61";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $updates;                // number of updates
@@ -14,7 +14,7 @@ class YellowUpdate {
         $this->yellow->system->setDefault("updateExtensionFile", "extension.ini");
         $this->yellow->system->setDefault("updateLatestFile", "update-latest.ini");
         $this->yellow->system->setDefault("updateCurrentFile", "update-current.ini");
-        $this->yellow->system->setDefault("updateCurrentRelease", "0");
+        $this->yellow->system->setDefault("updateCurrentRelease", "none");
         $this->yellow->system->setDefault("updateEventPending", "none");
         $this->yellow->system->setDefault("updateEventDaily", "0");
         $this->yellow->system->setDefault("updateTrashTimeout", "7776660");
@@ -396,69 +396,30 @@ class YellowUpdate {
 
     // Update pending events
     public function updateEventPending() {
-        $this->updateSystemFiles();
-        if ($this->yellow->system->get("updateEventPending")!="none") {
-            foreach (explode(",", $this->yellow->system->get("updateEventPending")) as $token) {
-                list($extension, $action) = $this->yellow->toolbox->getTextList($token, "/", 2);
-                if ($this->yellow->extension->isExisting($extension) && ($action!="ready" && $action!="uninstall")) {
-                    $value = $this->yellow->extension->data[$extension];
-                    if (method_exists($value["object"], "onUpdate")) $value["object"]->onUpdate($action);
+        if ($this->yellow->system->get("updateCurrentRelease")!="none") {
+            if ($this->yellow->system->get("updateEventPending")!="none") {
+                foreach (explode(",", $this->yellow->system->get("updateEventPending")) as $token) {
+                    list($extension, $action) = $this->yellow->toolbox->getTextList($token, "/", 2);
+                    if ($this->yellow->extension->isExisting($extension) && ($action!="ready" && $action!="uninstall")) {
+                        $value = $this->yellow->extension->data[$extension];
+                        if (method_exists($value["object"], "onUpdate")) $value["object"]->onUpdate($action);
+                    }
                 }
-            }
-            $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
-            if (!$this->yellow->system->save($fileName, array("updateEventPending" => "none"))) {
-                $this->yellow->log("error", "Can't write file '$fileName'!");
-            }
-            $this->updateSystemSettings();
-            $this->updateLanguageSettings();
-        }
-        if ($this->yellow->system->get("updateEventDaily")<=time()) {
-            foreach ($this->yellow->extension->data as $key=>$value) {
-                if (method_exists($value["object"], "onUpdate")) $value["object"]->onUpdate("daily");
-            }
-            $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
-            if (!$this->yellow->system->save($fileName, array("updateEventDaily" => $this->getTimestampDaily()))) {
-                $this->yellow->log("error", "Can't write file '$fileName'!");
-            }
-        }
-    }
-    
-    // Update system files from a previous release
-    public function updateSystemFiles() {
-        if (is_dir("system/settings/")) {   // TODO: remove later, convert settings files
-            $fileNameSource = "system/settings/system.ini";
-            $fileNameDestination = "system/extensions/yellow-system.ini";
-            if (is_file($fileNameSource)) {
-                $fileData = $fileDataNew = $this->yellow->toolbox->readFile($fileNameSource);
-                $fileDataNew = str_replace("user.ini", "yellow-user.ini", $fileDataNew);
-                $fileDataNew = str_replace("language.ini", "yellow-language.ini", $fileDataNew);
-                if (!$this->yellow->toolbox->createFile($fileNameDestination, $fileDataNew)) {
-                    $this->yellow->log("error", "Can't write file '$fileNameDestination'!");
+                $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
+                if (!$this->yellow->system->save($fileName, array("updateEventPending" => "none"))) {
+                    $this->yellow->log("error", "Can't write file '$fileName'!");
                 }
+                $this->updateSystemSettings();
+                $this->updateLanguageSettings();
             }
-            $fileNameSource = "system/settings/user.ini";
-            $fileNameDestination = "system/extensions/yellow-user.ini";
-            if (is_file($fileNameSource) && !$this->yellow->toolbox->copyFile($fileNameSource, $fileNameDestination)) {
-                $this->yellow->log("error", "Can't write file '$fileNameDestination'!");
-            }
-            $fileNameSource = "system/settings/language.ini";
-            $fileNameDestination = "system/extensions/yellow-language.ini";
-            if (is_file($fileNameSource) && !$this->yellow->toolbox->copyFile($fileNameSource, $fileNameDestination)) {
-                $this->yellow->log("error", "Can't write file '$fileNameDestination'!");
-            }
-            if (!$this->yellow->toolbox->deleteDirectory("system/settings/", $this->yellow->system->get("coreTrashDirectory"))) {
-                $this->yellow->log("error", "Can't delete directory 'system/settings/'!");
-            }
-            $this->yellow->system->load("system/extensions/yellow-system.ini");
-            $this->yellow->user->load("system/extensions/yellow-user.ini");
-            $this->yellow->language->load("system/extensions/yellow-language.ini");
-            $this->yellow->page->error(503, "Flux capacitor is charging to 1.21 gigawatt, please reload page!");
-        }
-        if ($this->yellow->system->isExisting("updateNotification")) {  // TODO: remove later, convert old notification
-            $updateEventPending = $this->yellow->system->get("updateNotification");
-            $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
-            if (!$this->yellow->system->save($fileName, array("updateEventPending" => $updateEventPending))) {
-                $this->yellow->log("error", "Can't write file '$fileName'!");
+            if ($this->yellow->system->get("updateEventDaily")<=time()) {
+                foreach ($this->yellow->extension->data as $key=>$value) {
+                    if (method_exists($value["object"], "onUpdate")) $value["object"]->onUpdate("daily");
+                }
+                $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
+                if (!$this->yellow->system->save($fileName, array("updateEventDaily" => $this->getTimestampDaily()))) {
+                    $this->yellow->log("error", "Can't write file '$fileName'!");
+                }
             }
         }
     }
