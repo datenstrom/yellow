@@ -20,7 +20,7 @@ jobs:
         run: |
           echo "::add-matcher::${{ runner.tool_cache }}/php.json"
           php yellow.php about
-        env:
-          URL: http://website/
       - name: Run tests
         run: php yellow.php build test
+        env:
+          URL: http://website/
