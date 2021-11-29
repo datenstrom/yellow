@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.59";
+    const VERSION = "0.8.60";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $updates;                // number of updates
@@ -17,6 +17,7 @@ class YellowUpdate {
         $this->yellow->system->setDefault("updateCurrentRelease", "0");
         $this->yellow->system->setDefault("updateEventPending", "none");
         $this->yellow->system->setDefault("updateEventDaily", "0");
+        $this->yellow->system->setDefault("updateTrashTimeout", "7776660");
     }
     
     // Handle update
@@ -32,11 +33,11 @@ class YellowUpdate {
             $statusCode = 200;
             $path = $this->yellow->system->get("coreTrashDirectory");
             foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/.*/", false, false) as $entry) {
-                $expire = $this->yellow->toolbox->getFileDeleted($entry) + $this->yellow->system->get("coreTrashTimeout");
+                $expire = $this->yellow->toolbox->getFileDeleted($entry) + $this->yellow->system->get("updateTrashTimeout");
                 if ($expire<=time() && !$this->yellow->toolbox->deleteFile($entry)) $statusCode = 500;
             }
             foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/.*/", false, true) as $entry) {
-                $expire = $this->yellow->toolbox->getFileDeleted($entry) + $this->yellow->system->get("coreTrashTimeout");
+                $expire = $this->yellow->toolbox->getFileDeleted($entry) + $this->yellow->system->get("updateTrashTimeout");
                 if ($expire<=time() && !$this->yellow->toolbox->deleteDirectory($entry)) $statusCode = 500;
             }
             if ($statusCode==500) $this->yellow->log("error", "Can't delete files in directory '$path'!\n");
@@ -60,10 +61,10 @@ class YellowUpdate {
                             $fileDataCurrent = $this->yellow->toolbox->unsetTextSettings($fileDataCurrent, "extension", $key);
                         }
                     }
-                    if(!is_file($fileNameCurrent) && !$this->yellow->toolbox->createFile($fileNameCurrent, $fileDataCurrent)) {
+                    if (!is_file($fileNameCurrent) && !$this->yellow->toolbox->createFile($fileNameCurrent, $fileDataCurrent)) {
                         $this->yellow->log("error", "Can't write file '$fileNameCurrent'!");
                     }
-                    if(!is_file($fileNameLatest) && !$this->yellow->toolbox->createFile($fileNameLatest, $fileDataLatest)) {
+                    if (!is_file($fileNameLatest) && !$this->yellow->toolbox->createFile($fileNameLatest, $fileDataLatest)) {
                         $this->yellow->log("error", "Can't write file '$fileNameLatest'!");
                     }
                 }
@@ -90,7 +91,7 @@ class YellowUpdate {
                     if ($fileData!=$fileDataNew && !$this->yellow->toolbox->createFile($entry, $fileDataNew)) {
                         $this->yellow->log("error", "Can't write file '$entry'!");
                     }
-                    if(basename($entry)=="draftpages.html" &&
+                    if (basename($entry)=="draftpages.html" &&
                         !$this->yellow->toolbox->deleteFile($entry, $this->yellow->system->get("coreTrashDirectory"))) {
                         $this->yellow->log("error", "Can't delete file '$entry'!");
                     }
@@ -106,6 +107,12 @@ class YellowUpdate {
             }
             if ($this->yellow->system->get("sliderStyle")=="flickity") {
                 if (!$this->yellow->system->save($fileName, array("sliderStyle" => "loop"))) {
+                    $this->yellow->log("error", "Can't write file '$fileName'!");
+                }
+            }
+            if ($this->yellow->system->isExisting("coreServerTimezone")) {
+                $coreTimezone = $this->yellow->system->get("coreServerTimezone");
+                if (!$this->yellow->system->save($fileName, array("coreTimezone" => $coreTimezone))) {
                     $this->yellow->log("error", "Can't write file '$fileName'!");
                 }
             }
@@ -230,7 +237,7 @@ class YellowUpdate {
         $statusCode = 0;
         if ($this->yellow->lookup->isContentFile($fileName)) {
             $this->updateEventPending();
-            if($this->isExtensionPending()) {
+            if ($this->isExtensionPending()) {
                 $statusCode = $this->updateExtensions("install");
                 if ($statusCode==200) {
                     $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);

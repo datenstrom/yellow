@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.54";
+    const VERSION = "0.8.55";
     const RELEASE = "0.8.18";
     public $page;           // current page
     public $content;        // content files
@@ -33,11 +33,10 @@ class YellowCore {
         $this->system->setDefault("language", "en");
         $this->system->setDefault("parser", "markdown");
         $this->system->setDefault("status", "public");
-        $this->system->setDefault("coreStaticUrl", "");
         $this->system->setDefault("coreServerUrl", "auto");
-        $this->system->setDefault("coreServerTimezone", "UTC");
+        $this->system->setDefault("coreStaticUrl", "auto");
+        $this->system->setDefault("coreTimezone", "UTC");
         $this->system->setDefault("coreMultiLanguageMode", "0");
-        $this->system->setDefault("coreTrashTimeout", "7776660");
         $this->system->setDefault("coreMediaLocation", "/media/");
         $this->system->setDefault("coreDownloadLocation", "/media/downloads/");
         $this->system->setDefault("coreImageLocation", "/media/images/");
@@ -1566,7 +1565,7 @@ class YellowSystem {
         $this->yellow->system->set("coreServerInstallDirectory", $pathInstall);
         $this->yellow->system->set("coreContentRootDirectory", $pathRoot);
         $this->yellow->system->set("coreContentHomeDirectory", $pathHome);
-        date_default_timezone_set($this->yellow->system->get("coreServerTimezone"));
+        date_default_timezone_set($this->yellow->system->get("coreTimezone"));
     }
     
     // Save system settings to file
@@ -1837,7 +1836,7 @@ class YellowLanguage {
         $monthNominative = $dateMonthsNominative[date("n", $timestamp) - 1];
         $monthGenitive = $dateMonthsGenitive[date("n", $timestamp) - 1];
         $weekday = $dateWeekdays[date("N", $timestamp) - 1];
-        $timeZone = $this->yellow->system->get("coreServerTimezone");
+        $timeZone = $this->yellow->system->get("coreTimezone");
         $timeZoneHelper = new DateTime(null, new DateTimeZone($timeZone));
         $timeZoneOffset = $timeZoneHelper->getOffset();
         $timeZoneAbbreviation = "GMT".($timeZoneOffset<0 ? "-" : "+").abs(intval($timeZoneOffset/3600));
@@ -3227,22 +3226,23 @@ class YellowToolbox {
     
     // Detect server name, version and operating system
     public function detectServerInformation() {
+        $name = "Unknown";
+        $version = "x.x.x";
+        $os = PHP_OS;
         if (preg_match("/^(\S+)\/(\S+)/", $this->getServer("SERVER_SOFTWARE"), $matches)) {
             $name = $matches[1];
             $version = $matches[2];
-        } elseif (preg_match("/^(\pL+)/u", $this->getServer("SERVER_SOFTWARE"), $matches)) {
+        } elseif (preg_match("/^(\S+)/u", $this->getServer("SERVER_SOFTWARE"), $matches)) {
             $name = $matches[1];
-            $version = "x.x.x";
-        } else {
-            $name = "CLI";
+        }
+        if (PHP_SAPI=="cli" || PHP_SAPI=="cli-server") {
+            $name = "Built-in";
             $version = PHP_VERSION;
         }
         if (PHP_OS=="Darwin") {
             $os = "Mac";
         } elseif (strtoupperu(substru(PHP_OS, 0, 3))=="WIN") {
             $os = "Windows";
-        } else {
-            $os = PHP_OS;
         }
         return array($name, $version, $os);
     }
