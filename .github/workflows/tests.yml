@@ -17,10 +17,8 @@ jobs:
           extensions: curl, gd, mbstring, zip
           coverage: none
       - name: Setup tests
-        run: |
-          echo "::add-matcher::${{ runner.tool_cache }}/php.json"
-          php yellow.php about
+        run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
       - name: Run tests
-        run: php yellow.php build test
+        run: php yellow.php build tests
         env:
           URL: http://website/
