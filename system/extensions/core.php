@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.55";
+    const VERSION = "0.8.56";
     const RELEASE = "0.8.18";
     public $page;           // current page
     public $content;        // content files
@@ -2397,7 +2397,8 @@ class YellowLookup {
         $contentDirectoryLength = strlenu($this->yellow->system->get("coreContentDirectory"));
         $mediaDirectoryLength = strlenu($this->yellow->system->get("coreMediaDirectory"));
         $systemDirectoryLength = strlenu($this->yellow->system->get("coreSystemDirectory"));
-        return substru($fileName, 0, $contentDirectoryLength)==$this->yellow->system->get("coreContentDirectory") ||
+        return strposu($fileName, "/")===false ||
+            substru($fileName, 0, $contentDirectoryLength)==$this->yellow->system->get("coreContentDirectory") ||
             substru($fileName, 0, $mediaDirectoryLength)==$this->yellow->system->get("coreMediaDirectory") ||
             substru($fileName, 0, $systemDirectoryLength)==$this->yellow->system->get("coreSystemDirectory");
     }
@@ -3453,18 +3454,11 @@ class YellowToolbox {
         $textFiltered = "";
         $textLength = strlenb($text);
         for ($pos=0; $pos<$textLength; ++$pos) {
-            if (($text[$pos]=="/" || $pos==0) && $pos+1<$textLength) {
-                if ($text[$pos+1]=="/") continue;
-                if ($text[$pos+1]==".") {
-                    $posNew = $pos+1;
-                    while ($text[$posNew]==".") {
-                        ++$posNew;
-                    }
-                    if ($text[$posNew]=="/" || $text[$posNew]=="") {
-                        $pos = $posNew-1;
-                        continue;
-                    }
-                }
+            if ($text[$pos]=="." && ($pos==0 || $text[$pos-1]=="/")) {
+                while ($text[$pos]==".") ++$pos;
+                if ($text[$pos]=="/") ++$pos;
+                --$pos;
+                continue;
             }
             $textFiltered .= $text[$pos];
         }

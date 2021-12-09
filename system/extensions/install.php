@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/install
 
 class YellowInstall {
-    const VERSION = "0.8.60";
+    const VERSION = "0.8.61";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -288,12 +288,12 @@ class YellowInstall {
         $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateCurrentFile");
         $fileData = $this->yellow->toolbox->readFile($fileName);
         $settings = $this->yellow->toolbox->getTextSettings($fileData, "extension");
-        $fileNames = array("yellow.php", "robots.txt", $fileName);
+        $fileNames = array($fileName);
         foreach ($settings as $extension=>$block) {
             foreach ($block as $key=>$value) {
                 if (strposu($key, "/")) {
                     list($entry, $flags) = $this->yellow->toolbox->getTextList($value, ",", 2);
-                    if (preg_match("/delete/i", $flags)) continue;
+                    if (!preg_match("/create/i", $flags)) continue;
                     array_push($fileNames, $key);
                 }
             }
@@ -371,8 +371,8 @@ class YellowInstall {
             if ($key=="password" || $key=="status") continue;
             $settings[$key] = trim($value);
         }
-        $settings["sitename"] = $this->yellow->toolbox->detectServerSitename();
-        $settings["coreTimezone"] = $this->yellow->toolbox->detectServerTimezone();
+        if ($this->yellow->system->get("sitename")=="Datenstrom Yellow") $settings["sitename"] = $this->yellow->toolbox->detectServerSitename();
+        if ($this->yellow->system->get("coreTimezone")=="UTC") $settings["coreTimezone"] = $this->yellow->toolbox->detectServerTimezone();
         if ($this->yellow->system->get("coreStaticUrl")=="auto" && !empty(getenv("URL"))) $settings["coreStaticUrl"] = getenv("URL");
         if ($this->yellow->system->get("updateEventPending")=="none") $settings["updateEventPending"] = "website/install";
         $settings["updateCurrentRelease"] = YellowCore::RELEASE;
@@ -417,7 +417,7 @@ class YellowInstall {
                     $extension = basename($matches[1]);
                     $extension = $this->yellow->lookup->normaliseName($extension, true, true);
                     list($entry, $flags) = $this->yellow->toolbox->getTextList($matches[2], ",", 2);
-                    $arguments = preg_split("/\s*,\s*/", $flags);
+                    $arguments = preg_split("/\s*,\s*/", trim($flags));
                     $language = array_pop($arguments);
                     if (preg_match("/^(.*)\.php$/", basename($entry))) {
                         $languages[$language] = $extension;
