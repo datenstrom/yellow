@@ -16,6 +16,7 @@ jobs:
           php-version: ${{ matrix.php }}
           extensions: curl, gd, mbstring, zip
           coverage: none
+          tools: none
       - name: Set up problem matcher
         run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
       - name: Run tests
