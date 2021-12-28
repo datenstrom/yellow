@@ -2,7 +2,7 @@
 // Bundle extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/bundle
 
 class YellowBundle {
-    const VERSION = "0.8.21";
+    const VERSION = "0.8.22";
     public $yellow;         // access to API
 
     // Handle initialisation
@@ -1978,13 +1978,12 @@ class MinifyBasic extends Minify {
     // Minify data, remove only comments and empty lines
     public function execute($path = null) {
         $content = "";
-        $this->extractStrings();
+        $this->extractStrings("\'\"\`");
+        $this->registerPattern("/\/\*.*?\*\//s", "");
+        $this->registerPattern("/\/\/.*?[\r\n]+/", "");
+        $this->registerPattern("/[\r\n]+/", "");
         foreach ($this->data as $source => $data) {
-            $data = $this->replace($data);
-            $data = preg_replace("/\/\*.*?\*\//s", "", $data);
-            $data = preg_replace("/\/\/.*?[\r\n]+/", "", $data);
-            $data = preg_replace("/[\r\n]+/", "\n", $data);
-            $content .= trim($data);
+            $content .= $this->replace($data);
         }
         return $this->restoreExtractedData($content);
     }
