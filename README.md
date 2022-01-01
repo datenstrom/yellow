@@ -6,4 +6,4 @@ Datenstrom Yellow is for people who make small websites. https://datenstrom.se/y
 
 Installing is unzipping one file and you are ready to go. The most important things for small websites are included. You can add features, themes and languages. Datenstrom Yellow works as content management system and static site generator. [Get started](https://datenstrom.se/yellow/help/how-to-get-started).
 
-Do you have questions? [Get help](https://datenstrom.se/yellow/help/) and [contribute](https://datenstrom.se/yellow/help/contributing-guidelines).
+Do you have questions? [Get help](https://datenstrom.se/yellow/help/).
