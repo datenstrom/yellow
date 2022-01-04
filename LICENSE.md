@@ -277,20 +277,18 @@ POSSIBILITY OF SUCH DAMAGES.
 
 END OF TERMS AND CONDITIONS
 
-## How to apply these terms to your software
+## How to apply this license to this software
 
-At the start of each source file add a link to a website, that contains this 
-license and information on how to contact you. For example:
+At the start of each source file you see a link to a website, that contains 
+this license and contact information. For example:
 
     Datenstrom Yellow, https://github.com/datenstrom/yellow
 
-If your software is based on modified source code, you also have to keep the 
+If your software is based on modified source code, you have to keep the 
 original attribution in each source file. For example: 
 
-    Coffee extension, https://website/coffee
-    Based on Fika extension, https://website/fika
+    Gnomovision Orange, https://website/gnomovision/orange
+    Based on Datenstrom Yellow, https://github.com/datenstrom/yellow
 
-## How to apply these terms to this software 
-
-All files are licensed under GPLv2 and copyrighted by the respective author, 
-unless stated otherwise.
+All source files are copyrighted by the respective author(s) 
+and licensed under GPL version 2, unless stated otherwise.
