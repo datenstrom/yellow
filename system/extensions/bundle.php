@@ -2,7 +2,7 @@
 // Bundle extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/bundle
 
 class YellowBundle {
-    const VERSION = "0.8.22";
+    const VERSION = "0.8.23";
     public $yellow;         // access to API
 
     // Handle initialisation
@@ -99,12 +99,10 @@ class YellowBundle {
                     $fileData = $this->yellow->toolbox->readFile($fileName);
                     $fileData = $this->processBundleConvert($scheme, $address, $base, $fileData, $fileName, $type);
                     $fileData = $this->processBundleMinify($scheme, $address, $base, $fileData, $fileName, $type);
-                    if (substrb($fileData, 0, 3)=="\xEF\xBB\xBF") $fileData = substrb($fileData, 3);
-                    if (substrb($fileData, 0, 13)=="\"use strict\";" || substrb($fileData, 0, 13)=="'use strict';") $fileData = substrb($fileData, 13);
                     if (!empty($fileDataBundle)) $fileDataBundle .= "\n\n";
-                    $fileDataBundle .= "/* ".basename($fileName)." */\n";
                     $fileDataBundle .= $fileData;
                 }
+                if ($type=="css") $fileDataBundle = $this->normaliseCss($fileDataBundle);
                 if (is_file($fileNameBundle)) $this->yellow->toolbox->deleteFile($fileNameBundle);
                 if (!$this->yellow->toolbox->createFile($fileNameBundle, $fileDataBundle) ||
                     !$this->yellow->toolbox->modifyFile($fileNameBundle, $modified)) {
@@ -140,7 +138,21 @@ class YellowBundle {
         $minifier = $type=="css" ? new MinifyCss() : new MinifyJavaScript();
         if (preg_match("/\.min/", $fileName)) $minifier = new MinifyBasic();
         $minifier->add($fileData);
-        return $minifier->minify();
+        $fileData = $minifier->minify();
+        if (substrb($fileData, 0, 3)=="\xEF\xBB\xBF") $fileData = substrb($fileData, 3);
+        if (substrb($fileData, 0, 13)=="\"use strict\";" || substrb($fileData, 0, 13)=="'use strict';") $fileData = substrb($fileData, 13);
+        return "/* ".basename($fileName)." */\n".$fileData;
+    }
+    
+    // Normalise CSS, move import rules to top
+    public function normaliseCss($fileData) {
+        if (preg_match_all("/(;?)(@import (?<url>url\()?(?P<quotes>[\"\']?).+?(?P=quotes)(?(url)\)));?/", $fileData, $matches)) {
+            foreach ($matches[0] as $match) {
+                $fileData = str_replace($match, "", $fileData);
+            }
+            $fileData = "/* Import rules from files */\n".implode(";", $matches[2]).";\n\n".$fileData;
+        }
+        return $fileData;
     }
     
     // Return bundle information
