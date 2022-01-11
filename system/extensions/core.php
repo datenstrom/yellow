@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.56";
+    const VERSION = "0.8.57";
     const RELEASE = "0.8.18";
     public $page;           // current page
     public $content;        // content files
@@ -1126,15 +1126,15 @@ class YellowPageCollection extends ArrayObject {
     }
 
     // Paginate page collection
-    public function pagination($limit, $reverse = true) {
+    public function paginate($limit) {
         $this->paginationNumber = 1;
         $this->paginationCount = ceil($this->count() / $limit);
         if ($this->yellow->page->isRequest("page")) $this->paginationNumber = intval($this->yellow->page->getRequest("page"));
-        if ($this->paginationNumber>$this->paginationCount) $this->paginationNumber = 0;
-        if ($this->paginationNumber>=1) {
-            $array = $this->getArrayCopy();
-            if ($reverse) $array = array_reverse($array);
-            $this->exchangeArray(array_slice($array, ($this->paginationNumber - 1) * $limit, $limit));
+        if ($this->paginationNumber<0 || $this->paginationNumber>$this->paginationCount) $this->paginationNumber = 0;
+        if ($this->paginationNumber) {
+            $this->exchangeArray(array_slice($this->getArrayCopy(), ($this->paginationNumber - 1) * $limit, $limit));
+        } else {
+            $this->yellow->page->error(404);
         }
         return $this;
     }
