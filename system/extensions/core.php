@@ -3,7 +3,7 @@
 
 class YellowCore {
     const VERSION = "0.8.58";
-    const RELEASE = "0.8.18";
+    const RELEASE = "0.8.19";
     public $page;           // current page
     public $content;        // content files
     public $media;          // media files
