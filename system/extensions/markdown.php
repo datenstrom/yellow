@@ -2,7 +2,7 @@
 // Markdown extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/markdown
 
 class YellowMarkdown {
-    const VERSION = "0.8.17";
+    const VERSION = "0.8.18";
     public $yellow;         // access to API
     
     // Handle initialisation
@@ -3993,6 +3993,11 @@ class YellowMarkdownParser extends MarkdownExtraParser {
         }
         return "<li$attr>".$item."</li>\n";
     }
+    
+    // Handle blockquotes, CommonMark compatible
+    public function doBlockQuotes($text) {
+		return preg_replace_callback("/((?>^[ ]*>[ ]?.+\n(.+\n)*)+)/m", array($this, "_doBlockQuotes_callback"), $text);
+	}
     
     // Handle notice blocks
     public function doNoticeBlocks($text) {
