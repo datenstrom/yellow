@@ -285,7 +285,7 @@ this license and contact information. For example:
     Datenstrom Yellow, https://github.com/datenstrom/yellow
 
 If your software is based on modified source code, you have to keep the 
-original attribution in each source file. For example: 
+original link in each source file. For example: 
 
     Gnomovision Orange, https://website/gnomovision/orange
     Based on Datenstrom Yellow, https://github.com/datenstrom/yellow
