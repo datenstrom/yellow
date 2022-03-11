@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.64";
+    const VERSION = "0.8.65";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $updates;                // number of updates
@@ -837,7 +837,7 @@ class YellowUpdate {
             $this->yellow->page->error($statusCode, "Can't download file '$url'!");
         }
         if ($this->yellow->system->get("coreDebugMode")>=2) {
-            echo "YellowUpdate::getExtensionFile status:$statusCode url:$url<br/>\n";
+            echo "YellowUpdate::getExtensionFile status:$statusCode url:$urlRequest<br/>\n";
         }
         return array($statusCode, $fileData);
     }
