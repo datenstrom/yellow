@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.63";
+    const VERSION = "0.8.64";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $updates;                // number of updates
@@ -308,7 +308,7 @@ class YellowUpdate {
         $statusCode = 200;
         $zip = new ZipArchive();
         if ($zip->open($path)===true) {
-            if (defined("DEBUG") && DEBUG>=2) echo "YellowUpdate::updateExtensionArchive file:$path<br/>\n";
+            if ($this->yellow->system->get("coreDebugMode")>=2) echo "YellowUpdate::updateExtensionArchive file:$path<br/>\n";
             $pathBase = "";
             if (preg_match("#^(.*\/).*?$#", $zip->getNameIndex(0), $matches)) $pathBase = $matches[1];
             $fileData = $zip->getFromName($pathBase.$this->yellow->system->get("updateExtensionFile"));
@@ -390,7 +390,7 @@ class YellowUpdate {
                     $this->yellow->page->error($statusCode, "Can't delete file '$fileName'!");
                 }
             }
-            if (defined("DEBUG") && DEBUG>=2) {
+            if ($this->yellow->system->get("coreDebugMode")>=2) {
                 $debug = "action:".($create ? "create" : "").($update ? "update" : "").($delete ? "delete" : "");
                 if (!$create && !$update && !$delete) $debug = "action:none";
                 echo "YellowUpdate::updateExtensionFile file:$fileName $debug<br/>\n";
@@ -601,7 +601,7 @@ class YellowUpdate {
                 $statusCode = 500;
                 $this->yellow->page->error($statusCode, "Can't delete file '$fileName'!");
             }
-            if (defined("DEBUG") && DEBUG>=2) {
+            if ($this->yellow->system->get("coreDebugMode")>=2) {
                 echo "YellowUpdate::removeExtensionFile file:$fileName action:delete<br/>\n";
             }
         }
@@ -836,7 +836,9 @@ class YellowUpdate {
             $statusCode = 500;
             $this->yellow->page->error($statusCode, "Can't download file '$url'!");
         }
-        if (defined("DEBUG") && DEBUG>=2) echo "YellowUpdate::getExtensionFile status:$statusCode url:$url<br/>\n";
+        if ($this->yellow->system->get("coreDebugMode")>=2) {
+            echo "YellowUpdate::getExtensionFile status:$statusCode url:$url<br/>\n";
+        }
         return array($statusCode, $fileData);
     }
     

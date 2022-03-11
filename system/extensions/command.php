@@ -2,7 +2,7 @@
 // Command extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/command
 
 class YellowCommand {
-    const VERSION = "0.8.32";
+    const VERSION = "0.8.33";
     public $yellow;                       // access to API
     public $files;                        // number of files
     public $links;                        // number of links
@@ -153,7 +153,9 @@ class YellowCommand {
             ++$this->errors;
             echo "\rERROR building location '$location', ".$this->yellow->page->getStatusCode(true)."\n";
         }
-        if (defined("DEBUG") && DEBUG>=1) echo "YellowCommand::buildStaticFile status:$statusCode location:$location<br/>\n";
+        if ($this->yellow->system->get("coreDebugMode")>=1) {
+            echo "YellowCommand::buildStaticFile status:$statusCode location:$location<br/>\n";
+        }
         return $statusCode;
     }
     
@@ -226,13 +228,17 @@ class YellowCommand {
                 $location = rtrim($location, "/")."/";
                 if (!isset($this->locationsArguments[$location])) {
                     $this->locationsArguments[$location] = $location;
-                    if (defined("DEBUG") && DEBUG>=2) echo "YellowCommand::analyseLocations detected location:$location<br/>\n";
+                    if ($this->yellow->system->get("coreDebugMode")>=2) {
+                        echo "YellowCommand::analyseLocations detected location:$location<br/>\n";
+                    }
                 }
             } else {
                 $location = rtrim($location, "0..9");
                 if (!isset($this->locationsArgumentsPagination[$location])) {
                     $this->locationsArgumentsPagination[$location] = $location;
-                    if (defined("DEBUG") && DEBUG>=2) echo "YellowCommand::analyseLocations detected location:$location<br/>\n";
+                    if ($this->yellow->system->get("coreDebugMode")>=2) {
+                        echo "YellowCommand::analyseLocations detected location:$location<br/>\n";
+                    }
                 }
             }
         }
@@ -299,7 +305,9 @@ class YellowCommand {
                             } else {
                                 $links[$url] .= ",".$locationSource;
                             }
-                            if (defined("DEBUG") && DEBUG>=2) echo "YellowCommand::analyseLinks detected url:$url<br/>\n";
+                            if ($this->yellow->system->get("coreDebugMode")>=2) {
+                                echo "YellowCommand::analyseLinks detected url:$url<br/>\n";
+                            }
                         } elseif (substru($location, 0, 1)=="/") {
                             $url = "$scheme://$address$location";
                             if (!isset($links[$url])) {
@@ -307,10 +315,14 @@ class YellowCommand {
                             } else {
                                 $links[$url] .= ",".$locationSource;
                             }
-                            if (defined("DEBUG") && DEBUG>=2) echo "YellowCommand::analyseLinks detected url:$url<br/>\n";
+                            if ($this->yellow->system->get("coreDebugMode")>=2) {
+                                echo "YellowCommand::analyseLinks detected url:$url<br/>\n";
+                            }
                         }
                     }
-                    if (defined("DEBUG") && DEBUG>=1) echo "YellowCommand::analyseLinks location:$locationSource<br/>\n";
+                    if ($this->yellow->system->get("coreDebugMode")>=1) {
+                        echo "YellowCommand::analyseLinks location:$locationSource<br/>\n";
+                    }
                 } else {
                     $statusCode = 500;
                     ++$this->errors;
@@ -347,7 +359,7 @@ class YellowCommand {
         uksort($remote, "strnatcasecmp");
         foreach ($remote as $url=>$value) {
             echo "\rChecking static website ".$this->getProgressPercent(++$remoteNow, count($remote), 5, 95)."%... ";
-            if (defined("DEBUG") && DEBUG>=1) echo "YellowCommand::analyseStatus url:$url\n";
+            if ($this->yellow->system->get("coreDebugMode")>=1) echo "YellowCommand::analyseStatus url:$url\n";
             $referer = "$scheme://$address$base".(($pos = strposu($value, ",")) ? substru($value, 0, $pos) : $value);
             $statusCodeUrl = $this->getLinkStatus($url, $referer);
             if ($statusCodeUrl!=200) {
@@ -614,7 +626,9 @@ class YellowCommand {
         curl_exec($curlHandle);
         $statusCode = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);
         curl_close($curlHandle);
-        if (defined("DEBUG") && DEBUG>=2) echo "YellowCommand::getLinkStatus status:$statusCode url:$url<br/>\n";
+        if ($this->yellow->system->get("coreDebugMode")>=2) {
+            echo "YellowCommand::getLinkStatus status:$statusCode url:$url<br/>\n";
+        }
         return $statusCode;
     }
 }

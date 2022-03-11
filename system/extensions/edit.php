@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/edit
 
 class YellowEdit {
-    const VERSION = "0.8.55";
+    const VERSION = "0.8.56";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -819,7 +819,7 @@ class YellowEdit {
         $page = $this->response->getPagePreview($scheme, $address, $base, $location, $fileName,
             $this->yellow->page->getRequest("rawdataedit"), $this->yellow->page->getRequest("rawdataendofline"));
         $statusCode = $this->yellow->sendData(200, $page->outputData, "", false);
-        if (defined("DEBUG") && DEBUG>=1) echo "YellowEdit::processRequestPreview file:$fileName<br/>\n";
+        if ($this->yellow->system->get("coreDebugMode")>=1) echo "YellowEdit::processRequestPreview file:$fileName<br/>\n";
         return $statusCode;
     }
     
@@ -1218,6 +1218,7 @@ class YellowEditResponse {
         $data["coreServerScheme"] = $this->yellow->system->get("coreServerScheme");
         $data["coreServerAddress"] = $this->yellow->system->get("coreServerAddress");
         $data["coreServerBase"] = $this->yellow->system->get("coreServerBase");
+        $data["coreDebugMode"] = $this->yellow->system->get("coreDebugMode");
         $data = array_merge($data, $this->yellow->system->getSettings("", "Location"));
         if ($this->isUser()) {
             $data["coreFileSizeMax"] = $this->yellow->toolbox->getNumberBytes(ini_get("upload_max_filesize"));
@@ -1247,7 +1248,6 @@ class YellowEditResponse {
             $data["editLoginPassword"] = $this->yellow->page->get("editLoginPassword");
             $data["editLoginRestriction"] = intval($this->isLoginRestriction());
         }
-        if (defined("DEBUG") && DEBUG>=1) $data["debug"] = DEBUG;
         return $data;
     }
     
@@ -1929,7 +1929,6 @@ class YellowEditMerge {
             } else {
                 $this->mergeConflict($diff, $diffMine[$posMine], $diffYours[$posYours], true);
             }
-            if (defined("DEBUG") && DEBUG>=2) echo "YellowEditMerge::mergeDiff $typeMine $typeYours pos:$posMine\t$posYours<br/>\n";
             if ($typeMine==YellowEditMerge::ADD || $typeYours==YellowEditMerge::ADD) {
                 if ($typeMine==YellowEditMerge::ADD) ++$posMine;
                 if ($typeYours==YellowEditMerge::ADD) ++$posYours;
@@ -1942,13 +1941,11 @@ class YellowEditMerge {
             array_push($diff, $diffMine[$posMine]);
             $typeMine = $diffMine[$posMine][0];
             $typeYours = " ";
-            if (defined("DEBUG") && DEBUG>=2) echo "YellowEditMerge::mergeDiff $typeMine $typeYours pos:$posMine\t$posYours<br/>\n";
         }
         for (;$posYours<count($diffYours); ++$posYours) {
             array_push($diff, $diffYours[$posYours]);
             $typeYours = $diffYours[$posYours][0];
             $typeMine = " ";
-            if (defined("DEBUG") && DEBUG>=2) echo "YellowEditMerge::mergeDiff $typeMine $typeYours pos:$posMine\t$posYours<br/>\n";
         }
         return $diff;
     }

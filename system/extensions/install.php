@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/install
 
 class YellowInstall {
-    const VERSION = "0.8.61";
+    const VERSION = "0.8.62";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -271,7 +271,7 @@ class YellowInstall {
     
     // Check web server requirements
     public function checkServerRequirements() {
-        if (defined("DEBUG") && DEBUG>=1) {
+        if ($this->yellow->system->get("coreDebugMode")>=1) {
             list($name, $version, $os) = $this->yellow->toolbox->detectServerInformation();
             echo "YellowInstall::checkServerRequirements for $name $version, $os<br/>\n";
         }
@@ -301,7 +301,9 @@ class YellowInstall {
         foreach ($fileNames as $fileName) {
             if (!is_file($fileName) || filesize($fileName)==0) {
                 $complete = false;
-                if (defined("DEBUG") && DEBUG>=1) echo "YellowInstall::checkServerComplete detected missing file:$fileName<br/>\n";
+                if ($this->yellow->system->get("coreDebugMode")>=1) {
+                    echo "YellowInstall::checkServerComplete detected missing file:$fileName<br/>\n";
+                }
             }
         }
         return $complete;
@@ -342,7 +344,7 @@ class YellowInstall {
     
     // Check command line requirements
     public function checkCommandRequirements() {
-        if (defined("DEBUG") && DEBUG>=1) {
+        if ($this->yellow->system->get("coreDebugMode")>=1) {
             list($name, $version, $os) = $this->yellow->toolbox->detectServerInformation();
             echo "YellowInstall::checkCommandRequirements for $name $version, $os<br/>\n";
         }

@@ -130,7 +130,7 @@ yellow.edit = {
     
     // Create pane
     createPane: function(paneId, paneAction, paneStatus) {
-        if (yellow.system.debug) console.log("yellow.edit.createPane id:"+paneId);
+        if (yellow.system.coreDebugMode) console.log("yellow.edit.createPane id:"+paneId);
         var elementPane = document.createElement("div");
         elementPane.className = "yellow-pane";
         elementPane.setAttribute("id", paneId);
@@ -514,7 +514,7 @@ yellow.edit = {
             if (!document.getElementById(paneId)) this.createPane(paneId, paneAction, paneStatus);
             var element = document.getElementById(paneId);
             if (!yellow.toolbox.isVisible(element)) {
-                if (yellow.system.debug) console.log("yellow.edit.showPane id:"+paneId);
+                if (yellow.system.coreDebugMode) console.log("yellow.edit.showPane id:"+paneId);
                 yellow.toolbox.setVisible(element, true);
                 if (paneModal) {
                     yellow.toolbox.addClass(document.body, "yellow-body-modal-open");
@@ -536,7 +536,7 @@ yellow.edit = {
     hidePane: function(paneId, fadeout) {
         var element = document.getElementById(paneId);
         if (yellow.toolbox.isVisible(element)) {
-            if (yellow.system.debug) console.log("yellow.edit.hidePane id:"+paneId);
+            if (yellow.system.coreDebugMode) console.log("yellow.edit.hidePane id:"+paneId);
             yellow.toolbox.removeClass(document.body, "yellow-body-modal-open");
             yellow.toolbox.removeValue("meta[name=viewport]", "content", ", maximum-scale=1, user-scalable=0");
             yellow.toolbox.setVisible(element, false, fadeout);
@@ -554,7 +554,7 @@ yellow.edit = {
         status = status ? status : "none";
         arguments = arguments ? arguments : "none";
         if (action!="none") {
-            if (yellow.system.debug) console.log("yellow.edit.processAction action:"+action+" status:"+status);
+            if (yellow.system.coreDebugMode) console.log("yellow.edit.processAction action:"+action+" status:"+status);
             var paneId = (status!="next" && status!="done") ? "yellow-pane-"+action : "yellow-pane-information";
             switch(action) {
                 case "login":       this.showPane(paneId, action, status); break;
@@ -587,7 +587,7 @@ yellow.edit = {
     
     // Process toolbar
     processToolbar: function(status, arguments) {
-        if (yellow.system.debug) console.log("yellow.edit.processToolbar status:"+status);
+        if (yellow.system.coreDebugMode) console.log("yellow.edit.processToolbar status:"+status);
         var elementText = document.getElementById(this.paneId+"-text");
         var elementPreview = document.getElementById(this.paneId+"-preview");
         if (!yellow.toolbox.isVisible(elementPreview) && !elementText.readOnly) {
@@ -652,7 +652,7 @@ yellow.edit = {
             for (var i=0; i<tokens.length; i++) {
                 var pair = tokens[i].split(" ");
                 if (shortcut==pair[0] || shortcut.replace("meta+", "ctrl+")==pair[0]) {
-                    if (yellow.system.debug) console.log("yellow.edit.processShortcut shortcut:"+shortcut);
+                    if (yellow.system.coreDebugMode) console.log("yellow.edit.processShortcut shortcut:"+shortcut);
                     e.stopPropagation();
                     e.preventDefault();
                     this.processToolbar(pair[1]);
@@ -698,7 +698,7 @@ yellow.edit = {
     
     // Create popup
     createPopup: function(popupId) {
-        if (yellow.system.debug) console.log("yellow.edit.createPopup id:"+popupId);
+        if (yellow.system.coreDebugMode) console.log("yellow.edit.createPopup id:"+popupId);
         var elementPopup = document.createElement("div");
         elementPopup.className = "yellow-popup";
         elementPopup.setAttribute("id", popupId);
@@ -769,7 +769,7 @@ yellow.edit = {
             this.hidePopup(this.popupId);
             if (!document.getElementById(popupId)) this.createPopup(popupId);
             var element = document.getElementById(popupId);
-            if (yellow.system.debug) console.log("yellow.edit.showPopup id:"+popupId);
+            if (yellow.system.coreDebugMode) console.log("yellow.edit.showPopup id:"+popupId);
             yellow.toolbox.setVisible(element, true);
             this.popupId = popupId;
             this.updateToolbar(status, "yellow-toolbar-selected");
@@ -787,7 +787,7 @@ yellow.edit = {
     hidePopup: function(popupId, fadeout) {
         var element = document.getElementById(popupId);
         if (yellow.toolbox.isVisible(element)) {
-            if (yellow.system.debug) console.log("yellow.edit.hidePopup id:"+popupId);
+            if (yellow.system.coreDebugMode) console.log("yellow.edit.hidePopup id:"+popupId);
             yellow.toolbox.setVisible(element, false, fadeout);
             this.popupId = 0;
             this.updateToolbar(0, "yellow-toolbar-selected");
@@ -1090,7 +1090,7 @@ yellow.editor = {
             element.value = textSelectionBefore + textSelectionNew + textSelectionAfter;
             element.setSelectionRange(selectionStartNew, selectionEndNew);
         }
-        if (yellow.system.debug) console.log("yellow.editor.setMarkdown type:"+information.type);
+        if (yellow.system.coreDebugMode) console.log("yellow.editor.setMarkdown type:"+information.type);
     },
     
     // Return Markdown formatting information
@@ -1224,7 +1224,7 @@ yellow.editor = {
             element.value = textSelectionBefore + textSelectionNew + textSelectionAfter;
             element.setSelectionRange(selectionStartNew, selectionEndNew);
             element.scrollTop = 0;
-            if (yellow.system.debug) console.log("yellow.editor.setMetaData key:"+key);
+            if (yellow.system.coreDebugMode) console.log("yellow.editor.setMetaData key:"+key);
         }
     },
     

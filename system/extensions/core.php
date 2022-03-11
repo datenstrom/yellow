@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.58";
+    const VERSION = "0.8.59";
     const RELEASE = "0.8.19";
     public $page;           // current page
     public $content;        // content files
@@ -37,6 +37,7 @@ class YellowCore {
         $this->system->setDefault("coreStaticUrl", "auto");
         $this->system->setDefault("coreTimezone", "UTC");
         $this->system->setDefault("coreMultiLanguageMode", "0");
+        $this->system->setDefault("coreDebugMode", "0");
         $this->system->setDefault("coreMediaLocation", "/media/");
         $this->system->setDefault("coreDownloadLocation", "/media/downloads/");
         $this->system->setDefault("coreImageLocation", "/media/images/");
@@ -81,16 +82,16 @@ class YellowCore {
         extension_loaded("mbstring") || die("Datenstrom Yellow requires PHP mbstring extension! $troubleshooting\n");
         extension_loaded("zip") || die("Datenstrom Yellow requires PHP zip extension! $troubleshooting\n");
         mb_internal_encoding("UTF-8");
-        if (defined("DEBUG") && DEBUG>=1) {
-            ini_set("display_errors", 1);
-            error_reporting(E_ALL);
-        }
     }
     
     // Handle initialisation
     public function load() {
-        register_shutdown_function(array($this, "processFatalError"));
         $this->system->load($this->system->get("coreExtensionDirectory").$this->system->get("coreSystemFile"));
+        register_shutdown_function(array($this, "processFatalError"));
+        if ($this->system->get("coreDebugMode")>=1) {
+            ini_set("display_errors", 1);
+            error_reporting(E_ALL);
+        }
         $this->user->load($this->system->get("coreExtensionDirectory").$this->system->get("coreUserFile"));
         $this->language->load($this->system->get("coreExtensionDirectory"));
         $this->language->load($this->system->get("coreExtensionDirectory").$this->system->get("coreLanguageFile"));
@@ -119,7 +120,7 @@ class YellowCore {
         if ($this->page->isExisting("pageError")) $statusCode = $this->processRequestError();
         ob_end_flush();
         $this->toolbox->timerStop($time);
-        if (defined("DEBUG") && DEBUG>=1 && $this->lookup->isContentFile($fileName)) {
+        if ($this->system->get("coreDebugMode")>=1 && $this->lookup->isContentFile($fileName)) {
             echo "YellowCore::request status:$statusCode time:$time ms<br/>\n";
         }
         return $statusCode;
@@ -150,7 +151,7 @@ class YellowCore {
                 $statusCode = $this->sendFile(200, $fileName, true);
             }
         }
-        if (defined("DEBUG") && DEBUG>=1 && $this->lookup->isContentFile($fileName)) {
+        if ($this->system->get("coreDebugMode")>=1 && $this->lookup->isContentFile($fileName)) {
             echo "YellowCore::processRequest file:$fileName<br/>\n";
         }
         return $statusCode;
@@ -163,7 +164,7 @@ class YellowCore {
             $this->page->location, $this->page->fileName, $this->page->cacheable, $this->page->statusCode,
             $this->page->get("pageError"));
         $statusCode = $this->sendPage();
-        if (defined("DEBUG") && DEBUG>=1) echo "YellowCore::processRequestError file:$fileName<br/>\n";
+        if ($this->system->get("coreDebugMode")>=1) echo "YellowCore::processRequestError file:$fileName<br/>\n";
         return $statusCode;
     }
     
@@ -223,7 +224,7 @@ class YellowCore {
             }
             if (!is_null($this->page->outputData)) echo $this->page->outputData;
         }
-        if (defined("DEBUG") && DEBUG>=1) {
+        if ($this->system->get("coreDebugMode")>=1) {
             foreach ($this->page->headerData as $key=>$value) {
                 echo "YellowCore::sendPage $key: $value<br/>\n";
             }
@@ -269,7 +270,7 @@ class YellowCore {
         foreach ($this->page->headerData as $key=>$value) {
             @header("$key: $value");
         }
-        if (defined("DEBUG") && DEBUG>=1) {
+        if ($this->system->get("coreDebugMode")>=1) {
             foreach ($this->page->headerData as $key=>$value) {
                 echo "YellowCore::sendStatus $key: $value<br/>\n";
             }
@@ -303,7 +304,7 @@ class YellowCore {
             echo "Yellow $command: Command not found\n";
         }
         $this->toolbox->timerStop($time);
-        if (defined("DEBUG") && DEBUG>=1) {
+        if ($this->system->get("coreDebugMode")>=1) {
             echo "YellowCore::command status:$statusCode time:$time ms<br/>\n";
         }
         return $statusCode<400 ? 0 : 1;
@@ -368,7 +369,9 @@ class YellowCore {
             $this->system->set("coreServerScheme", $scheme);
             $this->system->set("coreServerAddress", $address);
             $this->system->set("coreServerBase", $base);
-            if (defined("DEBUG") && DEBUG>=3) echo "YellowCore::getRequestInformation $scheme://$address$base<br/>\n";
+            if ($this->system->get("coreDebugMode")>=3) {
+                echo "YellowCore::getRequestInformation $scheme://$address$base<br/>\n";
+            }
         }
         $location = substru($this->toolbox->detectServerLocation(), strlenu($base));
         if (empty($fileName)) $fileName = $this->lookup->findFileFromSystem($location);
@@ -381,7 +384,9 @@ class YellowCore {
     public function getCommandInformation($line = "") {
         if (empty($line)) {
             $line = $this->toolbox->getTextString(array_slice($this->toolbox->getServer("argv"), 1));
-            if (defined("DEBUG") && DEBUG>=3) echo "YellowCore::getCommandInformation $line<br/>\n";
+            if ($this->system->get("coreDebugMode")>=3) {
+                echo "YellowCore::getCommandInformation $line<br/>\n";
+            }
         }
         return $this->toolbox->getTextList($line, " ", 2);
     }
@@ -567,7 +572,9 @@ class YellowPage {
                 $description = $this->yellow->toolbox->createTextDescription($this->parserData, 150);
                 $this->set("description", !empty($description) ? $description : $this->get("title"));
             }
-            if (defined("DEBUG") && DEBUG>=3) echo "YellowPage::parseContent location:".$this->location."<br/>\n";
+            if ($this->yellow->system->get("coreDebugMode")>=3) {
+                echo "YellowPage::parseContent location:".$this->location."<br/>\n";
+            }
         }
     }
     
@@ -608,7 +615,9 @@ class YellowPage {
                 }
             }
         }
-        if (defined("DEBUG") && DEBUG>=3 && !empty($name)) echo "YellowPage::parseContentShortcut name:$name type:$type<br/>\n";
+        if ($this->yellow->system->get("coreDebugMode")>=3 && !empty($name)) {
+            echo "YellowPage::parseContentShortcut name:$name type:$type<br/>\n";
+        }
         return $output;
     }
     
@@ -675,11 +684,15 @@ class YellowPage {
         $fileNameLayoutTheme = $this->yellow->system->get("coreLayoutDirectory").
             $this->yellow->lookup->normaliseName($this->get("theme"))."-".$this->yellow->lookup->normaliseName($name).".html";
         if (is_file($fileNameLayoutTheme)) {
-            if (defined("DEBUG") && DEBUG>=2) echo "YellowPage::includeLayout file:$fileNameLayoutTheme<br/>\n";
+            if ($this->yellow->system->get("coreDebugMode")>=2) {
+                echo "YellowPage::includeLayout file:$fileNameLayoutTheme<br/>\n";
+            }
             $this->setLastModified(filemtime($fileNameLayoutTheme));
             require($fileNameLayoutTheme);
         } elseif (is_file($fileNameLayoutNormal)) {
-            if (defined("DEBUG") && DEBUG>=2) echo "YellowPage::includeLayout file:$fileNameLayoutNormal<br/>\n";
+            if ($this->yellow->system->get("coreDebugMode")>=2) {
+                echo "YellowPage::includeLayout file:$fileNameLayoutNormal<br/>\n";
+            }
             $this->setLastModified(filemtime($fileNameLayoutNormal));
             require($fileNameLayoutNormal);
         } else {
@@ -1236,7 +1249,7 @@ class YellowContent {
     // Scan file system on demand
     public function scanLocation($location) {
         if (!isset($this->pages[$location])) {
-            if (defined("DEBUG") && DEBUG>=2) echo "YellowContent::scanLocation location:$location<br/>\n";
+            if ($this->yellow->system->get("coreDebugMode")>=2) echo "YellowContent::scanLocation location:$location<br/>\n";
             $this->pages[$location] = array();
             $scheme = $this->yellow->page->scheme;
             $address = $this->yellow->page->address;
@@ -1439,7 +1452,7 @@ class YellowMedia {
     // Scan file system on demand
     public function scanLocation($location) {
         if (!isset($this->files[$location])) {
-            if (defined("DEBUG") && DEBUG>=2) echo "YellowMedia::scanLocation location:$location<br/>\n";
+            if ($this->yellow->system->get("coreDebugMode")>=2) echo "YellowMedia::scanLocation location:$location<br/>\n";
             $this->files[$location] = array();
             $scheme = $this->yellow->page->scheme;
             $address = $this->yellow->page->address;
@@ -1556,11 +1569,11 @@ class YellowSystem {
     
     // Load system settings from file
     public function load($fileName) {
-        if (defined("DEBUG") && DEBUG>=2) echo "YellowSystem::load file:$fileName<br/>\n";
+        if ($this->yellow->system->get("coreDebugMode")>=2) echo "YellowSystem::load file:$fileName<br/>\n";
         $this->modified = $this->yellow->toolbox->getFileModified($fileName);
         $fileData = $this->yellow->toolbox->readFile($fileName);
         $this->settings = $this->yellow->toolbox->getTextSettings($fileData, "");
-        if (defined("DEBUG") && DEBUG>=3) {
+        if ($this->yellow->system->get("coreDebugMode")>=3) {
             foreach ($this->settings as $key=>$value) {
                 echo "YellowSystem::load ".ucfirst($key).":$value<br/>\n";
             }
@@ -1677,7 +1690,7 @@ class YellowUser {
 
     // Load user settings from file
     public function load($fileName) {
-        if (defined("DEBUG") && DEBUG>=2) echo "YellowUser::load file:$fileName<br/>\n";
+        if ($this->yellow->system->get("coreDebugMode")>=2) echo "YellowUser::load file:$fileName<br/>\n";
         $this->modified = $this->yellow->toolbox->getFileModified($fileName);
         $fileData = $this->yellow->toolbox->readFile($fileName);
         $this->settings = $this->yellow->toolbox->getTextSettings($fileData, "email");
@@ -1780,7 +1793,7 @@ class YellowLanguage {
             $regex = "/^.*\.txt$/";
         }
         foreach ($this->yellow->toolbox->getDirectoryEntries($path, $regex, true, false) as $entry) {
-            if (defined("DEBUG") && DEBUG>=2) echo "YellowLanguage::load file:$entry<br/>\n";
+            if ($this->yellow->system->get("coreDebugMode")>=2) echo "YellowLanguage::load file:$entry<br/>\n";
             $this->modified = max($this->modified, filemtime($entry));
             $fileData = $this->yellow->toolbox->readFile($entry);
             $settings = $this->yellow->toolbox->getTextSettings($fileData, "language");
@@ -1947,7 +1960,7 @@ class YellowExtension {
     // Load extensions
     public function load($path) {
         foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.php$/", true, false) as $entry) {
-            if (defined("DEBUG") && DEBUG>=3) echo "YellowExtension::load file:$entry<br/>\n";
+            if ($this->yellow->system->get("coreDebugMode")>=3) echo "YellowExtension::load file:$entry<br/>\n";
             $this->modified = max($this->modified, filemtime($entry));
             require_once($entry);
             $name = $this->yellow->lookup->normaliseName(basename($entry), true, true);
@@ -2042,7 +2055,7 @@ class YellowLookup {
                 $token = $this->normaliseToken($entry)."/";
                 if ($token==$pathRoot) $token = "";
                 array_push($locations, $includePath ? "root/$token $pathBase$entry/" : "root/$token");
-                if (defined("DEBUG") && DEBUG>=2) echo "YellowLookup::findRootLocations root/$token<br/>\n";
+                if ($this->yellow->system->get("coreDebugMode")>=2) echo "YellowLookup::findRootLocations root/$token<br/>\n";
             }
         } else {
             array_push($locations, $includePath ? "root/ $pathBase" : "root/");
@@ -2080,7 +2093,7 @@ class YellowLookup {
         } else {
             $invalid = true;
         }
-        if (defined("DEBUG") && DEBUG>=2) {
+        if ($this->yellow->system->get("coreDebugMode")>=2) {
             $debug = ($invalid ? "INVALID" : $location)." <- $pathBase$fileName";
             echo "YellowLookup::findLocationFromFile $debug<br/>\n";
         }
@@ -2130,7 +2143,7 @@ class YellowLookup {
                 } else {
                     $path .= $this->findFileDefault($path, $fileDefault, $fileExtension, false);
                 }
-                if (defined("DEBUG") && DEBUG>=2) {
+                if ($this->yellow->system->get("coreDebugMode")>=2) {
                     $debug = "$location -> ".($invalid ? "INVALID" : $path);
                     echo "YellowLookup::findFileFromLocation $debug<br/>\n";
                 }

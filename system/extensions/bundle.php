@@ -2,7 +2,7 @@
 // Bundle extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/bundle
 
 class YellowBundle {
-    const VERSION = "0.8.23";
+    const VERSION = "0.8.24";
     public $yellow;         // access to API
 
     // Handle initialisation
@@ -54,7 +54,7 @@ class YellowBundle {
                 array_push($dataOther, $line);
             }
         }
-        if (!defined("DEBUG")) {
+        if (!$this->yellow->system->get("coreDebugMode")) {
             $dataCss = $this->processBundle($dataCss, "css");
             $dataScriptDefer = $this->processBundle($dataScriptDefer, "js", "defer");
             $dataScriptNow = $this->processBundle($dataScriptNow, "js");
@@ -190,7 +190,7 @@ class YellowBundle {
         list($dummy, $fileNames, $modified) = $this->getBundleInformation($fileName);
         $idExpected = $idCurrent = $this->getBundleId($fileNames, $modified);
         if (preg_match("/^bundle-(.*)\.min/", basename($fileName), $matches)) $idCurrent = $matches[1];
-        return $idExpected==$idCurrent && !defined("DEBUG");
+        return $idExpected==$idCurrent && !$this->yellow->system->get("coreDebugMode");
     }
 }
     
