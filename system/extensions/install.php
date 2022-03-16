@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/install
 
 class YellowInstall {
-    const VERSION = "0.8.64";
+    const VERSION = "0.8.65";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -69,14 +69,13 @@ class YellowInstall {
         if ($this->yellow->system->get("updateCurrentRelease")=="none") {
             $this->checkCommandRequirements();
             $statusCode = $this->updateLog();
-            if (empty($command)) {
-                $statusCode = 304;
-                echo "Your website is ready for installation. Please type 'php yellow.php serve'\n";
-            }
             if ($command=="build" || $command=="clean") {
                 if ($statusCode==200) $statusCode = $this->updateLanguages();
                 if ($statusCode==200) $statusCode = $this->updateSettings();
                 if ($statusCode==200) $statusCode = $this->removeInstall();
+            } elseif ($command!="serve") {
+                $statusCode = 304;
+                echo "The installation has not been completed. Please type 'php yellow.php serve'\n";
             }
             if ($statusCode>=400) {
                 echo "ERROR installing files: ".$this->yellow->page->get("pageError")."\n";
