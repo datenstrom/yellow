@@ -75,7 +75,8 @@ class YellowCore {
     
     // Check requirements
     public function checkRequirements() {
-        $troubleshooting = PHP_SAPI!="cli" ? "<a href=\"".$this->getTroubleshootingUrl()."\">See troubleshooting</a>." : "";
+        $troubleshooting = PHP_SAPI!="cli" ?
+            "<a href=\"".$this->getTroubleshootingUrl()."\">See troubleshooting</a>." : "See ".$this->getTroubleshootingUrl();
         version_compare(PHP_VERSION, "5.6", ">=") || die("Datenstrom Yellow requires PHP 5.6 or higher! $troubleshooting\n");
         extension_loaded("curl") || die("Datenstrom Yellow requires PHP curl extension! $troubleshooting\n");
         extension_loaded("gd") || die("Datenstrom Yellow requires PHP gd extension! $troubleshooting\n");
@@ -176,8 +177,9 @@ class YellowCore {
             $fileName = substru($fileNameAbsolute, strlenu($this->system->get("coreServerInstallDirectory")));
             $this->log("error", "Can't parse file '$fileName'!");
             @header($this->toolbox->getHttpStatusFormatted(500));
-            $troubleshooting = PHP_SAPI!="cli" ? "<a href=\"".$this->getTroubleshootingUrl()."\">See troubleshooting</a>." : "";
-            echo "<br/>\nCheck the log file. Please activate the debug mode for more information. $troubleshooting\n";
+            $troubleshooting = PHP_SAPI!="cli" ?
+                "<a href=\"".$this->getTroubleshootingUrl()."\">See troubleshooting</a>." : "See ".$this->getTroubleshootingUrl();
+            echo "<br/>\nCheck the log file. Activate the debug mode for more information. $troubleshooting\n";
         }
     }
     

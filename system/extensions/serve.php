@@ -2,7 +2,7 @@
 // Serve extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/serve
 
 class YellowServe {
-    const VERSION = "0.8.16";
+    const VERSION = "0.8.17";
     public $yellow;         // access to API
     
     // Handle initialisation
@@ -32,7 +32,7 @@ class YellowServe {
         if ($scheme=="http" && !empty($address)) {
             if ($this->checkDynamicSettings($path, $url)) {
                 if (!preg_match("/\:\d+$/", $address)) $address .= ":8000";
-                echo "Starting built-in web server on $scheme://$address/\n";
+                echo "Starting built-in web server. Open a web browser and go to $scheme://$address/\n";
                 echo "Press Ctrl+C to quit...\n";
                 if ($this->isDynamicPath($path)) {
                     exec("php -S $address yellow.php 2>&1", $outputLines, $returnStatus);

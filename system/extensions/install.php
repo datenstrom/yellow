@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/install
 
 class YellowInstall {
-    const VERSION = "0.8.62";
+    const VERSION = "0.8.63";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -348,8 +348,9 @@ class YellowInstall {
             list($name, $version, $os) = $this->yellow->toolbox->detectServerInformation();
             echo "YellowInstall::checkCommandRequirements for $name $version, $os<br/>\n";
         }
-        $this->checkServerComplete() || die("Datenstrom Yellow requires complete upload!\n");
-        $this->checkServerWrite() || die("Datenstrom Yellow requires write access!\n");
+        $troubleshooting = "See ".$this->yellow->getTroubleshootingUrl();
+        $this->checkServerComplete() || die("Datenstrom Yellow requires complete upload! $troubleshooting\n");
+        $this->checkServerWrite() || die("Datenstrom Yellow requires write access! $troubleshooting\n");
     }
     
     // Detect browser languages
