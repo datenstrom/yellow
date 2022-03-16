@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.65";
+    const VERSION = "0.8.66";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $updates;                // number of updates
@@ -126,6 +126,19 @@ class YellowUpdate {
                 $wikiStartLocation = $this->yellow->system->get("wikiLocation");
                 if (!$this->yellow->system->save($fileName, array("wikiStartLocation" => $wikiStartLocation))) {
                     $this->yellow->log("error", "Can't write file '$fileName'!");
+                }
+            }
+        }
+        if ($action=="update") { // TODO: remove later, convert old log file
+            $fileNameOld = $this->yellow->system->get("coreExtensionDirectory")."yellow.log";
+            $fileNameNew = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreWebsiteFile");
+            if (is_file($fileNameOld)) {
+                $fileDataOld = $this->yellow->toolbox->readFile($fileNameOld);
+                $fileDataNew = $this->yellow->toolbox->readFile($fileNameNew);
+                if (!$this->yellow->toolbox->deleteFile($fileNameOld, $this->yellow->system->get("coreTrashDirectory"))) {
+                    $this->yellow->log("error", "Can't delete file '$fileNameOld'!");
+                } elseif (!$this->yellow->toolbox->createFile($fileNameNew, $fileDataOld.$fileDataNew)) {
+                    $this->yellow->log("error", "Can't write file '$fileNameNew'!");
                 }
             }
         }

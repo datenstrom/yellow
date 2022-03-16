@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.59";
+    const VERSION = "0.8.60";
     const RELEASE = "0.8.19";
     public $page;           // current page
     public $content;        // content files
@@ -63,7 +63,7 @@ class YellowCore {
         $this->system->setDefault("coreSystemFile", "yellow-system.ini");
         $this->system->setDefault("coreUserFile", "yellow-user.ini");
         $this->system->setDefault("coreLanguageFile", "yellow-language.ini");
-        $this->system->setDefault("coreLogFile", "yellow.log");
+        $this->system->setDefault("coreWebsiteFile", "yellow-website.log");
         $this->language->setDefault("coreDateFormatShort");
         $this->language->setDefault("coreDateFormatMedium");
         $this->language->setDefault("coreDateFormatLong");
@@ -340,7 +340,7 @@ class YellowCore {
         if ($statusCode==0) {
             $line = date("Y-m-d H:i:s")." ".trim($action)." ".trim($message)."\n";
             $this->toolbox->appendFile($this->system->get("coreServerInstallDirectory").
-                $this->system->get("coreExtensionDirectory").$this->system->get("coreLogFile"), $line);
+                $this->system->get("coreExtensionDirectory").$this->system->get("coreWebsiteFile"), $line);
         }
     }
     
@@ -589,6 +589,7 @@ class YellowPage {
         }
         if (is_null($output)) {
             if ($name=="yellow" && $type=="inline") {
+                if ($text=="release") $output = "Datenstrom Yellow ".YellowCore::RELEASE;
                 if ($text=="about") {
                     $output = "Datenstrom Yellow ".YellowCore::RELEASE."<br />\n";
                     $dataCurrent = $this->yellow->extension->data;
@@ -597,10 +598,8 @@ class YellowPage {
                         $output .= ucfirst($key)." ".$value["version"]."<br />\n";
                     }
                 }
-                if ($text=="release") $output = "Datenstrom Yellow ".YellowCore::RELEASE;
-                if ($text=="error") $output = $this->get("pageError");
                 if ($text=="log") {
-                    $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreLogFile");
+                    $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreWebsiteFile");
                     $fileHandle = @fopen($fileName, "r");
                     if ($fileHandle) {
                         $dataBufferSize = 512;
@@ -613,6 +612,7 @@ class YellowPage {
                     }
                     $output = str_replace("\n", "<br />\n", htmlspecialchars($dataBuffer));
                 }
+                if ($text=="error") $output = $this->get("pageError");
             }
         }
         if ($this->yellow->system->get("coreDebugMode")>=3 && !empty($name)) {

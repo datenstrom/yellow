@@ -90,7 +90,7 @@ class YellowInstall {
     // Update log file
     public function updateLog() {
         $statusCode = 200;
-        $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreLogFile");
+        $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreWebsiteFile");
         if (!is_file($fileName)) {
             list($name, $version, $os) = $this->yellow->toolbox->detectServerInformation();
             $product = "Datenstrom Yellow ".YellowCore::RELEASE;
