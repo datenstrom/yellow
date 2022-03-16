@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/install
 
 class YellowInstall {
-    const VERSION = "0.8.63";
+    const VERSION = "0.8.64";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -69,21 +69,28 @@ class YellowInstall {
         if ($this->yellow->system->get("updateCurrentRelease")=="none") {
             $this->checkCommandRequirements();
             $statusCode = $this->updateLog();
+            if (empty($command)) {
+                $statusCode = 304;
+                echo "Your website is ready for installation. Please type 'php yellow.php serve'\n";
+            }
             if ($command=="build" || $command=="clean") {
                 if ($statusCode==200) $statusCode = $this->updateLanguages();
                 if ($statusCode==200) $statusCode = $this->updateSettings();
                 if ($statusCode==200) $statusCode = $this->removeInstall();
             }
+            if ($statusCode>=400) {
+                echo "ERROR installing files: ".$this->yellow->page->get("pageError")."\n";
+                echo "Your website has not been installed: Please run command again\n";
+            }
         } else {
             $statusCode = $this->removeInstall();
             $this->yellow->log($statusCode==200 ? "info" : "error", "Uninstall extension 'Install ".YellowInstall::VERSION."'");
+            if ($statusCode>=400) {
+                echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
+                echo "Your website has not been updated: Please run command again\n";
+            }
         }
-        if ($statusCode==200) {
-            $statusCode = 0;
-        } else {
-            echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
-            echo "Your website has ".($statusCode!=200 ? "not " : "")."been updated: Please run command again\n";
-        }
+        if ($statusCode==200) $statusCode = 0;
         return $statusCode;
     }
     
