@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/install
 
 class YellowInstall {
-    const VERSION = "0.8.65";
+    const VERSION = "0.8.66";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -66,14 +66,24 @@ class YellowInstall {
     
     // Process command to install website
     public function processCommandInstall($command, $text) {
+        $statusCode = 0;
         if ($this->yellow->system->get("updateCurrentRelease")=="none") {
             $this->checkCommandRequirements();
-            $statusCode = $this->updateLog();
-            if ($command=="build" || $command=="clean") {
+            if (empty($command)) {
+                $statusCode = 304;
+                echo "Datenstrom Yellow is for people who make small websites. https://datenstrom.se/yellow/\n";
+                echo "Syntax: php yellow.php\n";
+                echo "        php yellow.php about\n";
+                echo "        php yellow.php build [directory location]\n";
+                echo "        php yellow.php serve [url]\n";
+            } elseif ($command=="build") {
+                $statusCode = $this->updateLog();
                 if ($statusCode==200) $statusCode = $this->updateLanguages();
                 if ($statusCode==200) $statusCode = $this->updateSettings();
                 if ($statusCode==200) $statusCode = $this->removeInstall();
-            } elseif ($command!="serve") {
+            } elseif ($command=="serve" || $command=="about") {
+                $statusCode = 200;
+            } else {
                 $statusCode = 304;
                 echo "The installation has not been completed. Please type 'php yellow.php serve'\n";
             }
