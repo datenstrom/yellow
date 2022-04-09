@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.63";
+    const VERSION = "0.8.64";
     const RELEASE = "0.8.19";
     public $page;           // current page
     public $content;        // content files
@@ -3307,7 +3307,10 @@ class YellowToolbox {
                         if ($dataMarker=="\xe1") {
                             $orientation = $this->getImageOrientationFromBuffer($dataBuffer, $pos+4, $dataBufferSize);
                         }
-                        if ($dataMarker>="\xc0" && $dataMarker<="\xcf") {
+                        if (($dataMarker>="\xc0" && $dataMarker<="\xc3") ||
+                            ($dataMarker>="\xc5" && $dataMarker<="\xc7") ||
+                            ($dataMarker>="\xc9" && $dataMarker<="\xcb") ||
+                            ($dataMarker>="\xcd" && $dataMarker<="\xcf")) {
                             $width = (ord($dataBuffer[$pos+7])<<8) + ord($dataBuffer[$pos+8]);
                             $height = (ord($dataBuffer[$pos+5])<<8) + ord($dataBuffer[$pos+6]);
                             $type = $fileType;
