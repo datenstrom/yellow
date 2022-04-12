@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.64";
+    const VERSION = "0.8.65";
     const RELEASE = "0.8.19";
     public $page;           // current page
     public $content;        // content files
@@ -47,11 +47,11 @@ class YellowCore {
         $this->system->setDefault("coreDownloadDirectory", "media/downloads/");
         $this->system->setDefault("coreImageDirectory", "media/images/");
         $this->system->setDefault("coreSystemDirectory", "system/");
+        $this->system->setDefault("coreCacheDirectory", "system/cache/");
         $this->system->setDefault("coreExtensionDirectory", "system/extensions/");
         $this->system->setDefault("coreLayoutDirectory", "system/layouts/");
         $this->system->setDefault("coreThemeDirectory", "system/themes/");
         $this->system->setDefault("coreTrashDirectory", "system/trash/");
-        $this->system->setDefault("coreCacheDirectory", "cache/");
         $this->system->setDefault("coreContentDirectory", "content/");
         $this->system->setDefault("coreContentRootDirectory", "default/");
         $this->system->setDefault("coreContentHomeDirectory", "home/");

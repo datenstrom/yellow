@@ -2,7 +2,7 @@
 // Command extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/command
 
 class YellowCommand {
-    const VERSION = "0.8.33";
+    const VERSION = "0.8.34";
     public $yellow;                       // access to API
     public $files;                        // number of files
     public $links;                        // number of links
@@ -479,6 +479,7 @@ class YellowCommand {
         $ok = false;
         if (!empty($path)) {
             if ($path==rtrim($this->yellow->system->get("commandStaticBuildDirectory"), "/")) $ok = true;
+            if ($path==rtrim($this->yellow->system->get("coreCacheDirectory"), "/")) $ok = true;
             if ($path==rtrim($this->yellow->system->get("coreTrashDirectory"), "/")) $ok = true;
             if (is_file("$path/".$this->yellow->system->get("commandStaticDefaultFile"))) $ok = true;
             if (is_file("$path/yellow.php")) $ok = false;
@@ -602,7 +603,6 @@ class YellowCommand {
         $locations = array();
         $pathIgnore = "($path/|".
             $this->yellow->system->get("commandStaticBuildDirectory")."|".
-            $this->yellow->system->get("coreCacheDirectory")."|".
             $this->yellow->system->get("coreContentDirectory")."|".
             $this->yellow->system->get("coreMediaDirectory")."|".
             $this->yellow->system->get("coreSystemDirectory").")";
