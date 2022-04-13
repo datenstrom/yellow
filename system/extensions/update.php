@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.66";
+    const VERSION = "0.8.67";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $updates;                // number of updates
@@ -25,11 +25,10 @@ class YellowUpdate {
         if ($action=="clean" || $action=="daily") {
             $statusCode = 200;
             $path = $this->yellow->system->get("coreExtensionDirectory");
-            $regex = "/^.*\\".$this->yellow->system->get("coreDownloadExtension")."$/";
-            foreach ($this->yellow->toolbox->getDirectoryEntries($path, $regex, false, false) as $entry) {
+            foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.download$/", false, false) as $entry) {
                 if (!$this->yellow->toolbox->deleteFile($entry)) $statusCode = 500;
             }
-            if ($statusCode==500) $this->yellow->log("error", "Can't delete files in directory '$path'!\n");
+            if ($statusCode==500) $this->yellow->log("error", "Can't delete files in directory '$path'!");
             $statusCode = 200;
             $path = $this->yellow->system->get("coreTrashDirectory");
             foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/.*/", false, false) as $entry) {
@@ -40,7 +39,7 @@ class YellowUpdate {
                 $expire = $this->yellow->toolbox->getFileDeleted($entry) + $this->yellow->system->get("updateTrashTimeout");
                 if ($expire<=time() && !$this->yellow->toolbox->deleteDirectory($entry)) $statusCode = 500;
             }
-            if ($statusCode==500) $this->yellow->log("error", "Can't delete files in directory '$path'!\n");
+            if ($statusCode==500) $this->yellow->log("error", "Can't delete files in directory '$path'!");
         }
         if ($action=="update") { // TODO: remove later, create settings files when missing
             $fileNameCurrent = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateCurrentFile");
@@ -279,11 +278,10 @@ class YellowUpdate {
     public function downloadExtensions($settings) {
         $statusCode = 200;
         $path = $this->yellow->system->get("coreExtensionDirectory");
-        $fileExtension = $this->yellow->system->get("coreDownloadExtension");
         foreach ($settings as $key=>$value) {
             $fileName = $path.$this->yellow->lookup->normaliseName($key, true, false, true).".zip";
             list($statusCode, $fileData) = $this->getExtensionFile($value->get("downloadUrl"));
-            if (empty($fileData) || !$this->yellow->toolbox->createFile($fileName.$fileExtension, $fileData)) {
+            if (empty($fileData) || !$this->yellow->toolbox->createFile($fileName.".download", $fileData)) {
                 $statusCode = 500;
                 $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
                 break;
@@ -292,7 +290,7 @@ class YellowUpdate {
         if ($statusCode==200) {
             foreach ($settings as $key=>$value) {
                 $fileName = $path.$this->yellow->lookup->normaliseName($key, true, false, true).".zip";
-                if (!$this->yellow->toolbox->renameFile($fileName.$fileExtension, $fileName)) {
+                if (!$this->yellow->toolbox->renameFile($fileName.".download", $fileName)) {
                     $statusCode = 500;
                     $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
                 }

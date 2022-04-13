@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.65";
+    const VERSION = "0.8.66";
     const RELEASE = "0.8.19";
     public $page;           // current page
     public $content;        // content files
@@ -36,13 +36,20 @@ class YellowCore {
         $this->system->setDefault("coreServerUrl", "auto");
         $this->system->setDefault("coreStaticUrl", "auto");
         $this->system->setDefault("coreTimezone", "UTC");
-        $this->system->setDefault("coreMultiLanguageMode", "0");
-        $this->system->setDefault("coreDebugMode", "0");
+        $this->system->setDefault("coreContentExtension", ".md");
+        $this->system->setDefault("coreContentDefaultFile", "page.md");
+        $this->system->setDefault("coreContentErrorFile", "page-error-(.*).md");
+        $this->system->setDefault("coreSystemFile", "yellow-system.ini");
+        $this->system->setDefault("coreUserFile", "yellow-user.ini");
+        $this->system->setDefault("coreLanguageFile", "yellow-language.ini");
+        $this->system->setDefault("coreWebsiteFile", "yellow-website.log");
         $this->system->setDefault("coreMediaLocation", "/media/");
         $this->system->setDefault("coreDownloadLocation", "/media/downloads/");
         $this->system->setDefault("coreImageLocation", "/media/images/");
         $this->system->setDefault("coreExtensionLocation", "/media/extensions/");
         $this->system->setDefault("coreThemeLocation", "/media/themes/");
+        $this->system->setDefault("coreMultiLanguageMode", "0");
+        $this->system->setDefault("coreDebugMode", "0");
         $this->system->setDefault("coreMediaDirectory", "media/");
         $this->system->setDefault("coreDownloadDirectory", "media/downloads/");
         $this->system->setDefault("coreImageDirectory", "media/images/");
@@ -56,14 +63,6 @@ class YellowCore {
         $this->system->setDefault("coreContentRootDirectory", "default/");
         $this->system->setDefault("coreContentHomeDirectory", "home/");
         $this->system->setDefault("coreContentSharedDirectory", "shared/");
-        $this->system->setDefault("coreContentDefaultFile", "page.md");
-        $this->system->setDefault("coreContentErrorFile", "page-error-(.*).md");
-        $this->system->setDefault("coreContentExtension", ".md");
-        $this->system->setDefault("coreDownloadExtension", ".download");
-        $this->system->setDefault("coreSystemFile", "yellow-system.ini");
-        $this->system->setDefault("coreUserFile", "yellow-user.ini");
-        $this->system->setDefault("coreLanguageFile", "yellow-language.ini");
-        $this->system->setDefault("coreWebsiteFile", "yellow-website.log");
         $this->language->setDefault("coreDateFormatShort");
         $this->language->setDefault("coreDateFormatMedium");
         $this->language->setDefault("coreDateFormatLong");
