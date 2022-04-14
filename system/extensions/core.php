@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.66";
+    const VERSION = "0.8.67";
     const RELEASE = "0.8.19";
     public $page;           // current page
     public $content;        // content files
@@ -589,31 +589,8 @@ class YellowPage {
             }
         }
         if (is_null($output)) {
-            if ($name=="yellow" && $type=="inline") {
-                if ($text=="release") $output = "Datenstrom Yellow ".YellowCore::RELEASE;
-                if ($text=="about") {
-                    $output = "Datenstrom Yellow ".YellowCore::RELEASE."<br />\n";
-                    $dataCurrent = $this->yellow->extension->data;
-                    uksort($dataCurrent, "strnatcasecmp");
-                    foreach ($dataCurrent as $key=>$value) {
-                        $output .= ucfirst($key)." ".$value["version"]."<br />\n";
-                    }
-                }
-                if ($text=="log") {
-                    $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreWebsiteFile");
-                    $fileHandle = @fopen($fileName, "r");
-                    if ($fileHandle) {
-                        $dataBufferSize = 512;
-                        fseek($fileHandle, max(0, filesize($fileName) - $dataBufferSize));
-                        $dataBuffer = fread($fileHandle, $dataBufferSize);
-                        if (strlenb($dataBuffer)==$dataBufferSize) {
-                            $dataBuffer = ($pos = strposu($dataBuffer, "\n")) ? substru($dataBuffer, $pos+1) : $dataBuffer;
-                        }
-                        fclose($fileHandle);
-                    }
-                    $output = str_replace("\n", "<br />\n", htmlspecialchars($dataBuffer));
-                }
-                if ($text=="error") $output = $this->get("pageError");
+            if ($name=="yellow" && $type=="inline" && $text=="error") {
+                $output = $this->get("pageError");
             }
         }
         if ($this->yellow->system->get("coreDebugMode")>=3 && !empty($name)) {

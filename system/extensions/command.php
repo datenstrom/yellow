@@ -2,7 +2,7 @@
 // Command extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/command
 
 class YellowCommand {
-    const VERSION = "0.8.34";
+    const VERSION = "0.8.35";
     public $yellow;                       // access to API
     public $files;                        // number of files
     public $links;                        // number of links
@@ -46,11 +46,19 @@ class YellowCommand {
     
     // Process command to show current version and extensions
     public function processCommandAbout($command, $text) {
-        echo "Datenstrom Yellow ".YellowCore::RELEASE."\n";
-        $dataCurrent = $this->yellow->extension->data;
-        uksort($dataCurrent, "strnatcasecmp");
-        foreach ($dataCurrent as $key=>$value) {
-            echo ucfirst($key)." ".$value["version"]."\n";
+        echo "Datenstrom Yellow ".YellowCore::RELEASE." - https://datenstrom.se/yellow/\n";
+        if ($this->yellow->extension->isExisting("update")) {
+            list($dummy, $settingsCurrent) = $this->yellow->extension->get("update")->getExtensionSettings(false);
+            foreach ($settingsCurrent as $key=>$value) {
+                $documentation = $value->isExisting("helpUrl") ? $value->get("helpUrl") : "No documentation available";
+                echo ucfirst($key)." ".$value->get("version")." - $documentation\n";
+            }
+        } else {
+            $dataCurrent = $this->yellow->extension->data;
+            uksort($dataCurrent, "strnatcasecmp");
+            foreach ($dataCurrent as $key=>$value) {
+                echo ucfirst($key)." ".$value["version"]."\n";
+            }
         }
         return 200;
     }

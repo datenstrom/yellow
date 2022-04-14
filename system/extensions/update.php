@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.67";
+    const VERSION = "0.8.68";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $updates;                // number of updates
@@ -170,6 +170,38 @@ class YellowUpdate {
         return $help;
     }
     
+    // Parse page content shortcut
+    public function onParseContentShortcut($page, $name, $text, $type) {
+        $output = null;
+        if ($name=="yellow" && $type=="inline") {
+            if ($text=="release") $output = "Datenstrom Yellow ".YellowCore::RELEASE;
+            if ($text=="about") {
+                $url = $this->yellow->language->getText("editYellowUrl", $page->get("language"));
+                $output = "Datenstrom Yellow ".YellowCore::RELEASE." - <a href=\"".htmlspecialchars($url)."\">".htmlspecialchars($url)."</a><br />\n";
+                list($dummy, $settingsCurrent) = $this->getExtensionSettings(false);
+                foreach ($settingsCurrent as $key=>$value) {
+                    $documentation = $value->isExisting("helpUrl") ? "<a href=\"".htmlspecialchars($value->get("helpUrl"))."\">".htmlspecialchars($value->get("helpUrl"))."</a>" : "No documentation available";
+                    $output .= ucfirst($key)." ".$value->get("version")." - $documentation<br />\n";
+                }
+            }
+            if ($text=="log") {
+                $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreWebsiteFile");
+                $fileHandle = @fopen($fileName, "r");
+                if ($fileHandle) {
+                    $dataBufferSize = 512;
+                    fseek($fileHandle, max(0, filesize($fileName) - $dataBufferSize));
+                    $dataBuffer = fread($fileHandle, $dataBufferSize);
+                    if (strlenb($dataBuffer)==$dataBufferSize) {
+                        $dataBuffer = ($pos = strposu($dataBuffer, "\n")) ? substru($dataBuffer, $pos+1) : $dataBuffer;
+                    }
+                    fclose($fileHandle);
+                }
+                $output = str_replace("\n", "<br />\n", htmlspecialchars($dataBuffer));
+            }
+        }
+        return $output;
+    }
+    
     // Process command to install extensions
     public function processCommandInstall($command, $text) {
         $extensions = $this->getExtensionsFromText($text);
@@ -182,7 +214,7 @@ class YellowUpdate {
             echo "Yellow $command: Website ".($statusCode!=200 ? "not " : "")."updated";
             echo ", $this->updates extension".($this->updates!=1 ? "s" : "")." installed\n";
         } else {
-            $statusCode = $this->showExtensions();
+            $statusCode = $this->showExtensions(true);
         }
         return $statusCode;
     }
@@ -198,7 +230,7 @@ class YellowUpdate {
             echo "Yellow $command: Website ".($statusCode!=200 ? "not " : "")."updated";
             echo ", $this->updates extension".($this->updates!=1 ? "s" : "")." uninstalled\n";
         } else {
-            $statusCode = $this->showExtensions();
+            $statusCode = $this->showExtensions(false);
         }
         return $statusCode;
     }
@@ -261,14 +293,15 @@ class YellowUpdate {
     }
     
     // Show extensions
-    public function showExtensions() {
-        list($statusCode, $settingsLatest) = $this->getExtensionSettings(true);
-        foreach ($settingsLatest as $key=>$value) {
-            $description = $text = $value->get("description");
+    public function showExtensions($latest) {
+        list($statusCode, $settings) = $this->getExtensionSettings($latest);
+        foreach ($settings as $key=>$value) {
+            $text = $value->isExisting("description") ? $value->get("description") : "No description available.";
+            $description = $text;
             if ($value->isExisting("developer")) $description = "$text Developed by ".$value["developer"].".";
             if ($value->isExisting("designer")) $description = "$text Designed by ".$value["designer"].".";
             if ($value->isExisting("translator")) $description = "$text Translated by ".$value["translator"].".";
-            echo ucfirst($key).": $description\n";
+            echo ucfirst($key)." - $description\n";
         }
         if ($statusCode!=200) echo "ERROR checking extensions: ".$this->yellow->page->get("pageError")."\n";
         return $statusCode;
