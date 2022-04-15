@@ -2,7 +2,7 @@
 // Command extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/command
 
 class YellowCommand {
-    const VERSION = "0.8.35";
+    const VERSION = "0.8.36";
     public $yellow;                       // access to API
     public $files;                        // number of files
     public $links;                        // number of links
@@ -399,7 +399,7 @@ class YellowCommand {
             uksort($data, "strnatcasecmp");
             $data = array_slice($data, 0, 99);
             foreach ($data as $key=>$value) {
-                echo "- $key\n";
+                echo "$key\n";
             }
             echo "\n";
         }
@@ -631,6 +631,7 @@ class YellowCommand {
         curl_setopt($curlHandle, CURLOPT_USERAGENT, "Mozilla/5.0 (compatible; YellowCommand/".YellowCommand::VERSION."; LinkChecker)");
         curl_setopt($curlHandle, CURLOPT_NOBODY, 1);
         curl_setopt($curlHandle, CURLOPT_CONNECTTIMEOUT, 30);
+        curl_setopt($curlHandle, CURLOPT_SSL_VERIFYPEER, false);
         curl_exec($curlHandle);
         $statusCode = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);
         curl_close($curlHandle);
