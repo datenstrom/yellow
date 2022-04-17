@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.69";
+    const VERSION = "0.8.70";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $extensions;             // number of extensions
@@ -180,7 +180,7 @@ class YellowUpdate {
                 $output = "Datenstrom Yellow ".YellowCore::RELEASE." - <a href=\"".htmlspecialchars($url)."\">".htmlspecialchars($url)."</a><br />\n";
                 list($dummy, $settingsCurrent) = $this->getExtensionSettings(false);
                 foreach ($settingsCurrent as $key=>$value) {
-                    $documentation = $value->isExisting("helpUrl") ? "<a href=\"".htmlspecialchars($value->get("helpUrl"))."\">".htmlspecialchars($value->get("helpUrl"))."</a>" : "No documentation available";
+                    $documentation = $value->isExisting("documentationUrl") ? "<a href=\"".htmlspecialchars($value->get("documentationUrl"))."\">".htmlspecialchars($value->get("documentationUrl"))."</a>" : "No documentation available";
                     $output .= ucfirst($key)." ".$value->get("version")." - $documentation<br />\n";
                 }
             }

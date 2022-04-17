@@ -2,7 +2,7 @@
 // Command extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/command
 
 class YellowCommand {
-    const VERSION = "0.8.36";
+    const VERSION = "0.8.37";
     public $yellow;                       // access to API
     public $files;                        // number of files
     public $links;                        // number of links
@@ -50,7 +50,7 @@ class YellowCommand {
         if ($this->yellow->extension->isExisting("update")) {
             list($dummy, $settingsCurrent) = $this->yellow->extension->get("update")->getExtensionSettings(false);
             foreach ($settingsCurrent as $key=>$value) {
-                $documentation = $value->isExisting("helpUrl") ? $value->get("helpUrl") : "No documentation available";
+                $documentation = $value->isExisting("documentationUrl") ? $value->get("documentationUrl") : "No documentation available";
                 echo ucfirst($key)." ".$value->get("version")." - $documentation\n";
             }
         } else {
