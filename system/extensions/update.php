@@ -2,10 +2,10 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.68";
+    const VERSION = "0.8.69";
     const PRIORITY = "2";
     public $yellow;                 // access to API
-    public $updates;                // number of updates
+    public $extensions;             // number of extensions
     
     // Handle initialisation
     public function onLoad($yellow) {
@@ -206,13 +206,13 @@ class YellowUpdate {
     public function processCommandInstall($command, $text) {
         $extensions = $this->getExtensionsFromText($text);
         if (!empty($extensions)) {
-            $this->updates = 0;
+            $this->extensions = 0;
             list($statusCode, $settings) = $this->getExtensionInstallInformation($extensions);
             if ($statusCode==200) $statusCode = $this->downloadExtensions($settings);
             if ($statusCode==200) $statusCode = $this->updateExtensions("install");
             if ($statusCode>=400) echo "ERROR installing files: ".$this->yellow->page->get("pageError")."\n";
             echo "Yellow $command: Website ".($statusCode!=200 ? "not " : "")."updated";
-            echo ", $this->updates extension".($this->updates!=1 ? "s" : "")." installed\n";
+            echo ", $this->extensions extension".($this->extensions!=1 ? "s" : "")." installed\n";
         } else {
             $statusCode = $this->showExtensions(true);
         }
@@ -223,12 +223,12 @@ class YellowUpdate {
     public function processCommandUninstall($command, $text) {
         $extensions = $this->getExtensionsFromText($text);
         if (!empty($extensions)) {
-            $this->updates = 0;
+            $this->extensions = 0;
             list($statusCode, $settings) = $this->getExtensionUninstallInformation($extensions, "core, update");
             if ($statusCode==200) $statusCode = $this->removeExtensions($settings);
             if ($statusCode>=400) echo "ERROR uninstalling files: ".$this->yellow->page->get("pageError")."\n";
             echo "Yellow $command: Website ".($statusCode!=200 ? "not " : "")."updated";
-            echo ", $this->updates extension".($this->updates!=1 ? "s" : "")." uninstalled\n";
+            echo ", $this->extensions extension".($this->extensions!=1 ? "s" : "")." uninstalled\n";
         } else {
             $statusCode = $this->showExtensions(false);
         }
@@ -241,22 +241,24 @@ class YellowUpdate {
         if (!empty($extensions)) {
             list($statusCode, $settings) = $this->getExtensionUpdateInformation($extensions);
             if ($statusCode!=200 || !empty($settings)) {
-                $this->updates = 0;
+                $this->extensions = 0;
                 if ($statusCode==200) $statusCode = $this->downloadExtensions($settings);
                 if ($statusCode==200) $statusCode = $this->updateExtensions("update");
                 if ($statusCode>=400) echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
                 echo "Yellow $command: Website ".($statusCode!=200 ? "not " : "")."updated";
-                echo ", $this->updates update".($this->updates!=1 ? "s" : "")." installed\n";
+                echo ", $this->extensions extension".($this->extensions!=1 ? "s" : "")." updated\n";
             } else {
                 echo "Your website is up to date\n";
             }
         } else {
             list($statusCode, $settings) = $this->getExtensionUpdateInformation(array("all"));
-            if ($statusCode!=200 || !empty($settings)) {
-                if ($statusCode>=400) echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
-                $this->updates = count($settings);
-                echo "Yellow $command: Please type 'php yellow.php update all'";
-                echo ", $this->updates update".($this->updates!=1 ? "s" : "")." available\n";
+            if (!empty($settings)) {
+                foreach ($settings as $key=>$value) {
+                    echo ucfirst($key)." ".$value->get("version")."\n";
+                }
+                echo "Yellow $command: Updates are available. Please type 'php yellow.php update all'.\n";
+            } elseif ($statusCode!=200) {
+                echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
             } else {
                 echo "Your website is up to date\n";
             }
@@ -269,9 +271,11 @@ class YellowUpdate {
         $statusCode = 0;
         $this->updateEventPending();
         if ($this->isExtensionPending()) {
+            $this->extensions = 0;
             $statusCode = $this->updateExtensions("install");
-            if ($statusCode!=200) echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
-            echo "Your website has ".($statusCode!=200 ? "not " : "")."been updated: Please run command again\n";
+            if ($statusCode!=200) echo "ERROR installing files: ".$this->yellow->page->get("pageError")."\n";
+            echo "Detected ZIP-file".($this->extensions!=1 ? "s" : "");
+            echo ", $this->extensions extension".($this->extensions!=1 ? "s" : "")." installed. Please run command again.\n";
         }
         return $statusCode;
     }
@@ -389,7 +393,7 @@ class YellowUpdate {
                     $statusCode = max($statusCode, $this->updateExtensionNotification($extension, $action));
                 }
                 $this->yellow->log($statusCode==200 ? "info" : "error", ucfirst($action)." extension '".ucfirst($extension)." $version'");
-                ++$this->updates;
+                ++$this->extensions;
             } else {
                 $statusCode = 500;
                 $this->yellow->page->error($statusCode, "Can't detect file '$path'!");
@@ -628,7 +632,7 @@ class YellowUpdate {
             if ($statusCode==200) $statusCode = $this->updateExtensionSettings($extension, $settings, $action);
             $version = $settings->get("version");
             $this->yellow->log($statusCode==200 ? "info" : "error", ucfirst($action)." extension '".ucfirst($extension)." $version'");
-            ++$this->updates;
+            ++$this->extensions;
         } else {
             $statusCode = 500;
             $this->yellow->page->error($statusCode, "Please delete extension '$extension' manually!");
@@ -739,11 +743,6 @@ class YellowUpdate {
                     $statusCode = 500;
                     $this->yellow->page->error($statusCode, "Can't find extension '$extension'!");
                 }
-            }
-        }
-        if ($statusCode==200) {
-            foreach ($settings as $key=>$value) {
-                echo ucfirst($key)." ".$value->get("version")."\n";
             }
         }
         return array($statusCode, $settings);
@@ -875,7 +874,7 @@ class YellowUpdate {
         } elseif ($statusCode==0) {
             $statusCode = 500;
             list($scheme, $address) = $this->yellow->lookup->getUrlInformation($url);
-            $this->yellow->page->error($statusCode, "Can't connect to server '$scheme://$address'!");
+            $this->yellow->page->error($statusCode, "Can't connect to the update server!");
         } else {
             $statusCode = 500;
             $this->yellow->page->error($statusCode, "Can't download file '$url'!");

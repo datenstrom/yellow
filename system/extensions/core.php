@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.67";
+    const VERSION = "0.8.68";
     const RELEASE = "0.8.19";
     public $page;           // current page
     public $content;        // content files
@@ -2506,6 +2506,7 @@ class YellowToolbox {
             case 430:   $text = "Login failed"; break;
             case 434:   $text = "Can create"; break;
             case 435:   $text = "Can restore"; break;
+            case 450:   $text = "Update error"; break;
             case 500:   $text = "Server error"; break;
             case 503:   $text = "Service unavailable"; break;
             default:    $text = "Error $statusCode";

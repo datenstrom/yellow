@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/install
 
 class YellowInstall {
-    const VERSION = "0.8.67";
+    const VERSION = "0.8.68";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -85,18 +85,18 @@ class YellowInstall {
                 $statusCode = 200;
             } else {
                 $statusCode = 304;
-                echo "The installation has not been completed. Please type 'php yellow.php serve'\n";
+                echo "The installation has not been completed. Please type 'php yellow.php serve'.\n";
             }
             if ($statusCode>=400) {
                 echo "ERROR installing files: ".$this->yellow->page->get("pageError")."\n";
-                echo "Your website has not been installed: Please run command again\n";
+                echo "The installation has not been completed. Please run command again.\n";
             }
         } else {
             $statusCode = $this->removeInstall();
             $this->yellow->log($statusCode==200 ? "info" : "error", "Uninstall extension 'Install ".YellowInstall::VERSION."'");
             if ($statusCode>=400) {
                 echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
-                echo "Your website has not been updated: Please run command again\n";
+                echo "Detected ZIP-files, 0 extensions installed. Please run command again.\n";
             }
         }
         if ($statusCode==200) $statusCode = 0;
