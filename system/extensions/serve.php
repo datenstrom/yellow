@@ -2,7 +2,7 @@
 // Serve extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/serve
 
 class YellowServe {
-    const VERSION = "0.8.19";
+    const VERSION = "0.8.20";
     public $yellow;         // access to API
     
     // Handle initialisation
@@ -27,11 +27,11 @@ class YellowServe {
     // Process command to start built-in web server
     public function processCommandServe($command, $text) {
         list($url) = $this->yellow->toolbox->getTextArguments($text);
-        if (empty($url)) $url = "http://localhost:8000";
+        if (empty($url)) $url = "http://localhost:8000/";
         list($scheme, $address, $base) = $this->yellow->lookup->getUrlInformation($url);
-        if ($scheme=="http" && !empty($address)) {
-            if ($this->checkServerSettings()) {
-                if (!preg_match("/\:\d+$/", $address)) $address .= ":8000";
+        if ($scheme=="http" && !empty($address) && empty($base)) {
+            if (!preg_match("/\:\d+$/", $address)) $address .= ":8000";
+            if ($this->checkServerSettings("$scheme://$address/")) {
                 echo "Starting built-in web server. Open a web browser and go to $scheme://$address/\n";
                 echo "Press Ctrl+C to quit...\n";
                 exec("php -S $address yellow.php 2>&1", $outputLines, $returnStatus);
@@ -54,7 +54,8 @@ class YellowServe {
     }
     
     // Check server settings
-    public function checkServerSettings() {
-        return $this->yellow->system->get("coreServerUrl")=="auto";
+    public function checkServerSettings($url) {
+        return $this->yellow->system->get("coreServerUrl")=="auto" ||
+            $this->yellow->system->get("coreServerUrl")==$url;
     }
 }
