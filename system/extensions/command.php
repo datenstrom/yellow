@@ -2,7 +2,7 @@
 // Command extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/command
 
 class YellowCommand {
-    const VERSION = "0.8.37";
+    const VERSION = "0.8.38";
     public $yellow;                       // access to API
     public $files;                        // number of files
     public $links;                        // number of links
@@ -121,9 +121,6 @@ class YellowCommand {
         }
         if (empty($locationFilter)) {
             foreach ($this->getMediaLocations() as $location) {
-                $statusCode = max($statusCode, $this->buildStaticFile($path, $location));
-            }
-            foreach ($this->getSystemLocations() as $location) {
                 $statusCode = max($statusCode, $this->buildStaticFile($path, $location));
             }
             foreach ($this->getExtraLocations($path) as $location) {
@@ -557,17 +554,13 @@ class YellowCommand {
     // Return media locations
     public function getMediaLocations() {
         $locations = array();
-        $path = $this->yellow->system->get("coreMediaDirectory");
-        $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($path, "/.*/", false, false);
+        $mediaPath = $this->yellow->system->get("coreMediaDirectory");
+        $mediaDirectoryLength = strlenu($this->yellow->system->get("coreMediaDirectory"));
+        $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($mediaPath, "/.*/", false, false);
         foreach ($fileNames as $fileName) {
-            array_push($locations, "/".$fileName);
+            $location = $this->yellow->system->get("coreMediaLocation").substru($fileName, $mediaDirectoryLength);
+            array_push($locations, $location);
         }
-        return $locations;
-    }
-
-    // Return system locations
-    public function getSystemLocations() {
-        $locations = array();
         $extensionPath = $this->yellow->system->get("coreExtensionDirectory");
         $extensionDirectoryLength = strlenu($this->yellow->system->get("coreExtensionDirectory"));
         $regex = "/\.(css|gif|ico|js|jpg|png|svg|woff|woff2)$/";
@@ -583,11 +576,11 @@ class YellowCommand {
             $location = $this->yellow->system->get("coreThemeLocation").substru($fileName, $themeDirectoryLength);
             array_push($locations, $location);
         }
-        return array_diff($locations, $this->getSystemLocationsIgnore());
+        return array_diff($locations, $this->getMediaLocationsIgnore());
     }
     
-    // Return system locations to ignore
-    public function getSystemLocationsIgnore() {
+    // Return media locations to ignore
+    public function getMediaLocationsIgnore() {
         $locations = array();
         $extensionPath = $this->yellow->system->get("coreExtensionDirectory");
         $extensionDirectoryLength = strlenu($this->yellow->system->get("coreExtensionDirectory"));
@@ -635,6 +628,7 @@ class YellowCommand {
         curl_exec($curlHandle);
         $statusCode = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);
         curl_close($curlHandle);
+        if ($statusCode<200) $statusCode = 404;
         if ($this->yellow->system->get("coreDebugMode")>=2) {
             echo "YellowCommand::getLinkStatus status:$statusCode url:$url<br/>\n";
         }

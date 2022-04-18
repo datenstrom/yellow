@@ -2,7 +2,7 @@
 // Bundle extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/bundle
 
 class YellowBundle {
-    const VERSION = "0.8.25";
+    const VERSION = "0.8.26";
     public $yellow;         // access to API
 
     // Handle initialisation
@@ -76,7 +76,7 @@ class YellowBundle {
             if (preg_match("/data-bundle=\"exclude\"/i", $value)) continue;
             if (substru($key, 0, strlenu($base))!=$base) continue;
             $location = substru($key, strlenu($base));
-            $fileName = $this->yellow->lookup->findFileFromSystem($location);
+            $fileName = $this->yellow->lookup->findFileFromMediaLocation($location);
             $modified = max($modified, $this->yellow->toolbox->getFileModified($fileName));
             if (is_readable($fileName)) {
                 array_push($fileNames, $fileName);

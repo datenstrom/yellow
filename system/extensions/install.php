@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/install
 
 class YellowInstall {
-    const VERSION = "0.8.68";
+    const VERSION = "0.8.69";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -216,7 +216,7 @@ class YellowInstall {
     // Update content
     public function updateContent($language, $name, $location) {
         $statusCode = 200;
-        $fileName = $this->yellow->lookup->findFileFromLocation($location);
+        $fileName = $this->yellow->lookup->findFileFromContentLocation($location);
         $fileData = str_replace("\r\n", "\n", $this->yellow->toolbox->readFile($fileName));
         if (!empty($fileData) && $language!="en") {
             $titleOld = "Title: ".$this->yellow->language->getText("{$name}Title", "en")."\n";

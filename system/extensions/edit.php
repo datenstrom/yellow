@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/edit
 
 class YellowEdit {
-    const VERSION = "0.8.56";
+    const VERSION = "0.8.57";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -351,7 +351,7 @@ class YellowEdit {
             $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
             $settings = array(
                 "name" => $name,
-                "language" => $this->yellow->lookup->findLanguageFromFile($fileName, $this->yellow->system->get("language")),
+                "language" => $this->yellow->lookup->findContentLanguage($fileName, $this->yellow->system->get("language")),
                 "home" => $this->yellow->system->get("editUserHome"),
                 "access" => $this->yellow->system->get("editUserAccess"),
                 "hash" => $this->response->createHash($password),
@@ -1356,16 +1356,16 @@ class YellowEditResponse {
         foreach ($this->yellow->content->path($page->location)->reverse() as $ancestor) {
             if ($ancestor->isExisting("layoutNew")) {
                 $name = $this->yellow->lookup->normaliseName($ancestor->get("layoutNew"));
-                $location = $this->yellow->content->getHomeLocation($page->location).$this->yellow->system->get("coreContentSharedDirectory");
-                $fileName = $this->yellow->lookup->findFileFromLocation($location, true).$this->yellow->system->get("editNewFile");
+                $location = $this->yellow->content->getHomeLocation($page->location)."shared/";
+                $fileName = $this->yellow->lookup->findFileFromContentLocation($location, true).$this->yellow->system->get("editNewFile");
                 $fileName = str_replace("(.*)", $name, $fileName);
                 if (is_file($fileName)) break;
             }
         }
         if (!is_file($fileName)) {
             $name = $this->yellow->lookup->normaliseName($this->yellow->system->get("layout"));
-            $location = $this->yellow->content->getHomeLocation($page->location).$this->yellow->system->get("coreContentSharedDirectory");
-            $fileName = $this->yellow->lookup->findFileFromLocation($location, true).$this->yellow->system->get("editNewFile");
+            $location = $this->yellow->content->getHomeLocation($page->location)."shared/";
+            $fileName = $this->yellow->lookup->findFileFromContentLocation($location, true).$this->yellow->system->get("editNewFile");
             $fileName = str_replace("(.*)", $name, $fileName);
         }
         if (is_file($fileName)) {
@@ -1431,7 +1431,7 @@ class YellowEditResponse {
     
     // Return file name for new/modified page
     public function getPageNewFile($location, $pageFileName = "", $pagePrefix = "") {
-        $fileName = $this->yellow->lookup->findFileFromLocation($location);
+        $fileName = $this->yellow->lookup->findFileFromContentLocation($location);
         if (!empty($fileName)) {
             if (!is_dir(dirname($fileName))) {
                 $path = "";
@@ -1503,10 +1503,15 @@ class YellowEditResponse {
     // Return group for new file
     public function getFileNewGroup($fileNameShort) {
         $group = "none";
-        $path = $this->yellow->system->get("coreMediaDirectory");
         $fileType = $this->yellow->toolbox->getFileType($fileNameShort);
-        $fileName = $this->yellow->system->get(preg_match("/(gif|jpg|png|svg)$/", $fileType) ? "coreImageDirectory" : "coreDownloadDirectory").$fileNameShort;
-        if (preg_match("#^$path(.+?)\/#", $fileName, $matches)) $group = strtoloweru($matches[1]);
+        $locationMedia = $this->yellow->system->get("coreMediaLocation");
+        $locationGroup = $this->yellow->system->get("coreDownloadLocation");
+        if (preg_match("/(gif|jpg|png|svg)$/", $fileType)) {
+            $locationGroup = $this->yellow->system->get("coreImageLocation");
+        }
+        if (preg_match("#^$locationMedia(.+?)\/#", $locationGroup, $matches)) {
+            $group = strtoloweru($matches[1]);
+        }
         return $group;
     }
 
