@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.69";
+    const VERSION = "0.8.70";
     const RELEASE = "0.8.19";
     public $page;           // current page
     public $content;        // content files
@@ -76,7 +76,7 @@ class YellowCore {
         $this->system->load("system/extensions/yellow-system.ini");
         $this->system->set("coreSystemFile", "yellow-system.ini");
         $this->system->set("coreContentDirectory", "content/");
-        $this->system->set("coreMediaDirectory", "media/");
+        $this->system->set("coreMediaDirectory", $this->lookup->findMediaDirectory("coreMediaLocation"));
         $this->system->set("coreSystemDirectory", "system/");
         $this->system->set("coreCacheDirectory", "system/cache/");
         $this->system->set("coreExtensionDirectory", "system/extensions/");
@@ -2165,9 +2165,20 @@ class YellowLookup {
     // Return media location from file path
     public function findMediaLocationFromFile($fileName) {
         $location = "";
+        $regex = "/\.(css|gif|ico|js|jpg|png|svg|woff|woff2)$/";
+        $extensionDirectoryLength = strlenu($this->yellow->system->get("coreExtensionDirectory"));
+        $themeDirectoryLength = strlenu($this->yellow->system->get("coreThemeDirectory"));
         $mediaDirectoryLength = strlenu($this->yellow->system->get("coreMediaDirectory"));
-        if (substru($fileName, 0, $mediaDirectoryLength)==$this->yellow->system->get("coreMediaDirectory")) {
-            $location = $this->yellow->system->get("coreMediaLocation").substru($fileName, $mediaDirectoryLength);
+        if (substru($fileName, 0, $extensionDirectoryLength)==$this->yellow->system->get("coreExtensionDirectory")) {
+            if ($this->isFileLocation($fileName) && preg_match($regex, $fileName)) {
+                $location = $this->yellow->system->get("coreExtensionLocation").substru($fileName, $extensionDirectoryLength);
+            }
+        } elseif (substru($fileName, 0, $themeDirectoryLength)==$this->yellow->system->get("coreThemeDirectory")) {
+            if ($this->isFileLocation($fileName) && preg_match($regex, $fileName)) {
+                $location = $this->yellow->system->get("coreThemeLocation").substru($fileName, $themeDirectoryLength);
+            }
+        } elseif (substru($fileName, 0, $mediaDirectoryLength)==$this->yellow->system->get("coreMediaDirectory")) {
+            $location = "/".$fileName;
         }
         return $location;
     }
@@ -2175,27 +2186,20 @@ class YellowLookup {
     // Return file path from media location
     public function findFileFromMediaLocation($location) {
         $fileName = "";
-        if ($this->isFileLocation($location)) {
-            $regex = "/\.(css|gif|ico|js|jpg|png|svg|woff|woff2)$/";
-            $extensionLocationLength = strlenu($this->yellow->system->get("coreExtensionLocation"));
-            $themeLocationLength = strlenu($this->yellow->system->get("coreThemeLocation"));
-            $mediaLocationLength = strlenu($this->yellow->system->get("coreMediaLocation"));
-            if (substru($location, 0, $extensionLocationLength)==$this->yellow->system->get("coreExtensionLocation")) {
-                if (preg_match($regex, $location)) {
-                    $fileName = $this->yellow->system->get("coreExtensionDirectory").substru($location, $extensionLocationLength);
-                }
-            } elseif (substru($location, 0, $themeLocationLength)==$this->yellow->system->get("coreThemeLocation")) {
-                if (preg_match($regex, $location)) {
-                    $fileName = $this->yellow->system->get("coreThemeDirectory").substru($location, $themeLocationLength);
-                }
-            } elseif (substru($location, 0, $mediaLocationLength)==$this->yellow->system->get("coreMediaLocation")) {
-                $fileName = $this->yellow->system->get("coreMediaDirectory").substru($location, $mediaLocationLength);
+        $regex = "/\.(css|gif|ico|js|jpg|png|svg|woff|woff2)$/";
+        $extensionLocationLength = strlenu($this->yellow->system->get("coreExtensionLocation"));
+        $themeLocationLength = strlenu($this->yellow->system->get("coreThemeLocation"));
+        $mediaLocationLength = strlenu($this->yellow->system->get("coreMediaLocation"));
+        if (substru($location, 0, $extensionLocationLength)==$this->yellow->system->get("coreExtensionLocation")) {
+            if ($this->isFileLocation($location) && preg_match($regex, $location)) {
+                $fileName = $this->yellow->system->get("coreExtensionDirectory").substru($location, $extensionLocationLength);
             }
-        } else {
-            $mediaLocationLength = strlenu($this->yellow->system->get("coreMediaLocation"));
-            if (substru($location, 0, $mediaLocationLength)==$this->yellow->system->get("coreMediaLocation")) {
-                $fileName = $this->yellow->system->get("coreMediaDirectory").substru($location, $mediaLocationLength);
+        } elseif (substru($location, 0, $themeLocationLength)==$this->yellow->system->get("coreThemeLocation")) {
+            if ($this->isFileLocation($location) && preg_match($regex, $location)) {
+                $fileName = $this->yellow->system->get("coreThemeDirectory").substru($location, $themeLocationLength);
             }
+        } elseif (substru($location, 0, $mediaLocationLength)==$this->yellow->system->get("coreMediaLocation")) {
+            $fileName = substru($location, 1);
         }
         return $fileName;
     }
@@ -2213,6 +2217,11 @@ class YellowLookup {
             }
         }
         return $fileNames;
+    }
+    
+    // Return media directory from a well-known system setting
+    public function findMediaDirectory($key) {
+        return substru($key, -8, 8)=="Location" ? $this->findFileFromMediaLocation($this->yellow->system->get($key)) : "";
     }
     
     // Return file or directory that matches token

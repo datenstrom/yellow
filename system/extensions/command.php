@@ -2,7 +2,7 @@
 // Command extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/command
 
 class YellowCommand {
-    const VERSION = "0.8.38";
+    const VERSION = "0.8.39";
     public $yellow;                       // access to API
     public $files;                        // number of files
     public $links;                        // number of links
@@ -555,33 +555,26 @@ class YellowCommand {
     public function getMediaLocations() {
         $locations = array();
         $mediaPath = $this->yellow->system->get("coreMediaDirectory");
-        $mediaDirectoryLength = strlenu($this->yellow->system->get("coreMediaDirectory"));
         $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($mediaPath, "/.*/", false, false);
         foreach ($fileNames as $fileName) {
-            $location = $this->yellow->system->get("coreMediaLocation").substru($fileName, $mediaDirectoryLength);
-            array_push($locations, $location);
+            array_push($locations, $this->yellow->lookup->findMediaLocationFromFile($fileName));
         }
         $extensionPath = $this->yellow->system->get("coreExtensionDirectory");
-        $extensionDirectoryLength = strlenu($this->yellow->system->get("coreExtensionDirectory"));
-        $regex = "/\.(css|gif|ico|js|jpg|png|svg|woff|woff2)$/";
-        $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($extensionPath, $regex, false, false);
+        $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($extensionPath, "/.*/", false, false);
         foreach ($fileNames as $fileName) {
-            $location = $this->yellow->system->get("coreExtensionLocation").substru($fileName, $extensionDirectoryLength);
-            array_push($locations, $location);
+            array_push($locations, $this->yellow->lookup->findMediaLocationFromFile($fileName));
         }
         $themePath = $this->yellow->system->get("coreThemeDirectory");
-        $themeDirectoryLength = strlenu($this->yellow->system->get("coreThemeDirectory"));
-        $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($themePath, $regex, false, false);
+        $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($themePath, "/.*/", false, false);
         foreach ($fileNames as $fileName) {
-            $location = $this->yellow->system->get("coreThemeLocation").substru($fileName, $themeDirectoryLength);
-            array_push($locations, $location);
+            array_push($locations, $this->yellow->lookup->findMediaLocationFromFile($fileName));
         }
         return array_diff($locations, $this->getMediaLocationsIgnore());
     }
     
     // Return media locations to ignore
     public function getMediaLocationsIgnore() {
-        $locations = array();
+        $locations = array("");
         $extensionPath = $this->yellow->system->get("coreExtensionDirectory");
         $extensionDirectoryLength = strlenu($this->yellow->system->get("coreExtensionDirectory"));
         if ($this->yellow->extension->isExisting("bundle")) {

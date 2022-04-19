@@ -2,7 +2,7 @@
 // Image extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/image
 
 class YellowImage {
-    const VERSION = "0.8.15";
+    const VERSION = "0.8.16";
     public $yellow;             // access to API
 
     // Handle initialisation
@@ -19,7 +19,7 @@ class YellowImage {
     public function onUpdate($action) {
         if ($action=="clean") {
             $statusCode = 200;
-            $path = $this->yellow->lookup->findFileFromMediaLocation($this->yellow->system->get("coreThumbnailLocation"));
+            $path = $this->yellow->lookup->findMediaDirectory("coreThumbnailLocation");
             foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/.*/", false, false) as $entry) {
                 if (!$this->yellow->toolbox->deleteFile($entry)) $statusCode = 500;
             }
@@ -36,7 +36,7 @@ class YellowImage {
                 if (empty($alt)) $alt = $this->yellow->language->getText("imageDefaultAlt");
                 if (empty($width)) $width = "100%";
                 if (empty($height)) $height = $width;
-                $path = $this->yellow->lookup->findFileFromMediaLocation($this->yellow->system->get("coreImageLocation"));
+                $path = $this->yellow->lookup->findMediaDirectory("coreImageLocation");
                 list($src, $width, $height) = $this->getImageInformation($path.$name, $width, $height);
             } else {
                 if (empty($alt)) $alt = $this->yellow->language->getText("imageDefaultAlt");
@@ -82,8 +82,7 @@ class YellowImage {
 
     // Return image information, create thumbnail on demand
     public function getImageInformation($fileName, $widthOutput, $heightOutput) {
-        $pathImage = $this->yellow->lookup->findFileFromMediaLocation($this->yellow->system->get("coreImageLocation"));
-        $fileNameShort = substru($fileName, strlenu($pathImage));
+        $fileNameShort = substru($fileName, strlenu($this->yellow->lookup->findMediaDirectory("coreImageLocation")));
         list($widthInput, $heightInput, $orientation, $type) = $this->yellow->toolbox->detectImageInformation($fileName);
         $widthOutput = $this->convertValueAndUnit($widthOutput, $widthInput);
         $heightOutput = $this->convertValueAndUnit($heightOutput, $heightInput);
@@ -92,7 +91,7 @@ class YellowImage {
             $width = $widthOutput;
             $height = $heightOutput;
         } else {
-            $pathThumb = $this->yellow->lookup->findFileFromMediaLocation($this->yellow->system->get("coreThumbnailLocation"));
+            $pathThumb = $this->yellow->lookup->findMediaDirectory("coreThumbnailLocation");
             $fileNameThumb = ltrim(str_replace(array("/", "\\", "."), "-", dirname($fileNameShort)."/".pathinfo($fileName, PATHINFO_FILENAME)), "-");
             $fileNameThumb .= "-".$widthOutput."x".$heightOutput;
             $fileNameThumb .= ".".pathinfo($fileName, PATHINFO_EXTENSION);
