@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/edit
 
 class YellowEdit {
-    const VERSION = "0.8.57";
+    const VERSION = "0.8.58";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -23,8 +23,8 @@ class YellowEdit {
         $this->yellow->system->setDefault("editUserPasswordMinLength", "8");
         $this->yellow->system->setDefault("editUserHashAlgorithm", "bcrypt");
         $this->yellow->system->setDefault("editUserHashCost", "10");
-        $this->yellow->system->setDefault("editUserHome", "/");
         $this->yellow->system->setDefault("editUserAccess", "create, edit, delete, restore, upload");
+        $this->yellow->system->setDefault("editUserHome", "/");
         $this->yellow->system->setDefault("editLoginRestriction", "0");
         $this->yellow->system->setDefault("editLoginSessionTimeout", "2592000");
         $this->yellow->system->setDefault("editBruteForceProtection", "25");
@@ -164,12 +164,14 @@ class YellowEdit {
         }
         if ($status=="ok") {
             $name = $this->yellow->system->get("sitename");
+            $userLanguage = $this->yellow->system->get("language");
             $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
             $settings = array(
                 "name" => $name,
-                "language" => $this->yellow->system->get("language"),
-                "home" => $this->yellow->system->get("editUserHome"),
+                "description" => $this->yellow->language->getText("editUserDescription", $userLanguage),
+                "language" => $userLanguage,
                 "access" => $this->yellow->system->get("editUserAccess"),
+                "home" => $this->yellow->system->get("editUserHome"),
                 "hash" => $this->response->createHash($password),
                 "stamp" => $this->response->createStamp(),
                 "pending" => "none",
@@ -348,12 +350,14 @@ class YellowEdit {
         if ($this->response->status=="ok" && $this->response->isLoginRestriction()) $this->response->status = "next";
         if ($this->response->status=="ok" && $this->isUserAccountTaken($email)) $this->response->status = "next";
         if ($this->response->status=="ok") {
+            $userLanguage = $this->yellow->lookup->findContentLanguage($fileName, $this->yellow->system->get("language"));
             $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
             $settings = array(
                 "name" => $name,
-                "language" => $this->yellow->lookup->findContentLanguage($fileName, $this->yellow->system->get("language")),
-                "home" => $this->yellow->system->get("editUserHome"),
+                "description" => $this->yellow->language->getText("editUserDescription", $userLanguage),
+                "language" => $userLanguage,
                 "access" => $this->yellow->system->get("editUserAccess"),
+                "home" => $this->yellow->system->get("editUserHome"),
                 "hash" => $this->response->createHash($password),
                 "stamp" => $this->response->createStamp(),
                 "pending" => "none",
@@ -597,9 +601,10 @@ class YellowEdit {
                 $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
                 $settings = array(
                     "name" => $name,
+                    "description" => $this->yellow->user->getUser("description", $emailSource),
                     "language" => $language,
-                    "home" => $this->yellow->user->getUser("home", $emailSource),
                     "access" => $this->yellow->user->getUser("access", $emailSource),
+                    "home" => $this->yellow->user->getUser("home", $emailSource),
                     "hash" => $this->response->createHash("none"),
                     "stamp" => $this->response->createStamp(),
                     "pending" => $emailSource,
@@ -1257,10 +1262,11 @@ class YellowEditResponse {
         if ($this->isUser()) {
             $data["email"] = $this->userEmail;
             $data["name"] = $this->yellow->user->getUser("name", $this->userEmail);
+            $data["description"] = $this->yellow->user->getUser("description", $this->userEmail);
             $data["language"] = $this->yellow->user->getUser("language", $this->userEmail);
             $data["status"] = $this->yellow->user->getUser("status", $this->userEmail);
-            $data["home"] = $this->yellow->user->getUser("home", $this->userEmail);
             $data["access"] = $this->yellow->user->getUser("access", $this->userEmail);
+            $data["home"] = $this->yellow->user->getUser("home", $this->userEmail);
         }
         return $data;
     }

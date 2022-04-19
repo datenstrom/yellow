@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/install
 
 class YellowInstall {
-    const VERSION = "0.8.69";
+    const VERSION = "0.8.70";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -186,9 +186,10 @@ class YellowInstall {
             $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
             $settings = array(
                 "name" => $name,
+                "description" => $this->yellow->language->getText("editUserDescription", $language),
                 "language" => $language,
-                "home" => "/",
                 "access" => "create, edit, delete, restore, upload, configure, update",
+                "home" => "/",
                 "hash" => $this->yellow->extension->get("edit")->response->createHash($password),
                 "stamp" => $this->yellow->extension->get("edit")->response->createStamp(),
                 "pending" => "none",
