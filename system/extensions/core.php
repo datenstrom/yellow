@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.70";
+    const VERSION = "0.8.71";
     const RELEASE = "0.8.19";
     public $page;           // current page
     public $content;        // content files
@@ -2165,16 +2165,15 @@ class YellowLookup {
     // Return media location from file path
     public function findMediaLocationFromFile($fileName) {
         $location = "";
-        $regex = "/\.(css|gif|ico|js|jpg|png|svg|woff|woff2)$/";
         $extensionDirectoryLength = strlenu($this->yellow->system->get("coreExtensionDirectory"));
         $themeDirectoryLength = strlenu($this->yellow->system->get("coreThemeDirectory"));
         $mediaDirectoryLength = strlenu($this->yellow->system->get("coreMediaDirectory"));
         if (substru($fileName, 0, $extensionDirectoryLength)==$this->yellow->system->get("coreExtensionDirectory")) {
-            if ($this->isFileLocation($fileName) && preg_match($regex, $fileName)) {
+            if ($this->yellow->toolbox->isSafeFile($fileName)) {
                 $location = $this->yellow->system->get("coreExtensionLocation").substru($fileName, $extensionDirectoryLength);
             }
         } elseif (substru($fileName, 0, $themeDirectoryLength)==$this->yellow->system->get("coreThemeDirectory")) {
-            if ($this->isFileLocation($fileName) && preg_match($regex, $fileName)) {
+            if ($this->yellow->toolbox->isSafeFile($fileName)) {
                 $location = $this->yellow->system->get("coreThemeLocation").substru($fileName, $themeDirectoryLength);
             }
         } elseif (substru($fileName, 0, $mediaDirectoryLength)==$this->yellow->system->get("coreMediaDirectory")) {
@@ -2186,16 +2185,15 @@ class YellowLookup {
     // Return file path from media location
     public function findFileFromMediaLocation($location) {
         $fileName = "";
-        $regex = "/\.(css|gif|ico|js|jpg|png|svg|woff|woff2)$/";
         $extensionLocationLength = strlenu($this->yellow->system->get("coreExtensionLocation"));
         $themeLocationLength = strlenu($this->yellow->system->get("coreThemeLocation"));
         $mediaLocationLength = strlenu($this->yellow->system->get("coreMediaLocation"));
         if (substru($location, 0, $extensionLocationLength)==$this->yellow->system->get("coreExtensionLocation")) {
-            if ($this->isFileLocation($location) && preg_match($regex, $location)) {
+            if ($this->yellow->toolbox->isSafeFile($location)) {
                 $fileName = $this->yellow->system->get("coreExtensionDirectory").substru($location, $extensionLocationLength);
             }
         } elseif (substru($location, 0, $themeLocationLength)==$this->yellow->system->get("coreThemeLocation")) {
-            if ($this->isFileLocation($location) && preg_match($regex, $location)) {
+            if ($this->yellow->toolbox->isSafeFile($location)) {
                 $fileName = $this->yellow->system->get("coreThemeDirectory").substru($location, $themeLocationLength);
             }
         } elseif (substru($location, 0, $mediaLocationLength)==$this->yellow->system->get("coreMediaLocation")) {
@@ -2219,7 +2217,7 @@ class YellowLookup {
         return $fileNames;
     }
     
-    // Return media directory from a well-known system setting
+    // Return media directory from a system setting
     public function findMediaDirectory($key) {
         return substru($key, -8, 8)=="Location" ? $this->findFileFromMediaLocation($this->yellow->system->get($key)) : "";
     }
@@ -2312,7 +2310,7 @@ class YellowLookup {
             $location = str_replace("/./", "/", $location);
             $location = str_replace(":", $this->yellow->toolbox->getLocationArgumentsSeparator(), $location);
         } else {
-            if ($filterStrict && !preg_match("/^(http|https|ftp|mailto|tel):/", $location)) $location = "error-xss-filter";
+            if ($filterStrict && !$this->yellow->toolbox->isSafeUrl($location)) $location = "error-xss-filter";
         }
         return $location;
     }
@@ -2322,7 +2320,7 @@ class YellowLookup {
         if (!preg_match("/^\w+:/", $location)) {
             $url = "$scheme://$address$base$location";
         } else {
-            if ($filterStrict && !preg_match("/^(http|https|ftp|mailto|tel):/", $location)) $location = "error-xss-filter";
+            if ($filterStrict && !$this->yellow->toolbox->isSafeUrl($location)) $location = "error-xss-filter";
             $url = $location;
         }
         return $url;
@@ -3459,11 +3457,11 @@ class YellowToolbox {
                 }
                 if ($filterStrict) {
                     $href = isset($elementAttributes["href"]) ? $elementAttributes["href"] : "";
-                    if (preg_match("/^\w+:/", $href) && !preg_match("/^(http|https|ftp|mailto|tel):/", $href)) {
+                    if (preg_match("/^\w+:/", $href) && !$this->isSafeUrl($href)) {
                         $elementAttributes["href"] = "error-xss-filter";
                     }
                     $href = isset($elementAttributes["xlink:href"]) ? $elementAttributes["xlink:href"] : "";
-                    if (preg_match("/^\w+:/", $href) && !preg_match("/^(http|https|ftp|mailto|tel):/", $href)) {
+                    if (preg_match("/^\w+:/", $href) && !$this->isSafeUrl($href)) {
                         $elementAttributes["xlink:href"] = "error-xss-filter";
                     }
                 }
@@ -3521,6 +3519,16 @@ class YellowToolbox {
     // Stop timer and calculate elapsed time in milliseconds
     public function timerStop(&$time) {
         $time = intval((microtime(true)-$time) * 1000);
+    }
+    
+    // Check if file is a well-known file type
+    public function isSafeFile($fileName) {
+        return preg_match("/\.(css|gif|ico|js|jpg|png|svg|woff|woff2)$/", $fileName);
+    }
+    
+    // Check if URL is a well-known URL scheme
+    public function isSafeUrl($url) {
+        return preg_match("/^(http|https|ftp|mailto|tel):/", $url);
     }
     
     // Check if there are location arguments in current HTTP request
