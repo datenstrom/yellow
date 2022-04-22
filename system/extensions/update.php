@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.71";
+    const VERSION = "0.8.72";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $extensions;             // number of extensions
@@ -365,7 +365,7 @@ class YellowUpdate {
             if (!empty($extension) && !empty($version)) {
                 $statusCode = $this->updateExtensionSettings($extension, $settings, $action);
                 if ($statusCode==200) {
-                    $languages = $this->getExtensionArchiveLanguages($zip, $pathBase);
+                    $paths = $this->getExtensionDirectories($zip, $pathBase);
                     foreach ($this->getExtensionFileNames($settings) as $fileName) {
                         list($entry, $flags) = $this->yellow->toolbox->getTextList($settings[$fileName], ",", 2);
                         if (!$this->yellow->lookup->isContentFile($fileName)) {
@@ -381,7 +381,7 @@ class YellowUpdate {
                         } else {
                             foreach ($this->getExtensionContentRootPages() as $page) {
                                 list($fileNameSource, $fileNameDestination) = $this->getExtensionContentFileNames(
-                                    $fileName, $pathBase, $entry, $flags, $languages, $page);
+                                    $fileName, $pathBase, $entry, $flags, $paths, $page);
                                 $fileData = $zip->getFromName($fileNameSource);
                                 $lastModified = $this->yellow->toolbox->getFileModified($fileNameDestination);
                                 $statusCode = $this->updateExtensionFile($fileNameDestination, $fileData,
@@ -781,18 +781,6 @@ class YellowUpdate {
         return array($statusCode, $settings);
     }
 
-    // Return extension archive languages
-    public function getExtensionArchiveLanguages($zip, $pathBase) {
-        $languages = array();
-        for ($index=0; $index<$zip->numFiles; ++$index) {
-            $entry = substru($zip->getNameIndex($index), strlenu($pathBase));
-            if (preg_match("#^(.*)\/.*?$#", $entry, $matches)) {
-                array_push($languages, $matches[1]);
-            }
-        }
-        return array_unique($languages);
-    }
-
     // Return extension information
     public function getExtensionInformation($settings) {
         $extension = lcfirst($settings->get("extension"));
@@ -811,6 +799,18 @@ class YellowUpdate {
         return array($extension, $version, $newModified, $oldModified);
     }
 
+    // Return extension directories
+    public function getExtensionDirectories($zip, $pathBase) {
+        $paths = array();
+        for ($index=0; $index<$zip->numFiles; ++$index) {
+            $entry = substru($zip->getNameIndex($index), strlenu($pathBase));
+            if (preg_match("#^(.*\/).*?$#", $entry, $matches)) {
+                array_push($paths, $matches[1]);
+            }
+        }
+        return array_unique($paths);
+    }
+    
     // Return extension file names
     public function getExtensionFileNames($settings, $reverse = false) {
         $fileNames = array();
@@ -831,18 +831,20 @@ class YellowUpdate {
     }
 
     // Return extension files names for content files
-    public function getExtensionContentFileNames($fileName, $pathBase, $entry, $flags, $languages, $page) {
+    public function getExtensionContentFileNames($fileName, $pathBase, $entry, $flags, $paths, $page) {
         if (preg_match("/multi-language/i", $flags)) {
-            $languageFound = "";
+            $pathMultiLanguage = "";
             $languagesWanted = array($page->get("language"), "en");
             foreach ($languagesWanted as $language) {
-                if (in_array($language, $languages)) {
-                    $languageFound = $language;
-                    break;
+                foreach ($paths as $path) {
+                    if ($this->yellow->lookup->normaliseToken(rtrim($path, "/"))==$language) {
+                        $pathMultiLanguage = $path;
+                        break;
+                    }
                 }
+                if (!empty($pathMultiLanguage)) break;
             }
-            $pathLanguage = $languageFound ? "$languageFound/" : "";
-            $fileNameSource = $pathBase.$pathLanguage.$entry;
+            $fileNameSource = $pathBase.$pathMultiLanguage.$entry;
         } else {
             $fileNameSource = $pathBase.$entry;
         }
