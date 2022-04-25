@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.72";
+    const VERSION = "0.8.73";
     const RELEASE = "0.8.19";
     public $page;           // current page
     public $content;        // content files
@@ -1008,6 +1008,7 @@ class YellowPageCollection extends ArrayObject {
     // Filter page collection by location or file
     public function match($regex = "/.*/", $filterByLocation = true) {
         $array = array();
+        $this->filterValue = $regex;
         foreach ($this->getArrayCopy() as $page) {
             if (preg_match($regex, $filterByLocation ? $page->location : $page->fileName)) array_push($array, $page);
         }
