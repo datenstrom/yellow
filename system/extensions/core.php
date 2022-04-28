@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.73";
+    const VERSION = "0.8.74";
     const RELEASE = "0.8.19";
     public $page;           // current page
     public $content;        // content files
@@ -639,8 +639,10 @@ class YellowPage {
     // Parse page layout
     public function parsePageLayout($name) {
         foreach ($this->yellow->content->getShared($this->location) as $page) {
-            $this->sharedPages[basename($page->location)] = $page;
-            $page->sharedPages["main"] = $this;
+            if ($page->get("status")=="shared") {
+                $this->sharedPages[basename($page->location)] = $page;
+                $page->sharedPages["main"] = $this;
+            }
         }
         $this->outputData = null;
         foreach ($this->yellow->extension->data as $key=>$value) {
@@ -1374,11 +1376,8 @@ class YellowContent {
     // Return shared pages
     public function getShared($location) {
         $pages = new YellowPageCollection($this->yellow);
-        $location = $this->getHomeLocation($location)."shared/";
-        foreach ($this->scanLocation($location) as $page) {
-            if ($page->get("status")=="shared") $pages->append($page);
-        }
-        return $pages;
+        $sharedLocation = $this->getHomeLocation($location)."shared/";
+        return $pages->merge($this->scanLocation($sharedLocation));
     }
     
     // Return root location
