@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.74";
+    const VERSION = "0.8.75";
     const RELEASE = "0.8.19";
     public $page;           // current page
     public $content;        // content files
@@ -207,12 +207,12 @@ class YellowCore {
         $this->page->setRequestInformation($scheme, $address, $base, $location, $fileName);
         $this->page->parseData($rawData, $cacheable, $statusCode, $pageError);
         $this->language->set($this->page->get("language"));
-        $this->page->parseContent();
         return $fileName;
     }
     
     // Send page response
     public function sendPage() {
+        $this->page->parseContent();
         $this->page->parsePage();
         $statusCode = $this->page->statusCode;
         $lastModifiedFormatted = $this->page->getHeader("Last-Modified");
@@ -516,7 +516,7 @@ class YellowPage {
                 $this->yellow->system->get("coreServerAddress"),
                 $this->yellow->system->get("coreServerBase"),
                 rtrim($this->yellow->system->get("editLocation"), "/").$this->location));
-            $this->setPage("main", $this);
+            $this->parseMetaShared();
         } else {
             $this->set("type", $this->yellow->toolbox->getFileType($this->fileName));
             $this->set("group", $this->yellow->toolbox->getFileGroup($this->fileName, $this->yellow->system->get("coreMediaDirectory")));
@@ -544,6 +544,19 @@ class YellowPage {
         } elseif (preg_match("/^(\xEF\xBB\xBF)?([^\r\n]+)[\r\n]+=+[\r\n]+/", $this->rawData, $parts)) {
             $this->metaDataOffsetBytes = strlenb($parts[0]);
             $this->set("title", $parts[2]);
+        }
+    }
+    
+    // Parse page meta data with shared pages
+    public function parseMetaShared() {
+        $this->sharedPages["main"] = $this;
+        if ($this->available && $this->statusCode!=0) {
+            foreach ($this->yellow->content->getShared($this->location) as $page) {
+                if ($page->get("status")=="shared") {
+                    $this->sharedPages[basename($page->location)] = $page;
+                    $page->sharedPages["main"] = $this;
+                }
+            }
         }
     }
     
@@ -638,12 +651,6 @@ class YellowPage {
     
     // Parse page layout
     public function parsePageLayout($name) {
-        foreach ($this->yellow->content->getShared($this->location) as $page) {
-            if ($page->get("status")=="shared") {
-                $this->sharedPages[basename($page->location)] = $page;
-                $page->sharedPages["main"] = $this;
-            }
-        }
         $this->outputData = null;
         foreach ($this->yellow->extension->data as $key=>$value) {
             if (method_exists($value["object"], "onParsePageLayout")) {

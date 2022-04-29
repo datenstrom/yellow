@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/edit
 
 class YellowEdit {
-    const VERSION = "0.8.58";
+    const VERSION = "0.8.59";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -88,9 +88,11 @@ class YellowEdit {
     public function onParseContentShortcut($page, $name, $text, $type) {
         $output = null;
         if ($name=="edit" && $type=="inline") {
-            $editText = "$name $text";
-            if (substru($text, 0, 2)=="- ") $editText = trim(substru($text, 2));
-            $output = "<a href=\"".$page->get("pageEditUrl")."\">".htmlspecialchars($editText)."</a>";
+            list($target, $description) = $this->yellow->toolbox->getTextList($text, " ", 2);
+            if (empty($target) || $target=="-") $target = "main";
+            if (empty($description)) $description = ucfirst($name);
+            $pageTarget = $target=="main" ? $page->getPage("main") : $page->getPage("main")->getPage($target);
+            $output = "<a href=\"".$pageTarget->get("pageEditUrl")."\">".htmlspecialchars($description)."</a>";
         }
         return $output;
     }
