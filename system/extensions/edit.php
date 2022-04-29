@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/edit
 
 class YellowEdit {
-    const VERSION = "0.8.59";
+    const VERSION = "0.8.60";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -662,11 +662,11 @@ class YellowEdit {
                 if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) $this->response->status = "invalid";
             }
             if ($this->response->status=="ok") {
-                $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
+                $fileNameSystem = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
                 $settings = array("sitename" => $sitename, "author" => $author, "email" => $email);
-                $file = $this->response->getFileSystem($scheme, $address, $base, $location, $fileName, $settings);
-                $this->response->status = (!$file->isError() && $this->yellow->system->save($fileName, $settings)) ? "done" : "error";
-                if ($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileName'!");
+                $file = $this->response->getFileSystem($scheme, $address, $base, $location, $fileNameSystem, $settings);
+                $this->response->status = (!$file->isError() && $this->yellow->system->save($fileNameSystem, $settings)) ? "done" : "error";
+                if ($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameSystem'!");
             }
             if ($this->response->status=="done") {
                 $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
@@ -1185,9 +1185,9 @@ class YellowEditResponse {
     }
 
     // Return system file
-    public function getFileSystem($scheme, $address, $base, $pageLocation, $fileName, $settings) {
+    public function getFileSystem($scheme, $address, $base, $pageLocation, $fileNameSystem, $settings) {
         $file = new YellowPage($this->yellow);
-        $file->setRequestInformation($scheme, $address, $base, "/".$fileName, $fileName);
+        $file->setRequestInformation($scheme, $address, $base, "/".$fileNameSystem, $fileNameSystem);
         $file->parseData(null, false, 0);
         foreach ($settings as $key=>$value) $file->set($key, $value);
         $this->editSystemFile($file, "configure", $this->userEmail);

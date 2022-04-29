@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.72";
+    const VERSION = "0.8.73";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $extensions;             // number of extensions
@@ -873,8 +873,7 @@ class YellowUpdate {
         if ($statusCode==200) {
             $fileData = $rawData;
         } elseif ($statusCode==0) {
-            $statusCode = 500;
-            list($scheme, $address) = $this->yellow->lookup->getUrlInformation($url);
+            $statusCode = 450;
             $this->yellow->page->error($statusCode, "Can't connect to the update server!");
         } else {
             $statusCode = 500;
