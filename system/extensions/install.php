@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/install
 
 class YellowInstall {
-    const VERSION = "0.8.70";
+    const VERSION = "0.8.71";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -35,10 +35,13 @@ class YellowInstall {
                 $status = trim($this->yellow->page->getRequest("status"));
                 $statusCode = $this->updateLog();
                 $statusCode = max($statusCode, $this->updateLanguages());
+                $errorMessage = $this->yellow->page->errorMessage;
                 $this->yellow->content->pages["root/"] = array();
                 $this->yellow->page = new YellowPage($this->yellow);
-                $this->yellow->page->setRequestInformation($scheme, $address, $base, $location, $fileName);
-                $this->yellow->page->parseData($this->getRawDataInstall(), false, $statusCode, $this->yellow->page->get("pageError"));
+                $this->yellow->page->setRequestInformation($scheme, $address, $base, $location, $fileName, false);
+                $this->yellow->page->parseMeta($this->getRawDataInstall(), $statusCode, $errorMessage);
+                $this->yellow->page->parseContent();
+                $this->yellow->page->parsePage();
                 if ($status=="install") $status = $this->updateExtension($extension)==200 ? "ok" : "error";
                 if ($status=="ok") $status = $this->updateUser($email, $password, $author, $language)==200 ? "ok" : "error";
                 if ($status=="ok") $status = $this->updateAuthentication($scheme, $address, $base, $email)==200 ? "ok" : "error";
@@ -58,7 +61,7 @@ class YellowInstall {
                 $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, "/");
                 $statusCode = $this->yellow->sendStatus(303, $location);
             } else {
-                $statusCode = $this->yellow->sendPage();
+                $statusCode = $this->yellow->sendData($this->yellow->page->statusCode, $this->yellow->page->headerData, $this->yellow->page->outputData);
             }
         }
         return $statusCode;
@@ -88,14 +91,14 @@ class YellowInstall {
                 echo "The installation has not been completed. Please type 'php yellow.php serve'.\n";
             }
             if ($statusCode>=400) {
-                echo "ERROR installing files: ".$this->yellow->page->get("pageError")."\n";
+                echo "ERROR installing files: ".$this->yellow->page->errorMessage."\n";
                 echo "The installation has not been completed. Please run command again.\n";
             }
         } else {
             $statusCode = $this->removeInstall();
             $this->yellow->log($statusCode==200 ? "info" : "error", "Uninstall extension 'Install ".YellowInstall::VERSION."'");
             if ($statusCode>=400) {
-                echo "ERROR updating files: ".$this->yellow->page->get("pageError")."\n";
+                echo "ERROR updating files: ".$this->yellow->page->errorMessage."\n";
                 echo "Detected ZIP-files, 0 extensions installed. Please run command again.\n";
             }
         }

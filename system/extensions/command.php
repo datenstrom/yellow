@@ -2,7 +2,7 @@
 // Command extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/command
 
 class YellowCommand {
-    const VERSION = "0.8.39";
+    const VERSION = "0.8.40";
     public $yellow;                       // access to API
     public $files;                        // number of files
     public $links;                        // number of links
@@ -194,7 +194,7 @@ class YellowCommand {
             !$this->yellow->toolbox->modifyFile($fileName, $modified)) {
             $statusCode = 500;
             $this->yellow->page->statusCode = $statusCode;
-            $this->yellow->page->set("pageError", "Can't write file '$fileName'!");
+            $this->yellow->page->errorMessage = "Can't write file '$fileName'!";
         }
         return $statusCode;
     }
@@ -209,7 +209,7 @@ class YellowCommand {
             !$this->yellow->toolbox->modifyFile($fileName, $modified)) {
             $statusCode = 500;
             $this->yellow->page->statusCode = $statusCode;
-            $this->yellow->page->set("pageError", "Can't write file '$fileName'!");
+            $this->yellow->page->errorMessage = "Can't write file '$fileName'!";
         }
         return $statusCode;
     }
@@ -541,7 +541,7 @@ class YellowCommand {
         $locations = array();
         $staticUrl = $this->yellow->system->get("coreStaticUrl");
         list($scheme, $address, $base) = $this->yellow->lookup->getUrlInformation($staticUrl);
-        $this->yellow->page->setRequestInformation($scheme, $address, $base, "", "");
+        $this->yellow->page->setRequestInformation($scheme, $address, $base, "", "", false);
         foreach ($this->yellow->content->index(true, true) as $page) {
             if (preg_match("/exclude/i", $page->get("build")) && !$includeAll) continue;
             if ($page->get("status")=="private" || $page->get("status")=="draft") continue;

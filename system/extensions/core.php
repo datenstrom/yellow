@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.75";
+    const VERSION = "0.8.76";
     const RELEASE = "0.8.19";
     public $page;           // current page
     public $content;        // content files
@@ -106,7 +106,7 @@ class YellowCore {
         $this->toolbox->timerStart($time);
         ob_start();
         list($scheme, $address, $base, $location, $fileName) = $this->getRequestInformation();
-        $this->page->setRequestInformation($scheme, $address, $base, $location, $fileName);
+        $this->page->setRequestInformation($scheme, $address, $base, $location, $fileName, true);
         foreach ($this->extension->data as $key=>$value) {
             if (method_exists($value["object"], "onRequest")) {
                 $this->lookup->requestHandler = $key;
@@ -118,7 +118,7 @@ class YellowCore {
             $this->lookup->requestHandler = "core";
             $statusCode = $this->processRequest($scheme, $address, $base, $location, $fileName, true);
         }
-        if ($this->page->isExisting("pageError")) $statusCode = $this->processRequestError();
+        if ($this->page->isError()) $statusCode = $this->processRequestError();
         ob_end_flush();
         $this->toolbox->timerStop($time);
         if ($this->system->get("coreDebugMode")>=1 && $this->lookup->isContentFile($fileName)) {
@@ -144,13 +144,12 @@ class YellowCore {
             }
         }
         if ($statusCode==0) {
-            if ($this->lookup->isContentFile($fileName) || !is_readable($fileName)) {
-                $fileName = $this->readPage($scheme, $address, $base, $location, $fileName, $cacheable,
-                    max(is_readable($fileName) ? 200 : 404, $this->page->statusCode), $this->page->get("pageError"));
-                $statusCode = $this->sendPage();
+            if ($this->lookup->isContentFile($fileName)) {
+                $statusCode = $this->sendPage($scheme, $address, $base, $location, $fileName, $cacheable, true);
             } else {
-                $statusCode = $this->sendFile(200, $fileName, true);
+                $statusCode = $this->sendFile(200, $fileName, $cacheable);
             }
+            if (!is_readable($fileName)) $this->page->error(404);
         }
         if ($this->system->get("coreDebugMode")>=1 && $this->lookup->isContentFile($fileName)) {
             echo "YellowCore::processRequest file:$fileName<br/>\n";
@@ -161,11 +160,9 @@ class YellowCore {
     // Process request with error
     public function processRequestError() {
         ob_clean();
-        $fileName = $this->readPage($this->page->scheme, $this->page->address, $this->page->base,
-            $this->page->location, $this->page->fileName, $this->page->cacheable, $this->page->statusCode,
-            $this->page->get("pageError"));
-        $statusCode = $this->sendPage();
-        if ($this->system->get("coreDebugMode")>=1) echo "YellowCore::processRequestError file:$fileName<br/>\n";
+        $statusCode = $this->sendPage($this->page->scheme, $this->page->address, $this->page->base,
+            $this->page->location, $this->page->fileName, false, false);
+        if ($this->system->get("coreDebugMode")>=1) echo "YellowCore::processRequestError file:".$this->page->fileName."<br/>\n";
         return $statusCode;
     }
     
@@ -183,49 +180,18 @@ class YellowCore {
         }
     }
     
-    // Read page
-    public function readPage($scheme, $address, $base, $location, $fileName, $cacheable, $statusCode, $pageError) {
-        if ($statusCode>=400) {
-            $locationError = $this->content->getHomeLocation($this->page->location)."shared/";
-            $fileNameError = $this->lookup->findFileFromContentLocation($locationError, true).$this->system->get("coreContentErrorFile");
-            $fileNameError = str_replace("(.*)", $statusCode, $fileNameError);
-            $languageError = $this->lookup->findContentLanguage($fileName, $this->system->get("language"));
-            if (is_file($fileNameError)) {
-                $rawData = $this->toolbox->readFile($fileNameError);
-            } elseif ($this->language->isText("coreError${statusCode}Title", $languageError)) {
-                $rawData = "---\nTitle: ".$this->language->getText("coreError${statusCode}Title", $languageError)."\n";
-                $rawData .= "Layout: error\n---\n".$this->language->getText("coreError${statusCode}Text", $languageError);
-            } else {
-                $rawData = "---\nTitle:".$this->toolbox->getHttpStatusFormatted($statusCode, true)."\n";
-                $rawData .= "Layout:error\n---\n$pageError";
-            }
-            $cacheable = false;
-        } else {
-            $rawData = $this->toolbox->readFile($fileName);
-        }
-        $this->page = new YellowPage($this);
-        $this->page->setRequestInformation($scheme, $address, $base, $location, $fileName);
-        $this->page->parseData($rawData, $cacheable, $statusCode, $pageError);
-        $this->language->set($this->page->get("language"));
-        return $fileName;
-    }
-    
     // Send page response
-    public function sendPage() {
+    public function sendPage($scheme, $address, $base, $location, $fileName, $cacheable, $showSource) {
+        $rawData = $showSource ? $this->toolbox->readFile($fileName) : $this->page->getRawDataError();
+        $statusCode = max($this->page->statusCode, 200);
+        $errorMessage = $this->page->errorMessage;
+        $this->page = new YellowPage($this);
+        $this->page->setRequestInformation($scheme, $address, $base, $location, $fileName, $cacheable);
+        $this->page->parseMeta($rawData, $statusCode, $errorMessage);
+        $this->language->set($this->page->get("language"));
         $this->page->parseContent();
         $this->page->parsePage();
-        $statusCode = $this->page->statusCode;
-        $lastModifiedFormatted = $this->page->getHeader("Last-Modified");
-        if ($statusCode==200 && $this->page->isCacheable() && $this->toolbox->isNotModified($lastModifiedFormatted)) {
-            $statusCode = 304;
-            @header($this->toolbox->getHttpStatusFormatted($statusCode));
-        } else {
-            @header($this->toolbox->getHttpStatusFormatted($statusCode));
-            foreach ($this->page->headerData as $key=>$value) {
-                @header("$key: $value");
-            }
-            if (!is_null($this->page->outputData)) echo $this->page->outputData;
-        }
+        $statusCode = $this->sendData($this->page->statusCode, $this->page->headerData, $this->page->outputData);
         if ($this->system->get("coreDebugMode")>=1) {
             foreach ($this->page->headerData as $key=>$value) {
                 echo "YellowCore::sendPage $key: $value<br/>\n";
@@ -235,6 +201,22 @@ class YellowCore {
             $language = $this->page->get("language");
             $parser = $this->page->get("parser");
             echo "YellowCore::sendPage layout:$layout theme:$theme language:$language parser:$parser<br/>\n";
+        }
+        return $statusCode;
+    }
+    
+    // Send data response
+    public function sendData($statusCode, $headerData, $outputData) {
+        $lastModifiedFormatted = isset($headerData["Last-Modified"]) ? $headerData["Last-Modified"] : "";
+        if ($statusCode==200 && !isset($headerData["Cache-Control"]) && $this->toolbox->isNotModified($lastModifiedFormatted)) {
+            $statusCode = 304;
+            @header($this->toolbox->getHttpStatusFormatted($statusCode));
+        } else {
+            @header($this->toolbox->getHttpStatusFormatted($statusCode));
+            foreach ($headerData as $key=>$value) {
+                @header("$key: $value");
+            }
+            if (!is_null($outputData)) echo $outputData;
         }
         return $statusCode;
     }
@@ -255,27 +237,12 @@ class YellowCore {
         return $statusCode;
     }
     
-    // Send data response
-    public function sendData($statusCode, $rawData, $fileName, $cacheable) {
-        @header($this->toolbox->getHttpStatusFormatted($statusCode));
-        if (!$cacheable) @header("Cache-Control: no-cache, no-store");
-        @header("Content-Type: ".$this->toolbox->getMimeContentType($fileName));
-        @header("Last-Modified: ".$this->toolbox->getHttpDateFormatted(time()));
-        echo $rawData;
-        return $statusCode;
-    }
-
     // Send status response
     public function sendStatus($statusCode, $location = "") {
         if (!empty($location)) $this->page->clean($statusCode, $location);
         @header($this->toolbox->getHttpStatusFormatted($statusCode));
         foreach ($this->page->headerData as $key=>$value) {
             @header("$key: $value");
-        }
-        if ($this->system->get("coreDebugMode")>=1) {
-            foreach ($this->page->headerData as $key=>$value) {
-                echo "YellowCore::sendStatus $key: $value<br/>\n";
-            }
         }
         return $statusCode;
     }
@@ -444,12 +411,13 @@ class YellowPage {
     public $outputData;             // response output
     public $parser;                 // content parser
     public $parserData;             // content data of page
+    public $statusCode;             // status code
+    public $errorMessage;           // error message
+    public $lastModified;           // last modification date
     public $available;              // page is available? (boolean)
     public $visible;                // page is visible location? (boolean)
     public $active;                 // page is active location? (boolean)
     public $cacheable;              // page is cacheable? (boolean)
-    public $lastModified;           // last modification date
-    public $statusCode;             // status code
 
     public function __construct($yellow) {
         $this->yellow = $yellow;
@@ -460,45 +428,46 @@ class YellowPage {
     }
 
     // Set request information
-    public function setRequestInformation($scheme, $address, $base, $location, $fileName) {
+    public function setRequestInformation($scheme, $address, $base, $location, $fileName, $cacheable) {
         $this->scheme = $scheme;
         $this->address = $address;
         $this->base = $base;
         $this->location = $location;
         $this->fileName = $fileName;
+        $this->cacheable = $cacheable;
     }
     
-    // Parse page data
-    public function parseData($rawData, $cacheable, $statusCode, $pageError = "") {
+    // Parse page meta
+    public function parseMeta($rawData, $statusCode = 0, $errorMessage = "") {
         $this->rawData = $rawData;
         $this->parser = null;
         $this->parserData = "";
+        $this->statusCode = $statusCode;
+        $this->errorMessage = $errorMessage;
+        $this->lastModified = 0;
         $this->available = $this->yellow->lookup->isAvailableLocation($this->location, $this->fileName);
         $this->visible = true;
         $this->active = $this->yellow->lookup->isActiveLocation($this->location, $this->yellow->page->location);
-        $this->cacheable = $cacheable;
-        $this->lastModified = 0;
-        $this->statusCode = $statusCode;
-        $this->parseMeta($pageError);
+        $this->parseMetaData();
     }
     
-    // Parse page data update
-    public function parseDataUpdate() {
+    // Parse page meta update
+    public function parseMetaUpdate() {
         if ($this->statusCode==0) {
             $this->rawData = $this->yellow->toolbox->readFile($this->fileName);
             $this->statusCode = 200;
-            $this->parseMeta();
+            $this->parseMetaData();
         }
     }
     
     // Parse page meta data
-    public function parseMeta($pageError = "") {
+    public function parseMetaData() {
         $this->metaData = new YellowArray();
         if (!is_null($this->rawData)) {
             $this->set("title", $this->yellow->toolbox->createTextTitle($this->location));
             $this->set("language", $this->yellow->lookup->findContentLanguage($this->fileName, $this->yellow->system->get("language")));
             $this->set("modified", date("Y-m-d H:i:s", $this->yellow->toolbox->getFileModified($this->fileName)));
-            $this->parseMetaRaw(array("sitename", "author", "layout", "theme", "parser", "status"));
+            $this->parseMetaDataRaw(array("sitename", "author", "layout", "theme", "parser", "status"));
             $titleHeader = ($this->location==$this->yellow->content->getHomeLocation($this->location)) ?
                 $this->get("sitename") : $this->get("title")." - ".$this->get("sitename");
             if (!$this->isExisting("titleContent")) $this->set("titleContent", $this->get("title"));
@@ -516,20 +485,19 @@ class YellowPage {
                 $this->yellow->system->get("coreServerAddress"),
                 $this->yellow->system->get("coreServerBase"),
                 rtrim($this->yellow->system->get("editLocation"), "/").$this->location));
-            $this->parseMetaShared();
+            $this->parseMetaDataShared();
         } else {
             $this->set("type", $this->yellow->toolbox->getFileType($this->fileName));
             $this->set("group", $this->yellow->toolbox->getFileGroup($this->fileName, $this->yellow->system->get("coreMediaDirectory")));
             $this->set("modified", date("Y-m-d H:i:s", $this->yellow->toolbox->getFileModified($this->fileName)));
         }
-        if (!empty($pageError)) $this->set("pageError", $pageError);
         foreach ($this->yellow->extension->data as $key=>$value) {
             if (method_exists($value["object"], "onParseMeta")) $value["object"]->onParseMeta($this);
         }
     }
     
     // Parse page meta data from raw data
-    public function parseMetaRaw($defaultKeys) {
+    public function parseMetaDataRaw($defaultKeys) {
         foreach ($defaultKeys as $key) {
             $value = $this->yellow->system->get($key);
             if (!empty($key) && !strempty($value)) $this->set($key, $value);
@@ -547,8 +515,8 @@ class YellowPage {
         }
     }
     
-    // Parse page meta data with shared pages
-    public function parseMetaShared() {
+    // Parse page meta data for shared pages
+    public function parseMetaDataShared() {
         $this->sharedPages["main"] = $this;
         if ($this->available && $this->statusCode!=0) {
             foreach ($this->yellow->content->getShared($this->location) as $page) {
@@ -580,7 +548,7 @@ class YellowPage {
                 }
             } else {
                 $this->parserData = $this->getContent(true, $sizeMax);
-                $this->parserData = preg_replace("/\[yellow error\]/i", $this->get("pageError"), $this->parserData);
+                $this->parserData = preg_replace("/\[yellow error\]/i", $this->errorMessage, $this->parserData);
             }
             if (!$this->isExisting("description")) {
                 $description = $this->yellow->toolbox->createTextDescription($this->parserData, 150);
@@ -603,7 +571,7 @@ class YellowPage {
         }
         if (is_null($output)) {
             if ($name=="yellow" && $type=="inline" && $text=="error") {
-                $output = $this->get("pageError");
+                $output = $this->errorMessage;
             }
         }
         if ($this->yellow->system->get("coreDebugMode")>=3 && !empty($name)) {
@@ -746,7 +714,7 @@ class YellowPage {
     // Return page content, HTML encoded or raw format
     public function getContent($rawFormat = false, $sizeMax = 0) {
         if ($rawFormat) {
-            $this->parseDataUpdate();
+            $this->parseMetaUpdate();
             $text = substrb($this->rawData, $this->metaDataOffsetBytes);
         } else {
             $this->parseContent($sizeMax);
@@ -903,27 +871,38 @@ class YellowPage {
         return $httpFormat ? $this->yellow->toolbox->getHttpDateFormatted($lastModified) : $lastModified;
     }
     
+    // Return raw data for error page
+    public function getRawDataError() {
+        $statusCode = $this->statusCode;
+        $sharedLocation = $this->yellow->content->getHomeLocation($this->location)."shared/";
+        $fileNameError = $this->yellow->lookup->findFileFromContentLocation($sharedLocation, true).$this->yellow->system->get("coreContentErrorFile");
+        $fileNameError = str_replace("(.*)", $statusCode, $fileNameError);
+        $languageError = $this->yellow->lookup->findContentLanguage($this->fileName, $this->yellow->system->get("language"));
+        if (is_file($fileNameError)) {
+            $rawData = $this->yellow->toolbox->readFile($fileNameError);
+        } elseif ($this->yellow->language->isText("coreError${statusCode}Title", $languageError)) {
+            $rawData = "---\nTitle: ".$this->yellow->language->getText("coreError${statusCode}Title", $languageError)."\n";
+            $rawData .= "Layout: error\n---\n".$this->yellow->language->getText("coreError${statusCode}Text", $languageError);
+        } else {
+            $rawData = "---\nTitle:".$this->yellow->toolbox->getHttpStatusFormatted($statusCode, true)."\n";
+            $rawData .= "Layout:error\n---\n".$this->errorMessage;
+        }
+        return $rawData;
+    }
+    
     // Return page status code, number or HTTP format
     public function getStatusCode($httpFormat = false) {
         $statusCode = $this->statusCode;
         if ($httpFormat) {
             $statusCode = $this->yellow->toolbox->getHttpStatusFormatted($statusCode);
-            if ($this->isExisting("pageError")) $statusCode .= ": ".$this->get("pageError");
+            if (!empty($this->errorMessage)) $statusCode .= ": ".$this->errorMessage;
         }
         return $statusCode;
     }
     
-    // Respond with error page
-    public function error($statusCode, $pageError = "") {
-        if (!$this->isExisting("pageError") && $statusCode>0) {
-            $this->statusCode = $statusCode;
-            $this->set("pageError", empty($pageError) ? "Page error!" : $pageError);
-        }
-    }
-    
     // Respond with status code, no page content
     public function clean($statusCode, $location = "") {
-        if (!$this->isExisting("pageClean") && $statusCode>0) {
+        if ($statusCode>0 && !$this->isExisting("pageClean")) {
             $this->statusCode = $statusCode;
             $this->lastModified = 0;
             $this->headerData = array();
@@ -932,6 +911,14 @@ class YellowPage {
                 $this->setHeader("Cache-Control", "no-cache, no-store");
             }
             $this->set("pageClean", (string)$statusCode);
+        }
+    }
+    
+    // Respond with error page
+    public function error($statusCode, $errorMessage = "") {
+        if ($statusCode>=400 && empty($this->errorMessage)) {
+            $this->statusCode = $statusCode;
+            $this->errorMessage = empty($errorMessage) ? "Page error!" : $errorMessage;
         }
     }
     
@@ -1245,8 +1232,8 @@ class YellowContent {
                 $rootLocations = $this->yellow->lookup->findContentRootLocations();
                 foreach ($rootLocations as $rootLocation=>$rootFileName) {
                     $page = new YellowPage($this->yellow);
-                    $page->setRequestInformation($scheme, $address, $base, $rootLocation, $rootFileName);
-                    $page->parseData("", false, 0);
+                    $page->setRequestInformation($scheme, $address, $base, $rootLocation, $rootFileName, false);
+                    $page->parseMeta("");
                     array_push($this->pages[$location], $page);
                 }
             } else {
@@ -1255,8 +1242,8 @@ class YellowContent {
                 foreach ($fileNames as $fileName) {
                     $page = new YellowPage($this->yellow);
                     $page->setRequestInformation($scheme, $address, $base,
-                        $this->yellow->lookup->findContentLocationFromFile($fileName), $fileName);
-                    $page->parseData($this->yellow->toolbox->readFile($fileName, 4096), false, 0);
+                        $this->yellow->lookup->findContentLocationFromFile($fileName), $fileName, false);
+                    $page->parseMeta($this->yellow->toolbox->readFile($fileName, 4096));
                     if (strlenb($page->rawData)<4096) $page->statusCode = 200;
                     array_push($this->pages[$location], $page);
                 }
@@ -1299,8 +1286,8 @@ class YellowContent {
             foreach ($matches as $match) {
                 if ($match[1]==2) {
                     $page = new YellowPage($this->yellow);
-                    $page->setRequestInformation($scheme, $address, $base, $one->location."#".$match[2], $one->fileName);
-                    $page->parseData("---\nTitle: $match[3]\n---\n", false, 0);
+                    $page->setRequestInformation($scheme, $address, $base, $one->location."#".$match[2], $one->fileName, false);
+                    $page->parseMeta("---\nTitle: $match[3]\n---\n");
                     $pages->append($page);
                 }
             }
@@ -1451,8 +1438,8 @@ class YellowMedia {
             foreach ($fileNames as $fileName) {
                 $file = new YellowPage($this->yellow);
                 $file->setRequestInformation($scheme, $address, $base,
-                    $this->yellow->lookup->findMediaLocationFromFile($fileName), $fileName);
-                $file->parseData(null, false, 0);
+                    $this->yellow->lookup->findMediaLocationFromFile($fileName), $fileName, false);
+                $file->parseMeta(null);
                 array_push($this->files[$location], $file);
             }
         }
