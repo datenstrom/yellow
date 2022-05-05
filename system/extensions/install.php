@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/install
 
 class YellowInstall {
-    const VERSION = "0.8.71";
+    const VERSION = "0.8.72";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -313,7 +313,8 @@ class YellowInstall {
             foreach ($block as $key=>$value) {
                 if (strposu($key, "/")) {
                     list($entry, $flags) = $this->yellow->toolbox->getTextList($value, ",", 2);
-                    if (!preg_match("/create/i", $flags)) continue;
+                    if (preg_match("/delete/i", $flags)) continue;
+                    if (preg_match("/additional/i", $flags)) continue;
                     array_push($fileNames, $key);
                 }
             }

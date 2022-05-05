@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.74";
+    const VERSION = "0.8.75";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $extensions;             // number of extensions
@@ -40,106 +40,6 @@ class YellowUpdate {
                 if ($expire<=time() && !$this->yellow->toolbox->deleteDirectory($entry)) $statusCode = 500;
             }
             if ($statusCode==500) $this->yellow->log("error", "Can't delete files in directory '$path'!");
-        }
-        if ($action=="update") { // TODO: remove later, create settings files when missing
-            $fileNameCurrent = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateCurrentFile");
-            $fileNameLatest = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateLatestFile");
-            if (!is_file($fileNameCurrent) || !is_file($fileNameLatest)) {
-                $url = $this->yellow->system->get("updateExtensionUrl")."/raw/master/".$this->yellow->system->get("updateLatestFile");
-                list($statusCode, $fileData) = $this->getExtensionFile($url);
-                if ($statusCode==200) {
-                    $fileDataCurrent = $fileDataLatest = $fileData;
-                    $settings = $this->yellow->toolbox->getTextSettings($fileDataCurrent, "extension");
-                    foreach ($settings as $key=>$value) {
-                        if ($this->yellow->extension->isExisting($key)) {
-                            $settingsNew = new YellowArray();
-                            $settingsNew["extension"] = ucfirst($key);
-                            $settingsNew["version"] = $this->yellow->extension->data[$key]["version"];
-                            $fileDataCurrent = $this->yellow->toolbox->setTextSettings($fileDataCurrent, "extension", $key, $settingsNew);
-                        } else {
-                            $fileDataCurrent = $this->yellow->toolbox->unsetTextSettings($fileDataCurrent, "extension", $key);
-                        }
-                    }
-                    if (!is_file($fileNameCurrent) && !$this->yellow->toolbox->createFile($fileNameCurrent, $fileDataCurrent)) {
-                        $this->yellow->log("error", "Can't write file '$fileNameCurrent'!");
-                    }
-                    if (!is_file($fileNameLatest) && !$this->yellow->toolbox->createFile($fileNameLatest, $fileDataLatest)) {
-                        $this->yellow->log("error", "Can't write file '$fileNameLatest'!");
-                    }
-                }
-            }
-        }
-        if ($action=="update") { // TODO: remove later, convert files for blog/wiki extension
-            if ($this->yellow->system->isExisting("blogPagesMax") || $this->yellow->system->isExisting("wikiPagesMax")) {
-                $path = $this->yellow->system->get("coreContentDirectory");
-                foreach ($this->yellow->toolbox->getDirectoryEntriesRecursive($path, "/^.*\.(md|txt)$/", true, false) as $entry) {
-                    $fileData = $fileDataNew = $this->yellow->toolbox->readFile($entry);
-                    $fileDataNew = str_replace("[blogarchive", "[blogmonths", $fileDataNew);
-                    $fileDataNew = preg_replace("/Layout: blogpages/i", "Layout: blog-start", $fileDataNew);
-                    $fileDataNew = preg_replace("/Layout: wikipages/i", "Layout: wiki-start", $fileDataNew);
-                    $fileDataNew = preg_replace("/Layout: draftpages/i", "Layout: draftpages-unsupported", $fileDataNew);
-                    if ($fileData!=$fileDataNew && !$this->yellow->toolbox->createFile($entry, $fileDataNew)) {
-                        $this->yellow->log("error", "Can't write file '$entry'!");
-                    }
-                }
-                $path = $this->yellow->system->get("coreLayoutDirectory");
-                foreach ($this->yellow->toolbox->getDirectoryEntriesRecursive($path, "/^.*\.html$/", true, false) as $entry) {
-                    $fileData = $fileDataNew = $this->yellow->toolbox->readFile($entry);
-                    $fileDataNew = str_replace("yellow->page->getPage(\"blog\")", "yellow->page->getPage(\"blogStart\")", $fileDataNew);
-                    $fileDataNew = str_replace("yellow->page->getPage(\"wiki\")", "yellow->page->getPage(\"wikiStart\")", $fileDataNew);
-                    if ($fileData!=$fileDataNew && !$this->yellow->toolbox->createFile($entry, $fileDataNew)) {
-                        $this->yellow->log("error", "Can't write file '$entry'!");
-                    }
-                    if (basename($entry)=="draftpages.html" &&
-                        !$this->yellow->toolbox->deleteFile($entry, $this->yellow->system->get("coreTrashDirectory"))) {
-                        $this->yellow->log("error", "Can't delete file '$entry'!");
-                    }
-                }
-            }
-        }
-        if ($action=="update") { // TODO: remove later, convert old extension settings
-            $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
-            if ($this->yellow->system->get("galleryStyle")=="photoswipe") {
-                if (!$this->yellow->system->save($fileName, array("galleryStyle" => "zoom"))) {
-                    $this->yellow->log("error", "Can't write file '$fileName'!");
-                }
-            }
-            if ($this->yellow->system->get("sliderStyle")=="flickity") {
-                if (!$this->yellow->system->save($fileName, array("sliderStyle" => "loop"))) {
-                    $this->yellow->log("error", "Can't write file '$fileName'!");
-                }
-            }
-            if ($this->yellow->system->isExisting("coreServerTimezone")) {
-                $coreTimezone = $this->yellow->system->get("coreServerTimezone");
-                if (!$this->yellow->system->save($fileName, array("coreTimezone" => $coreTimezone))) {
-                    $this->yellow->log("error", "Can't write file '$fileName'!");
-                }
-            }
-            if ($this->yellow->system->isExisting("blogLocation")) {
-                $blogStartLocation = $this->yellow->system->get("blogLocation");
-                if (!$this->yellow->system->save($fileName, array("blogStartLocation" => $blogStartLocation))) {
-                    $this->yellow->log("error", "Can't write file '$fileName'!");
-                }
-            }
-            if ($this->yellow->system->isExisting("wikiLocation")) {
-                $wikiStartLocation = $this->yellow->system->get("wikiLocation");
-                if (!$this->yellow->system->save($fileName, array("wikiStartLocation" => $wikiStartLocation))) {
-                    $this->yellow->log("error", "Can't write file '$fileName'!");
-                }
-            }
-        }
-        if ($action=="update") { // TODO: remove later, convert old log file
-            $fileNameOld = $this->yellow->system->get("coreExtensionDirectory")."yellow.log";
-            $fileNameNew = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreWebsiteFile");
-            if (is_file($fileNameOld)) {
-                $fileDataOld = $this->yellow->toolbox->readFile($fileNameOld);
-                $fileDataNew = $this->yellow->toolbox->readFile($fileNameNew);
-                if (!$this->yellow->toolbox->deleteFile($fileNameOld, $this->yellow->system->get("coreTrashDirectory"))) {
-                    $this->yellow->log("error", "Can't delete file '$fileNameOld'!");
-                } elseif (!$this->yellow->toolbox->createFile($fileNameNew, $fileDataOld.$fileDataNew)) {
-                    $this->yellow->log("error", "Can't write file '$fileNameNew'!");
-                }
-            }
         }
     }
     
@@ -269,6 +169,7 @@ class YellowUpdate {
     // Process command for pending events
     public function processCommandPending() {
         $statusCode = 0;
+        $this->updatePatchPending();
         $this->updateEventPending();
         if ($this->isExtensionPending()) {
             $this->extensions = 0;
@@ -284,6 +185,7 @@ class YellowUpdate {
     public function processRequestPending($scheme, $address, $base, $location, $fileName) {
         $statusCode = 0;
         if ($this->yellow->lookup->isContentFile($fileName)) {
+            $this->updatePatchPending();
             $this->updateEventPending();
             if ($this->isExtensionPending()) {
                 $statusCode = $this->updateExtensions("install");
@@ -445,6 +347,27 @@ class YellowUpdate {
             }
         }
         return $statusCode;
+    }
+
+    // Update pending patches
+    public function updatePatchPending() {
+        $fileName = $this->yellow->system->get("coreExtensionDirectory")."update-patch.bin";
+        if (is_file($fileName)) {
+            if (!$this->yellow->extension->isExisting("patch")) {
+                require_once($fileName);
+                $this->yellow->extension->register("patch", "YellowPatch");
+            }
+            if ($this->yellow->extension->isExisting("patch")) {
+                $value = $this->yellow->extension->data["patch"];
+                if (method_exists($value["object"], "onLoad")) $value["object"]->onLoad($this->yellow);
+                if (method_exists($value["object"], "onUpdate")) $value["object"]->onUpdate("update");
+            }
+            unset($this->yellow->extension->data["patch"]);
+            if (function_exists("opcache_reset")) opcache_reset();
+            if (!$this->yellow->toolbox->deleteFile($fileName)) {
+                $this->yellow->log("error", "Can't delete file '$fileName'!");
+            }
+        }
     }
 
     // Update pending events
