@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.75";
+    const VERSION = "0.8.76";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $extensions;             // number of extensions
@@ -353,6 +353,7 @@ class YellowUpdate {
     public function updatePatchPending() {
         $fileName = $this->yellow->system->get("coreExtensionDirectory")."update-patch.bin";
         if (is_file($fileName)) {
+            if ($this->yellow->system->get("coreDebugMode")>=2) echo "YellowUpdate::updatePatchPending file:$fileName<br/>\n";
             if (!$this->yellow->extension->isExisting("patch")) {
                 require_once($fileName);
                 $this->yellow->extension->register("patch", "YellowPatch");
