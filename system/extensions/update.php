@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.76";
+    const VERSION = "0.8.77";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $extensions;             // number of extensions
@@ -351,19 +351,19 @@ class YellowUpdate {
 
     // Update pending patches
     public function updatePatchPending() {
-        $fileName = $this->yellow->system->get("coreExtensionDirectory")."update-patch.bin";
+        $fileName = $this->yellow->system->get("coreExtensionDirectory")."updatepatch.bin";
         if (is_file($fileName)) {
             if ($this->yellow->system->get("coreDebugMode")>=2) echo "YellowUpdate::updatePatchPending file:$fileName<br/>\n";
-            if (!$this->yellow->extension->isExisting("patch")) {
+            if (!$this->yellow->extension->isExisting("updatepatch")) {
                 require_once($fileName);
-                $this->yellow->extension->register("patch", "YellowPatch");
+                $this->yellow->extension->register("updatepatch", "YellowUpdatePatch");
             }
-            if ($this->yellow->extension->isExisting("patch")) {
-                $value = $this->yellow->extension->data["patch"];
+            if ($this->yellow->extension->isExisting("updatepatch")) {
+                $value = $this->yellow->extension->data["updatepatch"];
                 if (method_exists($value["object"], "onLoad")) $value["object"]->onLoad($this->yellow);
                 if (method_exists($value["object"], "onUpdate")) $value["object"]->onUpdate("update");
             }
-            unset($this->yellow->extension->data["patch"]);
+            unset($this->yellow->extension->data["updatepatch"]);
             if (function_exists("opcache_reset")) opcache_reset();
             if (!$this->yellow->toolbox->deleteFile($fileName)) {
                 $this->yellow->log("error", "Can't delete file '$fileName'!");
