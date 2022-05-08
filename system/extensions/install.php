@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/install
 
 class YellowInstall {
-    const VERSION = "0.8.72";
+    const VERSION = "0.8.73";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -98,7 +98,7 @@ class YellowInstall {
             $statusCode = $this->removeInstall();
             $this->yellow->log($statusCode==200 ? "info" : "error", "Uninstall extension 'Install ".YellowInstall::VERSION."'");
             if ($statusCode>=400) {
-                echo "ERROR updating files: ".$this->yellow->page->errorMessage."\n";
+                echo "ERROR installing files: ".$this->yellow->page->errorMessage."\n";
                 echo "Detected ZIP-files, 0 extensions installed. Please run command again.\n";
             }
         }

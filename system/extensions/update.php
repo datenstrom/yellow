@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.77";
+    const VERSION = "0.8.78";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $extensions;             // number of extensions
@@ -169,12 +169,11 @@ class YellowUpdate {
     // Process command for pending events
     public function processCommandPending() {
         $statusCode = 0;
+        $this->extensions = 0;
         $this->updatePatchPending();
         $this->updateEventPending();
-        if ($this->isExtensionPending()) {
-            $this->extensions = 0;
-            $statusCode = $this->updateExtensions("install");
-            if ($statusCode!=200) echo "ERROR installing files: ".$this->yellow->page->errorMessage."\n";
+        $statusCode = $this->updateExtensionPending();
+        if ($statusCode==303) {
             echo "Detected ZIP-file".($this->extensions!=1 ? "s" : "");
             echo ", $this->extensions extension".($this->extensions!=1 ? "s" : "")." installed. Please run command again.\n";
         }
@@ -187,12 +186,10 @@ class YellowUpdate {
         if ($this->yellow->lookup->isContentFile($fileName)) {
             $this->updatePatchPending();
             $this->updateEventPending();
-            if ($this->isExtensionPending()) {
-                $statusCode = $this->updateExtensions("install");
-                if ($statusCode==200) {
-                    $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
-                    $statusCode = $this->yellow->sendStatus(303, $location);
-                }
+            $statusCode = $this->updateExtensionPending();
+            if ($statusCode==303) {
+                $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
+                $statusCode = $this->yellow->sendStatus(303, $location);
             }
         }
         return $statusCode;
@@ -361,7 +358,7 @@ class YellowUpdate {
             if ($this->yellow->extension->isExisting("updatepatch")) {
                 $value = $this->yellow->extension->data["updatepatch"];
                 if (method_exists($value["object"], "onLoad")) $value["object"]->onLoad($this->yellow);
-                if (method_exists($value["object"], "onUpdate")) $value["object"]->onUpdate("update");
+                if (method_exists($value["object"], "onUpdate")) $value["object"]->onUpdate("patch");
             }
             unset($this->yellow->extension->data["updatepatch"]);
             if (function_exists("opcache_reset")) opcache_reset();
@@ -399,6 +396,23 @@ class YellowUpdate {
                 }
             }
         }
+    }
+    
+    // Update pending extensions
+    public function updateExtensionPending() {
+        $statusCode = 0;
+        $path = $this->yellow->system->get("coreExtensionDirectory");
+        if (count($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.zip$/", false, false))>0) {
+            $statusCode = $this->updateExtensions("install");
+            if ($statusCode==200) $statusCode = 303;
+            if ($statusCode>=400) {
+                $this->yellow->log("error", $this->yellow->page->errorMessage);
+                $this->yellow->page->statusCode = 0;
+                $this->yellow->page->errorMessage = "";
+                $statusCode = 303;
+            }
+        }
+        return $statusCode;
     }
     
     // Update system settings
@@ -816,11 +830,5 @@ class YellowUpdate {
             $timeOffset = ($timeOffset+ord($char)) % 60;
         }
         return mktime(0, 0, 0) + 60*60*24 + $timeOffset;
-    }
-
-    // Check if extension pending
-    public function isExtensionPending() {
-        $path = $this->yellow->system->get("coreExtensionDirectory");
-        return count($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.zip$/", false, false))>0;
     }
 }
