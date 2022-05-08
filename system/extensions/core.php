@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.77";
+    const VERSION = "0.8.78";
     const RELEASE = "0.8.19";
     public $page;           // current page
     public $content;        // content files
@@ -239,7 +239,7 @@ class YellowCore {
     
     // Send status response
     public function sendStatus($statusCode, $location = "") {
-        if (!empty($location)) $this->page->clean($statusCode, $location);
+        if (!empty($location)) $this->page->status($statusCode, $location);
         @header($this->toolbox->getHttpStatusFormatted($statusCode));
         foreach ($this->page->headerData as $key=>$value) {
             @header("$key: $value");
@@ -603,7 +603,7 @@ class YellowPage {
         if ($this->yellow->getRequestHandler()=="core" && $this->isExisting("redirect") && $this->statusCode==200) {
             $location = $this->yellow->lookup->normaliseLocation($this->get("redirect"), $this->location);
             $location = $this->yellow->lookup->normaliseUrl($this->scheme, $this->address, "", $location);
-            $this->clean(301, $location);
+            $this->status(301, $location);
         }
         if ($this->yellow->getRequestHandler()=="core" && !$this->isAvailable() && $this->statusCode==200) {
             $this->error(404);
@@ -901,7 +901,7 @@ class YellowPage {
     }
     
     // Respond with status code, no page content
-    public function clean($statusCode, $location = "") {
+    public function status($statusCode, $location = "") {
         if ($statusCode>0 && !$this->isExisting("pageClean")) {
             $this->statusCode = $statusCode;
             $this->lastModified = 0;
