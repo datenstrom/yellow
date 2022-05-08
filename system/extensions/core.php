@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.78";
+    const VERSION = "0.8.79";
     const RELEASE = "0.8.19";
     public $page;           // current page
     public $content;        // content files
@@ -2937,7 +2937,7 @@ class YellowToolbox {
     // Return array of specific size from text
     public function getTextList($text, $separator, $size) {
         $tokens = explode($separator, $text, $size);
-        return array_pad($tokens, $size, null);
+        return array_pad($tokens, $size, "");
     }
     
     // Return array of variable size from text, space separated
@@ -2947,7 +2947,7 @@ class YellowToolbox {
         foreach ($tokens as $key=>$value) {
             if ($value==$optional) $tokens[$key] = "";
         }
-        return array_pad($tokens, $sizeMin, null);
+        return array_pad($tokens, $sizeMin, "");
     }
     
     // Return text from array, space separated
