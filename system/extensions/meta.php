@@ -2,7 +2,7 @@
 // Meta extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/meta
 
 class YellowMeta {
-    const VERSION = "0.8.14";
+    const VERSION = "0.8.15";
     public $yellow;         // access to API
     
     // Handle initialisation
