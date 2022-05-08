@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.76";
+    const VERSION = "0.8.77";
     const RELEASE = "0.8.19";
     public $page;           // current page
     public $content;        // content files
@@ -492,7 +492,7 @@ class YellowPage {
             $this->set("modified", date("Y-m-d H:i:s", $this->yellow->toolbox->getFileModified($this->fileName)));
         }
         foreach ($this->yellow->extension->data as $key=>$value) {
-            if (method_exists($value["object"], "onParseMeta")) $value["object"]->onParseMeta($this);
+            if (method_exists($value["object"], "onParseMetaData")) $value["object"]->onParseMetaData($this);
         }
     }
     
