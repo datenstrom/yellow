@@ -2,7 +2,7 @@
 // Bundle extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/bundle
 
 class YellowBundle {
-    const VERSION = "0.8.26";
+    const VERSION = "0.8.27";
     public $yellow;         // access to API
 
     // Handle initialisation
@@ -281,6 +281,44 @@ abstract class Minify
     }
 
     /**
+     * Add a file to be minified.
+     *
+     * @param string|string[] $data
+     *
+     * @return static
+     *
+     * @throws IOException
+     */
+    public function addFile($data /* $data = null, ... */)
+    {
+        // bogus "usage" of parameter $data: scrutinizer warns this variable is
+        // not used (we're using func_get_args instead to support overloading),
+        // but it still needs to be defined because it makes no sense to have
+        // this function without argument :)
+        $args = array($data) + func_get_args();
+
+        // this method can be overloaded
+        foreach ($args as $path) {
+            if (is_array($path)) {
+                call_user_func_array(array($this, 'addFile'), $path);
+                continue;
+            }
+
+            // redefine var
+            $path = (string) $path;
+
+            // check if we can read the file
+            if (!$this->canImportFile($path)) {
+                throw new IOException('The file "'.$path.'" could not be opened for reading. Check if PHP has enough permissions.');
+            }
+
+            $this->add($path);
+        }
+
+        return $this;
+    }
+
+    /**
      * Minify the data & (optionally) saves it to a file.
      *
      * @param string[optional] $path Path to write the data to
@@ -386,6 +424,9 @@ abstract class Minify
     /**
      * Register a pattern to execute against the source content.
      *
+     * If $replacement is a string, it must be plain text. Placeholders like $1 or \2 don't work.
+     * If you need that functionality, use a callback instead.
+     *
      * @param string          $pattern     PCRE pattern
      * @param string|callable $replacement Replacement value for matched pattern
      */
@@ -411,11 +452,13 @@ abstract class Minify
      */
     protected function replace($content)
     {
-        $processed = '';
+        $contentLength = strlen($content);
+        $output = '';
+        $processedOffset = 0;
         $positions = array_fill(0, count($this->patterns), -1);
         $matches = array();
 
-        while ($content) {
+        while ($processedOffset < $contentLength) {
             // find first match for all patterns
             foreach ($this->patterns as $i => $pattern) {
                 list($pattern, $replacement) = $pattern;
@@ -428,12 +471,12 @@ abstract class Minify
 
                 // no need to re-run matches that are still in the part of the
                 // content that hasn't been processed
-                if ($positions[$i] >= 0) {
+                if ($positions[$i] >= $processedOffset) {
                     continue;
                 }
 
                 $match = null;
-                if (preg_match($pattern, $content, $match, PREG_OFFSET_CAPTURE)) {
+                if (preg_match($pattern, $content, $match, PREG_OFFSET_CAPTURE, $processedOffset)) {
                     $matches[$i] = $match;
 
                     // we'll store the match position as well; that way, we
@@ -450,61 +493,52 @@ abstract class Minify
 
             // no more matches to find: everything's been processed, break out
             if (!$matches) {
-                $processed .= $content;
+                // output the remaining content
+                $output .= substr($content, $processedOffset);
                 break;
             }
 
             // see which of the patterns actually found the first thing (we'll
             // only want to execute that one, since we're unsure if what the
             // other found was not inside what the first found)
-            $discardLength = min($positions);
-            $firstPattern = array_search($discardLength, $positions);
-            $match = $matches[$firstPattern][0][0];
+            $matchOffset = min($positions);
+            $firstPattern = array_search($matchOffset, $positions);
+            $match = $matches[$firstPattern];
 
             // execute the pattern that matches earliest in the content string
-            list($pattern, $replacement) = $this->patterns[$firstPattern];
-            $replacement = $this->replacePattern($pattern, $replacement, $content);
+            list(, $replacement) = $this->patterns[$firstPattern];
 
-            // figure out which part of the string was unmatched; that's the
-            // part we'll execute the patterns on again next
-            $content = (string) substr($content, $discardLength);
-            $unmatched = (string) substr($content, strpos($content, $match) + strlen($match));
-
-            // move the replaced part to $processed and prepare $content to
-            // again match batch of patterns against
-            $processed .= substr($replacement, 0, strlen($replacement) - strlen($unmatched));
-            $content = $unmatched;
-
-            // first match has been replaced & that content is to be left alone,
-            // the next matches will start after this replacement, so we should
-            // fix their offsets
-            foreach ($positions as $i => $position) {
-                $positions[$i] -= $discardLength + strlen($match);
-            }
+            // add the part of the input between $processedOffset and the first match;
+            // that content wasn't matched by anything
+            $output .= substr($content, $processedOffset, $matchOffset - $processedOffset);
+            // add the replacement for the match
+            $output .= $this->executeReplacement($replacement, $match);
+            // advance $processedOffset past the match
+            $processedOffset = $matchOffset + strlen($match[0][0]);
         }
 
-        return $processed;
+        return $output;
     }
 
     /**
-     * This is where a pattern is matched against $content and the matches
-     * are replaced by their respective value.
-     * This function will be called plenty of times, where $content will always
-     * move up 1 character.
+     * If $replacement is a callback, execute it, passing in the match data.
+     * If it's a string, just pass it through.
      *
-     * @param string          $pattern     Pattern to match
      * @param string|callable $replacement Replacement value
-     * @param string          $content     Content to match pattern against
+     * @param array           $match       Match data, in PREG_OFFSET_CAPTURE form
      *
      * @return string
      */
-    protected function replacePattern($pattern, $replacement, $content)
+    protected function executeReplacement($replacement, $match)
     {
-        if (is_callable($replacement)) {
-            return preg_replace_callback($pattern, $replacement, $content, 1, $count);
-        } else {
-            return preg_replace($pattern, $replacement, $content, 1, $count);
+        if (!is_callable($replacement)) {
+            return $replacement;
         }
+        // convert $match from the PREG_OFFSET_CAPTURE form to the form the callback expects
+        foreach ($match as &$matchItem) {
+            $matchItem = $matchItem[0];
+        }
+        return $replacement($match);
     }
 
     /**
@@ -615,7 +649,7 @@ abstract class Minify
      */
     protected function openFileForWriting($path)
     {
-        if (($handler = @fopen($path, 'w')) === false) {
+        if ($path === '' || ($handler = @fopen($path, 'w')) === false) {
             throw new IOException('The file "'.$path.'" could not be opened for writing. Check if PHP has enough permissions.');
         }
 
@@ -633,7 +667,11 @@ abstract class Minify
      */
     protected function writeToFile($handler, $content, $path = '')
     {
-        if (($result = @fwrite($handler, $content)) === false || ($result < strlen($content))) {
+        if (
+            !is_resource($handler) ||
+            ($result = @fwrite($handler, $content)) === false ||
+            ($result < strlen($content))
+        ) {
             throw new IOException('The file "'.$path.'" could not be written to. Check your disk space and file permissions.');
         }
     }
@@ -657,6 +695,10 @@ class CSS extends Minify
         'jpeg' => 'data:image/jpeg',
         'svg' => 'data:image/svg+xml',
         'woff' => 'data:application/x-font-woff',
+        'woff2' => 'data:application/x-font-woff2',
+        'avif' => 'data:image/avif',
+        'apng' => 'data:image/apng',
+        'webp' => 'data:image/webp',
         'tif' => 'image/tiff',
         'tiff' => 'image/tiff',
         'xbm' => 'image/x-xbitmap',
@@ -829,7 +871,7 @@ class CSS extends Minify
 
             // grab referenced file & minify it (which may include importing
             // yet other @import statements recursively)
-            $minifier = new static($importPath);
+            $minifier = new self($importPath);
             $minifier->setMaxImportSize($this->maxImportSize);
             $minifier->setImportExtensions($this->importExtensions);
             $importContent = $minifier->execute($source, $parents);
@@ -920,7 +962,8 @@ class CSS extends Minify
              */
             $this->extractStrings();
             $this->stripComments();
-            $this->extractCalcs();
+            $this->extractMath();
+            $this->extractCustomProperties();
             $css = $this->replace($css);
 
             $css = $this->stripWhitespace($css);
@@ -1291,19 +1334,29 @@ class CSS extends Minify
     }
 
     /**
-     * Replace all `calc()` occurrences.
+     * Replace all occurrences of functions that may contain math, where
+     * whitespace around operators needs to be preserved (e.g. calc, clamp)
      */
-    protected function extractCalcs()
+    protected function extractMath()
     {
+        $functions = array('calc', 'clamp', 'min', 'max');
+        $pattern = '/\b('. implode('|', $functions) .')(\(.+?)(?=$|;|})/m';
+
         // PHP only supports $this inside anonymous functions since 5.4
         $minifier = $this;
-        $callback = function ($match) use ($minifier) {
-            $length = strlen($match[1]);
+        $callback = function ($match) use ($minifier, $pattern, &$callback) {
+            $function = $match[1];
+            $length = strlen($match[2]);
             $expr = '';
             $opened = 0;
 
+            // the regular expression for extracting math has 1 significant problem:
+            // it can't determine the correct closing parenthesis...
+            // instead, it'll match a larger portion of code to where it's certain that
+            // the calc() musts have ended, and we'll figure out which is the correct
+            // closing parenthesis here, by counting how many have opened
             for ($i = 0; $i < $length; $i++) {
-                $char = $match[1][$i];
+                $char = $match[2][$i];
                 $expr .= $char;
                 if ($char === '(') {
                     $opened++;
@@ -1311,18 +1364,41 @@ class CSS extends Minify
                     break;
                 }
             }
-            $rest = str_replace($expr, '', $match[1]);
-            $expr = trim(substr($expr, 1, -1));
 
+            // now that we've figured out where the calc() starts and ends, extract it
             $count = count($minifier->extracted);
-            $placeholder = 'calc('.$count.')';
-            $minifier->extracted[$placeholder] = 'calc('.$expr.')';
+            $placeholder = 'math('.$count.')';
+            $minifier->extracted[$placeholder] = $function.'('.trim(substr($expr, 1, -1)).')';
+
+            // and since we've captured more code than required, we may have some leftover
+            // calc() in here too - go recursive on the remaining but of code to go figure
+            // that out and extract what is needed
+            $rest = str_replace($function.$expr, '', $match[0]);
+            $rest = preg_replace_callback($pattern, $callback, $rest);
 
             return $placeholder.$rest;
         };
 
-        $this->registerPattern('/calc(\(.+?)(?=$|;|}|calc\()/', $callback);
-        $this->registerPattern('/calc(\(.+?)(?=$|;|}|calc\()/m', $callback);
+        $this->registerPattern($pattern, $callback);
+    }
+
+    /**
+     * Replace custom properties, whose values may be used in scenarios where
+     * we wouldn't want them to be minified (e.g. inside calc)
+     */
+    protected function extractCustomProperties()
+    {
+        // PHP only supports $this inside anonymous functions since 5.4
+        $minifier = $this;
+        $this->registerPattern(
+            '/(?<=^|[;}])\s*(--[^:;{}"\'\s]+)\s*:([^;{}]+)/m',
+            function ($match) use ($minifier) {
+                $placeholder = '--custom-'. count($minifier->extracted) . ':0';
+                $minifier->extracted[$placeholder] = $match[1] .':'. trim($match[2]);
+                return $placeholder;
+
+            }
+        );
     }
 
     /**
@@ -1541,15 +1617,25 @@ class JS extends Minify
         // PHP only supports $this inside anonymous functions since 5.4
         $minifier = $this;
         $callback = function ($match) use ($minifier) {
-            $count = count($minifier->extracted);
-            $placeholder = '/*'.$count.'*/';
-            $minifier->extracted[$placeholder] = $match[0];
+            if (
+                substr($match[2], 0, 1) === '!' ||
+                strpos($match[2], '@license') !== false ||
+                strpos($match[2], '@preserve') !== false
+            ) {
+                // preserve multi-line comments that start with /*!
+                // or contain @license or @preserve annotations
+                $count = count($minifier->extracted);
+                $placeholder = '/*'.$count.'*/';
+                $minifier->extracted[$placeholder] = $match[0];
 
-            return $placeholder;
+                return $match[1] . $placeholder . $match[3];
+            }
+
+            return $match[1] . $match[3];
         };
+
         // multi-line comments
-        $this->registerPattern('/\n?\/\*(!|.*?@license|.*?@preserve).*?\*\/\n?/s', $callback);
-        $this->registerPattern('/\/\*.*?\*\//s', '');
+        $this->registerPattern('/(\n?)\/\*(.*?)\*\/(\n?)/s', $callback);
 
         // single-line comments
         $this->registerPattern('/\/\/.*$/m', '');
@@ -1597,7 +1683,7 @@ class JS extends Minify
         // of the RegExp methods (a `\` followed by a variable or value is
         // likely part of a division, not a regex)
         $keywords = array('do', 'in', 'new', 'else', 'throw', 'yield', 'delete', 'return',  'typeof');
-        $before = '([=:,;\+\-\*\/\}\(\{\[&\|!]|^|'.implode('|', $keywords).')\s*';
+        $before = '(^|[=:,;\+\-\*\/\}\(\{\[&\|!]|'.implode('|', $keywords).')\s*';
         $propertiesAndMethods = array(
             // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp#Properties_2
             'constructor',
@@ -1748,9 +1834,26 @@ class JS extends Minify
          * to be the for-loop's body... Same goes for while loops.
          * I'm going to double that semicolon (if any) so after the next line,
          * which strips semicolons here & there, we're still left with this one.
+         * Note the special recursive construct in the three inner parts of the for:
+         * (\{([^\{\}]*(?-2))*[^\{\}]*\})? - it is intended to match inline
+         * functions bodies, e.g.: i<arr.map(function(e){return e}).length.
+         * Also note that the construct is applied only once and multiplied
+         * for each part of the for, otherwise it risks a catastrophic backtracking.
+         * The limitation is that it will not allow closures in more than one
+         * of the three parts for a specific for() case.
+         * REGEX throwing catastrophic backtracking: $content = preg_replace('/(for\([^;\{]*(\{([^\{\}]*(?-2))*[^\{\}]*\})?[^;\{]*;[^;\{]*(\{([^\{\}]*(?-2))*[^\{\}]*\})?[^;\{]*;[^;\{]*(\{([^\{\}]*(?-2))*[^\{\}]*\})?[^;\{]*\));(\}|$)/s', '\\1;;\\8', $content);
          */
-        $content = preg_replace('/(for\([^;\{]*;[^;\{]*;[^;\{]*\));(\}|$)/s', '\\1;;\\2', $content);
+        $content = preg_replace('/(for\((?:[^;\{]*|[^;\{]*function[^;\{]*(\{([^\{\}]*(?-2))*[^\{\}]*\})?[^;\{]*);[^;\{]*;[^;\{]*\));(\}|$)/s', '\\1;;\\4', $content);
+        $content = preg_replace('/(for\([^;\{]*;(?:[^;\{]*|[^;\{]*function[^;\{]*(\{([^\{\}]*(?-2))*[^\{\}]*\})?[^;\{]*);[^;\{]*\));(\}|$)/s', '\\1;;\\4', $content);
+        $content = preg_replace('/(for\([^;\{]*;[^;\{]*;(?:[^;\{]*|[^;\{]*function[^;\{]*(\{([^\{\}]*(?-2))*[^\{\}]*\})?[^;\{]*)\));(\}|$)/s', '\\1;;\\4', $content);
+
         $content = preg_replace('/(for\([^;\{]+\s+in\s+[^;\{]+\));(\}|$)/s', '\\1;;\\2', $content);
+
+        /*
+         * Do the same for the if's that don't have a body but are followed by ;}
+         */
+        $content = preg_replace('/(\bif\s*\([^{;]*\));\}/s', '\\1;;}', $content);
+
         /*
          * Below will also keep `;` after a `do{}while();` along with `while();`
          * While these could be stripped after do-while, detecting this
