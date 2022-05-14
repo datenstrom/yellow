@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.80";
+    const VERSION = "0.8.81";
     const RELEASE = "0.8.20";
     public $page;           // current page
     public $content;        // content files
@@ -487,6 +487,7 @@ class YellowPage {
                 rtrim($this->yellow->system->get("editLocation"), "/").$this->location));
             $this->parseMetaDataShared();
         } else {
+            $this->set("size", filesize($this->fileName));
             $this->set("type", $this->yellow->toolbox->getFileType($this->fileName));
             $this->set("group", $this->yellow->toolbox->getFileGroup($this->fileName, $this->yellow->system->get("coreMediaDirectory")));
             $this->set("modified", date("Y-m-d H:i:s", $this->yellow->toolbox->getFileModified($this->fileName)));
@@ -529,13 +530,13 @@ class YellowPage {
     }
     
     // Parse page content on demand
-    public function parseContent($sizeMax = 0) {
+    public function parseContent() {
         if (!is_null($this->rawData) && !is_object($this->parser)) {
             if ($this->yellow->extension->isExisting($this->get("parser"))) {
                 $value = $this->yellow->extension->data[$this->get("parser")];
                 if (method_exists($value["object"], "onParseContentRaw")) {
                     $this->parser = $value["object"];
-                    $this->parserData = $this->getContent(true, $sizeMax);
+                    $this->parserData = $this->getContent(true);
                     $this->parserData = preg_replace("/@pageReadUrl/i", $this->get("pageReadUrl"), $this->parserData);
                     $this->parserData = preg_replace("/@pageEditUrl/i", $this->get("pageEditUrl"), $this->parserData);
                     $this->parserData = $this->parser->onParseContentRaw($this, $this->parserData);
@@ -547,7 +548,7 @@ class YellowPage {
                     }
                 }
             } else {
-                $this->parserData = $this->getContent(true, $sizeMax);
+                $this->parserData = $this->getContent(true);
                 $this->parserData = preg_replace("/\[yellow error\]/i", $this->errorMessage, $this->parserData);
             }
             if (!$this->isExisting("description")) {
@@ -712,15 +713,15 @@ class YellowPage {
     }
     
     // Return page content, HTML encoded or raw format
-    public function getContent($rawFormat = false, $sizeMax = 0) {
+    public function getContent($rawFormat = false) {
         if ($rawFormat) {
             $this->parseMetaUpdate();
             $text = substrb($this->rawData, $this->metaDataOffsetBytes);
         } else {
-            $this->parseContent($sizeMax);
+            $this->parseContent();
             $text = $this->parserData;
         }
-        return $sizeMax ? substrb($text, 0, $sizeMax) : $text;
+        return $text;
     }
     
     // Return parent page, null if none
@@ -1017,13 +1018,13 @@ class YellowPageCollection extends ArrayObject {
         $array = $this->getArrayCopy();
         $sortIndex = 0;
         foreach ($array as $page) {
-            $page->set("sortindex", ++$sortIndex);
+            $page->set("sortIndex", ++$sortIndex);
         }
         $callback = function ($a, $b) use ($key, $ascendingOrder) {
             $result = $ascendingOrder ?
                 strnatcasecmp($a->get($key), $b->get($key)) :
                 strnatcasecmp($b->get($key), $a->get($key));
-            return $result==0 ? $a->get("sortindex") - $b->get("sortindex") : $result;
+            return $result==0 ? $a->get("sortIndex") - $b->get("sortIndex") : $result;
         };
         usort($array, $callback);
         $this->exchangeArray($array);
@@ -1038,19 +1039,19 @@ class YellowPageCollection extends ArrayObject {
         if (!empty($tokens)) {
             $array = array();
             foreach ($this->getArrayCopy() as $page) {
-                $searchScore = 0;
+                $sortScore = 0;
                 foreach ($tokens as $token) {
-                    if (stristr($page->get("title"), $token)) $searchScore += 50;
-                    if (stristr($page->get("tag"), $token)) $searchScore += 5;
-                    if (stristr($page->get("author"), $token)) $searchScore += 2;
+                    if (stristr($page->get("title"), $token)) $sortScore += 50;
+                    if (stristr($page->get("tag"), $token)) $sortScore += 5;
+                    if (stristr($page->get("author"), $token)) $sortScore += 2;
                 }
                 if ($page->location!=$location) {
-                    $page->set("searchscore", $searchScore);
+                    $page->set("sortScore", $sortScore);
                     array_push($array, $page);
                 }
             }
             $this->exchangeArray($array);
-            $this->sort("modified", $ascendingOrder)->sort("searchscore", $ascendingOrder);
+            $this->sort("modified", $ascendingOrder)->sort("sortScore", $ascendingOrder);
         }
         return $this;
     }
@@ -2986,6 +2987,7 @@ class YellowToolbox {
         $elementsVoid = array("area", "br", "col", "embed", "hr", "img", "input", "param", "source", "wbr");
         if ($lengthMax==0) $lengthMax = strlenu($text);
         if ($removeHtml) {
+            $hiddenLevel = 0;
             $offsetBytes = 0;
             while (true) {
                 $elementFound = preg_match("/<(\/?)([\!\?\w]+)(.*?)(\/?)>/s", $text, $matches, PREG_OFFSET_CAPTURE, $offsetBytes);
@@ -2993,7 +2995,9 @@ class YellowToolbox {
                 $elementRawData = isset($matches[0][0]) ? $matches[0][0] : "";
                 $elementStart = isset($matches[1][0]) ? $matches[1][0] : "";
                 $elementName = isset($matches[2][0]) ? $matches[2][0] : "";
-                if (!strempty($elementBefore)) {
+                $elementAttributes = isset($matches[3][0]) ? $matches[3][0] : "";
+                $elementEnd = isset($matches[4][0]) ? $matches[4][0] : "";
+                if (!strempty($elementBefore) && !$hiddenLevel) {
                     $rawText = preg_replace("/\s+/s", " ", html_entity_decode($elementBefore, ENT_QUOTES, "UTF-8"));
                     if (empty($elementStart) && in_array(strtolower($elementName), $elementsBlock)) $rawText = rtrim($rawText)." ";
                     if (substru($rawText, 0, 1)==" " && (empty($output) || substru($output, -1)==" ")) $rawText = ltrim($rawText);
@@ -3005,6 +3009,15 @@ class YellowToolbox {
                     $lengthMax = 0;
                 }
                 if ($lengthMax<=0 || !$elementFound) break;
+                if ($hiddenLevel>0 || preg_match("/aria-hidden=\"true\"/i", $elementAttributes)) {
+                    if (!empty($elementName) && empty($elementEnd) && !in_array(strtolower($elementName), $elementsVoid)) {
+                        if (empty($elementStart)) {
+                            ++$hiddenLevel;
+                        } else {
+                            --$hiddenLevel;
+                        }
+                    }
+                }
                 $offsetBytes = $matches[0][1] + strlenb($matches[0][0]);
             }
             $output = preg_replace("/\s+\…$/s", "…", $output);
