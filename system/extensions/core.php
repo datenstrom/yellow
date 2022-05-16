@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.81";
+    const VERSION = "0.8.82";
     const RELEASE = "0.8.20";
     public $page;           // current page
     public $content;        // content files
@@ -3249,10 +3249,15 @@ class YellowToolbox {
     
     // Detect server timezone
     public function detectServerTimezone() {
-        $timezone = @date_default_timezone_get();
-        if (PHP_OS=="Darwin" && $timezone=="UTC") {
-            if (preg_match("#zoneinfo/(.*)#", @readlink("/etc/localtime"), $matches)) $timezone = $matches[1];
+        $timezone = ini_get("date.timezone");
+        if (empty($timezone)) {
+            if (PHP_OS=="Darwin") {
+                if (preg_match("#zoneinfo/(.*)#", @readlink("/etc/localtime"), $matches)) $timezone = $matches[1];
+            } else {
+                if (preg_match("/^(\S+)\/(\S+)/", $this->readFile("/etc/timezone"), $matches)) $timezone = $matches[1];
+            }
         }
+        if (empty($timezone)) $timezone = "UTC";
         return $timezone;
     }
     
@@ -3264,7 +3269,7 @@ class YellowToolbox {
         if (preg_match("/^(\S+)\/(\S+)/", $this->getServer("SERVER_SOFTWARE"), $matches)) {
             $name = $matches[1];
             $version = $matches[2];
-        } elseif (preg_match("/^(\S+)/u", $this->getServer("SERVER_SOFTWARE"), $matches)) {
+        } elseif (preg_match("/^(\S+)/", $this->getServer("SERVER_SOFTWARE"), $matches)) {
             $name = $matches[1];
         }
         if (PHP_SAPI=="cli" || PHP_SAPI=="cli-server") {
