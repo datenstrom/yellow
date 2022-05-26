@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.82";
+    const VERSION = "0.8.83";
     const RELEASE = "0.8.20";
     public $page;           // current page
     public $content;        // content files
@@ -3257,7 +3257,7 @@ class YellowToolbox {
                 if (preg_match("/^(\S+)\/(\S+)/", $this->readFile("/etc/timezone"), $matches)) $timezone = $matches[1];
             }
         }
-        if (empty($timezone)) $timezone = "UTC";
+        if (!in_array($timezone, timezone_identifiers_list())) $timezone = "UTC";
         return $timezone;
     }
     
