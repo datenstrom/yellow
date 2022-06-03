@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.83";
+    const VERSION = "0.8.84";
     const RELEASE = "0.8.20";
     public $page;           // current page
     public $content;        // content files
@@ -3295,6 +3295,28 @@ class YellowToolbox {
             }
         }
         return $languageFound;
+    }
+    
+    // Detect terminal width and height
+    public function detectTerminalInformation() {
+        $width = $height = 0;
+        if (strtoupperu(substru(PHP_OS, 0, 3))=="WIN") {
+            exec("powershell $Host.UI.RawUI.WindowSize.Width", $outputLines, $returnStatus);
+            if ($returnStatus==0 && !empty($outputLines)) {
+                $width = intval(end($outputLines));
+            }
+            exec("powershell $Host.UI.RawUI.WindowSize.Height", $outputLines, $returnStatus);
+            if ($returnStatus==0 && !empty($outputLines)) {
+                $height = intval(end($outputLines));
+            }
+        } else {
+            exec("stty size", $outputLines, $returnStatus);
+            if ($returnStatus==0 && preg_match("/^(\d+)\s+(\d+)/", implode("\n", $outputLines), $matches)) {
+                $width = intval($matches[2]);
+                $height = intval($matches[1]);
+            }
+        }
+        return array($width, $height);
     }
     
     // Detect image width, height, orientation and type for GIF/JPG/PNG/SVG
