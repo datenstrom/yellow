@@ -3301,11 +3301,11 @@ class YellowToolbox {
     public function detectTerminalInformation() {
         $width = $height = 0;
         if (strtoupperu(substru(PHP_OS, 0, 3))=="WIN") {
-            exec("powershell $Host.UI.RawUI.WindowSize.Width", $outputLines, $returnStatus);
+            exec("powershell \$Host.UI.RawUI.WindowSize.Width", $outputLines, $returnStatus);
             if ($returnStatus==0 && !empty($outputLines)) {
                 $width = intval(end($outputLines));
             }
-            exec("powershell $Host.UI.RawUI.WindowSize.Height", $outputLines, $returnStatus);
+            exec("powershell \$Host.UI.RawUI.WindowSize.Height", $outputLines, $returnStatus);
             if ($returnStatus==0 && !empty($outputLines)) {
                 $height = intval(end($outputLines));
             }
