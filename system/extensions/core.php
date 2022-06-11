@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.84";
+    const VERSION = "0.8.85";
     const RELEASE = "0.8.20";
     public $page;           // current page
     public $content;        // content files
@@ -1832,7 +1832,7 @@ class YellowLanguage {
     // Return human readable date, relative to today
     public function getDateRelative($timestamp, $format, $daysLimit, $language = "") {
         $timeDifference = time() - $timestamp;
-        $days = abs(intval($timeDifference / 86400));
+        $days = abs(intval($timeDifference/86400));
         $key = $timeDifference>=0 ? "coreDatePast" : "coreDateFuture";
         $tokens = preg_split("/\s*,\s*/", $this->getText($key, $language));
         if (count($tokens)>=8) {

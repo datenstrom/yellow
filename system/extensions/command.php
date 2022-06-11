@@ -2,7 +2,7 @@
 // Command extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/command
 
 class YellowCommand {
-    const VERSION = "0.8.40";
+    const VERSION = "0.8.41";
     public $yellow;                       // access to API
     public $files;                        // number of files
     public $links;                        // number of links
@@ -499,8 +499,8 @@ class YellowCommand {
     
     // Return progress in percent
     public function getProgressPercent($now, $total, $increments, $max) {
-        $percent = intval(($max / $total) * $now);
-        if ($increments>1) $percent = intval($percent / $increments) * $increments;
+        $percent = intval(($max/$total) * $now);
+        if ($increments>1) $percent = intval($percent/$increments) * $increments;
         return min($max, $percent);
     }
     
