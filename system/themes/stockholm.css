@@ -13,6 +13,7 @@
     --code: #666;
     --link: #07d;
     --link-active: #29f;
+    --blockquote-accent: #29f;
     --notice1-accent: #fb0;
     --notice2-accent: #d00;
     --notice3-accent: #08e;
@@ -152,7 +153,7 @@ a:hover {
     margin-left: 0;
     padding-left: 1em;
     font-weight: bold;
-    border-left: 3px solid var(--link-active);
+    border-left: 3px solid var(--blockquote-accent);
 }
 .content .notice1 {
     margin: 1em 0;
