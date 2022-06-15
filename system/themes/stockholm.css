@@ -1,10 +1,25 @@
 /* Stockholm extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/stockholm */
 
-html, body, div, form, pre, span, tr, th, td, img {
-    margin: 0;
-    padding: 0;
-    border: 0;
-    vertical-align: baseline;
+/* Colors and fonts */
+
+:root {
+    --bg: #fff;
+    --code-bg: #f7f7f7;
+    --notice1-bg: #fffbf0;
+    --notice2-bg: #fdf0f0;
+    --notice3-bg: #f0f8fe;
+    --heading: #111;
+    --text: #666;
+    --code: #666;
+    --link: #07d;
+    --link-active: #29f;
+    --notice1-accent: #fb0;
+    --notice2-accent: #d00;
+    --notice3-accent: #08e;
+    --separator: #ddd;
+    --border: #bbb;
+    --font: "Open Sans", Helvetica, sans-serif;
+    --monospace-font: Consolas, Menlo, Courier, monospace;
 }
 @font-face {
     font-family: "Open Sans";
@@ -27,22 +42,26 @@ html, body, div, form, pre, span, tr, th, td, img {
     font-display: swap;
     src: url(stockholm-opensans-bold.woff) format("woff");
 }
+
+/* General */
+
+html, body, div, form, pre, span, tr, th, td, img {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    vertical-align: baseline;
+}
 body {
     margin: 1em;
-    background-color: #fff;
-    color: #666;
-    font-family: "Open Sans", Helvetica, sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
     font-size: 1em;
     font-weight: 300;
     line-height: 1.5;
 }
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-    color: #111;
+h1, h2, h3, h4, h5, h6 {
+    color: var(--heading);
     font-weight: 400;
 }
 h1 {
@@ -50,7 +69,7 @@ h1 {
 }
 hr {
     height: 1px;
-    background: #ddd;
+    background: var(--separator);
     border: 0;
 }
 strong {
@@ -60,11 +79,11 @@ code {
     font-size: 1.1em;
 }
 a {
-    color: #07d;
+    color: var(--link);
     text-decoration: none;
 }
 a:hover {
-    color: #07d;
+    color: var(--link);
     text-decoration: underline;
 }
 
@@ -74,10 +93,10 @@ a:hover {
     margin: 1em 0;
 }
 .content h1 a {
-    color: #111;
+    color: var(--heading);
 }
 .content h1 a:hover {
-    color: #111;
+    color: var(--heading);
     text-decoration: none;
 }
 .content img {
@@ -94,7 +113,7 @@ a:hover {
 .content th {
     text-align: left;
     padding: 0.3em;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--separator);
 }
 .content td {
     text-align: left;
@@ -103,13 +122,14 @@ a:hover {
 }
 .content code,
 .content pre {
-    font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    font-family: var(--monospace-font);
     font-size: 90%;
 }
 .content code {
     padding: 0.15em 0.4em;
     margin: 0;
-    background-color: #f7f7f7;
+    background-color: var(--code-bg);
+    color: var(--code);
     border-radius: 3px;
 }
 .content pre > code {
@@ -124,26 +144,27 @@ a:hover {
     padding: 1em;
     overflow: auto;
     line-height: 1.45;
-    background-color: #f7f7f7;
+    background-color: var(--code-bg);
+    color: var(--code);
     border-radius: 3px;
 }
 .content blockquote {
     margin-left: 0;
     padding-left: 1em;
     font-weight: bold;
-    border-left: 3px solid #29f;
+    border-left: 3px solid var(--link-active);
 }
 .content .notice1 {
     margin: 1em 0;
     padding: 10px 1em;
-    background-color: #fffbf0;
-    border-left: 10px solid #fb0;
+    background-color: var(--notice1-bg);
+    border-left: 10px solid var(--notice1-accent);
 }
 .content .notice2 {
     margin: 1em 0;
     padding: 10px 1em;
-    background-color: #fdf0f0;
-    border-left: 10px solid #d00;
+    background-color: var(--notice2-bg);
+    border-left: 10px solid var(--notice2-accent);
 }
 .content .notice3,
 .content .notice4,
@@ -151,8 +172,8 @@ a:hover {
 .content .notice6 {
     margin: 1em 0;
     padding: 10px 1em;
-    background-color: #f0f8fe;
-    border-left: 10px solid #08e;
+    background-color: var(--notice3-bg);
+    border-left: 10px solid var(--notice3-accent);
 }
 .content .flexible {
     position: relative;
@@ -225,18 +246,18 @@ a:hover {
     font-weight: 300;
 }
 .header .sitename h1 a {
-    color: #666;
-    border-bottom: solid 3px #fff;
+    color: var(--text);
+    border-bottom: solid 3px var(--bg);
     text-decoration: none;
     padding: 0.5em 0;
 }
 .header .sitename h1 a:hover {
-    color: #07d;
-    border-bottom: solid 3px #29f;
+    color: var(--link);
+    border-bottom: solid 3px var(--link-active);
 }
 .header .sitename p {
     margin-top: 0;
-    color: #666;
+    color: var(--text);
 }
 
 /* Navigation */
@@ -246,15 +267,15 @@ a:hover {
     float: right;
 }
 .navigation a {
-    color: #666;
-    border-bottom: solid 3px #fff;
+    color: var(--text);
+    border-bottom: solid 3px var(--bg);
     text-decoration: none;
     padding: 0.5em 0;
     margin: 0 0.5em;
 }
 .navigation a:hover {
-    color: #07d;
-    border-bottom: solid 3px #29f;
+    color: var(--link);
+    border-bottom: solid 3px var(--link-active);
 }
 .navigation ul {
     margin: 0 -0.5em;
@@ -265,7 +286,7 @@ a:hover {
     display: inline;
 }
 .navigation li a.active {
-    border-bottom: solid 3px #29f;
+    border-bottom: solid 3px var(--link-active);
 }
 .navigation-banner {
     clear: both;
@@ -277,10 +298,10 @@ a:hover {
     margin: 2em 0;
 }
 .footer .siteinfo a {
-    color: #07d;
+    color: var(--link);
 }
 .footer .siteinfo a:hover {
-    color: #07d;
+    color: var(--link);
     text-decoration: underline;
 }
 
@@ -291,10 +312,10 @@ a:hover {
     padding: 2px 4px;
     display: inline-block;
     min-width: 7em;
-    background-color: #fff;
-    color: #666;
-    background-image: linear-gradient(to bottom, #fff, #fff);
-    border: 1px solid #bbb;
+    background-color: var(--bg);
+    color: var(--text);
+    background-image: linear-gradient(to bottom, var(--bg), var(--bg));
+    border: 1px solid var(--border);
     border-radius: 4px;
     font-size: 0.9em;
     font-family: inherit;
@@ -309,7 +330,7 @@ a:hover {
     background-color: #eaeaea;
     color: #333333;
     background-image: linear-gradient(to bottom, #f8f8f8, #e1e1e1);
-    border: 1px solid #bbb;
+    border: 1px solid var(--border);
     border-color: #c1c1c1 #c1c1c1 #aaaaaa;
     border-radius: 4px;
     outline-offset: -2px;
