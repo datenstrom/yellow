@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.85";
+    const VERSION = "0.8.86";
     const RELEASE = "0.8.20";
     public $page;           // current page
     public $content;        // content files
@@ -2946,7 +2946,7 @@ class YellowToolbox {
         $text = preg_replace("/\s+/s", " ", trim($text));
         $tokens = str_getcsv($text, " ", "\"");
         foreach ($tokens as $key=>$value) {
-            if ($value==$optional) $tokens[$key] = "";
+            if (is_null($value) || $value==$optional) $tokens[$key] = "";
         }
         return array_pad($tokens, $sizeMin, "");
     }
