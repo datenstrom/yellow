@@ -15,6 +15,7 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           extensions: curl, gd, mbstring, zip
+          ini-file: development
           coverage: none
           tools: none
       - name: Set up problem matcher
