@@ -980,8 +980,20 @@ class YellowPageCollection extends ArrayObject {
         $this->yellow = $yellow;
     }
     
+    // Append to end of page collection
+    public function append($page): void {
+        parent::append($page);
+    }
+    
+    // Prepend to start of page collection
+    public function prepend($page): void {
+        $array = $this->getArrayCopy();
+        array_unshift($array, $page);
+        $this->exchangeArray($array);
+    }
+    
     // Filter page collection by page setting
-    public function filter($key, $value, $exactMatch = true) {
+    public function filter($key, $value, $exactMatch = true): YellowPageCollection {
         $array = array();
         $value = str_replace(" ", "-", strtoloweru($value));
         $valueLength = strlenu($value);
@@ -1003,7 +1015,7 @@ class YellowPageCollection extends ArrayObject {
     }
     
     // Filter page collection by location or file
-    public function match($regex = "/.*/", $filterByLocation = true) {
+    public function match($regex = "/.*/", $filterByLocation = true): YellowPageCollection {
         $array = array();
         $this->filterValue = $regex;
         foreach ($this->getArrayCopy() as $page) {
@@ -1014,7 +1026,7 @@ class YellowPageCollection extends ArrayObject {
     }
     
     // Sort page collection by page setting
-    public function sort($key, $ascendingOrder = true) {
+    public function sort($key, $ascendingOrder = true): YellowPageCollection {
         $array = $this->getArrayCopy();
         $sortIndex = 0;
         foreach ($array as $page) {
@@ -1032,7 +1044,7 @@ class YellowPageCollection extends ArrayObject {
     }
     
     // Sort page collection by settings similarity
-    public function similar($page, $ascendingOrder = false) {
+    public function similar($page, $ascendingOrder = false): YellowPageCollection {
         $location = $page->location;
         $keywords = strtoloweru($page->get("title").",".$page->get("tag").",".$page->get("author"));
         $tokens = array_unique(array_filter(preg_split("/[,\s\(\)\+\-]/", $keywords), "strlen"));
@@ -1057,13 +1069,13 @@ class YellowPageCollection extends ArrayObject {
     }
 
     // Calculate union, merge page collection
-    public function merge($input) {
+    public function merge($input): YellowPageCollection {
         $this->exchangeArray(array_merge($this->getArrayCopy(), (array)$input));
         return $this;
     }
     
     // Calculate intersection, remove pages that are not present in another page collection
-    public function intersect($input) {
+    public function intersect($input): YellowPageCollection {
         $callback = function ($a, $b) {
             return strcmp(spl_object_hash($a), spl_object_hash($b));
         };
@@ -1072,7 +1084,7 @@ class YellowPageCollection extends ArrayObject {
     }
 
     // Calculate difference, remove pages that are present in another page collection
-    public function diff($input) {
+    public function diff($input): YellowPageCollection {
         $callback = function ($a, $b) {
             return strcmp(spl_object_hash($a), spl_object_hash($b));
         };
@@ -1080,34 +1092,20 @@ class YellowPageCollection extends ArrayObject {
         return $this;
     }
     
-    // Append to end of page collection
-    public function append($page) {
-        parent::append($page);
-        return $this;
-    }
-    
-    // Prepend to start of page collection
-    public function prepend($page) {
-        $array = $this->getArrayCopy();
-        array_unshift($array, $page);
-        $this->exchangeArray($array);
-        return $this;
-    }
-    
     // Limit the number of pages in page collection
-    public function limit($pagesMax) {
+    public function limit($pagesMax): YellowPageCollection {
         $this->exchangeArray(array_slice($this->getArrayCopy(), 0, $pagesMax));
         return $this;
     }
     
     // Reverse page collection
-    public function reverse() {
+    public function reverse(): YellowPageCollection {
         $this->exchangeArray(array_reverse($this->getArrayCopy()));
         return $this;
     }
     
     // Randomize page collection
-    public function shuffle() {
+    public function shuffle(): YellowPageCollection {
         $array = $this->getArrayCopy();
         shuffle($array);
         $this->exchangeArray($array);
@@ -1115,7 +1113,7 @@ class YellowPageCollection extends ArrayObject {
     }
 
     // Paginate page collection
-    public function paginate($limit) {
+    public function paginate($limit): YellowPageCollection {
         if (!$this->isPagination() && $limit!=0) {
             $this->paginationNumber = 1;
             $this->paginationCount = ceil($this->count() / $limit);
@@ -3605,24 +3603,28 @@ class YellowArray extends ArrayObject {
     }
     
     // Return array element
+    #[\ReturnTypeWillChange]
     public function offsetGet($key) {
         if (is_string($key)) $key = lcfirst($key);
         return parent::offsetGet($key);
     }
     
     // Set array element
+    #[\ReturnTypeWillChange]
     public function offsetSet($key, $value) {
         if (is_string($key)) $key = lcfirst($key);
         parent::offsetSet($key, $value);
     }
     
     // Remove array element
+    #[\ReturnTypeWillChange]
     public function offsetUnset($key) {
         if (is_string($key)) $key = lcfirst($key);
         parent::offsetUnset($key);
     }
     
     // Check if array element exists
+    #[\ReturnTypeWillChange]
     public function offsetExists($key) {
         if (is_string($key)) $key = lcfirst($key);
         return parent::offsetExists($key);
