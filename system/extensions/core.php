@@ -981,12 +981,14 @@ class YellowPageCollection extends ArrayObject {
     }
     
     // Append to end of page collection
-    public function append($page): void {
+    #[\ReturnTypeWillChange]
+    public function append($page) {
         parent::append($page);
     }
     
     // Prepend to start of page collection
-    public function prepend($page): void {
+    #[\ReturnTypeWillChange]
+    public function prepend($page) {
         $array = $this->getArrayCopy();
         array_unshift($array, $page);
         $this->exchangeArray($array);
