@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.86";
+    const VERSION = "0.8.87";
     const RELEASE = "0.8.20";
     public $page;           // current page
     public $content;        // content files
@@ -1817,7 +1817,7 @@ class YellowLanguage {
         $monthGenitive = $dateMonthsGenitive[date("n", $timestamp) - 1];
         $weekday = $dateWeekdays[date("N", $timestamp) - 1];
         $timeZone = $this->yellow->system->get("coreTimezone");
-        $timeZoneHelper = new DateTime(null, new DateTimeZone($timeZone));
+        $timeZoneHelper = new DateTime("now", new DateTimeZone($timeZone));
         $timeZoneOffset = $timeZoneHelper->getOffset();
         $timeZoneAbbreviation = "GMT".($timeZoneOffset<0 ? "-" : "+").abs(intval($timeZoneOffset/3600));
         $format = preg_replace("/(?<!\\\)F/", addcslashes($monthNominative, "A..Za..z"), $format);
