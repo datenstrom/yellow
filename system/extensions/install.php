@@ -2,7 +2,7 @@
 // Install extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/install
 
 class YellowInstall {
-    const VERSION = "0.8.74";
+    const VERSION = "0.8.75";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -295,11 +295,10 @@ class YellowInstall {
             list($name, $version, $os) = $this->yellow->toolbox->detectServerInformation();
             echo "YellowInstall::checkServerRequirements for $name $version, $os<br/>\n";
         }
-        $troubleshooting = "<a href=\"".$this->yellow->getTroubleshootingUrl()."\">See troubleshooting</a>.";
-        $this->checkServerComplete() || die("Datenstrom Yellow requires complete upload! $troubleshooting\n");
-        $this->checkServerWrite() || die("Datenstrom Yellow requires write access! $troubleshooting\n");
-        $this->checkServerConfiguration() || die("Datenstrom Yellow requires configuration file! $troubleshooting\n");
-        $this->checkServerRewrite() || die("Datenstrom Yellow requires rewrite support! $troubleshooting\n");
+        if (!$this->checkServerComplete()) $this->yellow->exitFatalError("Datenstrom Yellow requires complete upload!");
+        if (!$this->checkServerWrite()) $this->yellow->exitFatalError("Datenstrom Yellow requires write access!");
+        if (!$this->checkServerConfiguration()) $this->yellow->exitFatalError("Datenstrom Yellow requires configuration file!");
+        if (!$this->checkServerRewrite()) $this->yellow->exitFatalError("Datenstrom Yellow requires rewrite support!");
     }
     
     // Check web server complete upload
@@ -370,9 +369,8 @@ class YellowInstall {
             list($name, $version, $os) = $this->yellow->toolbox->detectServerInformation();
             echo "YellowInstall::checkCommandRequirements for $name $version, $os<br/>\n";
         }
-        $troubleshooting = "See ".$this->yellow->getTroubleshootingUrl();
-        $this->checkServerComplete() || die("Datenstrom Yellow requires complete upload! $troubleshooting\n");
-        $this->checkServerWrite() || die("Datenstrom Yellow requires write access! $troubleshooting\n");
+        if (!$this->checkServerComplete()) $this->yellow->exitFatalError("Datenstrom Yellow requires complete upload!");
+        if (!$this->checkServerWrite()) $this->yellow->exitFatalError("Datenstrom Yellow requires write access!");
     }
     
     // Detect browser languages

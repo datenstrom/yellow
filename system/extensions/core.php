@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.87";
+    const VERSION = "0.8.88";
     const RELEASE = "0.8.20";
     public $page;           // current page
     public $content;        // content files
@@ -15,7 +15,6 @@ class YellowCore {
     public $toolbox;        // toolbox with helper functions
 
     public function __construct() {
-        $this->checkRequirements();
         $this->page = new YellowPage($this);
         $this->content = new YellowContent($this);
         $this->media = new YellowMedia($this);
@@ -25,6 +24,7 @@ class YellowCore {
         $this->extension = new YellowExtension($this);
         $this->lookup = new YellowLookup($this);
         $this->toolbox = new YellowToolbox();
+        $this->checkRequirements();
         $this->system->setDefault("sitename", "Localhost");
         $this->system->setDefault("author", "Datenstrom");
         $this->system->setDefault("email", "webmaster");
@@ -61,13 +61,11 @@ class YellowCore {
     
     // Check requirements
     public function checkRequirements() {
-        $troubleshooting = PHP_SAPI!="cli" ?
-            "<a href=\"".$this->getTroubleshootingUrl()."\">See troubleshooting</a>." : "See ".$this->getTroubleshootingUrl();
-        version_compare(PHP_VERSION, "7.0", ">=") || die("Datenstrom Yellow requires PHP 7.0 or higher! $troubleshooting\n");
-        extension_loaded("curl") || die("Datenstrom Yellow requires PHP curl extension! $troubleshooting\n");
-        extension_loaded("gd") || die("Datenstrom Yellow requires PHP gd extension! $troubleshooting\n");
-        extension_loaded("mbstring") || die("Datenstrom Yellow requires PHP mbstring extension! $troubleshooting\n");
-        extension_loaded("zip") || die("Datenstrom Yellow requires PHP zip extension! $troubleshooting\n");
+        if (!version_compare(PHP_VERSION, "7.0", ">=")) $this->exitFatalError("Datenstrom Yellow requires PHP 7.0 or higher!");
+        if (!extension_loaded("curl")) $this->exitFatalError("Datenstrom Yellow requires PHP curl extension!");
+        if (!extension_loaded("gd")) $this->exitFatalError("Datenstrom Yellow requires PHP gd extension!");
+        if (!extension_loaded("mbstring")) $this->exitFatalError("Datenstrom Yellow requires PHP mbstring extension!");
+        if (!extension_loaded("zip")) $this->exitFatalError("Datenstrom Yellow requires PHP zip extension!");
         mb_internal_encoding("UTF-8");
     }
     
@@ -178,6 +176,15 @@ class YellowCore {
                 "<a href=\"".$this->getTroubleshootingUrl()."\">See troubleshooting</a>." : "See ".$this->getTroubleshootingUrl();
             echo "<br/>\nCheck the log file. Activate the debug mode for more information. $troubleshooting\n";
         }
+    }
+    
+    // Show error message and terminate immediately
+    public function exitFatalError($errorMessage = "") {
+        @header($this->toolbox->getHttpStatusFormatted(500));
+        $troubleshooting = PHP_SAPI!="cli" ?
+            "<a href=\"".$this->getTroubleshootingUrl()."\">See troubleshooting</a>." : "See ".$this->getTroubleshootingUrl();
+        echo "$errorMessage $troubleshooting\n";
+        exit(1);
     }
     
     // Send page response
@@ -463,6 +470,7 @@ class YellowPage {
     // Parse page meta data
     public function parseMetaData() {
         $this->metaData = new YellowArray();
+        $this->metaDataOffsetBytes = 0;
         if (!is_null($this->rawData)) {
             $this->set("title", $this->yellow->toolbox->createTextTitle($this->location));
             $this->set("language", $this->yellow->lookup->findContentLanguage($this->fileName, $this->yellow->system->get("language")));
