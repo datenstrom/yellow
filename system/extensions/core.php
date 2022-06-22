@@ -2,7 +2,7 @@
 // Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
 
 class YellowCore {
-    const VERSION = "0.8.88";
+    const VERSION = "0.8.89";
     const RELEASE = "0.8.20";
     public $page;           // current page
     public $content;        // content files
@@ -428,6 +428,11 @@ class YellowPage {
 
     public function __construct($yellow) {
         $this->yellow = $yellow;
+        $this->scheme = "";
+        $this->address = "";
+        $this->base = "";
+        $this->location = "";
+        $this->fileName = "";
         $this->metaData = new YellowArray();
         $this->pageCollections = array();
         $this->sharedPages = array();
