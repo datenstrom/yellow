@@ -1,0 +1,268 @@
+# Swedish extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/swedish
+
+Language: sv
+LanguageLocale: sv_SE
+LanguageDescription: Svenska
+LanguageTranslator: Adam Engel
+BerlinDescription: Berlin är ett tema inspirerat av Dieter Rams.
+BlogDescription: Blogg för din webbplats.
+BlogBy: av
+BlogTag: Taggar:
+BlogMore: Läs mer…
+BreadcrumbDescription: Brödcrumbnavigering.
+BundleDescription: Bundla webbplatsfiler.
+ChineseDescription: Kinesiskt/简体中文 med språket "zh".
+CommandDescription: Webbplatsens kommandorad.
+ContactDescription: E-post kontaktsida.
+ContactName: Namn:
+ContactEmail: Email:
+ContactMessage: Meddelande:
+ContactConsent: Jag godkänner att denna webbplats lagrar mitt meddelande.
+ContactButton: Skicka mitt meddelande
+ContactMailSpam: [Spam]
+ContactMailHeader: Du har fått ett meddelande av @sender:
+ContactMailFooter: Detta mail skickades via @sitename - @title
+ContactStatusNone: Säg hej. Din feedback är väldigt välkommen.
+ContactStatusIncomplete: Vänligen fyll i alla fält.
+ContactStatusInvalid: Vänligen ange en giltig emailadress.
+ContactStatusReview: Vänligen ta bort länkar från meddelandet.
+ContactStatusDone: Ditt mail har nu skickats. Tack!
+ContactStatusError: Mailet kunde inte skickas, vänligen försök igen senare!
+CoreDescription: Webbplatsens kärnfunktion.
+CoreDatePast: idag, igår, @x dagar sedan, en månad sedan, @x månader sedan, ett år sedan, @x år sedan, den @x
+CoreDateFuture: snart, imorgon, om @x dagar, om 1 månad, om @x månader, om 1 år, om @x år, den @x
+CoreDateMonthsNominative: Januari, Februari, Mars, April, Maj, Juni, Juli, Augusti, September, Oktober, November, December
+CoreDateMonthsGenitive: Januari, Februari, Mars, April, Maj, Juni, Juli, Augusti, September, Oktober, November, December
+CoreDateWeekdays: Måndag, Tisdag, Onsdag, Torsdag, Fredag, Lördag, Söndag
+CoreDateWeekstart: Måndag
+CoreDateFormatShort: F Y
+CoreDateFormatMedium: Y-m-d
+CoreDateFormatLong: Y-m-d H:i
+CoreTimeFormatShort: H:i
+CoreTimeFormatMedium: H:i:s
+CoreTimeFormatLong: H:i:s T
+CoreDecimalSeparator: ,
+CorePaginationPrevious: ← Tidigare
+CorePaginationNext: Nästa →
+CoreError404Title: Filen hittades inte
+CoreError404Text: Den begärda filen kunde inte hittas. Å nej...
+CoreError420Title: Sidan är inte offentlig
+CoreError420Text: Den begärda sidan är inte offentlig. [yellow error]
+CoreError430Title: Inloggningen misslyckades
+CoreError430Text: Emailen eller lösenordet är felaktigt. [Var god försök igen](#data-action-login).
+CoreError434Title: Sidan hittades inte
+CoreError434Text: Den begärda sidan kunde inte hittas. [Du kan skapa den här sidan](#data-action-edit).
+CoreError435Title: Sidan hittades inte
+CoreError435Text:Den begärda sidan har tagits bort. [Du kan återställa den här sidan](#data-action-restore).
+CoreError450Title: Uppdateringsfel
+CoreError450Text: Kan inte ansluta till uppdateringsservern. En internetanslutning krävs.
+CoreError500Title: Serverfel
+CoreError500Text: Något gick fel. [yellow error]
+CzechDescription: Czech/Tjeckiskt med språket "cs".
+DanishDescription: Danska/Dansk med språket "da".
+DisqusDescription: Visa Disqus-kommentarer på bloggen.
+DraftDescription: Stöd för draftsidor.
+DraftStatusEmpty: Inga draftsidor hittades.
+DraftPageError: Vänligen logga in.
+DutchDescription: Holländska/Nederlands med språket "nl".
+EditDescription: Redigera din webbplats i en webbläsare.
+EditLoginTitle: Välkommen
+EditLoginEmail: Email:
+EditLoginPassword: Lösenord:
+EditLoginForgot: Glömt lösenordet?
+EditLoginSignup: Skapa användarkonto?
+EditLoginButton: Logga in
+EditSignupTitle: Create user account
+EditSignupName: Namn:
+EditSignupEmail: Email:
+EditSignupPassword: Lösenord:
+EditSignupConsent: I consent that this website stores my personal data.
+EditSignupButton: Create
+EditSignupStatusNone: Here you can create a new user account.
+EditSignupStatusIncomplete: Please fill out all fields.
+EditSignupStatusInvalid: Please enter a valid email.
+EditSignupStatusWeak: Please enter a different password.
+EditSignupStatusShort: Please enter a longer password.
+EditSignupStatusNext: User account will be created, please check your emails.
+EditForgotTitle: Forgot your password
+EditForgotEmail: Email:
+EditForgotStatusNone: No problem, you can create a new password.
+EditForgotStatusInvalid: Please enter a valid email.
+EditForgotStatusNext: User account will be recovered, please check your emails.
+EditRecoverTitle: Forgot your password
+EditRecoverPassword: Password:
+EditRecoverStatusPassword: Please enter a new password.
+EditRecoverStatusWeak: Please enter a different password.
+EditRecoverStatusShort: Please enter a longer password.
+EditRecoverStatusDone: User account recovered. Thank you!
+EditConfirmSubject: Confirm user account
+EditConfirmMessage: Hi @usershort,\n\nplease confirm your user account. Click the following link.
+EditConfirmTitle: User account
+EditConfirmStatusDone: User account confirmed and waiting for approval. Thank you!
+EditApproveSubject: Approve user account
+EditApproveMessage: Hi @usershort,\n\nplease approve a new user account for @useraccount. Click the following link.
+EditApproveTitle: User account
+EditApproveStatusDone: User account approved. Thank you!
+EditReactivateSubject: Reactivate user account
+EditReactivateMessage: Hi @usershort,\n\nplease reactivate your user account. There were too many failed login attempts. Click the following link.
+EditReactivateTitle: User account
+EditReactivateStatusDone: User account reactivated. Thank you!
+EditVerifySubject: Change user account
+EditVerifyMessage: Hi @usershort,\n\nplease confirm a new email for your user account. Click the following link.
+EditVerifyTitle: User account
+EditVerifyStatusDone: User account changed. Thank you!
+EditChangeSubject: Change user account
+EditChangeMessage: Hi @usershort,\n\nplease confirm that you want to change your user account. Click the following link.
+EditChangeTitle: User account
+EditChangeStatusDone: User account changed. Thank you!
+EditRemoveSubject: Delete user account
+EditRemoveMessage: Hi @usershort,\n\nplease confirm that you want to delete your user account. Click the following link.
+EditRemoveTitle: User account
+EditRemoveStatusDone: User account deleted. Thank you!
+EditRecoverSubject: Recover user account
+EditRecoverMessage: Hi @usershort,\n\nplease confirm that you forgot your password. Click the following link.
+EditWelcomeSubject: Welcome
+EditWelcomeMessage: Hi @usershort,\n\nyour user account has been created. Have fun editing the website.
+EditGoodbyeSubject: Goodbye
+EditGoodbyeMessage: Hi @usershort,\n\nyour user account has been deleted. Take care.
+EditAccountTitle: Användare
+EditAccountInformation: Du kan radera ditt användarkonto.
+EditAccountMore: Läs mer…
+EditAccountStatusNone: Här kan du ändra ditt användarkonto.
+EditAccountStatusInvalid: Please enter a valid email.
+EditAccountStatusTaken: Please enter a different email.
+EditAccountStatusWeak: Please enter a different password.
+EditAccountStatusShort: Please enter a longer password.
+EditAccountStatusNext: User account will be changed, please check your emails.
+EditQuitTitle: Delete user account
+EditQuitStatusNone: Please enter your name to confirm.
+EditQuitStatusMismatch: Please enter a different name.
+EditQuitStatusNext: User account will be deleted, please check your emails.
+EditConfigureTitle: Webbplats
+EditConfigureSitename: Name of the website:
+EditConfigureAuthor: Name of the webmaster:
+EditConfigureEmail: Email of the webmaster:
+EditConfigureInformation: The webmaster can approve new user accounts.
+EditConfigureStatusNone: Här kan du konfigurera din webbplats.
+EditConfigureStatusInvalid: Please enter a valid email.
+EditUpdateTitle: Uppdateringar
+EditUpdateStatusNone: Datenstrom Yellow är för människor som skapar små webbsidor.
+EditUpdateStatusCheck: Kollar efter uppdateringar…
+EditUpdateStatusUpdates: Följande uppdateringar är tillgängliga:
+EditUpdateStatusOk: Din webbplats är uppdaterad.
+EditOkButton: Ok
+EditCancelButton: Avbryt
+EditChangeButton: Ändra
+EditCreateButton: Skapa
+EditEditButton: Spara
+EditDeleteButton: Ta bort
+EditUpdateButton: Uppdatera
+EditEdit: Redigera sida
+EditCreate: +
+EditDelete: -
+EditKeyboardLabels: Ctrl+, Alt+, Shift+, ⌘, ⌥, ⇧
+EditToolbarFormat: Format
+EditToolbarHeading: Rubrik
+EditToolbarH1: Rubrik 1
+EditToolbarH2: Rubrik 2
+EditToolbarH3: Rubrik 3
+EditToolbarParagraph: Normal text
+EditToolbarPre: Källkod
+EditToolbarNotice: Indikation
+EditToolbarQuote: Citat
+EditToolbarBold: Fet
+EditToolbarItalic: Kursiv
+EditToolbarStrikethrough: Struken
+EditToolbarCode: Code
+EditToolbarList: Lista
+EditToolbarUl: • Osorterad lista
+EditToolbarOl: 1. Sorterad lista
+EditToolbarTl: ✓ Uppgiftslista
+EditToolbarLink: Länk
+EditToolbarFile: Fil
+EditToolbarEmojiawesome: Emoji
+EditToolbarFontawesome: Symbol
+EditToolbarStatus: Status
+EditToolbarUndo: Ångra
+EditToolbarRedo: Gör om
+EditToolbarPreview: Förhandsvisning
+EditToolbarHelp: Hjälp
+EditMailFooter: @sitename
+EditDataGenerated: Den här sidan genereras automatiskt.
+EditUploadProgress: Laddar upp fil…
+EditUserDescription: Redaktör
+EditMenuSettings: Inställningar
+EditMenuHelp: Hjälp
+EditMenuLogout: Logga ut
+EditYellowUrl: https://datenstrom.se/sv/yellow/
+EditYellowHelpUrl: https://datenstrom.se/sv/yellow/help/
+EmojiawesomeDescription: Massor och massor av emoji.
+EnglishDescription: Engelska/English med språket "en".
+FeedDescription: Feed med senaste ändringarna.
+FontawesomeDescription: Ikoner och symboler.
+FrenchDescription: Franska/Français med språket "fr".
+GalleryDescription: Bildgalleri med popup.
+GermanDescription: Tyska/Deutsch med språket "de".
+GooglecalendarDescription: Bädda in Google-kalender.
+GooglemapDescription: Bädda in Google-karta.
+HelpDescription: Hjälp för din webbplats.
+HighlightDescription: Markera källkod.
+HungarianDescription: Ungerska/Magyar med språket "hu".
+ImageDescription: Bilder och miniatyrbilder.
+ImageDefaultAlt: Bild utan beskrivning
+InstagramDescription: Bädda in Instagram-foton.
+InstallTitle: Hej
+InstallLanguage: Vad är ditt språk?
+InstallExtension: Vad vill du göra?
+InstallExtensionWebsite: Liten webbsida
+InstallExtensionBlog: Liten blogg
+InstallExtensionWiki: Liten wiki
+InstallButton: Installera
+InstallHomeTitle: Hem
+InstallHomeText: [image photo.jpg Exempel rounded]\n\n[edit - Du kan redigera den här sidan i en webbläsare] eller använda en textredigerare. [Få hjälp](https://datenstrom.se/sv/yellow/help/).
+InstallAboutTitle: Om
+InstallAboutText: [Gjord med hjälp av Datenstrom Yellow](https://datenstrom.se/sv/yellow/).
+InstallDefaultTitle: Sida
+InstallDefaultText: Detta är en ny sida.
+InstallBlogTitle: Bloggsida
+InstallBlogText: Detta är en ny bloggsida.
+InstallWikiTitle: Wikisida
+InstallWikiText: Detta är en ny wikisida.
+InstallExampleImage: Detta är en exempelbild
+ItalianDescription: Italienska/Italiano med språket "it".
+JapaneseDescription: Japanska/日本語 med språket "ja".
+MarkdownDescription: Textformatering för människor.
+MetaDescription: Metadata för webbplatser med sociala medier.
+NorwegianDescription: Norska/Norsk med språket "nb".
+ParsedownDescription: Textformatering för människor.
+ParisDescription: Paris är ett elegant tema.
+PolishDescription: Polska/Polski med språket "pl".
+PortugueseDescription: Portugisiska/Português med språket "pt".
+PreviousnextDescription: Visa länkar till föregående/nästa sida.
+PreviousnextPagePrevious: ← Tidigare: @title
+PreviousnextPageNext: Nästa: @title →
+PublishDescription: Paketera och publicera tillägg.
+RussianDescription: Ryska/Русский med språket "ru".
+SearchDescription: Heltekstsökning.
+SearchResultsNone: Skriv ett sökord.
+SearchResultsEmpty: Inga resultat funna.
+SearchSpecialChanges: Senaste ändringarna
+SearchButton: Sök
+ServeDescription: Inbyggd webbserver.
+SitemapDescription: Webbplatskarta med alla sidor.
+SliderDescription: Bildgalleri med reglaget.
+SlovakDescription: Slovakiska/Slovenčina med språket "sk".
+SoundcloudDescription: Bädda in Soundcloud-ljudspår.
+SpanishDescription: Spanska/Español med språket "es".
+StockholmDescription: Stockholm är ett rent tema.
+SwedishDescription: Svenska/Svenska med språket "sv".
+TocDescription: Innehållsförteckning.
+TrafficDescription: Skapa trafikanalyser från webbserverns loggfiler.
+TwitterDescription: Bädda in Twitter-meddelanden.
+UpdateDescription: Håll din webbplats uppdaterad.
+WikiDescription: Wiki för din webbplats.
+WikiModified: Senast uppdaterad den
+WikiTag: Taggar:
+WikiSpecialPages: Alla sidor
+WikiSpecialChanges: Senaste ändringarna
+YoutubeDescription: Bädda in Youtube-videor
