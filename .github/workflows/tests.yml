@@ -1,6 +1,6 @@
 # Datenstrom Yellow system tests
 
-name: Tests
+name: System tests
 on: [push, pull_request]
 jobs:
   tests:
