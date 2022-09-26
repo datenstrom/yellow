@@ -2,7 +2,7 @@
 // Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
 
 class YellowUpdate {
-    const VERSION = "0.8.80";
+    const VERSION = "0.8.81";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $extensions;             // number of extensions
@@ -53,6 +53,7 @@ class YellowUpdate {
         $statusCode = $this->processCommandPending();
         if ($statusCode==0) {
             switch ($command) {
+                case "about":       $statusCode = $this->processCommandAbout($command, $text); break;
                 case "install":     $statusCode = $this->processCommandInstall($command, $text); break;
                 case "uninstall":   $statusCode = $this->processCommandUninstall($command, $text); break;
                 case "update":      $statusCode = $this->processCommandUpdate($command, $text); break;
@@ -64,7 +65,8 @@ class YellowUpdate {
     
     // Handle command help
     public function onCommandHelp() {
-        $help = "install [extension]\n";
+        $help = "about [extension]\n";
+        $help .= "install [extension]\n";
         $help .= "uninstall [extension]\n";
         $help .= "update [extension]\n";
         return $help;
@@ -74,16 +76,14 @@ class YellowUpdate {
     public function onParseContentShortcut($page, $name, $text, $type) {
         $output = null;
         if ($name=="yellow" && $type=="inline") {
-            if ($text=="release") $output = "Datenstrom Yellow ".YellowCore::RELEASE;
             if ($text=="about") {
-                $url = $this->yellow->language->getText("editYellowUrl", $page->get("language"));
-                $output = "Datenstrom Yellow ".YellowCore::RELEASE." - <a href=\"".htmlspecialchars($url)."\">".htmlspecialchars($url)."</a><br />\n";
                 list($dummy, $settingsCurrent) = $this->getExtensionSettings(false);
+                $output = "Datenstrom Yellow ".YellowCore::RELEASE."<br />\n";
                 foreach ($settingsCurrent as $key=>$value) {
-                    $documentation = $value->isExisting("documentationUrl") ? "<a href=\"".htmlspecialchars($value->get("documentationUrl"))."\">".htmlspecialchars($value->get("documentationUrl"))."</a>" : "No documentation available";
-                    $output .= ucfirst($key)." ".$value->get("version")." - $documentation<br />\n";
+                    $output .= ucfirst($key)." ".$value->get("version")."<br />\n";
                 }
             }
+            if ($text=="release") $output = "Datenstrom Yellow ".YellowCore::RELEASE;
             if ($text=="log") {
                 $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreWebsiteFile");
                 $fileHandle = @fopen($fileName, "r");
@@ -102,6 +102,29 @@ class YellowUpdate {
         return $output;
     }
     
+    // Process command to show current version
+    public function processCommandAbout($command, $text) {
+        $statusCode = 200;
+        $extensions = $this->getExtensionsFromText($text);
+        if (!empty($extensions)) {
+            list($statusCode, $settings) = $this->getExtensionAboutInformation($extensions);
+            if ($statusCode==200) {
+                foreach ($settings as $key=>$value) {
+                    echo ucfirst($key)." ".$value->get("version")." - ".$this->getExtensionDescription($key, $value)."\n";
+                    echo $this->getExtensionDocumentation($key, $value)."\n";
+                }
+            }
+            if ($statusCode>=400) echo "ERROR checking extensions: ".$this->yellow->page->errorMessage."\n";
+        } else {
+            echo "Datenstrom Yellow ".YellowCore::RELEASE."\n";
+            list($statusCode, $settingsCurrent) = $this->getExtensionSettings(false);
+            foreach ($settingsCurrent as $key=>$value) {
+                echo ucfirst($key)." ".$value->get("version")."\n";
+            }
+        }
+        return $statusCode;
+    }
+    
     // Process command to install extensions
     public function processCommandInstall($command, $text) {
         $extensions = $this->getExtensionsFromText($text);
@@ -114,7 +137,11 @@ class YellowUpdate {
             echo "Yellow $command: Website ".($statusCode!=200 ? "not " : "")."updated";
             echo ", $this->extensions extension".($this->extensions!=1 ? "s" : "")." installed\n";
         } else {
-            $statusCode = $this->showExtensions(true);
+            list($statusCode, $settingsLatest) = $this->getExtensionSettings(true);
+            foreach ($settingsLatest as $key=>$value) {
+                echo ucfirst($key)." - ".$this->getExtensionDescription($key, $value)."\n";
+            }
+            if ($statusCode!=200) echo "ERROR checking extensions: ".$this->yellow->page->errorMessage."\n";
         }
         return $statusCode;
     }
@@ -124,13 +151,17 @@ class YellowUpdate {
         $extensions = $this->getExtensionsFromText($text);
         if (!empty($extensions)) {
             $this->extensions = 0;
-            list($statusCode, $settings) = $this->getExtensionUninstallInformation($extensions, "core, update");
+            list($statusCode, $settings) = $this->getExtensionAboutInformation($extensions, "core, update");
             if ($statusCode==200) $statusCode = $this->removeExtensions($settings);
             if ($statusCode>=400) echo "ERROR uninstalling files: ".$this->yellow->page->errorMessage."\n";
             echo "Yellow $command: Website ".($statusCode!=200 ? "not " : "")."updated";
             echo ", $this->extensions extension".($this->extensions!=1 ? "s" : "")." uninstalled\n";
         } else {
-            $statusCode = $this->showExtensions(false);
+            list($statusCode, $settingsCurrent) = $this->getExtensionSettings(false);
+            foreach ($settingsCurrent as $key=>$value) {
+                echo ucfirst($key)." - ".$this->getExtensionDescription($key, $value)."\n";
+            }
+            if ($statusCode!=200) echo "ERROR checking extensions: ".$this->yellow->page->errorMessage."\n";
         }
         return $statusCode;
     }
@@ -192,21 +223,6 @@ class YellowUpdate {
                 $statusCode = $this->yellow->sendStatus(303, $location);
             }
         }
-        return $statusCode;
-    }
-    
-    // Show extensions
-    public function showExtensions($latest) {
-        list($statusCode, $settings) = $this->getExtensionSettings($latest);
-        foreach ($settings as $key=>$value) {
-            $text = $value->isExisting("description") ? $value->get("description") : "No description available.";
-            $description = $text;
-            if ($value->isExisting("developer")) $description = "$text Developed by ".$value["developer"].".";
-            if ($value->isExisting("designer")) $description = "$text Designed by ".$value["designer"].".";
-            if ($value->isExisting("translator")) $description = "$text Translated by ".$value["translator"].".";
-            echo ucfirst($key)." - $description\n";
-        }
-        if ($statusCode!=200) echo "ERROR checking extensions: ".$this->yellow->page->errorMessage."\n";
         return $statusCode;
     }
     
@@ -597,6 +613,31 @@ class YellowUpdate {
     public function getExtensionsFromText($text) {
         return array_unique(array_filter($this->yellow->toolbox->getTextArguments($text), "strlen"));
     }
+    
+    // Return extension about information
+    public function getExtensionAboutInformation($extensions, $extensionsProtected = "") {
+        $settings = array();
+        list($statusCode, $settingsCurrent) = $this->getExtensionSettings(false);
+        foreach ($extensions as $extension) {
+            $found = false;
+            foreach ($settingsCurrent as $key=>$value) {
+                if (strtoloweru($key)==strtoloweru($extension)) {
+                    $settings[$key] = $settingsCurrent[$key];
+                    $found = true;
+                    break;
+                }
+            }
+            if (!$found) {
+                $statusCode = 500;
+                $this->yellow->page->error($statusCode, "Can't find extension '$extension'!");
+            }
+        }
+        $protected = preg_split("/\s*,\s*/", $extensionsProtected);
+        foreach ($settings as $key=>$value) {
+            if (in_array($key, $protected)) unset($settings[$key]);
+        }
+        return array($statusCode, $settings);
+    }
 
     // Return extension install information
     public function getExtensionInstallInformation($extensions) {
@@ -617,31 +658,6 @@ class YellowUpdate {
                 $statusCode = 500;
                 $this->yellow->page->error($statusCode, "Can't find extension '$extension'!");
             }
-        }
-        return array($statusCode, $settings);
-    }
-
-    // Return extension uninstall information
-    public function getExtensionUninstallInformation($extensions, $extensionsProtected) {
-        $settings = array();
-        list($statusCode, $settingsCurrent) = $this->getExtensionSettings(false);
-        foreach ($extensions as $extension) {
-            $found = false;
-            foreach ($settingsCurrent as $key=>$value) {
-                if (strtoloweru($key)==strtoloweru($extension)) {
-                    $settings[$key] = $settingsCurrent[$key];
-                    $found = true;
-                    break;
-                }
-            }
-            if (!$found) {
-                $statusCode = 500;
-                $this->yellow->page->error($statusCode, "Can't find extension '$extension'!");
-            }
-        }
-        $protected = preg_split("/\s*,\s*/", $extensionsProtected);
-        foreach ($settings as $key=>$value) {
-            if (in_array($key, $protected)) unset($settings[$key]);
         }
         return array($statusCode, $settings);
     }
@@ -793,6 +809,20 @@ class YellowUpdate {
             $fileNameDestination = $fileName;
         }
         return array($fileNameSource, $fileNameDestination);
+    }
+    
+    // Return extension description including developer/designer/translator
+    public function getExtensionDescription($key, $value) {
+        $description = $text = $value->isExisting("description") ? $value->get("description") : "No description available.";
+        if ($value->isExisting("developer")) $description = "$text Developed by ".$value["developer"].".";
+        if ($value->isExisting("designer")) $description = "$text Designed by ".$value["designer"].".";
+        if ($value->isExisting("translator")) $description = "$text Translated by ".$value["translator"].".";
+        return $description;
+    }
+    
+    // Return extension documentation
+    public function getExtensionDocumentation($key, $value) {
+        return $value->isExisting("documentationUrl") ? "Read more at ".$value->get("documentationUrl") : "No documentation available";
     }
 
     // Return extension file
