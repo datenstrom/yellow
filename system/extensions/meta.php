@@ -1,5 +1,5 @@
 <?php
-// Meta extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/meta
+// Meta extension, https://github.com/annaesvensson/yellow-meta
 
 class YellowMeta {
     const VERSION = "0.8.15";

@@ -1,5 +1,5 @@
 <?php
-// Command extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/command
+// Command extension, https://github.com/annaesvensson/yellow-command
 
 class YellowCommand {
     const VERSION = "0.8.42";

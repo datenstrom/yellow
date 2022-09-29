@@ -1,5 +1,5 @@
 <?php
-// Serve extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/serve
+// Serve extension, https://github.com/annaesvensson/yellow-serve
 
 class YellowServe {
     const VERSION = "0.8.20";

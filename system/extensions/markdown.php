@@ -1,5 +1,5 @@
 <?php
-// Markdown extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/markdown
+// Markdown extension, https://github.com/annaesvensson/yellow-markdown
 
 class YellowMarkdown {
     const VERSION = "0.8.22";

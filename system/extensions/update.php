@@ -1,5 +1,5 @@
 <?php
-// Update extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/update
+// Update extension, https://github.com/annaesvensson/yellow-update
 
 class YellowUpdate {
     const VERSION = "0.8.81";
@@ -721,7 +721,7 @@ class YellowUpdate {
             $fileNameLatest = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateLatestFile");
             $expire = $this->yellow->toolbox->getFileModified($fileNameLatest) + 60*10;
             if ($expire<=time()) {
-                $url = $this->yellow->system->get("updateExtensionUrl")."/raw/master/".$this->yellow->system->get("updateLatestFile");
+                $url = $this->yellow->system->get("updateExtensionUrl")."/raw/main/".$this->yellow->system->get("updateLatestFile");
                 list($statusCode, $fileData) = $this->getExtensionFile($url);
                 if ($statusCode==200 && !$this->yellow->toolbox->createFile($fileNameLatest, $fileData)) {
                     $statusCode = 500;

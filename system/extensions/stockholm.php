@@ -1,5 +1,5 @@
 <?php
-// Stockholm extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/stockholm
+// Stockholm extension, https://github.com/annaesvensson/yellow-stockholm
 
 class YellowStockholm {
     const VERSION = "0.8.13";

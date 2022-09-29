@@ -1,5 +1,5 @@
 <?php
-// Core extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/core
+// Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
     const VERSION = "0.8.89";

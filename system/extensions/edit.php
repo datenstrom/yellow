@@ -1,5 +1,5 @@
 <?php
-// Edit extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/edit
+// Edit extension, https://github.com/annaesvensson/yellow-edit
 
 class YellowEdit {
     const VERSION = "0.8.63";
