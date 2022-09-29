@@ -287,7 +287,7 @@ this license and contact information. For example:
 If your software is based on modified source code, you have to keep the 
 original link in each source file. For example: 
 
-    Gnomovision Orange, https://website/gnomovision/orange
+    Gnomovision Orange, https://github.com/gnomovision/orange
     Based on Datenstrom Yellow, https://github.com/datenstrom/yellow
 
 All source files are copyrighted by the respective author(s) 
