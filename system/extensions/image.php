@@ -1,5 +1,5 @@
 <?php
-// Image extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/image
+// Image extension, https://github.com/annaesvensson/yellow-image
 
 class YellowImage {
     const VERSION = "0.8.16";
