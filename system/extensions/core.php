@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.8.89";
+    const VERSION = "0.8.90";
     const RELEASE = "0.8.20";
     public $page;           // current page
     public $content;        // content files
@@ -28,9 +28,9 @@ class YellowCore {
         $this->system->setDefault("sitename", "Localhost");
         $this->system->setDefault("author", "Datenstrom");
         $this->system->setDefault("email", "webmaster");
+        $this->system->setDefault("language", "en");
         $this->system->setDefault("layout", "default");
         $this->system->setDefault("theme", "default");
-        $this->system->setDefault("language", "en");
         $this->system->setDefault("parser", "markdown");
         $this->system->setDefault("status", "public");
         $this->system->setDefault("coreServerUrl", "auto");
@@ -203,11 +203,11 @@ class YellowCore {
             foreach ($this->page->headerData as $key=>$value) {
                 echo "YellowCore::sendPage $key: $value<br/>\n";
             }
+            $language = $this->page->get("language");
             $layout = $this->page->get("layout");
             $theme = $this->page->get("theme");
-            $language = $this->page->get("language");
             $parser = $this->page->get("parser");
-            echo "YellowCore::sendPage layout:$layout theme:$theme language:$language parser:$parser<br/>\n";
+            echo "YellowCore::sendPage language:$language layout:$layout theme:$theme parser:$parser<br/>\n";
         }
         return $statusCode;
     }
@@ -1622,6 +1622,10 @@ class YellowSystem {
             foreach ($this->yellow->user->settings as $userKey=>$userValue) {
                 array_push($values, $userKey);
             }
+        } elseif ($key=="language") {
+            foreach ($this->yellow->language->settings as $languageKey=>$languageValue) {
+                array_push($values, $languageKey);
+            }
         } elseif ($key=="layout") {
             $path = $this->yellow->system->get("coreLayoutDirectory");
             foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.html$/", true, false, false) as $entry) {
@@ -1631,10 +1635,6 @@ class YellowSystem {
             $path = $this->yellow->system->get("coreThemeDirectory");
             foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.css$/", true, false, false) as $entry) {
                 array_push($values, lcfirst(substru($entry, 0, -4)));
-            }
-        } elseif ($key=="language") {
-            foreach ($this->yellow->language->settings as $languageKey=>$languageValue) {
-                array_push($values, $languageKey);
             }
         }
         return $values;
