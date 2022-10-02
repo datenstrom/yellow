@@ -2,7 +2,7 @@
 // Update extension, https://github.com/annaesvensson/yellow-update
 
 class YellowUpdate {
-    const VERSION = "0.8.81";
+    const VERSION = "0.8.82";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $extensions;             // number of extensions
@@ -822,7 +822,7 @@ class YellowUpdate {
     
     // Return extension documentation
     public function getExtensionDocumentation($key, $value) {
-        return $value->isExisting("documentationUrl") ? "Read more at ".$value->get("documentationUrl") : "No documentation available";
+        return "Read more at ".($value->isExisting("documentationUrl") ? $value->get("documentationUrl") : $this->yellow->system->get("updateExtensionUrl"));
     }
 
     // Return extension file

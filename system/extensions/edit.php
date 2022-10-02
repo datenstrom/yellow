@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/annaesvensson/yellow-edit
 
 class YellowEdit {
-    const VERSION = "0.8.63";
+    const VERSION = "0.8.64";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -141,9 +141,7 @@ class YellowEdit {
     public function userShow($command, $text) {
         $data = array();
         foreach ($this->yellow->user->settings as $key=>$value) {
-            $name = $value["name"];
-            if (preg_match("/\s/", $name)) $name = "\"$name\"";
-            $data[$key] = "$value[email] $name $value[status]";
+            $data[$key] = "$value[email] - User account by $value[name].";
         }
         uksort($data, "strnatcasecmp");
         foreach ($data as $line) echo "$line\n";
