@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.8.91";
+    const VERSION = "0.8.92";
     const RELEASE = "0.8.21";
     public $page;           // current page
     public $content;        // content files
