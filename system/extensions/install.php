@@ -2,7 +2,7 @@
 // Install extension, https://github.com/annaesvensson/yellow-install
 
 class YellowInstall {
-    const VERSION = "0.8.76";
+    const VERSION = "0.8.77";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -76,7 +76,7 @@ class YellowInstall {
                 $statusCode = 304;
                 echo "Datenstrom Yellow is for people who make small websites. https://datenstrom.se/yellow/\n";
                 echo "Syntax: php yellow.php\n";
-                echo "        php yellow.php about\n";
+                echo "        php yellow.php about [extension]\n";
                 echo "        php yellow.php build [directory location]\n";
                 echo "        php yellow.php serve [url]\n";
             } elseif ($command=="build") {
