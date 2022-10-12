@@ -2,7 +2,7 @@
 // Install extension, https://github.com/annaesvensson/yellow-install
 
 class YellowInstall {
-    const VERSION = "0.8.77";
+    const VERSION = "0.8.78";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -77,18 +77,19 @@ class YellowInstall {
                 echo "Datenstrom Yellow is for people who make small websites. https://datenstrom.se/yellow/\n";
                 echo "Syntax: php yellow.php\n";
                 echo "        php yellow.php about [extension]\n";
-                echo "        php yellow.php build [directory location]\n";
                 echo "        php yellow.php serve [url]\n";
-            } elseif ($command=="build") {
+                echo "        php yellow.php skip installation\n";
+            } elseif ($command=="about" || $command=="serve") {
+                $statusCode = 0;
+            } elseif ($command=="skip" && $text=="installation") {
                 $statusCode = $this->updateLog();
                 if ($statusCode==200) $statusCode = $this->updateLanguages();
                 if ($statusCode==200) $statusCode = $this->updateSettings();
                 if ($statusCode==200) $statusCode = $this->removeInstall();
-            } elseif ($command=="serve" || $command=="about") {
                 $statusCode = 200;
             } else {
                 $statusCode = 304;
-                echo "The installation has not been completed. Please type 'php yellow.php serve'.\n";
+                echo "The installation has not been completed. Please type 'php yellow.php serve' or 'php yellow.php skip installation`.\n";
             }
             if ($statusCode>=400) {
                 echo "ERROR installing files: ".$this->yellow->page->errorMessage."\n";
@@ -97,12 +98,12 @@ class YellowInstall {
         } else {
             $statusCode = $this->removeInstall();
             $this->yellow->log($statusCode==200 ? "info" : "error", "Uninstall extension 'Install ".YellowInstall::VERSION."'");
+            if ($statusCode==200) $statusCode = 0;
             if ($statusCode>=400) {
                 echo "ERROR installing files: ".$this->yellow->page->errorMessage."\n";
                 echo "Detected ZIP-files, 0 extensions installed. Please run command again.\n";
             }
         }
-        if ($statusCode==200) $statusCode = 0;
         return $statusCode;
     }
     
