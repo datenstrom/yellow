@@ -24,7 +24,7 @@ jobs:
         run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
       - name: Set up tests
         run: php yellow.php skip installation
-      - name: Run tests
-        run: php yellow.php build tests
         env:
           URL: http://website/
+      - name: Run tests
+        run: php yellow.php build tests
