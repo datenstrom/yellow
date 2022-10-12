@@ -2,7 +2,7 @@
 // Update extension, https://github.com/annaesvensson/yellow-update
 
 class YellowUpdate {
-    const VERSION = "0.8.82";
+    const VERSION = "0.8.83";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $extensions;             // number of extensions
@@ -151,7 +151,7 @@ class YellowUpdate {
         $extensions = $this->getExtensionsFromText($text);
         if (!empty($extensions)) {
             $this->extensions = 0;
-            list($statusCode, $settings) = $this->getExtensionAboutInformation($extensions, "core, update");
+            list($statusCode, $settings) = $this->getExtensionUninstallInformation($extensions, "core, update");
             if ($statusCode==200) $statusCode = $this->removeExtensions($settings);
             if ($statusCode>=400) echo "ERROR uninstalling files: ".$this->yellow->page->errorMessage."\n";
             echo "Yellow $command: Website ".($statusCode!=200 ? "not " : "")."updated";
@@ -615,11 +615,16 @@ class YellowUpdate {
     }
     
     // Return extension about information
-    public function getExtensionAboutInformation($extensions, $extensionsProtected = "") {
+    public function getExtensionAboutInformation($extensions) {
         $settings = array();
         list($statusCode, $settingsCurrent) = $this->getExtensionSettings(false);
+        $settingsCurrent["Datenstrom Yellow"] = new YellowArray();
+        $settingsCurrent["Datenstrom Yellow"]["version"] = YellowCore::RELEASE;
+        $settingsCurrent["Datenstrom Yellow"]["description"] = "Datenstrom Yellow is for people who make small websites.";
+        $settingsCurrent["Datenstrom Yellow"]["documentationUrl"] = "https://datenstrom.se/yellow/";
         foreach ($extensions as $extension) {
             $found = false;
+            if (strtoloweru($extension)=="yellow") $extension = "Datenstrom Yellow";
             foreach ($settingsCurrent as $key=>$value) {
                 if (strtoloweru($key)==strtoloweru($extension)) {
                     $settings[$key] = $settingsCurrent[$key];
@@ -631,10 +636,6 @@ class YellowUpdate {
                 $statusCode = 500;
                 $this->yellow->page->error($statusCode, "Can't find extension '$extension'!");
             }
-        }
-        $protected = preg_split("/\s*,\s*/", $extensionsProtected);
-        foreach ($settings as $key=>$value) {
-            if (in_array($key, $protected)) unset($settings[$key]);
         }
         return array($statusCode, $settings);
     }
@@ -662,6 +663,31 @@ class YellowUpdate {
         return array($statusCode, $settings);
     }
 
+    // Return extension about information
+    public function getExtensionUninstallInformation($extensions, $extensionsProtected = "") {
+        $settings = array();
+        list($statusCode, $settingsCurrent) = $this->getExtensionSettings(false);
+        foreach ($extensions as $extension) {
+            $found = false;
+            foreach ($settingsCurrent as $key=>$value) {
+                if (strtoloweru($key)==strtoloweru($extension)) {
+                    $settings[$key] = $settingsCurrent[$key];
+                    $found = true;
+                    break;
+                }
+            }
+            if (!$found) {
+                $statusCode = 500;
+                $this->yellow->page->error($statusCode, "Can't find extension '$extension'!");
+            }
+        }
+        $protected = preg_split("/\s*,\s*/", $extensionsProtected);
+        foreach ($settings as $key=>$value) {
+            if (in_array($key, $protected)) unset($settings[$key]);
+        }
+        return array($statusCode, $settings);
+    }
+    
     // Return extension update information
     public function getExtensionUpdateInformation($extensions) {
         $settings = array();
