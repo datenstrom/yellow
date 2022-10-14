@@ -2,7 +2,7 @@
 // Install extension, https://github.com/annaesvensson/yellow-install
 
 class YellowInstall {
-    const VERSION = "0.8.78";
+    const VERSION = "0.8.79";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -73,7 +73,7 @@ class YellowInstall {
         if ($this->yellow->system->get("updateCurrentRelease")=="none") {
             $this->checkCommandRequirements();
             if (empty($command)) {
-                $statusCode = 304;
+                $statusCode = 200;
                 echo "Datenstrom Yellow is for people who make small websites. https://datenstrom.se/yellow/\n";
                 echo "Syntax: php yellow.php\n";
                 echo "        php yellow.php about [extension]\n";
@@ -86,14 +86,13 @@ class YellowInstall {
                 if ($statusCode==200) $statusCode = $this->updateLanguages();
                 if ($statusCode==200) $statusCode = $this->updateSettings();
                 if ($statusCode==200) $statusCode = $this->removeInstall();
-                $statusCode = 200;
+                if ($statusCode>=400) {
+                    echo "ERROR installing files: ".$this->yellow->page->errorMessage."\n";
+                    echo "The installation has not been completed. Please run command again.\n";
+                }
             } else {
-                $statusCode = 304;
+                $statusCode = 500;
                 echo "The installation has not been completed. Please type 'php yellow.php serve' or 'php yellow.php skip installation`.\n";
-            }
-            if ($statusCode>=400) {
-                echo "ERROR installing files: ".$this->yellow->page->errorMessage."\n";
-                echo "The installation has not been completed. Please run command again.\n";
             }
         } else {
             $statusCode = $this->removeInstall();
