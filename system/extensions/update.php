@@ -2,7 +2,7 @@
 // Update extension, https://github.com/annaesvensson/yellow-update
 
 class YellowUpdate {
-    const VERSION = "0.8.83";
+    const VERSION = "0.8.84";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $extensions;             // number of extensions
@@ -837,13 +837,15 @@ class YellowUpdate {
         return array($fileNameSource, $fileNameDestination);
     }
     
-    // Return extension description including developer/designer/translator
+    // Return extension description including responsible developer/designer/translator
     public function getExtensionDescription($key, $value) {
-        $description = $text = $value->isExisting("description") ? $value->get("description") : "No description available.";
-        if ($value->isExisting("developer")) $description = "$text Developed by ".$value["developer"].".";
-        if ($value->isExisting("designer")) $description = "$text Designed by ".$value["designer"].".";
-        if ($value->isExisting("translator")) $description = "$text Translated by ".$value["translator"].".";
-        return $description;
+        $description = $responsible = "";
+        if ($value->isExisting("description")) $description = $value->get("description");
+        if ($value->isExisting("developer")) $responsible = "Developed by ".$value["developer"].".";
+        if ($value->isExisting("designer")) $responsible = "Designed by ".$value["designer"].".";
+        if ($value->isExisting("translator")) $responsible = "Translated by ".$value["translator"].".";
+        if (empty($description)) $description = "No description available.";
+        return "$description $responsible";
     }
     
     // Return extension documentation
