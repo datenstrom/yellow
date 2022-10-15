@@ -22,7 +22,7 @@ jobs:
           tools: none
       - name: Set up problem matcher
         run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
-      - name: Set up tests
+      - name: Set up test environment
         run: php yellow.php skip installation
         env:
           URL: http://website/
