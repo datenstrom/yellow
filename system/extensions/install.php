@@ -2,7 +2,7 @@
 // Install extension, https://github.com/annaesvensson/yellow-install
 
 class YellowInstall {
-    const VERSION = "0.8.79";
+    const VERSION = "0.8.80";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -133,9 +133,9 @@ class YellowInstall {
                 if (preg_match("#^(.*\/).*?$#", $zip->getNameIndex(0), $matches)) $pathBase = $matches[1];
                 $fileData = $zip->getFromName($pathBase.$this->yellow->system->get("updateExtensionFile"));
                 foreach ($this->getExtensionsRequired($fileData) as $extension) {
-                    $fileDataPhp = $zip->getFromName($pathBase."translation/$extension/$extension.php");
-                    $fileDataTxt = $zip->getFromName($pathBase."translation/$extension/$extension.txt");
-                    $fileDataIni = $zip->getFromName($pathBase."translation/$extension/extension.ini");
+                    $fileDataPhp = $zip->getFromName($pathBase."translations/$extension/$extension.php");
+                    $fileDataTxt = $zip->getFromName($pathBase."translations/$extension/$extension.txt");
+                    $fileDataIni = $zip->getFromName($pathBase."translations/$extension/extension.ini");
                     $statusCode = max($statusCode, $this->updateLanguageArchive($fileDataPhp, $fileDataTxt, $fileDataIni, $pathBase, "install"));
                 }
                 $this->yellow->language->load($this->yellow->system->get("coreExtensionDirectory"));
