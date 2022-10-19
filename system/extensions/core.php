@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.8.93";
+    const VERSION = "0.8.94";
     const RELEASE = "0.8.21";
     public $page;           // current page
     public $content;        // content files
@@ -119,7 +119,7 @@ class YellowCore {
         if ($this->page->isError()) $statusCode = $this->processRequestError();
         ob_end_flush();
         $this->toolbox->timerStop($time);
-        if ($this->system->get("coreDebugMode")>=1 && $this->lookup->isContentFile($fileName)) {
+        if ($this->system->get("coreDebugMode")>=1 && ($this->lookup->isContentFile($fileName) || $this->page->isError())) {
             echo "YellowCore::request status:$statusCode time:$time ms<br/>\n";
         }
         return $statusCode;
@@ -144,12 +144,12 @@ class YellowCore {
         if ($statusCode==0) {
             if ($this->lookup->isContentFile($fileName)) {
                 $statusCode = $this->sendPage($scheme, $address, $base, $location, $fileName, $cacheable, true);
-            } else {
+            } elseif (!empty($fileName)) {
                 $statusCode = $this->sendFile(200, $fileName, $cacheable);
             }
             if (!is_readable($fileName)) $this->page->error(404);
         }
-        if ($this->system->get("coreDebugMode")>=1 && $this->lookup->isContentFile($fileName)) {
+        if ($this->system->get("coreDebugMode")>=1 && ($this->lookup->isContentFile($fileName) || $this->page->isError())) {
             echo "YellowCore::processRequest file:$fileName<br/>\n";
         }
         return $statusCode;
@@ -350,6 +350,7 @@ class YellowCore {
             }
         }
         $location = substru($this->toolbox->detectServerLocation(), strlenu($base));
+        $fileName = "";
         if (empty($fileName)) $fileName = $this->lookup->findFileFromMediaLocation($location);
         if (empty($fileName)) $fileName = $this->lookup->findFileFromContentLocation($location);
         return array($scheme, $address, $base, $location, $fileName);
