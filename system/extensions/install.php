@@ -2,7 +2,7 @@
 // Install extension, https://github.com/annaesvensson/yellow-install
 
 class YellowInstall {
-    const VERSION = "0.8.80";
+    const VERSION = "0.8.81";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -134,12 +134,11 @@ class YellowInstall {
                 $fileData = $zip->getFromName($pathBase.$this->yellow->system->get("updateExtensionFile"));
                 foreach ($this->getExtensionsRequired($fileData) as $extension) {
                     $fileDataPhp = $zip->getFromName($pathBase."translations/$extension/$extension.php");
-                    $fileDataTxt = $zip->getFromName($pathBase."translations/$extension/$extension.txt");
                     $fileDataIni = $zip->getFromName($pathBase."translations/$extension/extension.ini");
-                    $statusCode = max($statusCode, $this->updateLanguageArchive($fileDataPhp, $fileDataTxt, $fileDataIni, $pathBase, "install"));
+                    $statusCode = max($statusCode, $this->updateLanguageArchive($fileDataPhp, $fileDataIni, $pathBase, "install"));
                 }
-                $this->yellow->language->load($this->yellow->system->get("coreExtensionDirectory"));
                 $this->yellow->extension->load($this->yellow->system->get("coreExtensionDirectory"));
+                $this->yellow->language->load($this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreLanguageFile"));
                 $zip->close();
             } else {
                 $statusCode = 500;
@@ -150,7 +149,7 @@ class YellowInstall {
     }
     
     // Update language archive
-    public function updateLanguageArchive($fileDataPhp, $fileDataTxt, $fileDataIni, $pathBase, $action) {
+    public function updateLanguageArchive($fileDataPhp, $fileDataIni, $pathBase, $action) {
         $statusCode = 200;
         if ($this->yellow->extension->isExisting("update")) {
             $settings = $this->yellow->toolbox->getTextSettings($fileDataIni, "");
@@ -158,13 +157,10 @@ class YellowInstall {
             $version = $settings->get("version");
             $modified = strtotime($settings->get("published"));
             $fileNamePhp = $this->yellow->system->get("coreExtensionDirectory").$extension.".php";
-            $fileNameTxt = $this->yellow->system->get("coreExtensionDirectory").$extension.".txt";
             if (!empty($extension) && !empty($version) && !is_file($fileNamePhp)) {
-                $statusCode = $this->yellow->extension->get("update")->updateExtensionSettings($extension, $settings, $action);
-                if ($statusCode==200) $statusCode = $this->yellow->extension->get("update")->updateExtensionFile(
-                    $fileNamePhp, $fileDataPhp, $modified, 0, 0, "create", $extension);
-                if ($statusCode==200) $statusCode = $this->yellow->extension->get("update")->updateExtensionFile(
-                    $fileNameTxt, $fileDataTxt, $modified, 0, 0, "create", $extension);
+                $statusCode = max($statusCode, $this->yellow->extension->get("update")->updateExtensionSettings($extension, $action, $settings));
+                $statusCode = max($statusCode, $this->yellow->extension->get("update")->updateExtensionFile(
+                    $fileNamePhp, $fileDataPhp, $modified, 0, 0, "create", $extension));
                 $this->yellow->log($statusCode==200 ? "info" : "error", ucfirst($action)." extension '".ucfirst($extension)." $version'");
             }
         }
@@ -404,7 +400,7 @@ class YellowInstall {
 
     // Return raw data for install page
     public function getRawDataInstall() {
-        $languages = $this->yellow->system->getValues("language");
+        $languages = $this->yellow->system->getAvailable("language");
         $language = $this->yellow->toolbox->detectBrowserLanguage($languages, $this->yellow->system->get("language"));
         $this->yellow->language->set($language);
         $rawData = "---\nTitle:".$this->yellow->language->getText("installTitle")."\nLanguage:$language\nNavigation:navigation\nHeader:none\nFooter:none\nSidebar:none\n---\n";
