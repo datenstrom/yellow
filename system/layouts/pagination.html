@@ -1,6 +1,6 @@
 <?php list($name, $pages) = $this->yellow->getLayoutArguments() ?>
 <?php if ($pages->isPagination()): ?>
-<div class="pagination" role="navigation">
+<div class="pagination" role="navigation" aria-label="<?php echo $this->yellow->language->getTextHtml("corePagination") ?>">
 <?php if ($pages->getPaginationPrevious()): ?>
 <a class="previous" href="<?php echo $pages->getPaginationPrevious() ?>"><?php echo $this->yellow->language->getTextHtml("corePaginationPrevious") ?></a>
 <?php endif ?>

@@ -1,6 +1,6 @@
 <?php $pages = $this->yellow->content->top() ?>
 <?php $this->yellow->page->setLastModified($pages->getModified()) ?>
-<div class="navigation" role="navigation">
+<div class="navigation" role="navigation" aria-label="<?php echo $this->yellow->language->getTextHtml("coreNavigation") ?>">
 <ul>
 <?php foreach ($pages as $page): ?>
 <li><a<?php echo $page->isActive() ? " class=\"active\" aria-current=\"page\"" : "" ?> href="<?php echo $page->getLocation(true) ?>"><?php echo $page->getHtml("titleNavigation") ?></a></li>
