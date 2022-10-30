@@ -2,7 +2,7 @@
 // Serve extension, https://github.com/annaesvensson/yellow-serve
 
 class YellowServe {
-    const VERSION = "0.8.20";
+    const VERSION = "0.8.21";
     public $yellow;         // access to API
     
     // Handle initialisation
@@ -21,7 +21,7 @@ class YellowServe {
     
     // Handle command help
     public function onCommandHelp() {
-        return "serve [url]\n";
+        return "serve [url]";
     }
     
     // Process command to start built-in web server

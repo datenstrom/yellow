@@ -2,7 +2,7 @@
 // Command extension, https://github.com/annaesvensson/yellow-command
 
 class YellowCommand {
-    const VERSION = "0.8.42";
+    const VERSION = "0.8.43";
     public $yellow;                       // access to API
     public $files;                        // number of files
     public $links;                        // number of links
@@ -36,10 +36,7 @@ class YellowCommand {
     
     // Handle command help
     public function onCommandHelp() {
-        $help = "build [directory location]\n";
-        $help .= "check [directory location]\n";
-        $help .= "clean [directory location]\n";
-        return $help;
+        return array("build [directory location]", "check [directory location]", "clean [directory location]");
     }
 
     // Process command to build static website

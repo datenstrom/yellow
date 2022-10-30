@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.8.96";
+    const VERSION = "0.8.97";
     const RELEASE = "0.8.21";
     public $page;           // current page
     public $content;        // content files
@@ -368,7 +368,9 @@ class YellowCore {
         $data = array();
         foreach ($this->extension->data as $key=>$value) {
             if (method_exists($value["object"], "onCommandHelp")) {
-                foreach (preg_split("/[\r\n]+/", $value["object"]->onCommandHelp()) as $line) {
+                $output = $value["object"]->onCommandHelp();
+                $lines = is_array($output) ? $output : array($output);
+                foreach ($lines as $line) {
                     list($command, $dummy) = $this->toolbox->getTextList($line, " ", 2);
                     if (!empty($command) && !isset($data[$command])) $data[$command] = $line;
                 }
@@ -1700,12 +1702,19 @@ class YellowLanguage {
     
     // Set default language settings
     public function setDefault($text) {
-        $settings = $this->yellow->toolbox->getTextSettings($text, "language");
-        foreach ($settings as $language=>$block) {
-            if (!isset($this->settings[$language])) $this->settings[$language] = new YellowArray();
-            foreach ($block as $key=>$value) {
-                $this->settings[$language][$key] = $value;
-                $this->settingsDefaults[$key] = true;
+        $language = "";
+        $lines = is_array($text) ? $text : array($text);
+        foreach ($lines as $line) {
+            if (preg_match("/^\#/", $line)) continue;
+            if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
+                if (lcfirst($matches[1])=="language" && !strempty($matches[2])) {
+                    $language = $matches[2];
+                    if (!isset($this->settings[$language])) $this->settings[$language] = new YellowArray();
+                }
+                if (!empty($language) && !empty($matches[1]) && !strempty($matches[2])) {
+                    $this->settings[$language][$matches[1]] = $matches[2];
+                    $this->settingsDefaults[$matches[1]] = true;
+                }
             }
         }
     }
@@ -2796,7 +2805,6 @@ class YellowToolbox {
                 if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
                     if (!empty($matches[1]) && !strempty($matches[2])) {
                         $settings[$matches[1]] = $matches[2];
-                        
                     }
                 }
             }

@@ -2,7 +2,7 @@
 // Update extension, https://github.com/annaesvensson/yellow-update
 
 class YellowUpdate {
-    const VERSION = "0.8.85";
+    const VERSION = "0.8.87";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $extensions;             // number of extensions
@@ -65,11 +65,7 @@ class YellowUpdate {
     
     // Handle command help
     public function onCommandHelp() {
-        $help = "about [extension]\n";
-        $help .= "install [extension]\n";
-        $help .= "uninstall [extension]\n";
-        $help .= "update [extension]\n";
-        return $help;
+        return array("about [extension]", "install [extension]", "uninstall [extension]", "update [extension]");
     }
     
     // Parse page content shortcut

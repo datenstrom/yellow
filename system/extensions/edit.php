@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/annaesvensson/yellow-edit
 
 class YellowEdit {
-    const VERSION = "0.8.65";
+    const VERSION = "0.8.66";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -81,7 +81,7 @@ class YellowEdit {
     
     // Handle command help
     public function onCommandHelp() {
-        return "user [option email password]\n";
+        return "user [option email password]";
     }
     
     // Handle page content of shortcut
