@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.8.97";
+    const VERSION = "0.8.98";
     const RELEASE = "0.8.21";
     public $page;           // current page
     public $content;        // content files
@@ -893,9 +893,9 @@ class YellowPage {
         $languageError = $this->yellow->lookup->findContentLanguage($this->fileName, $this->yellow->system->get("language"));
         if (is_file($fileNameError)) {
             $rawData = $this->yellow->toolbox->readFile($fileNameError);
-        } elseif ($this->yellow->language->isText("coreError${statusCode}Title", $languageError)) {
-            $rawData = "---\nTitle: ".$this->yellow->language->getText("coreError${statusCode}Title", $languageError)."\n";
-            $rawData .= "Layout: error\n---\n".$this->yellow->language->getText("coreError${statusCode}Text", $languageError);
+        } elseif ($this->yellow->language->isText("coreError{$statusCode}Title", $languageError)) {
+            $rawData = "---\nTitle: ".$this->yellow->language->getText("coreError{$statusCode}Title", $languageError)."\n";
+            $rawData .= "Layout: error\n---\n".$this->yellow->language->getText("coreError{$statusCode}Text", $languageError);
         } else {
             $rawData = "---\nTitle:".$this->yellow->toolbox->getHttpStatusFormatted($statusCode, true)."\n";
             $rawData .= "Layout:error\n---\n".$this->errorMessage;
@@ -1579,6 +1579,18 @@ class YellowSystem {
     public function setDefault($key, $value) {
         $this->settingsDefaults[$key] = $value;
     }
+
+    // Set default system settings
+    public function setDefaults($lines) {
+        foreach ($lines as $line) {
+            if (preg_match("/^\#/", $line)) continue;
+            if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
+                if (!empty($matches[1]) && !strempty($matches[2])) {
+                    $this->settingsDefaults[$matches[1]] = $matches[2];
+                }
+            }
+        }
+    }
     
     // Set system setting
     public function set($key, $value) {
@@ -1700,10 +1712,16 @@ class YellowLanguage {
         $this->language = $language;
     }
     
+    // Set default language setting
+    public function setDefault($key, $value, $language) {
+        if (!isset($this->settings[$language])) $this->settings[$language] = new YellowArray();
+        $this->settings[$language][$key] = $value;
+        $this->settingsDefaults[$key] = $value;
+    }
+    
     // Set default language settings
-    public function setDefault($text) {
+    public function setDefaults($lines) {
         $language = "";
-        $lines = is_array($text) ? $text : array($text);
         foreach ($lines as $line) {
             if (preg_match("/^\#/", $line)) continue;
             if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {

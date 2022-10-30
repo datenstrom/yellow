@@ -2,7 +2,7 @@
 // Install extension, https://github.com/annaesvensson/yellow-install
 
 class YellowInstall {
-    const VERSION = "0.8.82";
+    const VERSION = "0.8.83";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -414,13 +414,13 @@ class YellowInstall {
         $rawData .= "<p>".$this->yellow->language->getText("installLanguage")."</p>\n<p>";
         foreach ($languages as $language) {
             $checked = $language==$this->yellow->language->language ? " checked=\"checked\"" : "";
-            $rawData .= "<label for=\"${language}-language\"><input type=\"radio\" name=\"language\" id=\"${language}-language\" value=\"$language\"$checked> ".$this->yellow->language->getTextHtml("languageDescription", $language)."</label><br />";
+            $rawData .= "<label for=\"{$language}-language\"><input type=\"radio\" name=\"language\" id=\"{$language}-language\" value=\"$language\"$checked> ".$this->yellow->language->getTextHtml("languageDescription", $language)."</label><br />";
         }
         $rawData .= "</p>\n";
         $rawData .= "<p>".$this->yellow->language->getText("installExtension")."</p>\n<p>";
         foreach (array("website", "wiki", "blog") as $extension) {
             $checked = $extension=="website" ? " checked=\"checked\"" : "";
-            $rawData .= "<label for=\"${extension}-extension\"><input type=\"radio\" name=\"extension\" id=\"${extension}-extension\" value=\"$extension\"$checked> ".$this->yellow->language->getTextHtml("installExtension".ucfirst($extension))."</label><br />";
+            $rawData .= "<label for=\"{$extension}-extension\"><input type=\"radio\" name=\"extension\" id=\"{$extension}-extension\" value=\"$extension\"$checked> ".$this->yellow->language->getTextHtml("installExtension".ucfirst($extension))."</label><br />";
         }
         $rawData .= "</p>\n";
         $rawData .= "<input class=\"btn\" type=\"submit\" value=\"".$this->yellow->language->getText("installButton")."\" />\n";
