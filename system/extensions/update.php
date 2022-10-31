@@ -2,7 +2,7 @@
 // Update extension, https://github.com/annaesvensson/yellow-update
 
 class YellowUpdate {
-    const VERSION = "0.8.87";
+    const VERSION = "0.8.88";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $extensions;             // number of extensions
@@ -201,7 +201,7 @@ class YellowUpdate {
         $this->updateEventPending();
         $statusCode = $this->updateExtensionPending();
         if ($statusCode==303) {
-            echo "Detected ZIP-file".($this->extensions!=1 ? "s" : "");
+            echo "Detected ZIP file".($this->extensions!=1 ? "s" : "");
             echo ", $this->extensions extension".($this->extensions!=1 ? "s" : "")." installed. Please run command again.\n";
         }
         return $statusCode;
