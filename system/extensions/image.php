@@ -2,7 +2,7 @@
 // Image extension, https://github.com/annaesvensson/yellow-image
 
 class YellowImage {
-    const VERSION = "0.8.17";
+    const VERSION = "0.8.18";
     public $yellow;             // access to API
 
     // Handle initialisation
@@ -32,20 +32,20 @@ class YellowImage {
         if ($name=="image" && $type=="inline") {
             list($name, $alt, $style, $width, $height) = $this->yellow->toolbox->getTextArguments($text);
             if (!preg_match("/^\w+:/", $name)) {
-                if (empty($alt)) $alt = $this->yellow->language->getText("imageDefaultAlt");
-                if (empty($width)) $width = "100%";
-                if (empty($height)) $height = $width;
+                if (is_string_empty($alt)) $alt = $this->yellow->language->getText("imageDefaultAlt");
+                if (is_string_empty($width)) $width = "100%";
+                if (is_string_empty($height)) $height = $width;
                 $path = $this->yellow->lookup->findMediaDirectory("coreImageLocation");
                 list($src, $width, $height) = $this->getImageInformation($path.$name, $width, $height);
             } else {
-                if (empty($alt)) $alt = $this->yellow->language->getText("imageDefaultAlt");
+                if (is_string_empty($alt)) $alt = $this->yellow->language->getText("imageDefaultAlt");
                 $src = $this->yellow->lookup->normaliseUrl("", "", "", $name);
                 $width = $height = 0;
             }
             $output = "<img src=\"".htmlspecialchars($src)."\"";
             if ($width && $height) $output .= " width=\"".htmlspecialchars($width)."\" height=\"".htmlspecialchars($height)."\"";
-            if (!empty($alt)) $output .= " alt=\"".htmlspecialchars($alt)."\" title=\"".htmlspecialchars($alt)."\"";
-            if (!empty($style)) $output .= " class=\"".htmlspecialchars($style)."\"";
+            if (!is_string_empty($alt)) $output .= " alt=\"".htmlspecialchars($alt)."\" title=\"".htmlspecialchars($alt)."\"";
+            if (!is_string_empty($style)) $output .= " class=\"".htmlspecialchars($style)."\"";
             $output .= " />";
         }
         return $output;

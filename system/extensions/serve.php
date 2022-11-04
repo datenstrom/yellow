@@ -2,7 +2,7 @@
 // Serve extension, https://github.com/annaesvensson/yellow-serve
 
 class YellowServe {
-    const VERSION = "0.8.21";
+    const VERSION = "0.8.22";
     public $yellow;         // access to API
     
     // Handle initialisation
@@ -27,9 +27,9 @@ class YellowServe {
     // Process command to start built-in web server
     public function processCommandServe($command, $text) {
         list($url) = $this->yellow->toolbox->getTextArguments($text);
-        if (empty($url)) $url = "http://localhost:8000/";
+        if (is_string_empty($url)) $url = "http://localhost:8000/";
         list($scheme, $address, $base) = $this->yellow->lookup->getUrlInformation($url);
-        if ($scheme=="http" && !empty($address) && empty($base)) {
+        if ($scheme=="http" && !is_string_empty($address) && is_string_empty($base)) {
             if (!preg_match("/\:\d+$/", $address)) $address .= ":8000";
             if ($this->checkServerSettings("$scheme://$address/")) {
                 echo "Starting built-in web server. Open a web browser and go to $scheme://$address/\n";
@@ -37,7 +37,7 @@ class YellowServe {
                 exec("php -S $address yellow.php 2>&1", $outputLines, $returnStatus);
                 $statusCode = $returnStatus!=0 ? 500 : 200;
                 if ($statusCode!=200) {
-                    $output = !empty($outputLines) ? end($outputLines) : "Please check arguments!";
+                    $output = !is_array_empty($outputLines) ? end($outputLines) : "Please check arguments!";
                     if (preg_match("/^\[(.*?)\]\s*(.*)$/", $output, $matches)) $output = $matches[2];
                     echo "ERROR starting web server: $output\n";
                 }

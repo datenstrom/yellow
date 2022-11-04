@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/annaesvensson/yellow-edit
 
 class YellowEdit {
-    const VERSION = "0.8.66";
+    const VERSION = "0.8.67";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -40,7 +40,7 @@ class YellowEdit {
             $fileDataNew = "";
             foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
                 if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
-                    if (lcfirst($matches[1])=="email" && !strempty($matches[2])) {
+                    if (lcfirst($matches[1])=="email" && !is_string_empty($matches[2])) {
                         $status = $this->yellow->user->getUser("status", $matches[2]);
                         $reserved = strtotime($this->yellow->user->getUser("modified", $matches[2])) + 60*60*24;
                         $cleanup = $status!="active" && $status!="inactive" && $reserved<=time();
@@ -89,8 +89,8 @@ class YellowEdit {
         $output = null;
         if ($name=="edit" && $type=="inline") {
             list($target, $description) = $this->yellow->toolbox->getTextList($text, " ", 2);
-            if (empty($target) || $target=="-") $target = "main";
-            if (empty($description)) $description = ucfirst($name);
+            if (is_string_empty($target) || $target=="-") $target = "main";
+            if (is_string_empty($description)) $description = ucfirst($name);
             $pageTarget = $target=="main" ? $page->getPage("main") : $page->getPage("main")->getPage($target);
             $output = "<a href=\"".$pageTarget->get("pageEditUrl")."\">".htmlspecialchars($description)."</a>";
         }
@@ -144,7 +144,7 @@ class YellowEdit {
         }
         uksort($data, "strnatcasecmp");
         foreach ($data as $line) echo "$line\n";
-        if (count($data)==0) echo "Yellow $command: No user accounts\n";
+        if (is_array_empty($data)) echo "Yellow $command: No user accounts\n";
         return 200;
     }
     
@@ -152,7 +152,7 @@ class YellowEdit {
     public function userAdd($command, $text) {
         $status = "ok";
         list($option, $email, $password) = $this->yellow->toolbox->getTextArguments($text);
-        if (empty($email) || empty($password)) $status = $this->response->status = "incomplete";
+        if (is_string_empty($email) || is_string_empty($password)) $status = $this->response->status = "incomplete";
         if ($status=="ok") $status = $this->getUserAccount("add", $email, $password);
         if ($status=="ok" && $this->isUserAccountTaken($email)) $status = "taken";
         switch ($status) {
@@ -196,7 +196,7 @@ class YellowEdit {
     public function userChange($command, $text) {
         $status = "ok";
         list($option, $email, $password) = $this->yellow->toolbox->getTextArguments($text);
-        if (empty($email)) $status = $this->response->status = "invalid";
+        if (is_string_empty($email)) $status = $this->response->status = "invalid";
         if ($status=="ok") $status = $this->getUserAccount("change", $email, $password);
         if ($status=="ok" && !$this->yellow->user->isExisting($email)) $status = "unknown";
         switch ($status) {
@@ -208,7 +208,7 @@ class YellowEdit {
         if ($status=="ok") {
             $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
             $settings = array(
-                "hash" => empty($password) ? $this->yellow->user->getUser("hash", $email) : $this->response->createHash($password),
+                "hash" => is_string_empty($password) ? $this->yellow->user->getUser("hash", $email) : $this->response->createHash($password),
                 "failed" => "0",
                 "modified" => date("Y-m-d H:i:s", time()));
             $status = $this->yellow->user->save($fileNameUser, $email, $settings) ? "ok" : "error";
@@ -223,7 +223,7 @@ class YellowEdit {
     public function userRemove($command, $text) {
         $status = "ok";
         list($option, $email) = $this->yellow->toolbox->getTextArguments($text);
-        if (empty($email)) $status = $this->response->status = "invalid";
+        if (is_string_empty($email)) $status = $this->response->status = "invalid";
         if ($status=="ok") $status = $this->getUserAccount("remove", $email, "");
         if ($status=="ok" && !$this->yellow->user->isExisting($email)) $status = "unknown";
         switch ($status) {
@@ -345,7 +345,7 @@ class YellowEdit {
         $email = trim($this->yellow->page->getRequest("email"));
         $password = trim($this->yellow->page->getRequest("password"));
         $consent = trim($this->yellow->page->getRequest("consent"));
-        if (empty($name) || empty($email) || empty($password) || empty($consent)) $this->response->status = "incomplete";
+        if (is_string_empty($name) || is_string_empty($email) || is_string_empty($password) || is_string_empty($consent)) $this->response->status = "incomplete";
         if ($this->response->status=="ok") $this->response->status = $this->getUserAccount($this->response->action, $email, $password);
         if ($this->response->status=="ok" && $this->response->isLoginRestriction()) $this->response->status = "next";
         if ($this->response->status=="ok" && $this->isUserAccountTaken($email)) $this->response->status = "next";
@@ -445,7 +445,7 @@ class YellowEdit {
         $password = trim($this->yellow->page->getRequest("password"));
         $this->response->status = $this->getUserStatus($email, $this->yellow->page->getRequest("action"));
         if ($this->response->status=="ok") {
-            if (empty($password)) $this->response->status = "password";
+            if (is_string_empty($password)) $this->response->status = "password";
             if ($this->response->status=="ok") $this->response->status = $this->getUserAccount($this->response->action, $email, $password);
             if ($this->response->status=="ok") {
                 $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
@@ -510,7 +510,7 @@ class YellowEdit {
         $this->response->status = $this->getUserStatus($email, $this->yellow->page->getRequest("action"));
         if ($this->response->status=="ok") {
             list($email, $hash) = $this->yellow->toolbox->getTextList($this->yellow->user->getUser("pending", $email), ":", 2);
-            if (!$this->yellow->user->isExisting($email) || empty($hash)) $this->response->status = "done";
+            if (!$this->yellow->user->isExisting($email) || is_string_empty($hash)) $this->response->status = "done";
         }
         if ($this->response->status=="ok") {
             $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
@@ -542,7 +542,7 @@ class YellowEdit {
         $this->response->status = "ok";
         $name = trim($this->yellow->page->getRequest("name"));
         $email = $this->response->userEmail;
-        if (empty($name)) $this->response->status = "none";
+        if (is_string_empty($name)) $this->response->status = "none";
         if ($this->response->status=="ok" && $name!=$this->yellow->user->getUser("name", $email)) $this->response->status = "mismatch";
         if ($this->response->status=="ok") $this->response->status = $this->getUserAccount($this->response->action, $email, "");
         if ($this->response->status=="ok") {
@@ -593,8 +593,8 @@ class YellowEdit {
         $password = trim($this->yellow->page->getRequest("password"));
         $name = trim(preg_replace("/[^\pL\d\-\. ]/u", "-", $this->yellow->page->getRequest("name")));
         $language = trim($this->yellow->page->getRequest("language"));
-        if ($email!=$emailSource || !empty($password)) {
-            if (empty($email)) $this->response->status = "invalid";
+        if ($email!=$emailSource || !is_string_empty($password)) {
+            if (is_string_empty($email)) $this->response->status = "invalid";
             if ($this->response->status=="ok") $this->response->status = $this->getUserAccount($this->response->action, $email, $password);
             if ($this->response->status=="ok" && $email!=$emailSource && $this->isUserAccountTaken($email)) $this->response->status = "taken";
             if ($this->response->status=="ok" && $email!=$emailSource) {
@@ -619,7 +619,7 @@ class YellowEdit {
                 $settings = array(
                     "name" => $name,
                     "language" => $language,
-                    "pending" => $email.":".(empty($password) ? $this->yellow->user->getUser("hash", $emailSource) : $this->response->createHash($password)),
+                    "pending" => $email.":".(is_string_empty($password) ? $this->yellow->user->getUser("hash", $emailSource) : $this->response->createHash($password)),
                     "failed" => "0",
                     "modified" => date("Y-m-d H:i:s", time()));
                 $this->response->status = $this->yellow->user->save($fileNameUser, $emailSource, $settings) ? "ok" : "error";
@@ -657,7 +657,7 @@ class YellowEdit {
             $author = trim($this->yellow->page->getRequest("author"));
             $email = trim($this->yellow->page->getRequest("email"));
             if ($email!=$this->yellow->system->get("email")) {
-                if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) $this->response->status = "invalid";
+                if (is_string_empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) $this->response->status = "invalid";
             }
             if ($this->response->status=="ok") {
                 $fileNameSystem = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
@@ -684,7 +684,7 @@ class YellowEdit {
             $this->response->status = "ok";
             if ($this->yellow->page->getRequest("option")=="check") {
                 list($statusCode, $rawData) = $this->response->getUpdateInformation();
-                $this->response->status = empty($rawData) ? "ok" : "updates";
+                $this->response->status = is_string_empty($rawData) ? "ok" : "updates";
                 $this->response->rawDataOutput = $rawData;
                 if ($statusCode!=200) {
                     $this->response->status = "error";
@@ -706,7 +706,7 @@ class YellowEdit {
     // Process request to create page
     public function processRequestCreate($scheme, $address, $base, $location, $fileName) {
         $statusCode = 0;
-        if ($this->response->isUserAccess("create", $location) && !empty($this->yellow->page->getRequest("rawdataedit"))) {
+        if ($this->response->isUserAccess("create", $location) && !is_string_empty($this->yellow->page->getRequest("rawdataedit"))) {
             $this->response->rawDataSource = $this->yellow->page->getRequest("rawdatasource");
             $this->response->rawDataEdit = $this->yellow->page->getRequest("rawdatasource");
             $this->response->rawDataEndOfLine = $this->yellow->page->getRequest("rawdataendofline");
@@ -732,7 +732,7 @@ class YellowEdit {
     // Process request to edit page
     public function processRequestEdit($scheme, $address, $base, $location, $fileName) {
         $statusCode = 0;
-        if ($this->response->isUserAccess("edit", $location) && !empty($this->yellow->page->getRequest("rawdataedit"))) {
+        if ($this->response->isUserAccess("edit", $location) && !is_string_empty($this->yellow->page->getRequest("rawdataedit"))) {
             $this->response->rawDataSource = $this->yellow->page->getRequest("rawdatasource");
             $this->response->rawDataEdit = $this->yellow->page->getRequest("rawdataedit");
             $this->response->rawDataEndOfLine = $this->yellow->page->getRequest("rawdataendofline");
@@ -863,7 +863,7 @@ class YellowEdit {
         $action = $this->yellow->page->getRequest("action");
         $authToken = $this->yellow->toolbox->getCookie("authtoken");
         $csrfToken = $this->yellow->toolbox->getCookie("csrftoken");
-        if (empty($action) || $this->isRequestSameSite("POST", $scheme, $address)) {
+        if (is_string_empty($action) || $this->isRequestSameSite("POST", $scheme, $address)) {
             if ($action=="login") {
                 $email = $this->yellow->page->getRequest("email");
                 $password = $this->yellow->page->getRequest("password");
@@ -876,9 +876,9 @@ class YellowEdit {
                     $this->response->userFailedEmail = $email;
                     $this->response->userFailedExpire = PHP_INT_MAX;
                 }
-            } elseif (!empty($authToken) && !empty($csrfToken)) {
+            } elseif (!is_string_empty($authToken) && !is_string_empty($csrfToken)) {
                 $csrfTokenReceived = isset($_POST["csrftoken"]) ? $_POST["csrftoken"] : "";
-                $csrfTokenIrrelevant = empty($action);
+                $csrfTokenIrrelevant = is_string_empty($action);
                 if ($this->response->checkAuthToken($authToken, $csrfToken, $csrfTokenReceived, $csrfTokenIrrelevant)) {
                     $this->response->userEmail = $email = $this->response->getAuthEmail($authToken);
                     $this->response->language = $this->getUserLanguage($email);
@@ -897,7 +897,7 @@ class YellowEdit {
     public function checkUserUnauth($scheme, $address, $base, $location, $fileName) {
         $ok = false;
         $action = $this->yellow->page->getRequest("action");
-        if (empty($action) || $action=="signup" || $action=="forgot") {
+        if (is_string_empty($action) || $action=="signup" || $action=="forgot") {
             $ok = true;
         } elseif ($this->yellow->page->isRequest("actiontoken")) {
             $actionToken = $this->yellow->page->getRequest("actiontoken");
@@ -919,7 +919,7 @@ class YellowEdit {
 
     // Check user failed
     public function checkUserFailed($scheme, $address, $base, $location, $fileName) {
-        if (!empty($this->response->userFailedError)) {
+        if (!is_string_empty($this->response->userFailedError)) {
             if ($this->response->userFailedExpire>time() && $this->yellow->user->isExisting($this->response->userFailedEmail)) {
                 $email = $this->response->userFailedEmail;
                 $failed = $this->yellow->user->getUser("failed", $email)+1;
@@ -975,9 +975,9 @@ class YellowEdit {
         }
         if (is_null($status)) {
             $status = "ok";
-            if (!empty($password) && strlenu($password)<$this->yellow->system->get("editUserPasswordMinLength")) $status = "short";
-            if (!empty($password) && $password==$email) $status = "weak";
-            if (!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)) $status = "invalid";
+            if (!is_string_empty($password) && strlenu($password)<$this->yellow->system->get("editUserPasswordMinLength")) $status = "short";
+            if (!is_string_empty($password) && $password==$email) $status = "weak";
+            if (!is_string_empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)) $status = "invalid";
         }
         return $status;
     }
@@ -1046,9 +1046,9 @@ class YellowEditResponse {
     // Process page data
     public function processPageData($page) {
         if ($this->isUser()) {
-            if (empty($this->rawDataSource)) $this->rawDataSource = $page->rawData;
-            if (empty($this->rawDataEdit)) $this->rawDataEdit = $page->rawData;
-            if (empty($this->rawDataEndOfLine)) $this->rawDataEndOfLine = $this->getEndOfLine($page->rawData);
+            if (is_string_empty($this->rawDataSource)) $this->rawDataSource = $page->rawData;
+            if (is_string_empty($this->rawDataEdit)) $this->rawDataEdit = $page->rawData;
+            if (is_string_empty($this->rawDataEndOfLine)) $this->rawDataEndOfLine = $this->getEndOfLine($page->rawData);
             if ($page->statusCode==404 || $this->yellow->toolbox->isLocationArguments()) {
                 $this->rawDataEdit = $this->getRawDataGenerated($page);
                 $this->rawDataReadonly = true;
@@ -1058,9 +1058,9 @@ class YellowEditResponse {
                 $this->rawDataReadonly = false;
             }
         }
-        if (empty($this->language)) $this->language = $page->get("language");
-        if (empty($this->action)) $this->action = $this->isUser() ? "none" : "login";
-        if (empty($this->status)) $this->status = "none";
+        if (is_string_empty($this->language)) $this->language = $page->get("language");
+        if (is_string_empty($this->action)) $this->action = $this->isUser() ? "none" : "login";
+        if (is_string_empty($this->status)) $this->status = "none";
         if ($this->status=="error") $this->action = "error";
     }
     
@@ -1074,14 +1074,14 @@ class YellowEditResponse {
         if ($this->yellow->content->find($page->location)) {
             $page->location = $this->getPageNewLocation($page->rawData, $page->location, $page->get("pageNewLocation"));
             $page->fileName = $this->getPageNewFile($page->location, $page->fileName, $page->get("published"));
-            while ($this->yellow->content->find($page->location) || empty($page->fileName)) {
+            while ($this->yellow->content->find($page->location) || is_string_empty($page->fileName)) {
                 $page->rawData = $this->yellow->toolbox->setMetaData($page->rawData, "title", $this->getTitleNext($page->rawData));
                 $page->rawData = $this->yellow->toolbox->normaliseLines($page->rawData, $endOfLine);
                 $page->location = $this->getPageNewLocation($page->rawData, $page->location, $page->get("pageNewLocation"));
                 $page->fileName = $this->getPageNewFile($page->location, $page->fileName, $page->get("published"));
                 if (++$pageCounter>999) break;
             }
-            if ($this->yellow->content->find($page->location) || empty($page->fileName)) {
+            if ($this->yellow->content->find($page->location) || is_string_empty($page->fileName)) {
                 $page->error(500, "Page '".$page->get("title")."' is not possible!");
             }
         } else {
@@ -1109,11 +1109,11 @@ class YellowEditResponse {
         if ($this->isMetaModified($pageSource, $page) && $page->location!=$this->yellow->content->getHomeLocation($page->location)) {
             $page->location = $this->getPageNewLocation($page->rawData, $page->location, $page->get("pageNewLocation"), true);
             $page->fileName = $this->getPageNewFile($page->location, $page->fileName, $page->get("published"));
-            if ($page->location!=$pageSource->location && ($this->yellow->content->find($page->location) || empty($page->fileName))) {
+            if ($page->location!=$pageSource->location && ($this->yellow->content->find($page->location) || is_string_empty($page->fileName))) {
                 $page->error(500, "Page '".$page->get("title")."' is not possible!");
             }
         }
-        if (empty($page->rawData)) $page->error(500, "Page has been modified by someone else!");
+        if (is_string_empty($page->rawData)) $page->error(500, "Page has been modified by someone else!");
         if (!$this->isUserAccess("edit", $page->location) ||
             !$this->isUserAccess("edit", $pageSource->location)) {
             $page->error(500, "Page '".$page->get("title")."' is restricted!");
@@ -1173,7 +1173,7 @@ class YellowEditResponse {
         if ($file->get("type")=="html" || $file->get("type")=="svg") {
             $fileData = $this->yellow->toolbox->readFile($fileNameTemp);
             $fileData = $this->yellow->toolbox->normaliseData($fileData, $file->get("type"));
-            if (empty($fileData) || !$this->yellow->toolbox->createFile($fileNameTemp, $fileData)) {
+            if (is_string_empty($fileData) || !$this->yellow->toolbox->createFile($fileNameTemp, $fileData)) {
                 $file->error(500, "Can't write file '$fileNameTemp'!");
             }
         }
@@ -1329,7 +1329,7 @@ class YellowEditResponse {
     public function getEndOfLine($rawData = "") {
         $endOfLine = $this->yellow->system->get("editEndOfLine");
         if ($endOfLine=="auto") {
-            $rawData = empty($rawData) ? PHP_EOL : substru($rawData, 0, 4096);
+            $rawData = is_string_empty($rawData) ? PHP_EOL : substru($rawData, 0, 4096);
             $endOfLine = strposu($rawData, "\r")===false ? "lf" : "crlf";
         }
         return $endOfLine;
@@ -1352,7 +1352,7 @@ class YellowEditResponse {
                     }
                 }
             }
-            if (!empty($rawData)) $rawData = "<p>$rawData</p>\n";
+            if (!is_string_empty($rawData)) $rawData = "<p>$rawData</p>\n";
         }
         return array($statusCode, $rawData);
     }
@@ -1402,7 +1402,7 @@ class YellowEditResponse {
     
     // Return location for new/modified page
     public function getPageNewLocation($rawData, $pageLocation, $pageNewLocation, $pageMatchLocation = false) {
-        $location = empty($pageNewLocation) ? "@title" : $pageNewLocation;
+        $location = is_string_empty($pageNewLocation) ? "@title" : $pageNewLocation;
         $location = preg_replace("/@title/i", $this->getPageNewTitle($rawData), $location);
         $location = preg_replace("/@timestamp/i", $this->getPageNewData($rawData, "published", true, "U"), $location);
         $location = preg_replace("/@date/i", $this->getPageNewData($rawData, "published", true, "Y-m-d"), $location);
@@ -1428,7 +1428,7 @@ class YellowEditResponse {
     public function getPageNewTitle($rawData) {
         $title = $this->yellow->toolbox->getMetaData($rawData, "title");
         $titleSlug = $this->yellow->toolbox->getMetaData($rawData, "titleSlug");
-        $value = empty($titleSlug) ? $title : $titleSlug;
+        $value = is_string_empty($titleSlug) ? $title : $titleSlug;
         $value = $this->yellow->lookup->normaliseName($value, true, false, true);
         return trim(preg_replace("/-+/", "-", $value), "-");
     }
@@ -1437,8 +1437,8 @@ class YellowEditResponse {
     public function getPageNewData($rawData, $key, $filterFirst = false, $dateFormat = "") {
         $value = $this->yellow->toolbox->getMetaData($rawData, $key);
         if ($filterFirst && preg_match("/^(.*?)\,(.*)$/", $value, $matches)) $value = $matches[1];
-        if (!empty($dateFormat)) $value = date($dateFormat, strtotime($value));
-        if (strempty($value)) $value = "none";
+        if (!is_string_empty($dateFormat)) $value = date($dateFormat, strtotime($value));
+        if (is_string_empty($value)) $value = "none";
         $value = $this->yellow->lookup->normaliseName($value, true, false, true);
         return trim(preg_replace("/-+/", "-", $value), "-");
     }
@@ -1446,7 +1446,7 @@ class YellowEditResponse {
     // Return file name for new/modified page
     public function getPageNewFile($location, $pageFileName = "", $pagePrefix = "") {
         $fileName = $this->yellow->lookup->findFileFromContentLocation($location);
-        if (!empty($fileName)) {
+        if (!is_string_empty($fileName)) {
             if (!is_dir(dirname($fileName))) {
                 $path = "";
                 $tokens = explode("/", $fileName);
@@ -1465,7 +1465,7 @@ class YellowEditResponse {
                     $path .= $tokens[$i]."/";
                 }
                 $fileName = $path.$tokens[$i];
-                $pageFileName = empty($pageFileName) ? $fileName : $pageFileName;
+                $pageFileName = is_string_empty($pageFileName) ? $fileName : $pageFileName;
             }
             $prefix = $this->getPageNewPrefix($location, $pageFileName, $pagePrefix);
             if ($this->yellow->lookup->isFileLocation($location)) {
@@ -1489,7 +1489,7 @@ class YellowEditResponse {
     
     // Return prefix for new/modified page
     public function getPageNewPrefix($location, $pageFileName, $pagePrefix) {
-        if (empty($pagePrefix)) {
+        if (is_string_empty($pagePrefix)) {
             if ($this->yellow->lookup->isFileLocation($location)) {
                 if (preg_match("#^(.*)\/(.+?)$#", $pageFileName, $matches)) $pagePrefix = $matches[2];
             } else {
@@ -1501,7 +1501,7 @@ class YellowEditResponse {
     
     // Return location for new file
     public function getFileNewLocation($fileNameShort, $pageLocation, $fileNewLocation) {
-        $location = empty($fileNewLocation) ? $this->yellow->system->get("editUploadNewLocation") : $fileNewLocation;
+        $location = is_string_empty($fileNewLocation) ? $this->yellow->system->get("editUploadNewLocation") : $fileNewLocation;
         $location = preg_replace("/@timestamp/i", time(), $location);
         $location = preg_replace("/@date/i", date("Y-m-d"), $location);
         $location = preg_replace("/@type/i", $this->yellow->toolbox->getFileType($fileNameShort), $location);
@@ -1541,7 +1541,7 @@ class YellowEditResponse {
         $fileText = $fileNumber = $fileExtension = "";
         if (preg_match("/^(.*?)(\d*)(\..*?)?$/", $fileNameShort, $matches)) {
             $fileText = $matches[1];
-            $fileNumber = strempty($matches[2]) ? "-2" : $matches[2]+1;
+            $fileNumber = is_string_empty($matches[2]) ? "-2" : $matches[2]+1;
             $fileExtension = $matches[3];
         }
         return $fileText.$fileNumber.$fileExtension;
@@ -1552,7 +1552,7 @@ class YellowEditResponse {
         $titleText = $titleNumber = "";
         if (preg_match("/^(.*?)(\d*)$/", $this->yellow->toolbox->getMetaData($rawData, "title"), $matches)) {
             $titleText = $matches[1];
-            $titleNumber = strempty($matches[2]) ? " 2" : $matches[2]+1;
+            $titleNumber = is_string_empty($matches[2]) ? " 2" : $matches[2]+1;
         }
         return $titleText.$titleNumber;
     }
@@ -1617,7 +1617,7 @@ class YellowEditResponse {
     public function createAuthToken($email, $expire) {
         $hash = $this->yellow->user->getUser("hash", $email);
         $signature = $this->yellow->toolbox->createHash($hash."auth".$expire, "sha256");
-        if (empty($signature)) $signature = "padd"."error-hash-algorithm-sha256";
+        if (is_string_empty($signature)) $signature = "padd"."error-hash-algorithm-sha256";
         return substrb($signature, 4).$this->yellow->user->getUser("stamp", $email).dechex($expire);
     }
     
@@ -1625,7 +1625,7 @@ class YellowEditResponse {
     public function createActionToken($email, $action, $expire) {
         $hash = $this->yellow->user->getUser("hash", $email);
         $signature = $this->yellow->toolbox->createHash($hash.$action.$expire, "sha256");
-        if (empty($signature)) $signature = "padd"."error-hash-algorithm-sha256";
+        if (is_string_empty($signature)) $signature = "padd"."error-hash-algorithm-sha256";
         return substrb($signature, 4);
     }
     
@@ -1639,7 +1639,7 @@ class YellowEditResponse {
         $algorithm = $this->yellow->system->get("editUserHashAlgorithm");
         $cost = $this->yellow->system->get("editUserHashCost");
         $hash = $this->yellow->toolbox->createHash($password, $algorithm, $cost);
-        if (empty($hash)) $hash = "error-hash-algorithm-$algorithm";
+        if (is_string_empty($hash)) $hash = "error-hash-algorithm-$algorithm";
         return $hash;
     }
     
@@ -1682,7 +1682,7 @@ class YellowEditResponse {
     // Return user email from authentication, timing attack safe email lookup
     public function getAuthEmail($authToken, $stamp = "") {
         $email = "";
-        if (empty($stamp)) $stamp = substrb($authToken, 96, 20);
+        if (is_string_empty($stamp)) $stamp = substrb($authToken, 96, 20);
         foreach ($this->yellow->user->settings as $key=>$value) {
             if ($this->yellow->toolbox->verifyToken($value["stamp"], $stamp)) $email = $key;
         }
@@ -1759,7 +1759,7 @@ class YellowEditResponse {
                 $deleted = $deletedOriginal;
             }
         }
-        return !empty($fileNameDeleted) && $this->yellow->lookup->isContentFile($fileNameRestored) &&
+        return !is_string_empty($fileNameDeleted) && $this->yellow->lookup->isContentFile($fileNameRestored) &&
             $this->yellow->toolbox->renameFile($fileNameDeleted, $fileNameRestored, true) &&
             $this->yellow->toolbox->createFile($fileNameRestored, $rawDataRestored);
     }
@@ -1785,7 +1785,7 @@ class YellowEditResponse {
                 $deleted = $deletedOriginal;
             }
         }
-        return !empty($pathDeleted) && $this->yellow->lookup->isContentFile($fileNameRestored) &&
+        return !is_string_empty($pathDeleted) && $this->yellow->lookup->isContentFile($fileNameRestored) &&
             $this->yellow->toolbox->renameDirectory($pathDeleted, dirname($fileNameRestored), true) &&
             $this->yellow->toolbox->createFile($fileNameRestored, $rawDataRestored);
     }
@@ -1824,14 +1824,14 @@ class YellowEditResponse {
     
     // Check if user is logged in
     public function isUser() {
-        return !empty($this->userEmail);
+        return !is_string_empty($this->userEmail);
     }
     
     // Check if user with access
     public function isUserAccess($action, $location = "") {
         $userHome = $this->yellow->user->getUser("home", $this->userEmail);
         $tokens = preg_split("/\s*,\s*/", $this->yellow->user->getUser("access", $this->userEmail));
-        return in_array($action, $tokens) && (empty($location) || substru($location, 0, strlenu($userHome))==$userHome);
+        return in_array($action, $tokens) && (is_string_empty($location) || substru($location, 0, strlenu($userHome))==$userHome);
     }
 }
     

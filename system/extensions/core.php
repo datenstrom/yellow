@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.8.98";
+    const VERSION = "0.8.99";
     const RELEASE = "0.8.21";
     public $page;           // current page
     public $content;        // content files
@@ -140,7 +140,7 @@ class YellowCore {
         if ($statusCode==0) {
             if ($this->lookup->isContentFile($fileName)) {
                 $statusCode = $this->sendPage($scheme, $address, $base, $location, $fileName, $cacheable, true);
-            } elseif (!empty($fileName)) {
+            } elseif (!is_string_empty($fileName)) {
                 $statusCode = $this->sendFile(200, $fileName, $cacheable);
             }
             if (!is_readable($fileName)) $this->page->error(404);
@@ -167,7 +167,7 @@ class YellowCore {
             $fileNameAbsolute = isset($error["file"]) ? $error["file"] : "";
             $fileName = substru($fileNameAbsolute, strlenu($this->system->get("coreServerInstallDirectory")));
             $this->log("error", "Can't parse file '$fileName'!");
-            @header($this->toolbox->getHttpStatusFormatted(500));
+            $this->toolbox->sendHttpHeader($this->toolbox->getHttpStatusFormatted(500));
             $troubleshooting = PHP_SAPI!="cli" ?
                 "<a href=\"".$this->getTroubleshootingUrl()."\">See troubleshooting</a>." : "See ".$this->getTroubleshootingUrl();
             echo "<br/>\nCheck the log file. Activate the debug mode for more information. $troubleshooting\n";
@@ -176,7 +176,7 @@ class YellowCore {
     
     // Show error message and terminate immediately
     public function exitFatalError($errorMessage = "") {
-        @header($this->toolbox->getHttpStatusFormatted(500));
+        $this->toolbox->sendHttpHeader($this->toolbox->getHttpStatusFormatted(500));
         $troubleshooting = PHP_SAPI!="cli" ?
             "<a href=\"".$this->getTroubleshootingUrl()."\">See troubleshooting</a>." : "See ".$this->getTroubleshootingUrl();
         echo "$errorMessage $troubleshooting\n";
@@ -213,11 +213,11 @@ class YellowCore {
         $lastModifiedFormatted = isset($headerData["Last-Modified"]) ? $headerData["Last-Modified"] : "";
         if ($statusCode==200 && !isset($headerData["Cache-Control"]) && $this->toolbox->isNotModified($lastModifiedFormatted)) {
             $statusCode = 304;
-            @header($this->toolbox->getHttpStatusFormatted($statusCode));
+            $this->toolbox->sendHttpHeader($this->toolbox->getHttpStatusFormatted($statusCode));
         } else {
-            @header($this->toolbox->getHttpStatusFormatted($statusCode));
+            $this->toolbox->sendHttpHeader($this->toolbox->getHttpStatusFormatted($statusCode));
             foreach ($headerData as $key=>$value) {
-                @header("$key: $value");
+                $this->toolbox->sendHttpHeader("$key: $value");
             }
             if (!is_null($outputData)) echo $outputData;
         }
@@ -229,12 +229,12 @@ class YellowCore {
         $lastModifiedFormatted = $this->toolbox->getHttpDateFormatted($this->toolbox->getFileModified($fileName));
         if ($statusCode==200 && $cacheable && $this->toolbox->isNotModified($lastModifiedFormatted)) {
             $statusCode = 304;
-            @header($this->toolbox->getHttpStatusFormatted($statusCode));
+            $this->toolbox->sendHttpHeader($this->toolbox->getHttpStatusFormatted($statusCode));
         } else {
-            @header($this->toolbox->getHttpStatusFormatted($statusCode));
-            if (!$cacheable) @header("Cache-Control: no-cache, no-store");
-            @header("Content-Type: ".$this->toolbox->getMimeContentType($fileName));
-            @header("Last-Modified: ".$lastModifiedFormatted);
+            $this->toolbox->sendHttpHeader($this->toolbox->getHttpStatusFormatted($statusCode));
+            if (!$cacheable) $this->toolbox->sendHttpHeader("Cache-Control: no-cache, no-store");
+            $this->toolbox->sendHttpHeader("Content-Type: ".$this->toolbox->getMimeContentType($fileName));
+            $this->toolbox->sendHttpHeader("Last-Modified: ".$lastModifiedFormatted);
             echo $this->toolbox->readFile($fileName);
         }
         return $statusCode;
@@ -242,10 +242,10 @@ class YellowCore {
     
     // Send status response
     public function sendStatus($statusCode, $location = "") {
-        if (!empty($location)) $this->page->status($statusCode, $location);
-        @header($this->toolbox->getHttpStatusFormatted($statusCode));
+        if (!is_string_empty($location)) $this->page->status($statusCode, $location);
+        $this->toolbox->sendHttpHeader($this->toolbox->getHttpStatusFormatted($statusCode));
         foreach ($this->page->headerData as $key=>$value) {
-            @header("$key: $value");
+            $this->toolbox->sendHttpHeader("$key: $value");
         }
         return $statusCode;
     }
@@ -262,7 +262,7 @@ class YellowCore {
                 if ($statusCode!=0) break;
             }
         }
-        if ($statusCode==0 && empty($command)) {
+        if ($statusCode==0 && is_string_empty($command)) {
             $lineCounter = 0;
             echo "Datenstrom Yellow is for people who make small websites. https://datenstrom.se/yellow/\n";
             foreach ($this->getCommandHelp() as $line) {
@@ -334,7 +334,7 @@ class YellowCore {
     
     // Return request information
     public function getRequestInformation($scheme = "", $address = "", $base = "") {
-        if (empty($scheme) && empty($address) && empty($base)) {
+        if (is_string_empty($scheme) && is_string_empty($address) && is_string_empty($base)) {
             $url = $this->system->get("coreServerUrl");
             if ($url=="auto" || $this->isCommandLine()) $url = $this->toolbox->detectServerUrl();
             list($scheme, $address, $base) = $this->lookup->getUrlInformation($url);
@@ -347,14 +347,14 @@ class YellowCore {
         }
         $location = substru($this->toolbox->detectServerLocation(), strlenu($base));
         $fileName = "";
-        if (empty($fileName)) $fileName = $this->lookup->findFileFromMediaLocation($location);
-        if (empty($fileName)) $fileName = $this->lookup->findFileFromContentLocation($location);
+        if (is_string_empty($fileName)) $fileName = $this->lookup->findFileFromMediaLocation($location);
+        if (is_string_empty($fileName)) $fileName = $this->lookup->findFileFromContentLocation($location);
         return array($scheme, $address, $base, $location, $fileName);
     }
 
     // Return command information
     public function getCommandInformation($line = "") {
-        if (empty($line)) {
+        if (is_string_empty($line)) {
             $line = $this->toolbox->getTextString(array_slice($this->toolbox->getServer("argv"), 1));
             if ($this->system->get("coreDebugMode")>=3) {
                 echo "YellowCore::getCommandInformation $line<br/>\n";
@@ -372,7 +372,7 @@ class YellowCore {
                 $lines = is_array($output) ? $output : array($output);
                 foreach ($lines as $line) {
                     list($command, $dummy) = $this->toolbox->getTextList($line, " ", 2);
-                    if (!empty($command) && !isset($data[$command])) $data[$command] = $line;
+                    if (!is_string_empty($command) && !isset($data[$command])) $data[$command] = $line;
                 }
             }
         }
@@ -513,13 +513,13 @@ class YellowPage {
     public function parseMetaDataRaw($defaultKeys) {
         foreach ($defaultKeys as $key) {
             $value = $this->yellow->system->get($key);
-            if (!empty($key) && !strempty($value)) $this->set($key, $value);
+            if (!is_string_empty($key) && !is_string_empty($value)) $this->set($key, $value);
         }
         if (preg_match("/^(\xEF\xBB\xBF)?\-\-\-[\r\n]+(.+?)\-\-\-[\r\n]+/s", $this->rawData, $parts)) {
             $this->metaDataOffsetBytes = strlenb($parts[0]);
             foreach (preg_split("/[\r\n]+/", $parts[2]) as $line) {
                 if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
-                    if (!empty($matches[1]) && !strempty($matches[2])) $this->set($matches[1], $matches[2]);
+                    if (!is_string_empty($matches[1]) && !is_string_empty($matches[2])) $this->set($matches[1], $matches[2]);
                 }
             }
         } elseif (preg_match("/^(\xEF\xBB\xBF)?([^\r\n]+)[\r\n]+=+[\r\n]+/", $this->rawData, $parts)) {
@@ -565,7 +565,7 @@ class YellowPage {
             }
             if (!$this->isExisting("description")) {
                 $description = $this->yellow->toolbox->createTextDescription($this->parserData, 150);
-                $this->set("description", !empty($description) ? $description : $this->get("title"));
+                $this->set("description", !is_string_empty($description) ? $description : $this->get("title"));
             }
             if ($this->yellow->system->get("coreDebugMode")>=3) {
                 echo "YellowPage::parseContent location:".$this->location."<br/>\n";
@@ -587,7 +587,7 @@ class YellowPage {
                 $output = $this->errorMessage;
             }
         }
-        if ($this->yellow->system->get("coreDebugMode")>=3 && !empty($name)) {
+        if ($this->yellow->system->get("coreDebugMode")>=3 && !is_string_empty($name)) {
             echo "YellowPage::parseContentShortcut name:$name type:$type<br/>\n";
         }
         return $output;
@@ -686,7 +686,7 @@ class YellowPage {
     
     // Return page setting as language specific date
     public function getDate($key, $format = "") {
-        if (!empty($format)) {
+        if (!is_string_empty($format)) {
             $format = $this->yellow->language->getText($format);
         } else {
             $format = $this->yellow->language->getText("coreDateFormatMedium");
@@ -701,7 +701,7 @@ class YellowPage {
 
     // Return page setting as language specific date, relative to today
     public function getDateRelative($key, $format = "", $daysLimit = 30) {
-        if (!empty($format)) {
+        if (!is_string_empty($format)) {
             $format = $this->yellow->language->getText($format);
         } else {
             $format = $this->yellow->language->getText("coreDateFormatMedium");
@@ -908,7 +908,7 @@ class YellowPage {
         $statusCode = $this->statusCode;
         if ($httpFormat) {
             $statusCode = $this->yellow->toolbox->getHttpStatusFormatted($statusCode);
-            if (!empty($this->errorMessage)) $statusCode .= ": ".$this->errorMessage;
+            if (!is_string_empty($this->errorMessage)) $statusCode .= ": ".$this->errorMessage;
         }
         return $statusCode;
     }
@@ -919,7 +919,7 @@ class YellowPage {
             $this->statusCode = $statusCode;
             $this->lastModified = 0;
             $this->headerData = array();
-            if (!empty($location)) {
+            if (!is_string_empty($location)) {
                 $this->setHeader("Location", $location);
                 $this->setHeader("Cache-Control", "no-cache, no-store");
             }
@@ -929,9 +929,9 @@ class YellowPage {
     
     // Respond with error page
     public function error($statusCode, $errorMessage = "") {
-        if ($statusCode>=400 && empty($this->errorMessage)) {
+        if ($statusCode>=400 && is_string_empty($this->errorMessage)) {
             $this->statusCode = $statusCode;
-            $this->errorMessage = empty($errorMessage) ? "Page error!" : $errorMessage;
+            $this->errorMessage = is_string_empty($errorMessage) ? "Page error!" : $errorMessage;
         }
     }
     
@@ -1017,7 +1017,7 @@ class YellowPageCollection extends ArrayObject {
                 foreach (preg_split("/\s*,\s*/", $page->get($key)) as $pageValue) {
                     $pageValueLength = $exactMatch ? strlenu($pageValue) : $valueLength;
                     if ($value==substru(str_replace(" ", "-", strtoloweru($pageValue)), 0, $pageValueLength)) {
-                        if (empty($this->filterValue)) $this->filterValue = substru($pageValue, 0, $pageValueLength);
+                        if (is_string_empty($this->filterValue)) $this->filterValue = substru($pageValue, 0, $pageValueLength);
                         array_push($array, $page);
                         break;
                     }
@@ -1062,7 +1062,7 @@ class YellowPageCollection extends ArrayObject {
         $location = $page->location;
         $keywords = strtoloweru($page->get("title").",".$page->get("tag").",".$page->get("author"));
         $tokens = array_unique(array_filter(preg_split("/[,\s\(\)\+\-]/", $keywords), "strlen"));
-        if (!empty($tokens)) {
+        if (!is_array_empty($tokens)) {
             $array = array();
             foreach ($this->getArrayCopy() as $page) {
                 $sortScore = 0;
@@ -1223,6 +1223,11 @@ class YellowPageCollection extends ArrayObject {
     public function isPagination() {
         return $this->paginationCount>1;
     }
+    
+    // Check if page collection is empty
+    public function isEmpty() {
+        return empty($this->getArrayCopy());
+    }
 }
 
 class YellowContent {
@@ -1241,7 +1246,7 @@ class YellowContent {
             $scheme = $this->yellow->page->scheme;
             $address = $this->yellow->page->address;
             $base = $this->yellow->page->base;
-            if (empty($location)) {
+            if (is_string_empty($location)) {
                 $rootLocations = $this->yellow->lookup->findContentRootLocations();
                 foreach ($rootLocations as $rootLocation=>$rootFileName) {
                     $page = new YellowPage($this->yellow);
@@ -1409,19 +1414,21 @@ class YellowContent {
     
     // Return parent location
     public function getParentLocation($location) {
+        $parentLocation = "";
         $token = rtrim(substru($this->getRootLocation($location), 4), "/");
         if (preg_match("#^($token.*\/).+?$#", $location, $matches)) {
             if ($matches[1]!="$token/" || $this->yellow->lookup->isFileLocation($location)) $parentLocation = $matches[1];
         }
-        if (empty($parentLocation)) $parentLocation = "root$token/";
+        if (is_string_empty($parentLocation)) $parentLocation = "root$token/";
         return $parentLocation;
     }
     
     // Return top-level location
     public function getParentTopLocation($location) {
+        $parentTopLocation = "";
         $token = rtrim(substru($this->getRootLocation($location), 4), "/");
         if (preg_match("#^($token.+?\/)#", $location, $matches)) $parentTopLocation = $matches[1];
-        if (empty($parentTopLocation)) $parentTopLocation = "$token/";
+        if (is_string_empty($parentTopLocation)) $parentTopLocation = "$token/";
         return $parentTopLocation;
     }
 }
@@ -1442,7 +1449,7 @@ class YellowMedia {
             $scheme = $this->yellow->page->scheme;
             $address = $this->yellow->page->address;
             $base = $this->yellow->system->get("coreServerBase");
-            if (empty($location)) {
+            if (is_string_empty($location)) {
                 $fileNames = array($this->yellow->system->get("coreMediaDirectory"));
             } else {
                 if ($this->yellow->system->get("coreDebugMode")>=2) echo "YellowMedia::scanLocation location:$location<br/>\n";
@@ -1521,7 +1528,7 @@ class YellowMedia {
         if (preg_match("#^($token.*\/).+?$#", $location, $matches)) {
             if ($matches[1]!="$token/" || $this->yellow->lookup->isFileLocation($location)) $parentLocation = $matches[1];
         }
-        if (empty($parentLocation)) $parentLocation = "";
+        if (is_string_empty($parentLocation)) $parentLocation = "";
         return $parentLocation;
     }
     
@@ -1529,7 +1536,7 @@ class YellowMedia {
     public function getParentTopLocation($location) {
         $token = rtrim($this->yellow->system->get("coreMediaLocation"), "/");
         if (preg_match("#^($token.+?\/)#", $location, $matches)) $parentTopLocation = $matches[1];
-        if (empty($parentTopLocation)) $parentTopLocation = "$token/";
+        if (is_string_empty($parentTopLocation)) $parentTopLocation = "$token/";
         return $parentTopLocation;
     }
 }
@@ -1565,7 +1572,7 @@ class YellowSystem {
         $this->modified = time();
         $settingsNew = new YellowArray();
         foreach ($settings as $key=>$value) {
-            if (!empty($key) && !strempty($value)) {
+            if (!is_string_empty($key) && !is_string_empty($value)) {
                 $this->set($key, $value);
                 $settingsNew[$key] = $value;
             }
@@ -1585,7 +1592,7 @@ class YellowSystem {
         foreach ($lines as $line) {
             if (preg_match("/^\#/", $line)) continue;
             if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
-                if (!empty($matches[1]) && !strempty($matches[2])) {
+                if (!is_string_empty($matches[1]) && !is_string_empty($matches[2])) {
                     $this->settingsDefaults[$matches[1]] = $matches[2];
                 }
             }
@@ -1640,19 +1647,19 @@ class YellowSystem {
                 array_push($values, lcfirst(substru($entry, 0, -4)));
             }
         }
-        return count($values) ? $values : array($valueDefault);
+        return !is_array_empty($values) ? $values : array($valueDefault);
     }
     public function getValues($key) { return $this->getAvailable($key); } //TODO: remove later, for backwards compatibility
     
     // Return system settings
     public function getSettings($filterStart = "", $filterEnd = "") {
         $settings = array();
-        if (empty($filterStart) && empty($filterEnd)) {
+        if (is_string_empty($filterStart) && is_string_empty($filterEnd)) {
             $settings = array_merge($this->settingsDefaults->getArrayCopy(), $this->settings->getArrayCopy());
         } else {
             foreach (array_merge($this->settingsDefaults->getArrayCopy(), $this->settings->getArrayCopy()) as $key=>$value) {
-                if (!empty($filterStart) && substru($key, 0, strlenu($filterStart))==$filterStart) $settings[$key] = $value;
-                if (!empty($filterEnd) && substru($key, -strlenu($filterEnd))==$filterEnd) $settings[$key] = $value;
+                if (!is_string_empty($filterStart) && substru($key, 0, strlenu($filterStart))==$filterStart) $settings[$key] = $value;
+                if (!is_string_empty($filterEnd) && substru($key, -strlenu($filterEnd))==$filterEnd) $settings[$key] = $value;
             }
         }
         return $settings;
@@ -1725,11 +1732,11 @@ class YellowLanguage {
         foreach ($lines as $line) {
             if (preg_match("/^\#/", $line)) continue;
             if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
-                if (lcfirst($matches[1])=="language" && !strempty($matches[2])) {
+                if (lcfirst($matches[1])=="language" && !is_string_empty($matches[2])) {
                     $language = $matches[2];
                     if (!isset($this->settings[$language])) $this->settings[$language] = new YellowArray();
                 }
-                if (!empty($language) && !empty($matches[1]) && !strempty($matches[2])) {
+                if (!is_string_empty($language) && !is_string_empty($matches[1]) && !is_string_empty($matches[2])) {
                     $this->settings[$language][$matches[1]] = $matches[2];
                     $this->settingsDefaults[$matches[1]] = true;
                 }
@@ -1745,7 +1752,7 @@ class YellowLanguage {
     
     // Return language setting
     public function getText($key, $language = "") {
-        if (empty($language)) $language = $this->language;
+        if (is_string_empty($language)) $language = $this->language;
         return $this->isText($key, $language) ? $this->settings[$language][$key] : "[$key]";
     }
     
@@ -1810,14 +1817,14 @@ class YellowLanguage {
     // Return language settings
     public function getSettings($filterStart = "", $filterEnd = "", $language = "") {
         $settings = array();
-        if (empty($language)) $language = $this->language;
+        if (is_string_empty($language)) $language = $this->language;
         if (isset($this->settings[$language])) {
-            if (empty($filterStart) && empty($filterEnd)) {
+            if (is_string_empty($filterStart) && is_string_empty($filterEnd)) {
                 $settings = $this->settings[$language]->getArrayCopy();
             } else {
                 foreach ($this->settings[$language] as $key=>$value) {
-                    if (!empty($filterStart) && substru($key, 0, strlenu($filterStart))==$filterStart) $settings[$key] = $value;
-                    if (!empty($filterEnd) && substru($key, -strlenu($filterEnd))==$filterEnd) $settings[$key] = $value;
+                    if (!is_string_empty($filterStart) && substru($key, 0, strlenu($filterStart))==$filterStart) $settings[$key] = $value;
+                    if (!is_string_empty($filterEnd) && substru($key, -strlenu($filterEnd))==$filterEnd) $settings[$key] = $value;
                 }
             }
         }
@@ -1845,7 +1852,7 @@ class YellowLanguage {
     
     // Check if language setting exists
     public function isText($key, $language = "") {
-        if (empty($language)) $language = $this->language;
+        if (is_string_empty($language)) $language = $this->language;
         return isset($this->settings[$language]) && isset($this->settings[$language][$key]);
     }
 
@@ -1882,7 +1889,7 @@ class YellowUser {
         $settingsNew = new YellowArray();
         $settingsNew["email"] = $email;
         foreach ($settings as $key=>$value) {
-            if (!empty($key) && !strempty($value)) {
+            if (!is_string_empty($key) && !is_string_empty($value)) {
                 $this->setUser($key, $value, $email);
                 $settingsNew[$key] = $value;
             }
@@ -1914,7 +1921,7 @@ class YellowUser {
     
     // Return user setting
     public function getUser($key, $email = "") {
-        if (empty($email)) $email = $this->email;
+        if (is_string_empty($email)) $email = $this->email;
         return isset($this->settings[$email]) && isset($this->settings[$email][$key]) ? $this->settings[$email][$key] : "";
     }
 
@@ -1926,7 +1933,7 @@ class YellowUser {
     // Return user settings
     public function getSettings($email = "") {
         $settings = array();
-        if (empty($email)) $email = $this->email;
+        if (is_string_empty($email)) $email = $this->email;
         if (isset($this->settings[$email])) $settings = $this->settings[$email]->getArrayCopy();
         return $settings;
     }
@@ -1938,7 +1945,7 @@ class YellowUser {
     
     // Check if user setting exists
     public function isUser($key, $email = "") {
-        if (empty($email)) $email = $this->email;
+        if (is_string_empty($email)) $email = $this->email;
         return isset($this->settings[$email]) && isset($this->settings[$email][$key]);
     }
     
@@ -2020,11 +2027,11 @@ class YellowLookup {
         $pathBase = $this->yellow->system->get("coreContentDirectory");
         $pathRoot = $this->yellow->system->get("coreMultiLanguageMode") ? "default/" : "";
         $pathHome = "home/";
-        if (!empty($pathRoot)) {
+        if (!is_string_empty($pathRoot)) {
             $firstRoot = "";
             $token = $root = rtrim($pathRoot, "/");
             foreach ($this->yellow->toolbox->getDirectoryEntries($pathBase, "/.*/", true, true, false) as $entry) {
-                if (empty($firstRoot)) $firstRoot = $token = $entry;
+                if (is_string_empty($firstRoot)) $firstRoot = $token = $entry;
                 if ($this->normaliseToken($entry)==$root) {
                     $token = $entry;
                     break;
@@ -2033,11 +2040,11 @@ class YellowLookup {
             $pathRoot = $this->normaliseToken($token)."/";
             $pathBase .= "$firstRoot/";
         }
-        if (!empty($pathHome)) {
+        if (!is_string_empty($pathHome)) {
             $firstHome = "";
             $token = $home = rtrim($pathHome, "/");
             foreach ($this->yellow->toolbox->getDirectoryEntries($pathBase, "/.*/", true, true, false) as $entry) {
-                if (empty($firstHome)) $firstHome = $token = $entry;
+                if (is_string_empty($firstHome)) $firstHome = $token = $entry;
                 if ($this->normaliseToken($entry)==$home) {
                     $token = $entry;
                     break;
@@ -2053,7 +2060,7 @@ class YellowLookup {
         $language = $languageDefault;
         $pathBase = $this->yellow->system->get("coreContentDirectory");
         $pathRoot = $this->yellow->system->get("coreServerRootDirectory");
-        if (!empty($pathRoot)) {
+        if (!is_string_empty($pathRoot)) {
             $fileName = substru($fileName, strlenu($pathBase));
             if (preg_match("/^(.+?)\//", $fileName, $matches)) {
                 $name = $this->normaliseToken($matches[1]);
@@ -2068,7 +2075,7 @@ class YellowLookup {
         $rootLocations = array();
         $pathBase = $this->yellow->system->get("coreContentDirectory");
         $pathRoot = $this->yellow->system->get("coreServerRootDirectory");
-        if (!empty($pathRoot)) {
+        if (!is_string_empty($pathRoot)) {
             foreach ($this->yellow->toolbox->getDirectoryEntries($pathBase, "/.*/", true, true, false) as $entry) {
                 $token = $this->normaliseToken($entry)."/";
                 if ($token==$pathRoot) $token = "";
@@ -2097,7 +2104,7 @@ class YellowLookup {
         if (substru($fileName, 0, strlenu($pathBase))==$pathBase && mb_check_encoding($fileName, "UTF-8")) {
             $fileName = substru($fileName, strlenu($pathBase));
             $tokens = explode("/", $fileName);
-            if (!empty($pathRoot)) {
+            if (!is_string_empty($pathRoot)) {
                 $token = $this->normaliseToken($tokens[0])."/";
                 if ($token!=$pathRoot) $location .= $token;
                 array_shift($tokens);
@@ -2132,12 +2139,12 @@ class YellowLookup {
         $fileExtension = $this->yellow->system->get("coreContentExtension");
         $tokens = explode("/", $location);
         if ($this->isRootLocation($location)) {
-            if (!empty($pathRoot)) {
+            if (!is_string_empty($pathRoot)) {
                 $token = (count($tokens)>2) ? $tokens[1] : rtrim($pathRoot, "/");
                 $path .= $this->findFileDirectory($path, $token, "", true, true, $found, $invalid);
             }
         } else {
-            if (!empty($pathRoot)) {
+            if (!is_string_empty($pathRoot)) {
                 if (count($tokens)>2) {
                     if ($this->normaliseToken($tokens[1])==$this->normaliseToken(rtrim($pathRoot, "/"))) $invalid = true;
                     $path .= $this->findFileDirectory($path, $tokens[1], "", true, false, $found, $invalid);
@@ -2158,7 +2165,7 @@ class YellowLookup {
                 $path .= $this->findFileDirectory($path, $tokens[0], "", true, true, $found, $invalid);
             }
             if (!$directory) {
-                if (!strempty($tokens[$i])) {
+                if (!is_string_empty($tokens[$i])) {
                     $token = $tokens[$i].$fileExtension;
                     if ($token==$fileDefault) $invalid = true;
                     $path .= $this->findFileDirectory($path, $token, $fileExtension, false, true, $found, $invalid);
@@ -2290,15 +2297,15 @@ class YellowLookup {
     
     // Normalise file/directory token
     public function normaliseToken($text, $fileExtension = "", $removeExtension = false) {
-        if (!empty($fileExtension)) $text = ($pos = strrposu($text, ".")) ? substru($text, 0, $pos) : $text;
-        if (preg_match("/^[\d\-\_\.]+(.*)$/", $text, $matches) && !empty($matches[1])) $text = $matches[1];
+        if (!is_string_empty($fileExtension)) $text = ($pos = strrposu($text, ".")) ? substru($text, 0, $pos) : $text;
+        if (preg_match("/^[\d\-\_\.]+(.*)$/", $text, $matches) && !is_string_empty($matches[1])) $text = $matches[1];
         return preg_replace("/[^\pL\d\-\_]/u", "-", $text).($removeExtension ? "" : $fileExtension);
     }
     
     // Normalise name
     public function normaliseName($text, $removePrefix = false, $removeExtension = false, $filterStrict = false) {
         if ($removeExtension) $text = ($pos = strrposu($text, ".")) ? substru($text, 0, $pos) : $text;
-        if ($removePrefix && preg_match("/^[\d\-\_\.]+(.*)$/", $text, $matches) && !empty($matches[1])) $text = $matches[1];
+        if ($removePrefix && preg_match("/^[\d\-\_\.]+(.*)$/", $text, $matches) && !is_string_empty($matches[1])) $text = $matches[1];
         if ($filterStrict) $text = strtoloweru($text);
         return preg_replace("/[^\pL\d\-\_]/u", "-", $text);
     }
@@ -2307,7 +2314,7 @@ class YellowLookup {
     public function normalisePrefix($text) {
         $prefix = "";
         if (preg_match("/^([\d\-\_\.]*)(.*)$/", $text, $matches)) $prefix = $matches[1];
-        if (!empty($prefix) && !preg_match("/[\-\_\.]$/", $prefix)) $prefix .= "-";
+        if (!is_string_empty($prefix) && !preg_match("/[\-\_\.]$/", $prefix)) $prefix .= "-";
         return $prefix;
     }
     
@@ -2315,7 +2322,7 @@ class YellowLookup {
     public function normaliseUpperLower($input) {
         $array = array();
         foreach ($input as $key=>$value) {
-            if (empty($key) || strempty($value)) continue;
+            if (is_string_empty($key) || is_string_empty($value)) continue;
             $keySearch = strtoloweru($key);
             foreach ($array as $keyNew=>$valueNew) {
                 if (strtoloweru($keyNew)==$keySearch) {
@@ -2419,7 +2426,7 @@ class YellowLookup {
         $nested = false;
         if (!$checkHomeLocation || $location==$this->yellow->content->getHomeLocation($location)) {
             $path = dirname($fileName);
-            if (count($this->yellow->toolbox->getDirectoryEntries($path, "/.*/", true, true, false))) $nested = true;
+            if (!is_array_empty($this->yellow->toolbox->getDirectoryEntries($path, "/.*/", true, true, false))) $nested = true;
         }
         return $nested;
     }
@@ -2507,17 +2514,17 @@ class YellowToolbox {
                     $matches[2] = $value;
                     $found = true;
                 }
-                if (!empty($matches[1]) && !strempty($matches[2])) {
-                    if (!empty($locationArguments)) $locationArguments .= "/";
+                if (!is_string_empty($matches[1]) && !is_string_empty($matches[2])) {
+                    if (!is_string_empty($locationArguments)) $locationArguments .= "/";
                     $locationArguments .= "$matches[1]:$matches[2]";
                 }
             }
         }
-        if (!$found && !empty($key) && !strempty($value)) {
-            if (!empty($locationArguments)) $locationArguments .= "/";
+        if (!$found && !is_string_empty($key) && !is_string_empty($value)) {
+            if (!is_string_empty($locationArguments)) $locationArguments .= "/";
             $locationArguments .= "$key:$value";
         }
-        if (!empty($locationArguments)) {
+        if (!is_string_empty($locationArguments)) {
             $locationArguments = $this->normaliseArguments($locationArguments, false, false);
             if (!$this->isLocationArgumentsPagination($locationArguments)) $locationArguments .= "/";
         }
@@ -2528,14 +2535,14 @@ class YellowToolbox {
     public function getLocationArgumentsCleanUrl() {
         $locationArguments = "";
         foreach (array_merge($_GET, $_POST) as $key=>$value) {
-            if (!empty($key) && !strempty($value)) {
-                if (!empty($locationArguments)) $locationArguments .= "/";
+            if (!is_string_empty($key) && !is_string_empty($value)) {
+                if (!is_string_empty($locationArguments)) $locationArguments .= "/";
                 $key = str_replace(array("/", ":", "="), array("\x1c", "\x1d", "\x1e"), $key);
                 $value = str_replace(array("/", ":", "="), array("\x1c", "\x1d", "\x1e"), $value);
                 $locationArguments .= "$key:$value";
             }
         }
-        if (!empty($locationArguments)) {
+        if (!is_string_empty($locationArguments)) {
             $locationArguments = $this->normaliseArguments($locationArguments, false, false);
             if (!$this->isLocationArgumentsPagination($locationArguments)) $locationArguments .= "/";
         }
@@ -2597,12 +2604,17 @@ class YellowToolbox {
             "woff2" => "application/font-woff2",
             "xml" => "text/xml; charset=utf-8");
         $fileType = $this->getFileType($fileName);
-        if (empty($fileType)) {
+        if (is_string_empty($fileType)) {
             $contentType = $contentTypes["html"];
         } elseif (array_key_exists($fileType, $contentTypes)) {
             $contentType = $contentTypes[$fileType];
         }
         return $contentType;
+    }
+    
+    // Send HTTP header
+    public function sendHttpHeader($text) {
+        if (!headers_sent()) header($text);
     }
     
     // Return files and directories
@@ -2658,7 +2670,7 @@ class YellowToolbox {
         $ok = false;
         if ($mkdir) {
             $path = dirname($fileName);
-            if (!empty($path) && !is_dir($path)) @mkdir($path, 0777, true);
+            if (!is_string_empty($path) && !is_dir($path)) @mkdir($path, 0777, true);
         }
         $fileHandle = @fopen($fileName, "wb");
         if ($fileHandle) {
@@ -2679,7 +2691,7 @@ class YellowToolbox {
         $ok = false;
         if ($mkdir) {
             $path = dirname($fileName);
-            if (!empty($path) && !is_dir($path)) @mkdir($path, 0777, true);
+            if (!is_string_empty($path) && !is_dir($path)) @mkdir($path, 0777, true);
         }
         $fileHandle = @fopen($fileName, "ab");
         if ($fileHandle) {
@@ -2699,7 +2711,7 @@ class YellowToolbox {
         clearstatcache();
         if ($mkdir) {
             $path = dirname($fileNameDestination);
-            if (!empty($path) && !is_dir($path)) @mkdir($path, 0777, true);
+            if (!is_string_empty($path) && !is_dir($path)) @mkdir($path, 0777, true);
         }
         return @copy($fileNameSource, $fileNameDestination);
     }
@@ -2709,7 +2721,7 @@ class YellowToolbox {
         clearstatcache();
         if ($mkdir) {
             $path = dirname($fileNameDestination);
-            if (!empty($path) && !is_dir($path)) @mkdir($path, 0777, true);
+            if (!is_string_empty($path) && !is_dir($path)) @mkdir($path, 0777, true);
         }
         return @rename($fileNameSource, $fileNameDestination);
     }
@@ -2722,7 +2734,7 @@ class YellowToolbox {
     // Delete file
     public function deleteFile($fileName, $pathTrash = "") {
         clearstatcache();
-        if (empty($pathTrash)) {
+        if (is_string_empty($pathTrash)) {
             $ok = @unlink($fileName);
         } else {
             if (!is_dir($pathTrash)) @mkdir($pathTrash, 0777, true);
@@ -2738,7 +2750,7 @@ class YellowToolbox {
     // Delete directory
     public function deleteDirectory($path, $pathTrash = "") {
         clearstatcache();
-        if (empty($pathTrash)) {
+        if (is_string_empty($pathTrash)) {
             $iterator = new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::SKIP_DOTS);
             $files = new RecursiveIteratorIterator($iterator, RecursiveIteratorIterator::CHILD_FIRST);
             foreach ($files as $file) {
@@ -2794,9 +2806,9 @@ class YellowToolbox {
     }
     
     // Return number of bytes
-    public function getNumberBytes($string) {
-        $bytes = intval($string);
-        switch (strtoupperu(substru($string, -1))) {
+    public function getNumberBytes($text) {
+        $bytes = intval($text);
+        switch (strtoupperu(substru($text, -1))) {
             case "G": $bytes *= 1024*1024*1024; break;
             case "M": $bytes *= 1024*1024; break;
             case "K": $bytes *= 1024; break;
@@ -2810,18 +2822,18 @@ class YellowToolbox {
         foreach ($lines as &$line) {
             $line = $line."\n";
         }
-        if (strempty($text) || substru($text, -1, 1)=="\n") array_pop($lines);
+        if (is_string_empty($text) || substru($text, -1, 1)=="\n") array_pop($lines);
         return $lines;
     }
     
     // Return settings from text
     function getTextSettings($text, $blockStart) {
         $settings = new YellowArray();
-        if (empty($blockStart)) {
+        if (is_string_empty($blockStart)) {
             foreach ($this->getTextLines($text) as $line) {
                 if (preg_match("/^\#/", $line)) continue;
                 if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
-                    if (!empty($matches[1]) && !strempty($matches[2])) {
+                    if (!is_string_empty($matches[1]) && !is_string_empty($matches[2])) {
                         $settings[$matches[1]] = $matches[2];
                     }
                 }
@@ -2831,11 +2843,11 @@ class YellowToolbox {
             foreach ($this->getTextLines($text) as $line) {
                 if (preg_match("/^\#/", $line)) continue;
                 if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
-                    if (lcfirst($matches[1])==$blockStart && !strempty($matches[2])) {
+                    if (lcfirst($matches[1])==$blockStart && !is_string_empty($matches[2])) {
                         $blockKey = $matches[2];
                         $settings[$blockKey] = new YellowArray();
                     }
-                    if (!empty($blockKey) && !empty($matches[1]) && !strempty($matches[2])) {
+                    if (!is_string_empty($blockKey) && !is_string_empty($matches[1]) && !is_string_empty($matches[2])) {
                         $settings[$blockKey][$matches[1]] = $matches[2];
                     }
                 }
@@ -2847,10 +2859,10 @@ class YellowToolbox {
     // Set settings in text
     function setTextSettings($text, $blockStart, $blockKey, $settings) {
         $textNew = "";
-        if (empty($blockStart)) {
+        if (is_string_empty($blockStart)) {
             foreach ($this->getTextLines($text) as $line) {
                 if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
-                    if (!empty($matches[1]) && isset($settings[$matches[1]])) {
+                    if (!is_string_empty($matches[1]) && isset($settings[$matches[1]])) {
                         $textNew .= "$matches[1]: ".$settings[$matches[1]]."\n";
                         unset($settings[$matches[1]]);
                         continue;
@@ -2866,11 +2878,11 @@ class YellowToolbox {
             $textStart = $textMiddle = $textEnd = "";
             foreach ($this->getTextLines($text) as $line) {
                 if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
-                    if (lcfirst($matches[1])==$blockStart && !strempty($matches[2])) {
+                    if (lcfirst($matches[1])==$blockStart && !is_string_empty($matches[2])) {
                         $scan = lcfirst($matches[2])==lcfirst($blockKey);
                     }
                 }
-                if (!$scan && empty($textMiddle)) {
+                if (!$scan && is_string_empty($textMiddle)) {
                     $textStart .= $line;
                 } elseif ($scan) {
                     $textMiddle .= $line;
@@ -2881,7 +2893,7 @@ class YellowToolbox {
             $textSettings = "";
             foreach ($this->getTextLines($textMiddle) as $line) {
                 if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
-                    if (!empty($matches[1]) && isset($settings[$matches[1]])) {
+                    if (!is_string_empty($matches[1]) && isset($settings[$matches[1]])) {
                         $textSettings .= "$matches[1]: ".$settings[$matches[1]]."\n";
                         unset($settings[$matches[1]]);
                         continue;
@@ -2892,11 +2904,11 @@ class YellowToolbox {
             foreach ($settings as $key=>$value) {
                 $textSettings .= (strposu($key, "/") ? $key : ucfirst($key)).": $value\n";
             }
-            if (!empty($textMiddle)) {
+            if (!is_string_empty($textMiddle)) {
                 $textMiddle = $textSettings;
-                if (!empty($textEnd)) $textMiddle .= "\n";
+                if (!is_string_empty($textEnd)) $textMiddle .= "\n";
             } else {
-                if (!empty($textStart)) $textEnd .= "\n";
+                if (!is_string_empty($textStart)) $textEnd .= "\n";
                 $textEnd .= $textSettings;
             }
             $textNew = $textStart.$textMiddle.$textEnd;
@@ -2907,16 +2919,16 @@ class YellowToolbox {
     // Remove settings from text
     function unsetTextSettings($text, $blockStart, $blockKey) {
         $textNew = "";
-        if (!empty($blockStart)) {
+        if (!is_string_empty($blockStart)) {
             $scan = false;
             $textStart = $textMiddle = $textEnd = "";
             foreach ($this->getTextLines($text) as $line) {
                 if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
-                    if (lcfirst($matches[1])==$blockStart && !strempty($matches[2])) {
+                    if (lcfirst($matches[1])==$blockStart && !is_string_empty($matches[2])) {
                         $scan = lcfirst($matches[2])==lcfirst($blockKey);
                     }
                 }
-                if (!$scan && empty($textMiddle)) {
+                if (!$scan && is_string_empty($textMiddle)) {
                     $textStart .= $line;
                 } elseif ($scan) {
                     $textMiddle .= $line;
@@ -2966,7 +2978,7 @@ class YellowToolbox {
             } else {
                 $key = $value = $tokens[$i];
             }
-            if (!strempty($key) && (!strempty($value) || in_array(strtolower($key), $attributesAllowEmptyString))) {
+            if (!is_string_empty($key) && (!is_string_empty($value) || in_array(strtolower($key), $attributesAllowEmptyString))) {
                 $attributes[$key] = $value;
             }
         }
@@ -2994,8 +3006,8 @@ class YellowToolbox {
         $text = "";
         foreach ($tokens as $token) {
             if (preg_match("/\s/", $token)) $token = "\"$token\"";
-            if (empty($token)) $token = $optional;
-            if (!empty($text)) $text .= " ";
+            if (is_string_empty($token)) $token = $optional;
+            if (!is_string_empty($text)) $text .= " ";
             $text .= $token;
         }
         return $text;
@@ -3035,21 +3047,21 @@ class YellowToolbox {
                 $elementName = isset($matches[2][0]) ? $matches[2][0] : "";
                 $elementAttributes = isset($matches[3][0]) ? $matches[3][0] : "";
                 $elementEnd = isset($matches[4][0]) ? $matches[4][0] : "";
-                if (!strempty($elementBefore) && !$hiddenLevel) {
+                if (!is_string_empty($elementBefore) && !$hiddenLevel) {
                     $rawText = preg_replace("/\s+/s", " ", html_entity_decode($elementBefore, ENT_QUOTES, "UTF-8"));
-                    if (empty($elementStart) && in_array(strtolower($elementName), $elementsBlock)) $rawText = rtrim($rawText)." ";
-                    if (substru($rawText, 0, 1)==" " && (empty($output) || substru($output, -1)==" ")) $rawText = ltrim($rawText);
+                    if (is_string_empty($elementStart) && in_array(strtolower($elementName), $elementsBlock)) $rawText = rtrim($rawText)." ";
+                    if (substru($rawText, 0, 1)==" " && (is_string_empty($output) || substru($output, -1)==" ")) $rawText = ltrim($rawText);
                     $output .= $this->getTextTruncated($rawText, $lengthMax);
                     $lengthMax -= strlenu($rawText);
                 }
-                if (!empty($elementRawData) && $elementRawData==$endMarker) {
+                if (!is_string_empty($elementRawData) && $elementRawData==$endMarker) {
                     $output .= $endMarkerText;
                     $lengthMax = 0;
                 }
                 if ($lengthMax<=0 || !$elementFound) break;
                 if ($hiddenLevel>0 || preg_match("/aria-hidden=\"true\"/i", $elementAttributes)) {
-                    if (!empty($elementName) && empty($elementEnd) && !in_array(strtolower($elementName), $elementsVoid)) {
-                        if (empty($elementStart)) {
+                    if (!is_string_empty($elementName) && is_string_empty($elementEnd) && !in_array(strtolower($elementName), $elementsVoid)) {
+                        if (is_string_empty($elementStart)) {
                             ++$hiddenLevel;
                         } else {
                             --$hiddenLevel;
@@ -3069,17 +3081,17 @@ class YellowToolbox {
                 $elementStart = isset($matches[1][0]) ? $matches[1][0] : "";
                 $elementName = isset($matches[2][0]) ? $matches[2][0] : "";
                 $elementEnd = isset($matches[4][0]) ? $matches[4][0] : "";
-                if (!strempty($elementBefore)) {
+                if (!is_string_empty($elementBefore)) {
                     $output .= $this->getTextTruncated($elementBefore, $lengthMax);
                     $lengthMax -= strlenu($elementBefore);
                 }
-                if (!empty($elementRawData) && $elementRawData==$endMarker) {
+                if (!is_string_empty($elementRawData) && $elementRawData==$endMarker) {
                     $output .= $endMarkerText;
                     $lengthMax = 0;
                 }
                 if ($lengthMax<=0 || !$elementFound) break;
-                if (!empty($elementName) && empty($elementEnd) && !in_array(strtolower($elementName), $elementsVoid)) {
-                    if (empty($elementStart)) {
+                if (!is_string_empty($elementName) && is_string_empty($elementEnd) && !in_array(strtolower($elementName), $elementsVoid)) {
+                    if (is_string_empty($elementStart)) {
                         array_push($elementsOpen, $elementName);
                     } else {
                         array_pop($elementsOpen);
@@ -3107,10 +3119,10 @@ class YellowToolbox {
     public function createSalt($length, $bcryptFormat = false) {
         $dataBuffer = $salt = "";
         $dataBufferSize = $bcryptFormat ? intval(ceil($length/4) * 3) : intval(ceil($length/2));
-        if (empty($dataBuffer) && function_exists("random_bytes")) {
+        if (is_string_empty($dataBuffer) && function_exists("random_bytes")) {
             $dataBuffer = @random_bytes($dataBufferSize);
         }
-        if (empty($dataBuffer) && function_exists("openssl_random_pseudo_bytes")) {
+        if (is_string_empty($dataBuffer) && function_exists("openssl_random_pseudo_bytes")) {
             $dataBuffer = @openssl_random_pseudo_bytes($dataBufferSize);
         }
         if (strlenb($dataBuffer)==$dataBufferSize) {
@@ -3133,12 +3145,12 @@ class YellowToolbox {
             case "bcrypt":  $prefix = sprintf("$2y$%02d$", $cost);
                             $salt = $this->createSalt(22, true);
                             $hash = crypt($text, $prefix.$salt);
-                            if (empty($salt) || strlenb($hash)!=60) $hash = "";
+                            if (is_string_empty($salt) || strlenb($hash)!=60) $hash = "";
                             break;
             case "sha256":  $prefix = "$5y$";
                             $salt = $this->createSalt(32);
                             $hash = "$prefix$salt".hash("sha256", $salt.$text);
-                            if (empty($salt) || strlenb($hash)!=100) $hash = "";
+                            if (is_string_empty($salt) || strlenb($hash)!=100) $hash = "";
                             break;
         }
         return $hash;
@@ -3183,7 +3195,7 @@ class YellowToolbox {
             $key = lcfirst($key);
             foreach ($this->getTextLines($parts[2]) as $line) {
                 if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
-                    if (lcfirst($matches[1])==$key && !strempty($matches[2])) {
+                    if (lcfirst($matches[1])==$key && !is_string_empty($matches[2])) {
                         $value = $matches[2];
                         break;
                     }
@@ -3261,7 +3273,7 @@ class YellowToolbox {
                 $_SERVER["LOCATION_ARGUMENTS"] = $matches[2];
                 foreach (explode("/", $matches[2]) as $token) {
                     if (preg_match("/^(.*?)$separator(.*)$/", $token, $matches)) {
-                        if (!empty($matches[1]) && !strempty($matches[2])) {
+                        if (!is_string_empty($matches[1]) && !is_string_empty($matches[2])) {
                             $matches[1] = str_replace(array("\x1c", "\x1d", "\x1e"), array("/", ":", "="), $matches[1]);
                             $matches[2] = str_replace(array("\x1c", "\x1d", "\x1e"), array("/", ":", "="), $matches[2]);
                             $_REQUEST[$matches[1]] = $matches[2];
@@ -3288,7 +3300,7 @@ class YellowToolbox {
     // Detect server timezone
     public function detectServerTimezone() {
         $timezone = ini_get("date.timezone");
-        if (empty($timezone)) {
+        if (is_string_empty($timezone)) {
             if (PHP_OS=="Darwin") {
                 if (preg_match("#zoneinfo/(.*)#", @readlink("/etc/localtime"), $matches)) $timezone = $matches[1];
             } else {
@@ -3325,9 +3337,9 @@ class YellowToolbox {
     // Detect browser language
     public function detectBrowserLanguage($languages, $languageDefault) {
         $languageFound = $languageDefault;
-        foreach (preg_split("/\s*,\s*/", $this->getServer("HTTP_ACCEPT_LANGUAGE")) as $string) {
-            list($language, $dummy) = $this->getTextList($string, ";", 2);
-            if (!empty($language) && in_array($language, $languages)) {
+        foreach (preg_split("/\s*,\s*/", $this->getServer("HTTP_ACCEPT_LANGUAGE")) as $text) {
+            list($language, $dummy) = $this->getTextList($text, ";", 2);
+            if (!is_string_empty($language) && in_array($language, $languages)) {
                 $languageFound = $language;
                 break;
             }
@@ -3340,11 +3352,11 @@ class YellowToolbox {
         $width = $height = 0;
         if (strtoupperu(substru(PHP_OS, 0, 3))=="WIN") {
             exec("powershell \$Host.UI.RawUI.WindowSize.Width", $outputLines, $returnStatus);
-            if ($returnStatus==0 && !empty($outputLines)) {
+            if ($returnStatus==0 && !is_array_empty($outputLines)) {
                 $width = intval(end($outputLines));
             }
             exec("powershell \$Host.UI.RawUI.WindowSize.Height", $outputLines, $returnStatus);
-            if ($returnStatus==0 && !empty($outputLines)) {
+            if ($returnStatus==0 && !is_array_empty($outputLines)) {
                 $height = intval(end($outputLines));
             }
         } else {
@@ -3363,7 +3375,7 @@ class YellowToolbox {
         $type = "";
         $fileHandle = @fopen($fileName, "rb");
         if ($fileHandle) {
-            if (empty($fileType)) $fileType = $this->getFileType($fileName);
+            if (is_string_empty($fileType)) $fileType = $this->getFileType($fileName);
             if ($fileType=="gif") {
                 $dataSignature = fread($fileHandle, 6);
                 $dataHeader = fread($fileHandle, 7);
@@ -3540,7 +3552,7 @@ class YellowToolbox {
                 }
                 $output .= "<$elementStart$elementName";
                 foreach ($elementAttributes as $key=>$value) $output .= " $key=\"$value\"";
-                if (!empty($elementEnd)) $output .= " ";
+                if (!is_string_empty($elementEnd)) $output .= " ";
                 $output .= "$elementEnd>";
             }
             if (!$elementFound) break;
@@ -3606,7 +3618,7 @@ class YellowToolbox {
     
     // Check if there are location arguments in current HTTP request
     public function isLocationArguments($location = "") {
-        if (empty($location)) $location = $this->getServer("LOCATION").$this->getServer("LOCATION_ARGUMENTS");
+        if (is_string_empty($location)) $location = $this->getServer("LOCATION").$this->getServer("LOCATION_ARGUMENTS");
         $separator = $this->getLocationArgumentsSeparator();
         return preg_match("/[^\/]+$separator.*$/", $location);
     }
@@ -3624,8 +3636,8 @@ class YellowToolbox {
 }
 
 class YellowArray extends ArrayObject {
-    public function __construct() {
-        parent::__construct(array());
+    public function __construct($array = []) {
+        parent::__construct($array);
     }
     
     // Set array element
@@ -3669,6 +3681,11 @@ class YellowArray extends ArrayObject {
     public function offsetExists($key) {
         if (is_string($key)) $key = lcfirst($key);
         return parent::offsetExists($key);
+    }
+
+    // Check if array is empty
+    public function isEmpty() {
+        return empty($this->getArrayCopy());
     }
 }
 
@@ -3723,6 +3740,12 @@ function substrb() {
 }
 
 // Check if string is empty
-function strempty($string) {
+function is_string_empty($string) {
     return is_null($string) || $string==="";
+}
+function strempty($string) { return is_null($string) || $string===""; } //TODO: remove later, for backwards compatibility
+
+// Check if array is empty
+function is_array_empty($array) {
+    return is_null($array) || (is_array($array) ? empty($array) : empty($array->getArrayCopy()));
 }

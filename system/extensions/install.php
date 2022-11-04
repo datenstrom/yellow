@@ -2,7 +2,7 @@
 // Install extension, https://github.com/annaesvensson/yellow-install
 
 class YellowInstall {
-    const VERSION = "0.8.83";
+    const VERSION = "0.8.84";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -24,7 +24,7 @@ class YellowInstall {
     // Process request to install website
     public function processRequestInstall($scheme, $address, $base, $location, $fileName) {
         $statusCode = 0;
-        if ($this->yellow->lookup->isContentFile($fileName) || empty($fileName)) {
+        if ($this->yellow->lookup->isContentFile($fileName) || is_string_empty($fileName)) {
             if ($this->yellow->system->get("updateCurrentRelease")=="none") {
                 $this->checkServerRequirements();
                 $author = trim(preg_replace("/[^\pL\d\-\. ]/u", "-", $this->yellow->page->getRequest("author")));
@@ -71,7 +71,7 @@ class YellowInstall {
         $statusCode = 0;
         if ($this->yellow->system->get("updateCurrentRelease")=="none") {
             $this->checkCommandRequirements();
-            if (empty($command)) {
+            if (is_string_empty($command)) {
                 $statusCode = 200;
                 echo "Datenstrom Yellow is for people who make small websites. https://datenstrom.se/yellow/\n";
                 echo "Syntax: php yellow.php\n";
@@ -159,7 +159,7 @@ class YellowInstall {
             $version = $settings->get("version");
             $modified = strtotime($settings->get("published"));
             $fileNamePhp = $this->yellow->system->get("coreExtensionDirectory").$extension.".php";
-            if (!empty($extension) && !empty($version) && !is_file($fileNamePhp)) {
+            if (!is_string_empty($extension) && !is_string_empty($version) && !is_file($fileNamePhp)) {
                 $statusCode = max($statusCode, $this->yellow->extension->get("update")->updateExtensionSettings($extension, $action, $settings));
                 $statusCode = max($statusCode, $this->yellow->extension->get("update")->updateExtensionFile(
                     $fileNamePhp, $fileDataPhp, $modified, 0, 0, "create", $extension));
@@ -182,8 +182,8 @@ class YellowInstall {
     // Update user
     public function updateUser($email, $password, $name, $language) {
         $statusCode = 200;
-        if (!empty($email) && !empty($password) && $this->yellow->extension->isExisting("edit")) {
-            if (empty($name)) $name = $this->yellow->system->get("sitename");
+        if (!is_string_empty($email) && !is_string_empty($password) && $this->yellow->extension->isExisting("edit")) {
+            if (is_string_empty($name)) $name = $this->yellow->system->get("sitename");
             $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
             $settings = array(
                 "name" => $name,
@@ -220,7 +220,7 @@ class YellowInstall {
         $statusCode = 200;
         $fileName = $this->yellow->lookup->findFileFromContentLocation($location);
         $fileData = str_replace("\r\n", "\n", $this->yellow->toolbox->readFile($fileName));
-        if (!empty($fileData) && $language!="en") {
+        if (!is_string_empty($fileData) && $language!="en") {
             $titleOld = "Title: ".$this->yellow->language->getText("{$name}Title", "en")."\n";
             $titleNew = "Title: ".$this->yellow->language->getText("{$name}Title", $language)."\n";
             $fileData = str_replace($titleOld, $titleNew, $fileData);
@@ -247,7 +247,7 @@ class YellowInstall {
         $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreLanguageFile");
         $fileData = $this->yellow->toolbox->readFile($fileName);
         if (strposu($fileData, "Language:")===false) {
-            if (!empty($fileData)) $fileData .= "\n";
+            if (!is_string_empty($fileData)) $fileData .= "\n";
             $fileData .= "Language: $language\n";
             $fileData .= "media/images/photo.jpg: ".$this->yellow->language->getText("installExampleImage", $language)."\n";
             if (!$this->yellow->toolbox->createFile($fileName, $fileData)) {
@@ -377,10 +377,10 @@ class YellowInstall {
         $languages = array();
         foreach (preg_split("/\s*,\s*/", $this->yellow->toolbox->getServer("HTTP_ACCEPT_LANGUAGE")) as $string) {
             list($language, $dummy) = $this->yellow->toolbox->getTextList($string, ";", 2);
-            if (!empty($language)) array_push($languages, $language);
+            if (!is_string_empty($language)) array_push($languages, $language);
         }
         foreach (preg_split("/\s*,\s*/", $languagesDefault) as $language) {
-            if (!empty($language)) array_push($languages, $language);
+            if (!is_string_empty($language)) array_push($languages, $language);
         }
         return array_unique($languages);
     }
@@ -395,7 +395,7 @@ class YellowInstall {
         }
         if ($this->yellow->system->get("sitename")=="Datenstrom Yellow") $settings["sitename"] = $this->yellow->toolbox->detectServerSitename();
         if ($this->yellow->system->get("coreTimezone")=="UTC") $settings["coreTimezone"] = $this->yellow->toolbox->detectServerTimezone();
-        if ($this->yellow->system->get("coreStaticUrl")=="auto" && !empty(getenv("URL"))) $settings["coreStaticUrl"] = getenv("URL");
+        if ($this->yellow->system->get("coreStaticUrl")=="auto" && getenv("URL")!==false) $settings["coreStaticUrl"] = getenv("URL");
         if ($this->yellow->system->get("updateEventPending")=="none") $settings["updateEventPending"] = "website/install";
         $settings["updateCurrentRelease"] = YellowCore::RELEASE;
         return $settings;
@@ -435,7 +435,7 @@ class YellowInstall {
         $languages = array();
         foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
             if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
-                if (!empty($matches[1]) && !empty($matches[2]) && strposu($matches[1], "/")) {
+                if (!is_string_empty($matches[1]) && !is_string_empty($matches[2]) && strposu($matches[1], "/")) {
                     $extension = basename($matches[1]);
                     $extension = $this->yellow->lookup->normaliseName($extension, true, true);
                     list($entry, $flags) = $this->yellow->toolbox->getTextList($matches[2], ",", 2);

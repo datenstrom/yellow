@@ -2,7 +2,7 @@
 // Meta extension, https://github.com/annaesvensson/yellow-meta
 
 class YellowMeta {
-    const VERSION = "0.8.15";
+    const VERSION = "0.8.16";
     public $yellow;         // access to API
     
     // Handle initialisation
@@ -45,7 +45,7 @@ class YellowMeta {
             $alt = $page->isExisting("imageAlt") ? $page->get("imageAlt") : $page->get("title");
         } elseif (preg_match("/\[image(\s.*?)\]/", $page->getContent(true), $matches)) {
             list($name, $alt) = $this->yellow->toolbox->getTextArguments(trim($matches[1]));
-            if (empty($alt)) $alt = $page->get("title");
+            if (is_string_empty($alt)) $alt = $page->get("title");
         } else {
             $name = $this->yellow->system->get("metaDefaultImage");
             $alt = $page->isExisting("imageAlt") ? $page->get("imageAlt") : $page->get("title");

@@ -2,7 +2,7 @@
 // Markdown extension, https://github.com/annaesvensson/yellow-markdown
 
 class YellowMarkdown {
-    const VERSION = "0.8.22";
+    const VERSION = "0.8.23";
     public $yellow;         // access to API
     
     // Handle initialisation
@@ -3911,7 +3911,7 @@ class YellowMarkdownParser extends MarkdownExtraParser {
     // Handle fenced code blocks
     public function _doFencedCodeBlocks_callback($matches) {
         $text = $matches[4];
-        $name = empty($matches[2]) ? "" : trim("$matches[2] $matches[3]");
+        $name = is_string_empty($matches[2]) ? "" : trim("$matches[2] $matches[3]");
         $output = $this->page->parseContentShortcut($name, $text, "code");
         if (is_null($output)) {
             $attr = $this->doExtraAttributes("pre", ".$matches[2] $matches[3]");
@@ -3926,7 +3926,7 @@ class YellowMarkdownParser extends MarkdownExtraParser {
         $text = $matches[1];
         $level = $matches[3][0]=="=" ? 1 : 2;
         $attr = $this->doExtraAttributes("h$level", $dummy =& $matches[2]);
-        if (empty($attr) && $level>=2) $attr = $this->getIdAttribute($text);
+        if (is_string_empty($attr) && $level>=2) $attr = $this->getIdAttribute($text);
         $output = "<h$level$attr>".$this->runSpanGamut($text)."</h$level>";
         return "\n".$this->hashBlock($output)."\n\n";
     }
@@ -3936,7 +3936,7 @@ class YellowMarkdownParser extends MarkdownExtraParser {
         $text = $matches[2];
         $level = strlen($matches[1]);
         $attr = $this->doExtraAttributes("h$level", $dummy =& $matches[3]);
-        if (empty($attr) && $level>=2) $attr = $this->getIdAttribute($text);
+        if (is_string_empty($attr) && $level>=2) $attr = $this->getIdAttribute($text);
         $output = "<h$level$attr>".$this->runSpanGamut($text)."</h$level>";
         return "\n".$this->hashBlock($output)."\n\n";
     }
@@ -3948,7 +3948,7 @@ class YellowMarkdownParser extends MarkdownExtraParser {
         $title = isset($matches[7]) ? $matches[7] : "";
         $attr = $this->doExtraAttributes("a", $dummy =& $matches[8]);
         $output = "<a href=\"".$this->encodeURLAttribute($url)."\"";
-        if (!empty($title)) $output .= " title=\"".$this->encodeAttribute($title)."\"";
+        if (!is_string_empty($title)) $output .= " title=\"".$this->encodeAttribute($title)."\"";
         $output .= $attr;
         $output .= ">".$this->runSpanGamut($text)."</a>";
         return $this->hashPart($output);
@@ -3964,8 +3964,8 @@ class YellowMarkdownParser extends MarkdownExtraParser {
         $title = isset($matches[7]) ? $matches[7] : $matches[2];
         $attr = $this->doExtraAttributes("img", $dummy =& $matches[8]);
         $output = "<img src=\"".$this->encodeURLAttribute($src)."\"";
-        if (!empty($alt)) $output .= " alt=\"".$this->encodeAttribute($alt)."\"";
-        if (!empty($title)) $output .= " title=\"".$this->encodeAttribute($title)."\"";
+        if (!is_string_empty($alt)) $output .= " alt=\"".$this->encodeAttribute($alt)."\"";
+        if (!is_string_empty($title)) $output .= " title=\"".$this->encodeAttribute($title)."\"";
         $output .= $attr;
         $output .= $this->empty_element_suffix;
         return $this->hashPart($output);
@@ -4016,7 +4016,7 @@ class YellowMarkdownParser extends MarkdownExtraParser {
             $level = strspn(str_replace(array("![", " "), "", $lines), "!");
             $attr = " class=\"notice$level\"";
         }
-        if (!empty($text)) {
+        if (!is_string_empty($text)) {
             ++$this->noticeLevel;
             $output = "<div$attr>\n".$this->runBlockGamut($text)."\n</div>";
             --$this->noticeLevel;
