@@ -693,7 +693,13 @@ yellow.edit = {
     // Process close
     processClose: function() {
         this.hidePane(this.paneId);
-        if (yellow.page.action=="login") window.open(yellow.page.pageReadUrl, "_self");
+        if (yellow.page.action=="login") {
+            var url = yellow.system.coreServerScheme+"://"+
+                yellow.system.coreServerAddress+
+                yellow.system.coreServerBase+
+                yellow.page.location;
+            window.open(url, "_self");
+        }
     },
     
     // Create popup

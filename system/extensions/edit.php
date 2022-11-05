@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/annaesvensson/yellow-edit
 
 class YellowEdit {
-    const VERSION = "0.8.67";
+    const VERSION = "0.8.68";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -84,6 +84,15 @@ class YellowEdit {
         return "user [option email password]";
     }
     
+    // Handle page meta data
+    public function onParseMetaData($page) {
+        $page->set("editPageUrl", $this->yellow->lookup->normaliseUrl(
+            $this->yellow->system->get("coreServerScheme"),
+            $this->yellow->system->get("coreServerAddress"),
+            $this->yellow->system->get("coreServerBase"),
+            rtrim($this->yellow->system->get("editLocation"), "/").$page->location));
+    }
+    
     // Handle page content of shortcut
     public function onParseContentShortcut($page, $name, $text, $type) {
         $output = null;
@@ -92,7 +101,7 @@ class YellowEdit {
             if (is_string_empty($target) || $target=="-") $target = "main";
             if (is_string_empty($description)) $description = ucfirst($name);
             $pageTarget = $target=="main" ? $page->getPage("main") : $page->getPage("main")->getPage($target);
-            $output = "<a href=\"".$pageTarget->get("pageEditUrl")."\">".htmlspecialchars($description)."</a>";
+            $output = "<a href=\"".$pageTarget->get("editPageUrl")."\">".htmlspecialchars($description)."</a>";
         }
         return $output;
     }
@@ -1072,12 +1081,12 @@ class YellowEditResponse {
         $page->parseMeta($rawData);
         $this->editContentFile($page, "create", $this->userEmail);
         if ($this->yellow->content->find($page->location)) {
-            $page->location = $this->getPageNewLocation($page->rawData, $page->location, $page->get("pageNewLocation"));
+            $page->location = $this->getPageNewLocation($page->rawData, $page->location, $page->get("editNewLocation"));
             $page->fileName = $this->getPageNewFile($page->location, $page->fileName, $page->get("published"));
             while ($this->yellow->content->find($page->location) || is_string_empty($page->fileName)) {
                 $page->rawData = $this->yellow->toolbox->setMetaData($page->rawData, "title", $this->getTitleNext($page->rawData));
                 $page->rawData = $this->yellow->toolbox->normaliseLines($page->rawData, $endOfLine);
-                $page->location = $this->getPageNewLocation($page->rawData, $page->location, $page->get("pageNewLocation"));
+                $page->location = $this->getPageNewLocation($page->rawData, $page->location, $page->get("editNewLocation"));
                 $page->fileName = $this->getPageNewFile($page->location, $page->fileName, $page->get("published"));
                 if (++$pageCounter>999) break;
             }
@@ -1107,7 +1116,7 @@ class YellowEditResponse {
         $pageSource->parseMeta($rawDataSource);
         $this->editContentFile($page, "edit", $this->userEmail);
         if ($this->isMetaModified($pageSource, $page) && $page->location!=$this->yellow->content->getHomeLocation($page->location)) {
-            $page->location = $this->getPageNewLocation($page->rawData, $page->location, $page->get("pageNewLocation"), true);
+            $page->location = $this->getPageNewLocation($page->rawData, $page->location, $page->get("editNewLocation"), true);
             $page->fileName = $this->getPageNewFile($page->location, $page->fileName, $page->get("published"));
             if ($page->location!=$pageSource->location && ($this->yellow->content->find($page->location) || is_string_empty($page->fileName))) {
                 $page->error(500, "Page '".$page->get("title")."' is not possible!");
@@ -1203,6 +1212,10 @@ class YellowEditResponse {
     // Return page data including status information
     public function getPageData($page) {
         $data = array();
+        $data["scheme"] = $this->yellow->page->scheme;
+        $data["address"] = $this->yellow->page->address;
+        $data["base"] = $this->yellow->page->base;
+        $data["location"] = $this->yellow->page->location;
         if ($this->isUser()) {
             $data["title"] = $this->yellow->toolbox->getMetaData($this->rawDataEdit, "title");
             $data["rawDataSource"] = $this->rawDataSource;
@@ -1211,13 +1224,7 @@ class YellowEditResponse {
             $data["rawDataOutput"] = strval($this->rawDataOutput);
             $data["rawDataReadonly"] = intval($this->rawDataReadonly);
             $data["rawDataEndOfLine"] = $this->rawDataEndOfLine;
-            $data["scheme"] = $this->yellow->page->scheme;
-            $data["address"] = $this->yellow->page->address;
-            $data["base"] = $this->yellow->page->base;
-            $data["location"] = $this->yellow->page->location;
         }
-        $data["pageReadUrl"] = $this->yellow->page->get("pageReadUrl");
-        $data["pageEditUrl"] = $this->yellow->page->get("pageEditUrl");
         if ($this->action!="none") $data = array_merge($data, $this->getRequestData());
         $data["action"] = $this->action;
         $data["status"] = $this->status;
@@ -1401,8 +1408,8 @@ class YellowEditResponse {
     }
     
     // Return location for new/modified page
-    public function getPageNewLocation($rawData, $pageLocation, $pageNewLocation, $pageMatchLocation = false) {
-        $location = is_string_empty($pageNewLocation) ? "@title" : $pageNewLocation;
+    public function getPageNewLocation($rawData, $pageLocation, $editNewLocation, $pageMatchLocation = false) {
+        $location = is_string_empty($editNewLocation) ? "@title" : $editNewLocation;
         $location = preg_replace("/@title/i", $this->getPageNewTitle($rawData), $location);
         $location = preg_replace("/@timestamp/i", $this->getPageNewData($rawData, "published", true, "U"), $location);
         $location = preg_replace("/@date/i", $this->getPageNewData($rawData, "published", true, "Y-m-d"), $location);

@@ -2,7 +2,7 @@
 // Install extension, https://github.com/annaesvensson/yellow-install
 
 class YellowInstall {
-    const VERSION = "0.8.84";
+    const VERSION = "0.8.85";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -394,8 +394,8 @@ class YellowInstall {
             $settings[$key] = trim($value);
         }
         if ($this->yellow->system->get("sitename")=="Datenstrom Yellow") $settings["sitename"] = $this->yellow->toolbox->detectServerSitename();
+        if ($this->yellow->system->get("commandStaticUrl")=="auto" && getenv("URL")!==false) $settings["commandStaticUrl"] = getenv("URL");
         if ($this->yellow->system->get("coreTimezone")=="UTC") $settings["coreTimezone"] = $this->yellow->toolbox->detectServerTimezone();
-        if ($this->yellow->system->get("coreStaticUrl")=="auto" && getenv("URL")!==false) $settings["coreStaticUrl"] = getenv("URL");
         if ($this->yellow->system->get("updateEventPending")=="none") $settings["updateEventPending"] = "website/install";
         $settings["updateCurrentRelease"] = YellowCore::RELEASE;
         return $settings;

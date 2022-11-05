@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.8.99";
+    const VERSION = "0.8.100";
     const RELEASE = "0.8.21";
     public $page;           // current page
     public $content;        // content files
@@ -34,13 +34,12 @@ class YellowCore {
         $this->system->setDefault("parser", "markdown");
         $this->system->setDefault("status", "public");
         $this->system->setDefault("coreServerUrl", "auto");
-        $this->system->setDefault("coreStaticUrl", "auto");
         $this->system->setDefault("coreTimezone", "UTC");
         $this->system->setDefault("coreContentExtension", ".md");
         $this->system->setDefault("coreContentDefaultFile", "page.md");
         $this->system->setDefault("coreContentErrorFile", "page-error-(.*).md");
-        $this->system->setDefault("coreUserFile", "yellow-user.ini");
         $this->system->setDefault("coreLanguageFile", "yellow-language.ini");
+        $this->system->setDefault("coreUserFile", "yellow-user.ini");
         $this->system->setDefault("coreWebsiteFile", "yellow-website.log");
         $this->system->setDefault("coreMediaLocation", "/media/");
         $this->system->setDefault("coreDownloadLocation", "/media/downloads/");
@@ -487,16 +486,6 @@ class YellowPage {
             if (!$this->isExisting("titleHeader")) $this->set("titleHeader", $titleHeader);
             if ($this->get("status")=="unlisted") $this->visible = false;
             if ($this->get("status")=="shared") $this->available = false;
-            $this->set("pageReadUrl", $this->yellow->lookup->normaliseUrl(
-                $this->yellow->system->get("coreServerScheme"),
-                $this->yellow->system->get("coreServerAddress"),
-                $this->yellow->system->get("coreServerBase"),
-                $this->location));
-            $this->set("pageEditUrl", $this->yellow->lookup->normaliseUrl(
-                $this->yellow->system->get("coreServerScheme"),
-                $this->yellow->system->get("coreServerAddress"),
-                $this->yellow->system->get("coreServerBase"),
-                rtrim($this->yellow->system->get("editLocation"), "/").$this->location));
             $this->parseMetaDataShared();
         } else {
             $this->set("size", filesize($this->fileName));
@@ -549,8 +538,6 @@ class YellowPage {
                 if (method_exists($value["object"], "onParseContentRaw")) {
                     $this->parser = $value["object"];
                     $this->parserData = $this->getContent(true);
-                    $this->parserData = preg_replace("/@pageReadUrl/i", $this->get("pageReadUrl"), $this->parserData);
-                    $this->parserData = preg_replace("/@pageEditUrl/i", $this->get("pageEditUrl"), $this->parserData);
                     $this->parserData = $this->parser->onParseContentRaw($this, $this->parserData);
                     foreach ($this->yellow->extension->data as $key=>$value) {
                         if (method_exists($value["object"], "onParseContentHtml")) {
