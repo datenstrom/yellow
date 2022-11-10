@@ -2,7 +2,7 @@
 // Update extension, https://github.com/annaesvensson/yellow-update
 
 class YellowUpdate {
-    const VERSION = "0.8.90";
+    const VERSION = "0.8.91";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $extensions;             // number of extensions
@@ -317,7 +317,7 @@ class YellowUpdate {
     // Update extension from file
     public function updateExtensionFile($fileName, $fileData, $newModified, $oldModified, $lastModified, $flags, $extension) {
         $statusCode = 200;
-        $fileName = $this->yellow->toolbox->normalisePath($fileName);
+        $fileName = $this->yellow->lookup->normalisePath($fileName);
         if ($this->yellow->lookup->isValidFile($fileName)) {
             $create = $update = $delete = false;
             if (preg_match("/create/i", $flags) && !is_file($fileName) && !is_string_empty($fileData)) $create = true;
@@ -630,7 +630,7 @@ class YellowUpdate {
     // Remove extension file
     public function removeExtensionFile($fileName) {
         $statusCode = 200;
-        $fileName = $this->yellow->toolbox->normalisePath($fileName);
+        $fileName = $this->yellow->lookup->normalisePath($fileName);
         if ($this->yellow->lookup->isValidFile($fileName) && is_file($fileName)) {
             if (!$this->yellow->toolbox->deleteFile($fileName, $this->yellow->system->get("coreTrashDirectory"))) {
                 $statusCode = 500;
@@ -804,7 +804,7 @@ class YellowUpdate {
         $invalid = false;
         foreach ($settings as $key=>$value) {
             if (strposu($key, "/")) {
-                $fileName = $this->yellow->toolbox->normalisePath($key);
+                $fileName = $this->yellow->lookup->normalisePath($key);
                 if (!$this->yellow->lookup->isValidFile($fileName)) $invalid = true;
                 if ($oldModified==0) $oldModified = $this->yellow->toolbox->getFileModified($fileName);
             }

@@ -98,7 +98,7 @@ class YellowInstall {
             if ($statusCode==200) $statusCode = 0;
             if ($statusCode>=400) {
                 echo "ERROR installing files: ".$this->yellow->page->errorMessage."\n";
-                echo "Detected ZIP-files, 0 extensions installed. Please run command again.\n";
+                echo "Detected ZIP files, 0 extensions installed. Please run command again.\n";
             }
         }
         return $statusCode;

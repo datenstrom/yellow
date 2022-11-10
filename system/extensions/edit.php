@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/annaesvensson/yellow-edit
 
 class YellowEdit {
-    const VERSION = "0.8.68";
+    const VERSION = "0.8.69";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -1075,7 +1075,7 @@ class YellowEditResponse {
     
     // Return new page
     public function getPageNew($scheme, $address, $base, $location, $fileName, $rawData, $endOfLine) {
-        $rawData = $this->yellow->toolbox->normaliseLines($rawData, $endOfLine);
+        $rawData = $this->yellow->lookup->normaliseLines($rawData, $endOfLine);
         $page = new YellowPage($this->yellow);
         $page->setRequestInformation($scheme, $address, $base, $location, $fileName, false);
         $page->parseMeta($rawData);
@@ -1085,7 +1085,7 @@ class YellowEditResponse {
             $page->fileName = $this->getPageNewFile($page->location, $page->fileName, $page->get("published"));
             while ($this->yellow->content->find($page->location) || is_string_empty($page->fileName)) {
                 $page->rawData = $this->yellow->toolbox->setMetaData($page->rawData, "title", $this->getTitleNext($page->rawData));
-                $page->rawData = $this->yellow->toolbox->normaliseLines($page->rawData, $endOfLine);
+                $page->rawData = $this->yellow->lookup->normaliseLines($page->rawData, $endOfLine);
                 $page->location = $this->getPageNewLocation($page->rawData, $page->location, $page->get("editNewLocation"));
                 $page->fileName = $this->getPageNewFile($page->location, $page->fileName, $page->get("published"));
                 if (++$pageCounter>999) break;
@@ -1104,9 +1104,9 @@ class YellowEditResponse {
     
     // Return modified page
     public function getPageEdit($scheme, $address, $base, $location, $fileName, $rawDataSource, $rawDataEdit, $rawDataFile, $endOfLine) {
-        $rawDataSource = $this->yellow->toolbox->normaliseLines($rawDataSource, $endOfLine);
-        $rawDataEdit = $this->yellow->toolbox->normaliseLines($rawDataEdit, $endOfLine);
-        $rawDataFile = $this->yellow->toolbox->normaliseLines($rawDataFile, $endOfLine);
+        $rawDataSource = $this->yellow->lookup->normaliseLines($rawDataSource, $endOfLine);
+        $rawDataEdit = $this->yellow->lookup->normaliseLines($rawDataEdit, $endOfLine);
+        $rawDataFile = $this->yellow->lookup->normaliseLines($rawDataFile, $endOfLine);
         $rawData = $this->extension->merge->merge($rawDataSource, $rawDataEdit, $rawDataFile);
         $page = new YellowPage($this->yellow);
         $page->setRequestInformation($scheme, $address, $base, $location, $fileName, false);
@@ -1132,7 +1132,7 @@ class YellowEditResponse {
     
     // Return deleted page
     public function getPageDelete($scheme, $address, $base, $location, $fileName, $rawData, $endOfLine) {
-        $rawData = $this->yellow->toolbox->normaliseLines($rawData, $endOfLine);
+        $rawData = $this->yellow->lookup->normaliseLines($rawData, $endOfLine);
         $page = new YellowPage($this->yellow);
         $page->setRequestInformation($scheme, $address, $base, $location, $fileName, false);
         $page->parseMeta($rawData);
@@ -1157,7 +1157,7 @@ class YellowEditResponse {
     
     // Return preview page
     public function getPagePreview($scheme, $address, $base, $location, $fileName, $rawData, $endOfLine) {
-        $rawData = $this->yellow->toolbox->normaliseLines($rawData, $endOfLine);
+        $rawData = $this->yellow->lookup->normaliseLines($rawData, $endOfLine);
         $page = new YellowPage($this->yellow);
         $page->setRequestInformation($scheme, $address, $base, $location, $fileName, false);
         $page->parseMeta($rawData, 200);
@@ -1181,7 +1181,7 @@ class YellowEditResponse {
         $file->set("type", $this->yellow->toolbox->getFileType($fileNameShort));
         if ($file->get("type")=="html" || $file->get("type")=="svg") {
             $fileData = $this->yellow->toolbox->readFile($fileNameTemp);
-            $fileData = $this->yellow->toolbox->normaliseData($fileData, $file->get("type"));
+            $fileData = $this->yellow->lookup->normaliseData($fileData, $file->get("type"));
             if (is_string_empty($fileData) || !$this->yellow->toolbox->createFile($fileNameTemp, $fileData)) {
                 $file->error(500, "Can't write file '$fileNameTemp'!");
             }
@@ -1581,7 +1581,7 @@ class YellowEditResponse {
             $expire = time() + 60*60*24;
             $actionToken = $this->createActionToken($email, $action, $expire);
             $locationArguments = "/action:$action/email:$email/expire:$expire/language:$userLanguage/actiontoken:$actionToken/";
-            $url = "$scheme://$address$base".$this->yellow->toolbox->normaliseArguments($locationArguments, false, false);
+            $url = "$scheme://$address$base".$this->yellow->lookup->normaliseArguments($locationArguments, false, false);
         }
         $prefix = "edit".ucfirst($action);
         $message = $this->yellow->language->getText("{$prefix}Message", $userLanguage);

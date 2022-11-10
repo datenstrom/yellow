@@ -2,7 +2,7 @@
 // Markdown extension, https://github.com/annaesvensson/yellow-markdown
 
 class YellowMarkdown {
-    const VERSION = "0.8.23";
+    const VERSION = "0.8.24";
     public $yellow;         // access to API
     
     // Handle initialisation
@@ -14,7 +14,7 @@ class YellowMarkdown {
     public function onParseContentRaw($page, $text) {
         $markdown = new YellowMarkdownParser($this->yellow, $page);
         $text = $markdown->transform($text);
-        $text = $this->yellow->toolbox->normaliseData($text, "html");
+        $text = $this->yellow->lookup->normaliseData($text, "html");
         return $text;
     }
 }
