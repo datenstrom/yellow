@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.8.101";
+    const VERSION = "0.8.102";
     const RELEASE = "0.8.21";
     public $content;        // content files
     public $media;          // media files
@@ -2809,7 +2809,10 @@ class YellowToolbox {
         return $this->getServer("HTTP_IF_MODIFIED_SINCE")==$lastModifiedFormatted;
     }
     
-    public function normaliseArguments($text, $appendSlash = true, $filterStrict = true) { return $this->yellow->lookup->normaliseArguments($text, $appendSlash, $filterStrict); } //TODO: remove later, for backwards compatibility
+    // TODO: remove later, for backwards compatibility
+    public function normaliseUpperLower($input) { return $this->yellow->lookup->normaliseArray($input); }
+    public function normaliseArguments($text, $appendSlash = true, $filterStrict = true) { return $this->yellow->lookup->normaliseArguments($text, $appendSlash, $filterStrict); }
+    public function normalisePath($text) { return $this->yellow->lookup->normalisePath($text); }
 }
 
 class YellowPage {
