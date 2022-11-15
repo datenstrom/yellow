@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/annaesvensson/yellow-edit
 
 class YellowEdit {
-    const VERSION = "0.8.69";
+    const VERSION = "0.8.70";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -1256,8 +1256,8 @@ class YellowEditResponse {
             $data["editKeyboardShortcuts"] = $this->yellow->system->get("editKeyboardShortcuts");
             $data["editToolbarButtons"] = $this->getToolbarButtons();
             $data["editStatusValues"] = $this->getStatusValues();
-            $data["emojiawesomeToolbarButtons"] = $this->yellow->system->get("emojiawesomeToolbarButtons");
-            $data["fontawesomeToolbarButtons"] = $this->yellow->system->get("fontawesomeToolbarButtons");
+            $data["emojiToolbarButtons"] = $this->yellow->system->get("emojiToolbarButtons");
+            $data["iconToolbarButtons"] = $this->yellow->system->get("iconToolbarButtons");
             if ($this->isUserAccess("configure")) {
                 $data["sitename"] = $this->yellow->system->get("sitename");
                 $data["author"] = $this->yellow->system->get("author");
@@ -1316,8 +1316,8 @@ class YellowEditResponse {
         $toolbarButtons = $this->yellow->system->get("editToolbarButtons");
         if ($toolbarButtons=="auto") {
             $toolbarButtons = "format, bold, italic, strikethrough, code, separator, list, link, file";
-            if ($this->yellow->extension->isExisting("emojiawesome")) $toolbarButtons .= ", emojiawesome";
-            if ($this->yellow->extension->isExisting("fontawesome")) $toolbarButtons .= ", fontawesome";
+            if ($this->yellow->extension->isExisting("emoji")) $toolbarButtons .= ", emoji";
+            if ($this->yellow->extension->isExisting("icon")) $toolbarButtons .= ", icon";
             $toolbarButtons .= ", status, preview";
         }
         return $toolbarButtons;
