@@ -747,7 +747,7 @@ yellow.edit = {
                     for (var i=0; i<tokens.length; i++) {
                         var token = tokens[i].replace(/[\:]/g,"");
                         var className = token.replace("+1", "plus1").replace("-1", "minus1").replace(/_/g, "-");
-                        rawDataEmojis += "<li><a href=\"#\" id=\"yellow-popup-list-"+yellow.toolbox.encodeHtml(token)+"\" data-action=\"toolbar\" data-status=\"text\" data-arguments=\":"+yellow.toolbox.encodeHtml(token)+":\"><i class=\"ea ea-"+yellow.toolbox.encodeHtml(className)+"\"></i></a></li>";
+                        rawDataEmojis += "<li><a href=\"#\" id=\"yellow-popup-list-"+yellow.toolbox.encodeHtml(token)+"\" data-action=\"toolbar\" data-status=\"text\" data-arguments=\":"+yellow.toolbox.encodeHtml(token)+":\"><i class=\"emoji emoji-"+yellow.toolbox.encodeHtml(className)+"\"></i></a></li>";
                     }
                 }
                 elementDiv.innerHTML = "<ul class=\"yellow-dropdown yellow-dropdown-menu\">"+rawDataEmojis+"</ul>";
@@ -758,7 +758,7 @@ yellow.edit = {
                     var tokens = yellow.system.iconToolbarButtons.split(" ");
                     for (var i=0; i<tokens.length; i++) {
                         var token = tokens[i].replace(/[\:]/g,"");
-                        rawDataIcons += "<li><a href=\"#\" id=\"yellow-popup-list-"+yellow.toolbox.encodeHtml(token)+"\" data-action=\"toolbar\" data-status=\"text\" data-arguments=\":"+yellow.toolbox.encodeHtml(token)+":\"><i class=\"fa "+yellow.toolbox.encodeHtml(token)+"\"></i></a></li>";
+                        rawDataIcons += "<li><a href=\"#\" id=\"yellow-popup-list-"+yellow.toolbox.encodeHtml(token)+"\" data-action=\"toolbar\" data-status=\"text\" data-arguments=\":"+yellow.toolbox.encodeHtml(token)+":\"><i class=\"icon "+yellow.toolbox.encodeHtml(token)+"\"></i></a></li>";
                     }
                 }
                 elementDiv.innerHTML = "<ul class=\"yellow-dropdown yellow-dropdown-menu\">"+rawDataIcons+"</ul>";
