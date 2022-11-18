@@ -2,7 +2,7 @@
 // Install extension, https://github.com/annaesvensson/yellow-install
 
 class YellowInstall {
-    const VERSION = "0.8.85";
+    const VERSION = "0.8.86";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -83,7 +83,7 @@ class YellowInstall {
             } elseif ($command=="skip" && $text=="installation") {
                 $statusCode = $this->updateLog();
                 if ($statusCode==200) $statusCode = $this->updateLanguages();
-                if ($statusCode==200) $statusCode = $this->updateSettings();
+                if ($statusCode==200) $statusCode = $this->updateSettings(true);
                 if ($statusCode==200) $statusCode = $this->removeInstall();
                 if ($statusCode>=400) {
                     echo "ERROR installing files: ".$this->yellow->page->errorMessage."\n";
@@ -236,10 +236,10 @@ class YellowInstall {
     }
     
     // Update settings
-    public function updateSettings() {
+    public function updateSettings($skipInstallation = false) {
         $statusCode = 200;
         $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
-        if (!$this->yellow->system->save($fileName, $this->getSystemSettings())) {
+        if (!$this->yellow->system->save($fileName, $this->getSystemSettings($skipInstallation))) {
             $statusCode = 500;
             $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
         }
@@ -386,7 +386,7 @@ class YellowInstall {
     }
     
     // Return system settings
-    public function getSystemSettings() {
+    public function getSystemSettings($skipInstallation) {
         $settings = array();
         foreach ($_REQUEST as $key=>$value) {
             if (!$this->yellow->system->isExisting($key)) continue;
@@ -395,6 +395,7 @@ class YellowInstall {
         }
         if ($this->yellow->system->get("sitename")=="Datenstrom Yellow") $settings["sitename"] = $this->yellow->toolbox->detectServerSitename();
         if ($this->yellow->system->get("commandStaticUrl")=="auto" && getenv("URL")!==false) $settings["commandStaticUrl"] = getenv("URL");
+        if ($this->yellow->system->get("commandStaticUrl")=="auto" && $skipInstallation) $settings["commandStaticUrl"] = "http://localhost:8000/";
         if ($this->yellow->system->get("coreTimezone")=="UTC") $settings["coreTimezone"] = $this->yellow->toolbox->detectServerTimezone();
         if ($this->yellow->system->get("updateEventPending")=="none") $settings["updateEventPending"] = "website/install";
         $settings["updateCurrentRelease"] = YellowCore::RELEASE;
