@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.8.102";
+    const VERSION = "0.8.103";
     const RELEASE = "0.8.21";
     public $content;        // content files
     public $media;          // media files
@@ -2673,8 +2673,8 @@ class YellowToolbox {
                 $dataBufferSizeMax = filesize($fileName);
                 $dataBufferSize = min($dataBufferSizeMax, 4096);
                 if ($dataBufferSize) $dataBuffer = fread($fileHandle, $dataBufferSize);
-                $dataSignature = substrb($dataBuffer, 0, 4);
-                if (!feof($fileHandle) && ($dataSignature=="\xff\xd8\xff\xe0" || $dataSignature=="\xff\xd8\xff\xe1")) {
+                $dataSignature = substrb($dataBuffer, 0, 2);
+                if (!feof($fileHandle) && $dataSignature=="\xff\xd8") {
                     for ($pos=2; $pos+8<$dataBufferSize; $pos+=$length) {
                         if ($dataBuffer[$pos]!="\xff") break;
                         $dataMarker = $dataBuffer[$pos+1];
