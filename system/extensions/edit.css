@@ -593,8 +593,8 @@
     mask: url("edit-stack.svg#close");
 }
 .yellow-icon-help {
-    -webkit-mask: url("edit-stack.svg#close");
-    mask: url("edit-stack.svg#close");
+    -webkit-mask: url("edit-stack.svg#help");
+    mask: url("edit-stack.svg#help");
 }
 .yellow-icon-logo {
     -webkit-mask: url("edit-stack.svg#logo");
