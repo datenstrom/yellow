@@ -93,7 +93,7 @@ class YellowCore {
         $this->startup();
     }
     
-    // Handle request from web server
+    // Handle request from web browser
     public function request() {
         $statusCode = 0;
         $this->toolbox->timerStart($time);
