@@ -1,0 +1,4 @@
+---
+Title: Footer
+Status: shared
+---

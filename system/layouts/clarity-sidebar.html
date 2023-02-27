@@ -1,0 +1,77 @@
+<?php $pages = $this->yellow->content->index()->filter("layout", "blog")->sort("published", false)->limit(20) ?>
+<?php
+  $tags = array();
+  $recents = null;
+  $recentCounter = 0;
+  foreach ($pages as $page) {
+    if ($recentCounter++<5) {
+      $recents .= "<li><a href=\"".$page->getLocation(true)."\" class=\"nav-link\">".$page->getHtml("title")."</a></li>";
+    }
+
+    if ($page->isExisting("tag")) {
+        foreach (preg_split("/\s*,\s*/", $page->get("tag")) as $entry) {
+            if (!isset($tags[$entry])) $tags[$entry] = 0;
+            ++$tags[$entry];
+        }
+    }
+  }
+?>
+<aside class="sidebar">
+    <?php if ($this->yellow->extension->isExisting("search")): ?>
+    <section class="sidebar_inner">
+      <!-- Search -->
+      <div>
+      <form class="search-form" action="<?php echo $this->yellow->page->getBase() ?>/search/" method="post">
+        <div class="search_wrapper">
+            <input class="search_input" type="text" name="query" value="<?php echo $this->yellow->page->getRequestHtml("query") ?>"<?php echo $this->yellow->page->get("status")=="none" ? " autofocus=\"autofocus\"" : "" ?> />
+            <button type="submit" class="search_btn"><svg class="icon search_btn" style="width: 36px;height: 30px;"><use xlink:href="#search"></use></svg></button>
+            <input type="hidden" name="clean-url" />    
+        </div>
+      </form>
+      </div>
+    </section>
+    <?php endif ?>
+
+    <section class="sidebar_inner">
+        <!-- About widget -->
+        <h2>My thoughts...</h2>
+        <div class="sidebar_description">
+         Things that run in mind. I somehow managed to write something down. 
+        </div>
+    </section>
+    <section class="sidebar_inner">
+        <!-- About widget -->
+        <h2>About</h2>
+        <div class="sidebar_description">
+          Technologist, perpetual student, teacher, continual incremental improvement.
+        </div>
+    </section>
+    <section class="sidebar_inner">
+        <!-- Recent posts widget -->
+        <h2 class="mt-4">Recent Posts</h2>
+        <ul class="flex-column">
+            <?php echo $recents ?>
+        </ul>
+    </section>
+    <section class="sidebar_inner">
+      <!-- Tags widget -->
+      <div>
+          <h2 class="mt-4 taxonomy" id="tags-section">Tags</h2>
+          <nav class="tags_nav">            
+            <?php
+              $output = null;
+              if (count($tags)) {
+                uasort($tags, "strnatcasecmp");
+                uksort($tags, "strnatcasecmp");
+                $output .= "<ul>\n";
+                foreach ($tags as $key=>$value) {
+                  $output .= "<a href=\"".$this->yellow->page->getBase()."/blog/".$this->yellow->toolbox->normaliseArguments("tag:$key")." \" class=\"post_tag button button_translucent\">".$key."<span class=\"button_tally\">".$value."</span></a>";
+                }
+                $output .= "\n";
+              }
+              echo $output;
+            ?>
+          </nav>
+      </div>
+  </section>
+</aside>

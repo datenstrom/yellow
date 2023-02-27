@@ -1,8 +1,8 @@
 <?php
-// Blog extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/blog
+// Blog extension, https://github.com/annaesvensson/yellow-blog
 
 class YellowBlog {
-    const VERSION = "0.8.19";
+    const VERSION = "0.8.23";
     public $yellow;         // access to API
     
     // Handle initialisation
@@ -35,14 +35,14 @@ class YellowBlog {
     public function getShorcutBlogauthors($page, $name, $text) {
         $output = null;
         list($startLocation, $entriesMax) = $this->yellow->toolbox->getTextArguments($text);
-        if (empty($startLocation)) $startLocation = $this->yellow->system->get("blogStartLocation");
-        if (strempty($entriesMax)) $entriesMax = $this->yellow->system->get("blogEntriesMax");
+        if (is_string_empty($startLocation)) $startLocation = $this->yellow->system->get("blogStartLocation");
+        if (is_string_empty($entriesMax)) $entriesMax = $this->yellow->system->get("blogEntriesMax");
         $blogStart = $this->yellow->content->find($startLocation);
         $pages = $this->getBlogPages($startLocation);
         $page->setLastModified($pages->getModified());
         $authors = $this->getMeta($pages, "author");
-        if (count($authors)) {
-            $authors = $this->yellow->lookup->normaliseUpperLower($authors);
+        if (!is_array_empty($authors)) {
+            $authors = $this->yellow->lookup->normaliseArray($authors);
             if ($entriesMax!=0 && count($authors)>$entriesMax) {
                 uasort($authors, "strnatcasecmp");
                 $authors = array_slice($authors, -$entriesMax, $entriesMax, true);
@@ -51,7 +51,7 @@ class YellowBlog {
             $output = "<div class=\"".htmlspecialchars($name)."\">\n";
             $output .= "<ul>\n";
             foreach ($authors as $key=>$value) {
-                $output .= "<li><a href=\"".$blogStart->getLocation(true).$this->yellow->toolbox->normaliseArguments("author:$key")."\">";
+                $output .= "<li><a href=\"".$blogStart->getLocation(true).$this->yellow->lookup->normaliseArguments("author:$key")."\">";
                 $output .= htmlspecialchars($key)."</a></li>\n";
             }
             $output .= "</ul>\n";
@@ -66,13 +66,13 @@ class YellowBlog {
     public function getShorcutBlogpages($page, $name, $text) {
         $output = null;
         list($startLocation, $entriesMax, $filterTag) = $this->yellow->toolbox->getTextArguments($text);
-        if (empty($startLocation)) $startLocation = $this->yellow->system->get("blogStartLocation");
-        if (strempty($entriesMax)) $entriesMax = $this->yellow->system->get("blogEntriesMax");
+        if (is_string_empty($startLocation)) $startLocation = $this->yellow->system->get("blogStartLocation");
+        if (is_string_empty($entriesMax)) $entriesMax = $this->yellow->system->get("blogEntriesMax");
         $pages = $this->getBlogPages($startLocation);
-        if (!empty($filterTag)) $pages->filter("tag", $filterTag);
+        if (!is_string_empty($filterTag)) $pages->filter("tag", $filterTag);
         $pages->sort("title");
         $page->setLastModified($pages->getModified());
-        if (count($pages)) {
+        if (!is_array_empty($pages)) {
             if ($entriesMax!=0) $pages->limit($entriesMax);
             $output = "<div class=\"".htmlspecialchars($name)."\">\n";
             $output .= "<ul>\n";
@@ -92,13 +92,13 @@ class YellowBlog {
     public function getShorcutBlogchanges($page, $name, $text) {
         $output = null;
         list($startLocation, $entriesMax, $filterTag) = $this->yellow->toolbox->getTextArguments($text);
-        if (empty($startLocation)) $startLocation = $this->yellow->system->get("blogStartLocation");
-        if (strempty($entriesMax)) $entriesMax = $this->yellow->system->get("blogEntriesMax");
+        if (is_string_empty($startLocation)) $startLocation = $this->yellow->system->get("blogStartLocation");
+        if (is_string_empty($entriesMax)) $entriesMax = $this->yellow->system->get("blogEntriesMax");
         $pages = $this->getBlogPages($startLocation);
-        if (!empty($filterTag)) $pages->filter("tag", $filterTag);
+        if (!is_string_empty($filterTag)) $pages->filter("tag", $filterTag);
         $pages->sort("published", false);
         $page->setLastModified($pages->getModified());
-        if (count($pages)) {
+        if (!is_array_empty($pages)) {
             if ($entriesMax!=0) $pages->limit($entriesMax);
             $output = "<div class=\"".htmlspecialchars($name)."\">\n";
             $output .= "<ul>\n";
@@ -118,12 +118,12 @@ class YellowBlog {
     public function getShorcutBlogrelated($page, $name, $text) {
         $output = null;
         list($startLocation, $entriesMax) = $this->yellow->toolbox->getTextArguments($text);
-        if (empty($startLocation)) $startLocation = $this->yellow->system->get("blogStartLocation");
-        if (strempty($entriesMax)) $entriesMax = $this->yellow->system->get("blogEntriesMax");
+        if (is_string_empty($startLocation)) $startLocation = $this->yellow->system->get("blogStartLocation");
+        if (is_string_empty($entriesMax)) $entriesMax = $this->yellow->system->get("blogEntriesMax");
         $pages = $this->getBlogPages($startLocation);
         $pages->similar($page->getPage("main"));
         $page->setLastModified($pages->getModified());
-        if (count($pages)) {
+        if (!is_array_empty($pages)) {
             if ($entriesMax!=0) $pages->limit($entriesMax);
             $output = "<div class=\"".htmlspecialchars($name)."\">\n";
             $output .= "<ul>\n";
@@ -143,14 +143,14 @@ class YellowBlog {
     public function getShorcutBlogtags($page, $name, $text) {
         $output = null;
         list($startLocation, $entriesMax) = $this->yellow->toolbox->getTextArguments($text);
-        if (empty($startLocation)) $startLocation = $this->yellow->system->get("blogStartLocation");
-        if (strempty($entriesMax)) $entriesMax = $this->yellow->system->get("blogEntriesMax");
+        if (is_string_empty($startLocation)) $startLocation = $this->yellow->system->get("blogStartLocation");
+        if (is_string_empty($entriesMax)) $entriesMax = $this->yellow->system->get("blogEntriesMax");
         $blogStart = $this->yellow->content->find($startLocation);
         $pages = $this->getBlogPages($startLocation);
         $page->setLastModified($pages->getModified());
         $tags = $this->getMeta($pages, "tag");
-        if (count($tags)) {
-            $tags = $this->yellow->lookup->normaliseUpperLower($tags);
+        if (!is_array_empty($tags)) {
+            $tags = $this->yellow->lookup->normaliseArray($tags);
             if ($entriesMax!=0 && count($tags)>$entriesMax) {
                 uasort($tags, "strnatcasecmp");
                 $tags = array_slice($tags, -$entriesMax, $entriesMax, true);
@@ -159,7 +159,7 @@ class YellowBlog {
             $output = "<div class=\"".htmlspecialchars($name)."\">\n";
             $output .= "<ul>\n";
             foreach ($tags as $key=>$value) {
-                $output .= "<li><a href=\"".$blogStart->getLocation(true).$this->yellow->toolbox->normaliseArguments("tag:$key")."\">";
+                $output .= "<li><a href=\"".$blogStart->getLocation(true).$this->yellow->lookup->normaliseArguments("tag:$key")."\">";
                 $output .= htmlspecialchars($key)."</a></li>\n";
             }
             $output .= "</ul>\n";
@@ -174,20 +174,20 @@ class YellowBlog {
     public function getShorcutBlogyears($page, $name, $text) {
         $output = null;
         list($startLocation, $entriesMax) = $this->yellow->toolbox->getTextArguments($text);
-        if (empty($startLocation)) $startLocation = $this->yellow->system->get("blogStartLocation");
-        if (strempty($entriesMax)) $entriesMax = $this->yellow->system->get("blogEntriesMax");
+        if (is_string_empty($startLocation)) $startLocation = $this->yellow->system->get("blogStartLocation");
+        if (is_string_empty($entriesMax)) $entriesMax = $this->yellow->system->get("blogEntriesMax");
         $blogStart = $this->yellow->content->find($startLocation);
         $pages = $this->getBlogPages($startLocation);
         $page->setLastModified($pages->getModified());
         $years = $this->getYears($pages, "published");
-        if (count($years)) {
+        if (!is_array_empty($years)) {
             if ($entriesMax!=0) $years = array_slice($years, -$entriesMax, $entriesMax, true);
             uksort($years, "strnatcasecmp");
             $years = array_reverse($years, true);
             $output = "<div class=\"".htmlspecialchars($name)."\">\n";
             $output .= "<ul>\n";
             foreach ($years as $key=>$value) {
-                $output .= "<li><a href=\"".$blogStart->getLocation(true).$this->yellow->toolbox->normaliseArguments("published:$key")."\">";
+                $output .= "<li><a href=\"".$blogStart->getLocation(true).$this->yellow->lookup->normaliseArguments("published:$key")."\">";
                 $output .= htmlspecialchars($key)."</a></li>\n";
             }
             $output .= "</ul>\n";
@@ -202,20 +202,20 @@ class YellowBlog {
     public function getShorcutBlogmonths($page, $name, $text) {
         $output = null;
         list($startLocation, $entriesMax) = $this->yellow->toolbox->getTextArguments($text);
-        if (empty($startLocation)) $startLocation = $this->yellow->system->get("blogStartLocation");
-        if (strempty($entriesMax)) $entriesMax = $this->yellow->system->get("blogEntriesMax");
+        if (is_string_empty($startLocation)) $startLocation = $this->yellow->system->get("blogStartLocation");
+        if (is_string_empty($entriesMax)) $entriesMax = $this->yellow->system->get("blogEntriesMax");
         $blogStart = $this->yellow->content->find($startLocation);
         $pages = $this->getBlogPages($startLocation);
         $page->setLastModified($pages->getModified());
         $months = $this->getMonths($pages, "published");
-        if (count($months)) {
+        if (!is_array_empty($months)) {
             if ($entriesMax!=0) $months = array_slice($months, -$entriesMax, $entriesMax, true);
             uksort($months, "strnatcasecmp");
             $months = array_reverse($months, true);
             $output = "<div class=\"".htmlspecialchars($name)."\">\n";
             $output .= "<ul>\n";
             foreach ($months as $key=>$value) {
-                $output .= "<li><a href=\"".$blogStart->getLocation(true).$this->yellow->toolbox->normaliseArguments("published:$key")."\">";
+                $output .= "<li><a href=\"".$blogStart->getLocation(true).$this->yellow->lookup->normaliseArguments("published:$key")."\">";
                 $output .= htmlspecialchars($this->yellow->language->normaliseDate($key))."</a></li>\n";
             }
             $output .= "</ul>\n";
@@ -244,7 +244,7 @@ class YellowBlog {
                 array_push($pagesFilter, $this->yellow->language->normaliseDate($pages->getFilter()));
             }
             $pages->sort("published", false);
-            if (!empty($pagesFilter)) {
+            if (!is_array_empty($pagesFilter)) {
                 $text = implode(" ", $pagesFilter);
                 $page->set("titleHeader", $text." - ".$page->get("sitename"));
                 $page->set("titleContent", $page->get("title").": ".$text);
@@ -268,7 +268,7 @@ class YellowBlog {
     
     // Handle content file editing
     public function onEditContentFile($page, $action, $email) {
-        if ($page->get("layout")=="blog") $page->set("pageNewLocation", $this->yellow->system->get("blogNewLocation"));
+        if ($page->get("layout")=="blog") $page->set("editNewLocation", $this->yellow->system->get("blogNewLocation"));
     }
 
     // Return blog pages
@@ -291,7 +291,7 @@ class YellowBlog {
         $class = "";
         if ($page->isExisting("tag")) {
             foreach (preg_split("/\s*,\s*/", $page->get("tag")) as $tag) {
-                $class .= " tag-".$this->yellow->toolbox->normaliseArguments($tag, false);
+                $class .= " tag-".$this->yellow->lookup->normaliseArguments($tag, false);
             }
         }
         return trim($class);

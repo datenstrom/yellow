@@ -1,0 +1,25 @@
+.me {
+    display: block;
+    margin: 2em auto;
+    margin-bottom: 3em;
+    width: 250px;
+    height: 250px;
+    border-radius: 50%;
+    position: relative;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+.about-header {
+    text-align: center;
+    padding-top: 1em;
+}
+
+.typed {
+  font-family: 'Waiting for the Sunrise', cursive; 
+  font-size:30px; 
+  margin: 10px 50px; 
+  letter-spacing: 6px; 
+  font-weight: bold;
+}
+

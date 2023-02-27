@@ -1,0 +1,17 @@
+<?php $this->yellow->layout("clarity-header") ?>
+<main>
+
+    <div class="<?php echo ($this->yellow->system->get('ClarityAlwaysSidebar') == 'true') ? 'grid-inverse wrap content' : 'grid wrap content' ?>">
+        <div class="posts" id="posts">
+            <!-- <h1><?php echo $this->yellow->page->getHtml("titleContent") ?></h1> -->
+            <div class="post_item">
+                <div class="excerpt_header">
+                    <?php echo $this->yellow->page->getContent() ?>
+                </div>
+            </div>
+        </div>
+        <?php //$this->yellow->layout("clarity-sidebar") ?>
+        <?php if ($this->yellow->system->get("ClarityAlwaysSidebar") == "true") $this->yellow->layout("clarity-sidebar") ?>
+    </div>
+</main>
+<?php $this->yellow->layout("clarity-footer") ?>

@@ -1,4 +1,4 @@
-/* Edit extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/edit */
+/* Edit extension, https://github.com/annaesvensson/yellow-edit */
 
 .yellow-bar {
     position: relative;
@@ -423,26 +423,26 @@
     font-size: 0.9em;
     line-height: 1.8;
 }
-#yellow-popup-emojiawesome {
+#yellow-popup-emoji {
     padding: 10px;
     width: 14em;
 }
-#yellow-popup-emojiawesome a {
+#yellow-popup-emoji a {
     padding: 0.2em;
 }
-#yellow-popup-emojiawesome .yellow-dropdown li {
+#yellow-popup-emoji .yellow-dropdown li {
     display: inline-block;
 }
-#yellow-popup-fontawesome {
+#yellow-popup-icon {
     padding: 10px;
     width: 13em;
 }
-#yellow-popup-fontawesome a {
+#yellow-popup-icon a {
     padding: 0.18em 0.3em;
     min-width: 1em;
     text-align: center;
 }
-#yellow-popup-fontawesome .yellow-dropdown li {
+#yellow-popup-icon .yellow-dropdown li {
     display: inline-block;
 }
 
@@ -556,13 +556,13 @@
     -webkit-mask: url("edit-stack.svg#table");
     mask: url("edit-stack.svg#table");
 }
-.yellow-icon-emojiawesome {
-    -webkit-mask: url("edit-stack.svg#emojiawesome");
-    mask: url("edit-stack.svg#emojiawesome");
+.yellow-icon-emoji {
+    -webkit-mask: url("edit-stack.svg#emoji");
+    mask: url("edit-stack.svg#emoji");
 }
-.yellow-icon-fontawesome {
-    -webkit-mask: url("edit-stack.svg#fontawesome");
-    mask: url("edit-stack.svg#fontawesome");
+.yellow-icon-icon {
+    -webkit-mask: url("edit-stack.svg#icon");
+    mask: url("edit-stack.svg#icon");
 }
 .yellow-icon-status {
     -webkit-mask: url("edit-stack.svg#status");
@@ -593,8 +593,8 @@
     mask: url("edit-stack.svg#close");
 }
 .yellow-icon-help {
-    -webkit-mask: url("edit-stack.svg#close");
-    mask: url("edit-stack.svg#close");
+    -webkit-mask: url("edit-stack.svg#help");
+    mask: url("edit-stack.svg#help");
 }
 .yellow-icon-logo {
     -webkit-mask: url("edit-stack.svg#logo");

@@ -1,0 +1,62 @@
+<?php $this->yellow->layout("header") ?>
+<main>
+    <div class="grid-inverse wrap content">
+        <ul class="posts" id="posts">
+            <?php if ($this->yellow->page->get("blogWithFilter")): ?>
+            <li class="post_item"><div class="excerpt_header"><h3 class="post_link" style="text-transform: uppercase;">
+                <span><svg class="icon" style="width: 2rem;height: 2rem;"><use xlink:href="#tag"></use></svg></span>
+                <?php echo preg_split("/\s*:\s*/", $this->yellow->page->getHtml("titleContent"))[1] ?>
+            </h3></div></li>
+            <?php endif ?>
+            <?php foreach ($this->yellow->page->getPages("blog") as $page): ?>
+            <li class="post_item">
+                <div class="excerpt">
+                    <div class="excerpt_header">
+                        <h3 class="post_link">
+                            <a href="<?php echo $page->getLocation(true) ?>" title="<?php echo $page->getHtml("title") ?></a>"><?php echo $page->getHtml("title") ?></a>
+                        </h3>
+                        <div class="post_meta">
+                            <span><svg class="icon"><use xlink:href="#author"></use></svg></span>
+                            <span class="post_date"> <?php echo $page->getHtml("author") ?> </span>
+                            <span> · <svg class="icon"><use xlink:href="#calendar"></use></svg></span>
+                            <span class="post_date"> <?php echo $page->getDateHtml("published") ?> ·</span>
+                            <span class="post_date"> 1 min read ·</span>
+                            <span>
+                            <div class="post_share">Share on:
+                                <a href="https://twitter.com/intent/tweet?text=<?php echo $page->getHtml("title") ?>&url=<?php echo $page->getLocation(true) ?>&tw_p=tweetbutton" class="twitter" title="<?php echo $page->getHtml("title") ?> Twitter" target="_blank" rel="nofollow">
+                                    <svg class="icon"><use xlink:href="#twitter"></use></svg>
+                                </a>
+                                <a href="https://www.facebook.com/sharer.php?u=<?php echo $page->getLocation(true) ?>&t=<?php echo $page->getHtml("title") ?>" class="facebook" title="<?php echo $page->getHtml("title") ?> Facebook" target="_blank" rel="nofollow">
+                                    <svg class="icon"><use xlink:href="#facebook"></use></svg>
+                                </a>
+                                <a href="#linkedinshare" id = "linkedinshare" class="linkedin" title="LinkedIn" rel="nofollow">
+                                    <svg class="icon"><use xlink:href="#linkedin"></use></svg>
+                                </a>
+                                <a href="{{ .Permalink }}" title="Copy Link" class="link link_yank">
+                                    <svg class="icon"><use xlink:href="#copy"></use></svg>
+                                </a>
+                                </div>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="excerpt_footer">
+                        <article class="post_content">
+                            <?php echo $this->yellow->toolbox->createTextDescription($page->getContent(), 0, false, "<!--more-->", "<a href=\"".$page->getLocation(true)."\">".$this->yellow->language->getTextHtml("blogMore")."</a>") ?>
+                            <hr>
+                            <div class="post_meta" style="display: flex;">
+                                <span style="margin-bottom: 0;"><svg class="icon"><use xlink:href="#tag"></use></svg></span>
+                                <?php if ($page->isExisting("tag")): ?>
+                                    <?php $tagCounter = 0; foreach (preg_split("/\s*,\s*/", $page->get("tag")) as $tag) { if (++$tagCounter>0)  echo "<a href=\"".$this->yellow->page->getLocation(true).$this->yellow->toolbox->normaliseArguments("tag:$tag")."\" class=\"post_tag button button_translucent\">".htmlspecialchars($tag)."</a>"; } ?>
+                                <?php endif ?>
+                            </div>
+                        </article>
+                    <div>
+                </div>
+            </li>
+            <?php endforeach ?>
+            <li><?php $this->yellow->layout("pagination", $this->yellow->page->getPages("blog")) ?></li>
+        </ul>
+        <?php $this->yellow->layout("clarity-sidebar") ?>
+    </div>
+</main>
+<?php $this->yellow->layout("footer") ?>

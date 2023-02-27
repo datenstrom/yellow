@@ -1,0 +1,32 @@
+<?php $this->yellow->layout("homepage-header") ?>
+<!-- 
+
+DESIGN INSPIRATION: 
+https://dribbble.com/shots/9347405-Finding-yourself
+
+-->
+<div class="navbar-container">
+    
+  </div>
+  <div class="full-width">
+  <div class="hero-container">
+    <div class="hero-text-container">
+      
+        <div class="wrapper">
+          <div class="typing-demo">
+            <?php echo $this->yellow->page->getHtml("titleContent") ?>
+          </div>
+        </div>
+        
+    </div>
+    
+    
+  </div>
+</div>
+
+<div class="content">
+<div class="main" role="main">
+<?php echo $this->yellow->page->getContent() ?>
+</div>
+</div>
+<?php $this->yellow->layout("footer") ?>

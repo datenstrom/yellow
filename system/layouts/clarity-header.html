@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="<?php echo $this->yellow->page->getHtml("language") ?>">
+<head>
+<title><?php echo $this->yellow->page->getHtml("titleHeader") ?></title>
+<meta charset="utf-8" />
+<meta name="description" content="<?php echo $this->yellow->page->getHtml("description") ?>" />
+<meta name="author" content="<?php echo $this->yellow->page->getHtml("author") ?>" />
+<meta name="generator" content="Datenstrom Yellow" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<?php echo $this->yellow->page->getExtra("header") ?>
+</head>
+<body id="documentTop">
+    <header class="nav_header" role="banner">
+        <nav class="nav">
+            <a class="nav_brand nav_item" href="<?php echo $this->yellow->page->getBase(true)."/" ?>">
+                <img src="<?php echo $this->yellow->page->getBase(true) ?>/media/themes/clarity.png" class="logo" alt="logo">
+                <div class="nav_close">
+                    <div>
+                        <svg class="icon">
+                            <use xlink:href="#open-menu"></use>
+                        </svg>
+                        <svg class="icon">
+                            <use xlink:href="#closeme"></use>
+                        </svg>
+                    </div>
+                </div>
+            </a>
+            <?php $this->yellow->layout("navigation") ?>
+        </nav>        
+    </header>

@@ -1,0 +1,26 @@
+<?php list($name, $pages) = $this->yellow->getLayoutArguments() ?>
+<?php if ($pages->isPagination()): ?>
+    <ul class="pagination pagination-default">
+        <li class="page-item<?php if (!$pages->getPaginationPrevious()) echo " disabled" ?>" <?php if (!$pages->getPaginationPrevious()) echo " style=\"pointer-events: none\"" ?>>
+            <a class="page-link" href="<?php echo $pages->getPaginationPrevious() ?>"><svg class="icon rotate-270"><use xlink:href="#arrow"></use></svg></a>
+        </li>
+        <li class="page-item<?php if (!$pages->getPaginationPrevious()) echo " disabled" ?>" <?php if (!$pages->getPaginationPrevious()) echo " style=\"pointer-events: none\"" ?>>
+            <a class="page-link" href="<?php echo $pages->getPaginationPrevious() ?>"><svg class="icon rotate-270"><use xlink:href="#arrow"></use></svg></a>
+        </li>
+        <?php if($pages->getPaginationCount() > 1): ?>
+        <?php for($i = 1; $i <= $pages->getPaginationCount(); ++$i): ?>
+        <li class="page-item<?php if ($i == $pages->getPaginationNumber()) echo " active" ?>">
+            <a class="page-link" href="<?php echo $pages->getPaginationLocation(true, $i) ?>"><?php echo $i ?></a>
+        </li>
+        <?php endfor ?>
+        <?php endif ?>
+        <li class="page-item<?php if (!$pages->getPaginationNext()) echo " disabled" ?>" <?php if (!$pages->getPaginationNext()) echo " style=\"pointer-events: none\"" ?>>
+            <a class="page-link" href="<?php echo $pages->getPaginationNext() ?>" role="button"><svg class="icon rotate-90"><use xlink:href="#arrow"></use></svg></a>
+        </li>
+        <li class="page-item<?php if (!$pages->getPaginationNext()) echo " disabled" ?>" <?php if (!$pages->getPaginationNext()) echo " style=\"pointer-events: none\"" ?>>
+            <a class="page-link" href="<?php echo $pages->getPaginationNext() ?>" role="button"><svg class="icon rotate-90"><use xlink:href="#arrow"></use></svg></a>
+        </li>
+    </ul>
+<?php endif ?>
+
+

@@ -1,0 +1,85 @@
+<?php $this->yellow->layout("header") ?>
+<main>
+    <div class="grid-inverse wrap content">
+	    My thoughts!
+        <ul class="posts" id="posts">
+            <li class="post_item">
+                <div class="excerpt">
+                    <div class="excerpt_header">
+                        <h3 class="post_link">
+                            <a href="<?php echo $this->yellow->page->getLocation(true) ?>" title="<?php echo $this->yellow->page->getHtml("titleContent") ?></a>"><?php echo $this->yellow->page->getHtml("titleContent") ?></a>
+                        </h3>
+                        <div class="post_meta">
+                            <span><svg class="icon"><use xlink:href="#author"></use></svg></span>
+                            <span class="post_date"> <?php echo $this->yellow->page->get("author") ?> </span>
+                            <span> · <svg class="icon"><use xlink:href="#calendar"></use></svg></span>
+                            <span class="post_date"> <?php echo $this->yellow->page->getDateHtml("published") ?> ·</span>
+                            <span class="post_date"> 1 min read ·</span>
+                            <span>
+                            <div class="post_share">Share on:
+                                <a href="https://twitter.com/intent/tweet?text=<?php echo $this->yellow->page->getHtml("titleContent") ?>&url=<?php echo $this->yellow->page->getLocation(true) ?>&tw_p=tweetbutton" class="twitter" title="<?php echo $this->yellow->page->getHtml("titleContent") ?> Twitter" target="_blank" rel="nofollow">
+                                    <svg class="icon"><use xlink:href="#twitter"></use></svg>
+                                </a>
+                                <a href="https://www.facebook.com/sharer.php?u=<?php echo $this->yellow->page->getLocation(true) ?>&t=<?php echo $this->yellow->page->getHtml("titleContent") ?>" class="facebook" title="<?php echo $this->yellow->page->getHtml("titleContent") ?> Facebook" target="_blank" rel="nofollow">
+                                    <svg class="icon"><use xlink:href="#facebook"></use></svg>
+                                </a>
+                                <a href="#linkedinshare" id = "linkedinshare" class="linkedin" title="LinkedIn" rel="nofollow">
+                                    <svg class="icon"><use xlink:href="#linkedin"></use></svg>
+                                </a>
+                                <a href="{{ .Permalink }}" title="Copy Link" class="link link_yank">
+                                    <svg class="icon"><use xlink:href="#copy"></use></svg>
+                                </a>
+                                </div>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="excerpt_footer">
+                        <article class="post_content">
+                            <?php echo $this->yellow->page->getContent() ?>
+                            <hr>
+                            <?php if ($this->yellow->page->isExisting("tag")): ?>
+                            <div class="post_meta" style="display: flex;">
+                                <span style="margin-bottom: 0;"><svg class="icon"><use xlink:href="#tag"></use></svg></span>
+                                <?php $tagCounter = 0; foreach (preg_split("/\s*,\s*/", $this->yellow->page->get("tag")) as $tag) { if (++$tagCounter>0) echo "<a href=\"".$this->yellow->page->getLocation(true).$this->yellow->toolbox->normaliseArguments("tag:$tag")."\" class=\"post_tag button button_translucent\">".htmlspecialchars($tag)."</a>"; } ?>
+                            </div>
+                            <?php endif ?>
+                            <hr>
+                            <div class="prev-next-post pure-g" style="display: flex;">
+                                <?php $pages = $this->yellow->content->index()->filter("layout", "blog")->reverse() ?>
+                                <?php $page = $this->yellow->page ?>
+                                <div class="pure-u-1-24" style="text-align: left; width: 4.1667%;">
+                                    <?php if ($pages->getPageNext($page)): ?>
+                                    <a href="<?php echo $pages->getPageNext($page)->getBase().$pages->getPageNext($page)->getLocation() ?>"><svg class="icon rotate-270" style="fill: #0077b8;"><use xlink:href="#arrow"></use></svg></a>
+                                    <?php endif ?>
+                                </div>
+                                <div class="pure-u-10-24" style="width: 41.6667%;">
+                                    <?php if ($pages->getPageNext($page)): ?>
+                                    <a href="<?php echo $pages->getPageNext($page)->getBase().$pages->getPageNext($page)->getLocation() ?>"><?php echo $pages->getPageNext($page)->getHtml("title") ?></a>
+                                    <?php endif ?>
+                                </div>
+                                <div class="pure-u-2-24" style="width: 8.3333%;">&nbsp;</div>
+                                <div class="pure-u-10-24" style="text-align: right; width: 41.6667%">
+                                    <?php if ($pages->getPagePrevious($page)): ?>
+                                    <a href="<?php echo $pages->getPagePrevious($page)->getBase().$pages->getPagePrevious($page)->getLocation() ?>"><?php echo $pages->getPagePrevious($page)->getHtml("title") ?></a>
+                                    <?php endif ?>
+                                </div>
+                                <div class="pure-u-1-24" style="text-align: right; width: 4.1667%;">
+                                    <?php if ($pages->getPagePrevious($page)): ?>
+                                    <a href="<?php echo $pages->getPagePrevious($page)->getBase().$pages->getPagePrevious($page)->getLocation() ?>"><svg class="icon rotate-90" style="fill: #0077b8;"><use xlink:href="#arrow"></use></svg></a>
+                                    <?php endif ?>
+                                </div>
+                            </div>
+                        </article>
+                    <div>
+                </div>
+            </li>
+            <li class="post_item">
+                <article class="post_content">
+                </article>
+            </li>
+            <li class="post_item"><?php echo $this->yellow->page->getExtra("comments") ?></li>
+        </ul>
+        <?php $this->yellow->layout("clarity-sidebar") ?>
+    </div>
+</main>
+<?php $this->yellow->layout("footer") ?>

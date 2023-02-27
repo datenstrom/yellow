@@ -1,8 +1,8 @@
 <?php
-// Bundle extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/bundle
+// Bundle extension, https://github.com/annaesvensson/yellow-bundle
 
 class YellowBundle {
-    const VERSION = "0.8.27";
+    const VERSION = "0.8.29";
     public $yellow;         // access to API
 
     // Handle initialisation
@@ -83,7 +83,7 @@ class YellowBundle {
                 unset($data[$key]);
             }
         }
-        if (!empty($fileNames)) {
+        if (!is_array_empty($fileNames)) {
             $id = $this->getBundleId($fileNames, $modified);
             $fileNameBundle = $this->yellow->system->get("coreExtensionDirectory")."bundle-$id.min.$type";
             $locationBundle = $base.$this->yellow->system->get("coreExtensionLocation")."bundle-$id.min.$type";
@@ -91,7 +91,7 @@ class YellowBundle {
             if ($type=="css") {
                 $data[$locationBundle] = "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"".htmlspecialchars($locationBundle)."\" />\n";
             } else {
-                $data[$locationBundle] = "<script type=\"text/javascript\" ${rawDataAttribute}src=\"".htmlspecialchars($locationBundle)."\"></script>\n";
+                $data[$locationBundle] = "<script type=\"text/javascript\" {$rawDataAttribute}src=\"".htmlspecialchars($locationBundle)."\"></script>\n";
             }
             if ($this->yellow->toolbox->getFileModified($fileNameBundle)!=$modified) {
                 $fileDataBundle = "";
@@ -99,7 +99,7 @@ class YellowBundle {
                     $fileData = $this->yellow->toolbox->readFile($fileName);
                     $fileData = $this->processBundleConvert($scheme, $address, $base, $fileData, $fileName, $type);
                     $fileData = $this->processBundleMinify($scheme, $address, $base, $fileData, $fileName, $type);
-                    if (!empty($fileDataBundle)) $fileDataBundle .= "\n\n";
+                    if (!is_string_empty($fileDataBundle)) $fileDataBundle .= "\n\n";
                     $fileDataBundle .= $fileData;
                 }
                 if ($type=="css") $fileDataBundle = $this->normaliseCss($fileDataBundle);

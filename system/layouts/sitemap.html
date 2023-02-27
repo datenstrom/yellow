@@ -1,0 +1,16 @@
+<?php $this->yellow->layout("header") ?>
+<div class="content">
+<div class="main" role="main">
+<h1><?php echo $this->yellow->page->getHtml("titleContent") ?></h1>
+<ul>
+<?php $section = $sectionNew = "" ?>
+<?php foreach ($this->yellow->page->getPages("sitemap")->paginate($this->yellow->system->get("sitemapPaginationLimit")) as $page): ?>
+<?php $sectionNew = htmlspecialchars(strtoupperu(substru($page->get("title"), 0, 1))) ?>
+<?php if ($section!=$sectionNew) { $section = $sectionNew; echo "</ul><h2>$section</h2><ul>\n"; } ?>
+<li><a href="<?php echo $page->getLocation(true) ?>"><?php echo $page->getHtml("title") ?></a></li>
+<?php endforeach ?>
+</ul>
+<?php $this->yellow->layout("pagination", $this->yellow->page->getPages("sitemap")) ?>
+</div>
+</div>
+<?php $this->yellow->layout("footer") ?>

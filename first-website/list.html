@@ -1,0 +1,224 @@
+{*
+//$perms = associative array of permissions
+//$record_editable = True if the current record is editable
+//$can_add_new_related_record
+//$can_add_existing_related_record
+//$link,$query (for new related record)
+//$link2, $query2 (for existing related record)
+//$link3, $query3 (for import related records)
+//$importTable - Dataface_Table of the destination table.
+//$related_list_actions - 
+*}
+ 		
+{if !$relatedList->hideActions and ($record_editable or $can_add_new_related_record or $can_add_existing_related_record)}
+	
+	<div id="relatedActionsWrapper" class="contentActions">
+		<ul id="relatedActions">
+			{if  $relatedList->_relationship->supportsAddNew() and $can_add_new_related_record}
+				<li id="addNew">
+					<a id="add_new_related_record" href="{$new_related_record_link|escape}">
+						{translate id="scripts.Dataface.RelatedList.toHtml.LABEL_ADD_NEW_RELATED_RECORD" relationship=$relationship_label|escape}
+							Add New {$relationship_label|escape} Record
+						{/translate}
+					</a>
+				</li>
+			{/if}
+			{if $relatedList->_relationship->supportsAddExisting() and $can_add_existing_related_record}
+				  <li id="addExisting">
+					  <a id="add_existing_related_record" href="{$existing_related_record_link|escape}">
+						  {translate id="scripts.Dataface.RelatedList.toHtml.LABEL_ADD_EXISTING_RELATED_RECORD" relationship=$relationship_label|escape}
+							Add Existing {$relationship_label|escape} Record
+						  {/translate}
+					  </a>
+				   </li>
+			{/if}
+			{if $import_related_records_query and $importTable->getImportFilters()|@count > 0 }
+				<li id="import">
+					<a id="import_related_records" href="{$link3|escape}">
+						{translate id="scripts.Dataface.RelatedList.toHtml.LABEL_IMPORT_RELATED_RECORDS" relationship=$relationship_label|escape}
+							Import {$relationship_label|escape} Records
+						{/translate}
+					</a>
+				</li>
+			{/if}
+		</ul>
+	</div>
+	
+{/if}
+{if  !$relatedList->hideActions }
+
+	<div class="result-tools" style="float:left">
+		<script language="javascript" type="text/javascript" src="{$searchSrc|escape}"></script>
+		<a href="#" onclick="Dataface.RelatedList.showSearch('{$relname|escape}', document.getElementById('related_find_wrapper')); return false;" title="Filter these results"><img src="{$imgIcon|escape}" alt="Filter" /></a>
+		
+	</div>
+
+
+{/if}
+{if !$relatedList->hideActions}
+	<div class="resultlist-controller related-list-controller">
+		{capture assign="relatedResultController"}
+			{include file="xataface/RelatedList/result_controller.html"}
+			
+			<div class="result-list-actions">
+				<ul class="icon-only" id="result-list-actions">
+	
+					{foreach from=$related_list_actions item=action}
+						
+						
+						<li id="result-list-actions-{$action.id|escape}" class="plain">
+						
+							<a id="result-list-actions-{$action.id|escape}-link" href="{$action.url|escape}"
+								{if $action.onclick}
+									onclick="{$action.onclick|escape}"
+								{/if}
+							   accesskey="e" title="{$action.description|escape}">
+							   <img id="result-list-actions-{$action.id|escape}-icon" src="{$action.icon|escape}" alt="{$action.label|escape}"/>                   
+								<span class="action-label">{$action.label|escape}</span>
+							</a>
+						</li>
+		
+					
+					{/foreach}
+				
+				
+				
+				</ul>
+			
+			</div>
+		{/capture}
+		{$relatedResultController}
+
+	</div>
+{/if}
+
+{if $treetable}
+	{$treetable}
+{else}
+	{$moveUpForm}
+	{if !$relatedList->hideActions and $relatedList->_where}
+		{assign var=relatedSearchKey value="-related:search"}
+		<div>Showing matches for query <em>&quot;{$filterQuery.$relatedSearchKey|escape}&quot;</em>
+		<a href="{$app->url('-related:search=')|escape}" title="Remove this filter to show all records in this relationship">
+			<img src="{$smarty.const.DATAFACE_URL|escape}/images/delete.gif" alt="Remove filter" />
+		</a>
+		</div>
+	{/if}
+	<div style="display:none" id="related_find_wrapper"></div>
+	{if $records|@count > 0 }
+		{$related_table_html}
+		
+		
+		{if !$relatedList->hideActions }
+			{$selected_actions_form}
+			
+			{if $selected_actions|@count > 0}
+				<div id="selected-actions">
+					{translate id="scripts.GLOBAL.LABEL_WITH_SELECTED"}With Selected{/translate}: 
+					<ul class="selectedActionsMenu" id="result_list-selectedActionsMenu">
+						{foreach from=$selected_actions item=action}
+					
+							<li id="action-{$action.id|escape}"><a href="{$action.url|escape}" title="{$action.description|escape}">{$action.label|escape}</a></li>
+
+						{/foreach}				
+			
+			
+					</ul>
+				</div>
+			{/if}
+
+			<div class="resultlist-controller">
+				{$relatedResultController}
+			</div>
+			
+			<script language="javascript" src="{$prototype_url|escape}"></script>
+			<script language="javascript" src="{$scriptaculous_url|escape}"></script>
+			<script language="javascript" src="{$effects_url|escape}"></script>
+			<script language="javascript" src="{$dragdrop_url|escape}"></script>
+			<script>{literal}
+				function removeUnauthorizedColumns(){
+					var relatedList = document.getElementById('relatedList');
+					var trs = relatedList.getElementsByTagName('tr');
+					var viewableColumns = [];
+					var numCols = 0;
+					for (var i=0; i<trs.length; i++){
+						var tr = trs[i];
+						var tds = tr.getElementsByTagName('td');
+						for (var j=0; j<tds.length; j++){
+							var td = tds[j];
+							if ( td.className.indexOf('viewableColumn') >= 0 ){
+								viewableColumns[j] = true;
+							}
+							numCols = j;
+						}
+					}
+					for (var j=viewableColumns.length; j<=numCols; j++){
+						viewableColumns[j] = false;
+					}
+					
+					
+					for (var i=0; i<trs.length; i++){
+						var tds = trs[i].getElementsByTagName('td');
+						if ( tds.length <= 0 ){
+							var tds = trs[i].getElementsByTagName('th');
+						}
+						
+						for (var j=0; j<viewableColumns.length; j++){
+							if ( !viewableColumns[j] ){
+								tds[j].style.display = 'none';
+							}
+						}
+						
+					}
+				}
+				removeUnauthorizedColumns();
+				
+				
+				if ( {/literal}{$sortable_js}{literal} ){
+					Sortable.create("relatedList-body",
+							{
+								dropOnEmpty:true,
+								constraint:false, 
+								//handle:'move-handle',
+								tag:'tr',
+								onUpdate: function(container){
+									
+									var params = Sortable.serialize('relatedList-body');
+									params += '&'+window.location.search.substring(1);
+									
+									params += '&-action=reorder_related_records';
+									
+									new Ajax.Request(
+										DATAFACE_SITE_HREF, {
+											method: 'post', 
+											parameters: params, 
+											onSuccess: function(transport){
+												
+												//document.getElementById('details-controller').innerHTML = transport.responseText;
+											},
+											onFailure:function(){
+												alert('Failed to sort records.');
+											}
+										}
+									);
+									
+								}
+								//only:'movable'
+							});
+						//Sortable.create("dataface-sections-main",
+						//{dropOnEmpty:true,constraint:false, handle:'movable-handle',tag:'div',only:'movable', onUpdate:updateSections});
+				}	
+			
+			{/literal}</script>
+			
+
+		{/if}
+	
+	{else}
+	
+		<p>{translate id="scripts.GLOBAL.NO_RECORDS_MATCHED_REQUEST"}No records matched your request.{/translate}</p>
+	{/if}
+
+	
+		
+{/if}

@@ -1,4 +1,4 @@
-// Edit extension, https://github.com/datenstrom/yellow-extensions/tree/master/source/edit
+// Edit extension, https://github.com/annaesvensson/yellow-edit
 
 var yellow = {
     onLoad: function(e) { yellow.edit.load(e); },
@@ -693,7 +693,13 @@ yellow.edit = {
     // Process close
     processClose: function() {
         this.hidePane(this.paneId);
-        if (yellow.page.action=="login") window.open(yellow.page.pageReadUrl, "_self");
+        if (yellow.page.action=="login") {
+            var url = yellow.system.coreServerScheme+"://"+
+                yellow.system.coreServerAddress+
+                yellow.system.coreServerBase+
+                yellow.page.location;
+            window.open(url, "_self");
+        }
     },
     
     // Create popup
@@ -734,25 +740,25 @@ yellow.edit = {
                 "<li><a href=\"#\" id=\"yellow-popup-list-tl\" data-action=\"toolbar\" data-status=\"tl\">"+this.getText("ToolbarTl")+"</a></li>"+
                 "</ul>";
                 break;
-            case "yellow-popup-emojiawesome":
+            case "yellow-popup-emoji":
                 var rawDataEmojis = "";
-                if (yellow.system.emojiawesomeToolbarButtons && yellow.system.emojiawesomeToolbarButtons!="none") {
-                    var tokens = yellow.system.emojiawesomeToolbarButtons.split(" ");
+                if (yellow.system.emojiToolbarButtons && yellow.system.emojiToolbarButtons!="none") {
+                    var tokens = yellow.system.emojiToolbarButtons.split(" ");
                     for (var i=0; i<tokens.length; i++) {
                         var token = tokens[i].replace(/[\:]/g,"");
                         var className = token.replace("+1", "plus1").replace("-1", "minus1").replace(/_/g, "-");
-                        rawDataEmojis += "<li><a href=\"#\" id=\"yellow-popup-list-"+yellow.toolbox.encodeHtml(token)+"\" data-action=\"toolbar\" data-status=\"text\" data-arguments=\":"+yellow.toolbox.encodeHtml(token)+":\"><i class=\"ea ea-"+yellow.toolbox.encodeHtml(className)+"\"></i></a></li>";
+                        rawDataEmojis += "<li><a href=\"#\" id=\"yellow-popup-list-"+yellow.toolbox.encodeHtml(token)+"\" data-action=\"toolbar\" data-status=\"text\" data-arguments=\":"+yellow.toolbox.encodeHtml(token)+":\"><i class=\"emoji emoji-"+yellow.toolbox.encodeHtml(className)+"\"></i></a></li>";
                     }
                 }
                 elementDiv.innerHTML = "<ul class=\"yellow-dropdown yellow-dropdown-menu\">"+rawDataEmojis+"</ul>";
                 break;
-            case "yellow-popup-fontawesome":
+            case "yellow-popup-icon":
                 var rawDataIcons = "";
-                if (yellow.system.fontawesomeToolbarButtons && yellow.system.fontawesomeToolbarButtons!="none") {
-                    var tokens = yellow.system.fontawesomeToolbarButtons.split(" ");
+                if (yellow.system.iconToolbarButtons && yellow.system.iconToolbarButtons!="none") {
+                    var tokens = yellow.system.iconToolbarButtons.split(" ");
                     for (var i=0; i<tokens.length; i++) {
                         var token = tokens[i].replace(/[\:]/g,"");
-                        rawDataIcons += "<li><a href=\"#\" id=\"yellow-popup-list-"+yellow.toolbox.encodeHtml(token)+"\" data-action=\"toolbar\" data-status=\"text\" data-arguments=\":"+yellow.toolbox.encodeHtml(token)+":\"><i class=\"fa "+yellow.toolbox.encodeHtml(token)+"\"></i></a></li>";
+                        rawDataIcons += "<li><a href=\"#\" id=\"yellow-popup-list-"+yellow.toolbox.encodeHtml(token)+"\" data-action=\"toolbar\" data-status=\"text\" data-arguments=\":"+yellow.toolbox.encodeHtml(token)+":\"><i class=\"icon "+yellow.toolbox.encodeHtml(token)+"\"></i></a></li>";
                     }
                 }
                 elementDiv.innerHTML = "<ul class=\"yellow-dropdown yellow-dropdown-menu\">"+rawDataIcons+"</ul>";
@@ -1018,7 +1024,7 @@ yellow.edit = {
 
     // Check if element is expandable
     isExpandable: function(name) {
-        return (name=="format" || name=="heading" || name=="list" || name=="emojiawesome" || name=="fontawesome");
+        return (name=="format" || name=="heading" || name=="list" || name=="emoji" || name=="icon");
     },
     
     // Check if extension exists

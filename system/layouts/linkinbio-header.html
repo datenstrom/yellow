@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="<?php echo $this->yellow->page->getHtml("language") ?>">
+<head>
+<title><?php echo $this->yellow->page->getHtml("titleHeader") ?></title>
+<meta charset="utf-8" />
+<meta name="description" content="<?php echo $this->yellow->page->getHtml("description") ?>" />
+<meta name="author" content="<?php echo $this->yellow->page->getHtml("author") ?>" />
+<meta name="generator" content="Datenstrom Yellow" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="me" href="https://social.lifeofpablo.com/@pablo"></a>
+<script src="https://kit.fontawesome.com/2ad0b8bc3e.js" crossorigin="anonymous"></script>
+<?php echo $this->yellow->page->getExtra("header") ?>
+</head>
+<body>
+<div class="<?php echo "page layout-".$this->yellow->page->getHtml("layout") ?>">
+    <link rel="stylesheet" href="media/css/brands.css">
+<div class="header" role="banner">
+<div class="sitename">
+<h1><a href="<?php echo $this->yellow->page->getBase(true)."/" ?>"><i class="sitename-logo"></i><!-- <?php echo $this->yellow->page->getHtml("sitename") ?> !--></a></h1>
+<?php echo $this->yellow->page->getPage("header")->getContent() ?>
+</div>
+<div class="sitename-banner"></div>
+<!-- <?php $this->yellow->layout("navigation") ?> !-->
+</div>

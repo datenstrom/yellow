@@ -1,10 +1,57 @@
 <div class="footer" role="contentinfo">
+    <?php echo $this->yellow->page->getExtra("footer") ?>
+
+<div class="footer-container">
+    
+    <div class="row">
+        <div class="footer-col">
+            <h4>My Other Sites</h4>
+            <ul>
+                <li><a href="https://lifeofpablo.com/korea"> Korea Trip 2022</a></li>
+                <li><a href="https://pmorales.hotglue.me/">My Hot Glue Site</a></li>
+                <li><a href="https://lifeofpablo.com/social">Mastodon</a></li>
+            </ul>
+        </div>
+       <div class="footer-col">
+            <h4>Privacy & Cookies</h4>
+            <ul>
+                <li><a href="https://lifeofpablo.com/privacy">Privacy Policy</a></li>
+                <li><a href="https://lifeofpablo.com/cookie-policy">Cookie Policy</a></li>
+                <!-- <li><a href="#">returns</a></li>
+                <li><a href="#">order status</a></li>
+                <li><a href="#">payment options</a></li>-->
+            </ul>
+        </div> 
+         <div class="footer-col">
+            <h4>Getting Around</h4>
+            <ul>
+                <li><a href="/sitemap">Sitemap</a></li>
+                <li><a href="/random-page">Random Page</a></li>
+                <li><a href="/complaint-form">File a Formal Complaint</a></li>
+            </ul>
+        </div>
+        <div class="footer-col">
+            <h4>Follow Me</h4>
+            <div class="social-links">
+                <a href="https://github.com/pmoralesgarcia"><i class="fa-brands fa-github"></i></i></a> 
+                <a href="https://twitter.com/thepablomorales"><i class="fab fa-twitter"></i></a>
+                <a href="https://instagram.com/thepablomorales"><i class="fab fa-instagram"></i></a>
+                <a href="https://www.linkedin.com/in/pmoralesgarcia"><i class="fab fa-linkedin-in"></i></a>
+                <a href="https://lifeofpablo.com/linkinbio"><i class="fa-solid fa-plus"></i>More</a>
+            </div>
+        </div>
+    </div>
+</div>
+<div><i class="fa-regular fa-copyright"></i> 2013-<script>document.write(new Date().getFullYear())</script> Pablo Morales. All Rights Reserved</div>
+
+<div id="wcb" class="carbonbadge"></div>
+<div><script src="https://unpkg.com/website-carbon-badges@1.1.3/b.min.js" defer></script></div></div>
 <div class="siteinfo">
 <?php echo $this->yellow->page->getPage("footer")->getContent() ?>
 </div>
 <div class="siteinfo-banner"></div>
 </div>
 </div>
-<?php echo $this->yellow->page->getExtra("footer") ?>
+
 </body>
 </html>

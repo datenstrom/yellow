@@ -1,0 +1,19 @@
+/* Backtotop extension, https://github.com/GiovanniSalmeri/yellow-backtotop */
+
+a#backtotop {
+    background-color: gray;
+    color: white;
+    font-weight: normal;
+    padding: 5px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    position: fixed;
+    z-index: 9999;
+    bottom: 20px;
+    right: 30px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 500ms, visibility 500ms;
+    -webkit-transition: opacity 500ms, visibility 500ms;
+    --screens: 1; /* vertical scroll before the link appears */
+}

@@ -1,0 +1,44 @@
+<?php $this->yellow->layout("header") ?>
+<main>
+    <div class="grid-inverse wrap content">     
+        <ul class="posts" id="posts">
+            <li class="post_item">
+                <div class="excerpt_header">
+                    <h3><?php echo $this->yellow->page->getHtml("titleContent") ?></h3>
+                </div>
+                <div class="excerpt_footer">
+                    <form class="search-form" action="<?php echo $this->yellow->page->getLocation(true) ?>" method="post">
+                        <div class="search_wrapper">
+                            <input class="search_input" type="text" name="query" value="<?php echo $this->yellow->page->getRequestHtml("query") ?>"<?php echo $this->yellow->page->get("status")=="none" ? " autofocus=\"autofocus\"" : "" ?> />
+                            <button type="submit" class="search_btn"><svg class="icon search_btn" style="width: 36px;height: 30px;"><use xlink:href="#search"></use></svg></button>
+                            <input type="hidden" name="clean-url" />    
+                        </div>
+                    </form>
+                </div>
+            </li>
+            <?php if (count($this->yellow->page->getPages("search"))): ?>
+            <?php foreach ($this->yellow->page->getPages("search") as $page): ?>
+            <li class="post_item">
+                <div class="excerpt">
+                    <div class="excerpt_header"><h2><a href="<?php echo $page->getLocation(true) ?>"><?php echo $page->getHtml("title") ?></a></h2></div>
+                    <div class="excerpt_footer"><?php echo htmlspecialchars($this->yellow->toolbox->createTextDescription($page->getContent(false, 4096), $this->yellow->system->get("searchPageLength"))) ?></div>
+                </div>
+            </li>
+            <?php endforeach ?>
+            <?php elseif ($this->yellow->page->get("status")!="none"): ?>
+            <li class="post_item">   
+                <div class="excerpt">
+                    <div class="excerpt_header">
+                        <p><?php echo $this->yellow->language->getTextHtml("searchResults".ucfirst($this->yellow->page->get("status"))) ?><p>
+                    </div>
+                </div>
+            </li>
+            <?php endif ?>
+            <li><?php $this->yellow->layout("pagination", $this->yellow->page->getPages("search")) ?></li>
+        
+
+        </ul>
+        <?php $this->yellow->layout("clarity-sidebar") ?>
+    </div>
+</main>
+<?php $this->yellow->layout("footer") ?>
