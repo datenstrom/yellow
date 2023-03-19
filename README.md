@@ -1,6 +1,6 @@
 <p align="right"><a href="README-de.md">Deutsch</a> &nbsp; <a href="README.md">English</a> &nbsp; <a href="README-sv.md">Svenska</a></p>
 
-# Datenstrom Yellow 0.8.21
+# Datenstrom Yellow 0.8.22
 
 Datenstrom Yellow is for people who make small websites. https://datenstrom.se/yellow/
 

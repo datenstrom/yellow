@@ -2,8 +2,8 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.8.104";
-    const RELEASE = "0.8.21";
+    const VERSION = "0.8.105";
+    const RELEASE = "0.8.22";
     public $content;        // content files
     public $media;          // media files
     public $system;         // system settings
@@ -3394,13 +3394,13 @@ class YellowPageCollection extends ArrayObject {
         $this->yellow = $yellow;
     }
     
-    // Append to end of page collection
+    // Append page to end of page collection
     #[\ReturnTypeWillChange]
     public function append($page) {
         parent::append($page);
     }
     
-    // Prepend to start of page collection
+    // Prepend page to start of page collection
     #[\ReturnTypeWillChange]
     public function prepend($page) {
         $array = $this->getArrayCopy();
