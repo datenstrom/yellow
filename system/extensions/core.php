@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.8.103";
+    const VERSION = "0.8.104";
     const RELEASE = "0.8.21";
     public $content;        // content files
     public $media;          // media files
@@ -3408,6 +3408,17 @@ class YellowPageCollection extends ArrayObject {
         $this->exchangeArray($array);
     }
     
+    // Remove page from page collection
+    public function remove($page): YellowPageCollection {
+        $array = array();
+        $location = $page->location;
+        foreach ($this->getArrayCopy() as $page) {
+            if ($page->location!=$location) array_push($array, $page);
+        }
+        $this->exchangeArray($array);
+        return $this;
+    }
+    
     // Filter page collection by page setting
     public function filter($key, $value, $exactMatch = true): YellowPageCollection {
         $array = array();
@@ -3493,7 +3504,7 @@ class YellowPageCollection extends ArrayObject {
     // Calculate intersection, remove pages that are not present in another page collection
     public function intersect($input): YellowPageCollection {
         $callback = function ($a, $b) {
-            return strcmp(spl_object_hash($a), spl_object_hash($b));
+            return strcmp($a->location, $b->location);
         };
         $this->exchangeArray(array_uintersect($this->getArrayCopy(), (array)$input, $callback));
         return $this;
@@ -3502,7 +3513,7 @@ class YellowPageCollection extends ArrayObject {
     // Calculate difference, remove pages that are present in another page collection
     public function diff($input): YellowPageCollection {
         $callback = function ($a, $b) {
-            return strcmp(spl_object_hash($a), spl_object_hash($b));
+            return strcmp($a->location, $b->location);
         };
         $this->exchangeArray(array_udiff($this->getArrayCopy(), (array)$input, $callback));
         return $this;
