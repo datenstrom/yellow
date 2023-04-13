@@ -1,8 +1,8 @@
 <?php
-// Command extension, https://github.com/annaesvensson/yellow-command
+// Static extension, https://github.com/annaesvensson/static-command
 
-class YellowCommand {
-    const VERSION = "0.8.45";
+class YellowStatic {
+    const VERSION = "0.8.46";
     public $yellow;                       // access to API
     public $files;                        // number of files
     public $links;                        // number of links
@@ -13,10 +13,10 @@ class YellowCommand {
     // Handle initialisation
     public function onLoad($yellow) {
         $this->yellow = $yellow;
-        $this->yellow->system->setDefault("commandStaticUrl", "auto");
-        $this->yellow->system->setDefault("commandStaticDirectory", "public/");
-        $this->yellow->system->setDefault("commandStaticDefaultFile", "index.html");
-        $this->yellow->system->setDefault("commandStaticErrorFile", "404.html");
+        $this->yellow->system->setDefault("staticUrl", "auto");
+        $this->yellow->system->setDefault("staticDirectory", "public/");
+        $this->yellow->system->setDefault("staticDefaultFile", "index.html");
+        $this->yellow->system->setDefault("staticErrorFile", "404.html");
     }
     
     // Handle request
@@ -52,7 +52,7 @@ class YellowCommand {
                 $this->files = 0;
                 $this->errors = 1;
                 $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
-                echo "ERROR building files: Please configure CommandStaticUrl in file '$fileName'!\n";
+                echo "ERROR building files: Please configure StaticUrl in file '$fileName'!\n";
             }
             echo "Yellow $command: $this->files file".($this->files!=1 ? "s" : "");
             echo ", $this->errors error".($this->errors!=1 ? "s" : "")."\n";
@@ -65,11 +65,11 @@ class YellowCommand {
     
     // Build static files
     public function buildStaticFiles($path, $locationFilter) {
-        $path = rtrim(is_string_empty($path) ? $this->yellow->system->get("commandStaticDirectory") : $path, "/");
+        $path = rtrim(is_string_empty($path) ? $this->yellow->system->get("staticDirectory") : $path, "/");
         $this->files = $this->errors = 0;
         $this->locationsArguments = $this->locationsArgumentsPagination = array();
         $statusCode = is_string_empty($locationFilter) ? $this->cleanStaticFiles($path, $locationFilter) : 200;
-        $staticUrl = $this->yellow->system->get("commandStaticUrl");
+        $staticUrl = $this->yellow->system->get("staticUrl");
         list($scheme, $address, $base) = $this->yellow->lookup->getUrlInformation($staticUrl);
         $locations = $this->getContentLocations();
         $filesEstimated = count($locations);
@@ -116,7 +116,7 @@ class YellowCommand {
         $this->yellow->page->fileName = substru($location, 1);
         if (!is_readable($this->yellow->page->fileName)) {
             ob_start();
-            $staticUrl = $this->yellow->system->get("commandStaticUrl");
+            $staticUrl = $this->yellow->system->get("staticUrl");
             list($scheme, $address, $base) = $this->yellow->lookup->getUrlInformation($staticUrl);
             $statusCode = $this->requestStaticFile($scheme, $address, $base, $location);
             if ($statusCode<400 || $error) {
@@ -136,7 +136,7 @@ class YellowCommand {
             echo "\rERROR building location '$location', ".$this->yellow->page->getStatusCode(true)."\n";
         }
         if ($this->yellow->system->get("coreDebugMode")>=1) {
-            echo "YellowCommand::buildStaticFile status:$statusCode location:$location<br/>\n";
+            echo "YellowStatic::buildStaticFile status:$statusCode location:$location<br/>\n";
         }
         return $statusCode;
     }
@@ -211,7 +211,7 @@ class YellowCommand {
                 if (!isset($this->locationsArguments[$location])) {
                     $this->locationsArguments[$location] = $location;
                     if ($this->yellow->system->get("coreDebugMode")>=2) {
-                        echo "YellowCommand::analyseLocations detected location:$location<br/>\n";
+                        echo "YellowStatic::analyseLocations detected location:$location<br/>\n";
                     }
                 }
             } else {
@@ -219,7 +219,7 @@ class YellowCommand {
                 if (!isset($this->locationsArgumentsPagination[$location])) {
                     $this->locationsArgumentsPagination[$location] = $location;
                     if ($this->yellow->system->get("coreDebugMode")>=2) {
-                        echo "YellowCommand::analyseLocations detected location:$location<br/>\n";
+                        echo "YellowStatic::analyseLocations detected location:$location<br/>\n";
                     }
                 }
             }
@@ -238,7 +238,7 @@ class YellowCommand {
                 $this->links = 0;
                 $this->errors = 1;
                 $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
-                echo "ERROR checking files: Please configure CommandStaticUrl in file '$fileName'!\n";
+                echo "ERROR checking files: Please configure staticUrl in file '$fileName'!\n";
             }
             echo "Yellow $command: $this->links link".($this->links!=1 ? "s" : "");
             echo ", $this->errors error".($this->errors!=1 ? "s" : "")."\n";
@@ -251,9 +251,9 @@ class YellowCommand {
     
     // Check static files for broken links
     public function checkStaticFiles($path, $locationFilter) {
-        $path = rtrim(is_string_empty($path) ? $this->yellow->system->get("commandStaticDirectory") : $path, "/");
+        $path = rtrim(is_string_empty($path) ? $this->yellow->system->get("staticDirectory") : $path, "/");
         $this->links = $this->errors = 0;
-        $regex = "/^[^.]+$|".$this->yellow->system->get("commandStaticDefaultFile")."$/";
+        $regex = "/^[^.]+$|".$this->yellow->system->get("staticDefaultFile")."$/";
         $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($path, $regex, false, false);
         list($statusCodeFiles, $links) = $this->analyseLinks($path, $locationFilter, $fileNames);
         list($statusCodeLinks, $broken, $redirect) = $this->analyseStatus($path, $links);
@@ -269,7 +269,7 @@ class YellowCommand {
         $statusCode = 200;
         $links = array();
         if (!is_array_empty($fileNames)) {
-            $staticUrl = $this->yellow->system->get("commandStaticUrl");
+            $staticUrl = $this->yellow->system->get("staticUrl");
             list($scheme, $address, $base) = $this->yellow->lookup->getUrlInformation($staticUrl);
             foreach ($fileNames as $fileName) {
                 if (is_readable($fileName)) {
@@ -288,7 +288,7 @@ class YellowCommand {
                                 $links[$url] .= ",".$locationSource;
                             }
                             if ($this->yellow->system->get("coreDebugMode")>=2) {
-                                echo "YellowCommand::analyseLinks detected url:$url<br/>\n";
+                                echo "YellowStatic::analyseLinks detected url:$url<br/>\n";
                             }
                         } elseif (substru($location, 0, 1)=="/") {
                             $url = "$scheme://$address$location";
@@ -298,12 +298,12 @@ class YellowCommand {
                                 $links[$url] .= ",".$locationSource;
                             }
                             if ($this->yellow->system->get("coreDebugMode")>=2) {
-                                echo "YellowCommand::analyseLinks detected url:$url<br/>\n";
+                                echo "YellowStatic::analyseLinks detected url:$url<br/>\n";
                             }
                         }
                     }
                     if ($this->yellow->system->get("coreDebugMode")>=1) {
-                        echo "YellowCommand::analyseLinks location:$locationSource<br/>\n";
+                        echo "YellowStatic::analyseLinks location:$locationSource<br/>\n";
                     }
                 } else {
                     $statusCode = 500;
@@ -324,7 +324,7 @@ class YellowCommand {
     public function analyseStatus($path, $links) {
         $statusCode = 200;
         $remote = $broken = $redirect = $data = array();
-        $staticUrl = $this->yellow->system->get("commandStaticUrl");
+        $staticUrl = $this->yellow->system->get("staticUrl");
         $staticUrlLength = strlenu(rtrim($staticUrl, "/"));
         list($scheme, $address, $base) = $this->yellow->lookup->getUrlInformation($staticUrl);
         $staticLocations = $this->getContentLocations(true);
@@ -341,7 +341,7 @@ class YellowCommand {
         uksort($remote, "strnatcasecmp");
         foreach ($remote as $url=>$value) {
             echo "\rChecking static website ".$this->getProgressPercent(++$remoteNow, count($remote), 5, 95)."%... ";
-            if ($this->yellow->system->get("coreDebugMode")>=1) echo "YellowCommand::analyseStatus url:$url\n";
+            if ($this->yellow->system->get("coreDebugMode")>=1) echo "YellowStatic::analyseStatus url:$url\n";
             $referer = "$scheme://$address$base".(($pos = strposu($value, ",")) ? substru($value, 0, $pos) : $value);
             $statusCodeUrl = $this->getLinkStatus($url, $referer);
             if ($statusCodeUrl!=200) {
@@ -396,7 +396,7 @@ class YellowCommand {
     // Clean static files and directories
     public function cleanStaticFiles($path, $location) {
         $statusCode = 200;
-        $path = rtrim(is_string_empty($path) ? $this->yellow->system->get("commandStaticDirectory") : $path, "/");
+        $path = rtrim(is_string_empty($path) ? $this->yellow->system->get("staticDirectory") : $path, "/");
         if (is_string_empty($location)) {
             foreach ($this->yellow->extension->data as $key=>$value) {
                 if (method_exists($value["object"], "onUpdate")) $value["object"]->onUpdate("clean");
@@ -443,7 +443,7 @@ class YellowCommand {
         if (is_dir($this->yellow->system->get("coreCacheDirectory"))) {
             $location .= $this->yellow->toolbox->getLocationArguments();
             $fileName = rtrim($this->yellow->system->get("coreCacheDirectory"), "/").$location;
-            if (!$this->yellow->lookup->isFileLocation($location)) $fileName .= $this->yellow->system->get("commandStaticDefaultFile");
+            if (!$this->yellow->lookup->isFileLocation($location)) $fileName .= $this->yellow->system->get("staticDefaultFile");
             if (is_file($fileName) && is_readable($fileName) && !$this->yellow->isCommandLine()) {
                 $statusCode = $this->yellow->sendFile(200, $fileName, true);
             }
@@ -453,17 +453,17 @@ class YellowCommand {
     
     // Check static settings
     public function checkStaticSettings() {
-        return preg_match("/^(http|https):/", $this->yellow->system->get("commandStaticUrl"));
+        return preg_match("/^(http|https):/", $this->yellow->system->get("staticUrl"));
     }
     
     // Check static directory
     public function checkStaticDirectory($path) {
         $ok = false;
         if (!is_string_empty($path)) {
-            if ($path==rtrim($this->yellow->system->get("commandStaticDirectory"), "/")) $ok = true;
+            if ($path==rtrim($this->yellow->system->get("staticDirectory"), "/")) $ok = true;
             if ($path==rtrim($this->yellow->system->get("coreCacheDirectory"), "/")) $ok = true;
             if ($path==rtrim($this->yellow->system->get("coreTrashDirectory"), "/")) $ok = true;
-            if (is_file("$path/".$this->yellow->system->get("commandStaticDefaultFile"))) $ok = true;
+            if (is_file("$path/".$this->yellow->system->get("staticDefaultFile"))) $ok = true;
             if (is_file("$path/yellow.php")) $ok = false;
         }
         return $ok;
@@ -485,9 +485,9 @@ class YellowCommand {
     public function getStaticFile($path, $location, $statusCode) {
         if ($statusCode<400) {
             $fileName = $path.$location;
-            if (!$this->yellow->lookup->isFileLocation($location)) $fileName .= $this->yellow->system->get("commandStaticDefaultFile");
+            if (!$this->yellow->lookup->isFileLocation($location)) $fileName .= $this->yellow->system->get("staticDefaultFile");
         } elseif ($statusCode==404) {
-            $fileName = $path."/".$this->yellow->system->get("commandStaticErrorFile");
+            $fileName = $path."/".$this->yellow->system->get("staticErrorFile");
         } else {
             $fileName = $path."/error.html";
         }
@@ -497,8 +497,8 @@ class YellowCommand {
     // Return static location
     public function getStaticLocation($path, $fileName) {
         $location = substru($fileName, strlenu($path));
-        if (basename($location)==$this->yellow->system->get("commandStaticDefaultFile")) {
-            $defaultFileLength = strlenu($this->yellow->system->get("commandStaticDefaultFile"));
+        if (basename($location)==$this->yellow->system->get("staticDefaultFile")) {
+            $defaultFileLength = strlenu($this->yellow->system->get("staticDefaultFile"));
             $location = substru($location, 0, -$defaultFileLength);
         }
         return $location;
@@ -516,7 +516,7 @@ class YellowCommand {
     // Return content locations
     public function getContentLocations($includeAll = false) {
         $locations = array();
-        $staticUrl = $this->yellow->system->get("commandStaticUrl");
+        $staticUrl = $this->yellow->system->get("staticUrl");
         list($scheme, $address, $base) = $this->yellow->lookup->getUrlInformation($staticUrl);
         $this->yellow->page->setRequestInformation($scheme, $address, $base, "", "", false);
         foreach ($this->yellow->content->index(true, true) as $page) {
@@ -573,7 +573,7 @@ class YellowCommand {
     public function getExtraLocations($path) {
         $locations = array();
         $pathIgnore = "($path/|".
-            $this->yellow->system->get("commandStaticDirectory")."|".
+            $this->yellow->system->get("staticDirectory")."|".
             $this->yellow->system->get("coreContentDirectory")."|".
             $this->yellow->system->get("coreMediaDirectory")."|".
             $this->yellow->system->get("coreSystemDirectory").")";
@@ -591,7 +591,7 @@ class YellowCommand {
         $curlHandle = curl_init();
         curl_setopt($curlHandle, CURLOPT_URL, $url);
         curl_setopt($curlHandle, CURLOPT_REFERER, $referer);
-        curl_setopt($curlHandle, CURLOPT_USERAGENT, "Mozilla/5.0 (compatible; YellowCommand/".YellowCommand::VERSION."; LinkChecker)");
+        curl_setopt($curlHandle, CURLOPT_USERAGENT, "Mozilla/5.0 (compatible; YellowStatic/".YellowStatic::VERSION."; LinkChecker)");
         curl_setopt($curlHandle, CURLOPT_NOBODY, 1);
         curl_setopt($curlHandle, CURLOPT_CONNECTTIMEOUT, 30);
         curl_setopt($curlHandle, CURLOPT_SSL_VERIFYPEER, false);
@@ -600,7 +600,7 @@ class YellowCommand {
         curl_close($curlHandle);
         if ($statusCode<200) $statusCode = 404;
         if ($this->yellow->system->get("coreDebugMode")>=2) {
-            echo "YellowCommand::getLinkStatus status:$statusCode url:$url<br/>\n";
+            echo "YellowStatic::getLinkStatus status:$statusCode url:$url<br/>\n";
         }
         return $statusCode;
     }
