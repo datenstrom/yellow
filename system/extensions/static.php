@@ -2,7 +2,7 @@
 // Static extension, https://github.com/annaesvensson/static-command
 
 class YellowStatic {
-    const VERSION = "0.8.46";
+    const VERSION = "0.8.47";
     public $yellow;                       // access to API
     public $files;                        // number of files
     public $links;                        // number of links
@@ -19,6 +19,24 @@ class YellowStatic {
         $this->yellow->system->setDefault("staticErrorFile", "404.html");
     }
     
+    // Handle update
+    public function onUpdate($action) {
+        if ($action=="install") {
+            if($this->yellow->system->isExisting("commandStaticUrl")) { //TODO: remove later, for backwards compatibility
+                $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
+                $settings = array(
+                    "staticUrl" => $this->yellow->system->get("commandStaticUrl"),
+                    "staticDirectory" => $this->yellow->system->get("commandStaticDirectory"),
+                    "staticDefaultFile" => $this->yellow->system->get("commandStaticDefaultFile"),
+                    "staticErrorFile" => $this->yellow->system->get("commandStaticErrorFile"));
+                if (!$this->yellow->system->save($fileName, $settings)) {
+                    $this->yellow->log("error", "Can't write file '$fileName'!");
+                }
+                $this->yellow->log("info", "Import settings for 'Static ".YellowStatic::VERSION."'");
+            }
+        }
+    }
+
     // Handle request
     public function onRequest($scheme, $address, $base, $location, $fileName) {
        return $this->processRequestCache($scheme, $address, $base, $location, $fileName);
