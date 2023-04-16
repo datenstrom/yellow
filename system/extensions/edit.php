@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/annaesvensson/yellow-edit
 
 class YellowEdit {
-    const VERSION = "0.8.71";
+    const VERSION = "0.8.72";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -50,7 +50,7 @@ class YellowEdit {
             }
             $fileDataNew = rtrim($fileDataNew)."\n";
             if ($fileData!=$fileDataNew && !$this->yellow->toolbox->createFile($fileNameUser, $fileDataNew)) {
-                $this->yellow->log("error", "Can't write file '$fileNameUser'!");
+                $this->yellow->toolbox->log("error", "Can't write file '$fileNameUser'!");
             }
         }
     }
@@ -189,7 +189,7 @@ class YellowEdit {
                 "status" => "active");
             $status = $this->yellow->user->save($fileNameUser, $email, $settings) ? "ok" : "error";
             if ($status=="error") echo "ERROR updating settings: Can't write file '$fileNameUser'!\n";
-            $this->yellow->log($status=="ok" ? "info" : "error", "Add user '".strtok($name, " ")."'");
+            $this->yellow->toolbox->log($status=="ok" ? "info" : "error", "Add user '".strtok($name, " ")."'");
         }
         if ($status=="ok") {
             $algorithm = $this->yellow->system->get("editUserHashAlgorithm");
@@ -244,7 +244,7 @@ class YellowEdit {
             $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
             $status = $this->yellow->user->remove($fileNameUser, $email) ? "ok" : "error";
             if ($status=="error") echo "ERROR updating settings: Can't write file '$fileNameUser'!\n";
-            $this->yellow->log($status=="ok" ? "info" : "error", "Remove user '".strtok($name, " ")."'");
+            $this->yellow->toolbox->log($status=="ok" ? "info" : "error", "Remove user '".strtok($name, " ")."'");
         }
         $statusCode = $status=="ok" ? 200 : 500;
         echo "Yellow $command: User account ".($statusCode!=200 ? "not " : "")."removed\n";
@@ -421,7 +421,7 @@ class YellowEdit {
             $settings = array("failed" => "0", "modified" => date("Y-m-d H:i:s", time()), "status" => "active");
             $this->response->status = $this->yellow->user->save($fileNameUser, $email, $settings) ? "ok" : "error";
             if ($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
-            $this->yellow->log($this->response->status=="ok" ? "info" : "error", "Add user '".strtok($name, " ")."'");
+            $this->yellow->toolbox->log($this->response->status=="ok" ? "info" : "error", "Add user '".strtok($name, " ")."'");
         }
         if ($this->response->status=="ok") {
             $this->response->status = $this->response->sendMail($scheme, $address, $base, $email, "welcome") ? "done" : "error";
@@ -574,7 +574,7 @@ class YellowEdit {
             $settings = array("failed" => "0", "modified" => date("Y-m-d H:i:s", time()), "status" => "removed");
             $this->response->status = $this->yellow->user->save($fileNameUser, $email, $settings) ? "ok" : "error";
             if ($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameUser'!");
-            $this->yellow->log($this->response->status=="ok" ? "info" : "error", "Remove user '".strtok($name, " ")."'");
+            $this->yellow->toolbox->log($this->response->status=="ok" ? "info" : "error", "Remove user '".strtok($name, " ")."'");
         }
         if ($this->response->status=="ok") {
             $this->response->status = $this->response->sendMail($scheme, $address, $base, $email, "goodbye") ? "ok" : "error";

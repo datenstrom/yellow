@@ -2,7 +2,7 @@
 // Image extension, https://github.com/annaesvensson/yellow-image
 
 class YellowImage {
-    const VERSION = "0.8.18";
+    const VERSION = "0.8.19";
     public $yellow;             // access to API
 
     // Handle initialisation
@@ -22,7 +22,7 @@ class YellowImage {
             foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/.*/", false, false) as $entry) {
                 if (!$this->yellow->toolbox->deleteFile($entry)) $statusCode = 500;
             }
-            if ($statusCode==500) $this->yellow->log("error", "Can't delete files in directory '$path'!");
+            if ($statusCode==500) $this->yellow->toolbox->log("error", "Can't delete files in directory '$path'!");
         }
     }
 

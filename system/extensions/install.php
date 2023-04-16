@@ -2,7 +2,7 @@
 // Install extension, https://github.com/annaesvensson/yellow-install
 
 class YellowInstall {
-    const VERSION = "0.8.87";
+    const VERSION = "0.8.88";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -111,10 +111,10 @@ class YellowInstall {
         if (!is_file($fileName)) {
             list($name, $version, $os) = $this->yellow->toolbox->detectServerInformation();
             $product = "Datenstrom Yellow ".YellowCore::RELEASE;
-            $this->yellow->log("info", "Install $product, PHP ".PHP_VERSION.", $name $version, $os");
+            $this->yellow->toolbox->log("info", "Install $product, PHP ".PHP_VERSION.", $name $version, $os");
             foreach ($this->yellow->extension->data as $key=>$value) {
                 if ($key=="install") continue;
-                $this->yellow->log("info", "Install extension '".ucfirst($key)." $value[version]'");
+                $this->yellow->toolbox->log("info", "Install extension '".ucfirst($key)." $value[version]'");
             }
             if (!is_file($fileName)) {
                 $statusCode = 500;
@@ -163,7 +163,7 @@ class YellowInstall {
                 $statusCode = max($statusCode, $this->yellow->extension->get("update")->updateExtensionSettings($extension, $action, $settings));
                 $statusCode = max($statusCode, $this->yellow->extension->get("update")->updateExtensionFile(
                     $fileNamePhp, $fileDataPhp, $modified, 0, 0, "create", $extension));
-                $this->yellow->log($statusCode==200 ? "info" : "error", ucfirst($action)." extension '".ucfirst($extension)." $version'");
+                $this->yellow->toolbox->log($statusCode==200 ? "info" : "error", ucfirst($action)." extension '".ucfirst($extension)." $version'");
             }
         }
         return $statusCode;
@@ -201,7 +201,7 @@ class YellowInstall {
                 $statusCode = 500;
                 $this->yellow->page->error($statusCode, "Can't write file '$fileNameUser'!");
             }
-            $this->yellow->log($statusCode==200 ? "info" : "error", "Add user '".strtok($name, " ")."'");
+            $this->yellow->toolbox->log($statusCode==200 ? "info" : "error", "Add user '".strtok($name, " ")."'");
         }
         return $statusCode;
     }
@@ -284,7 +284,7 @@ class YellowInstall {
             $statusCode = 500;
             $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
         }
-        if ($log) $this->yellow->log($statusCode==200 ? "info" : "error", "Uninstall extension 'Install ".YellowInstall::VERSION."'");
+        if ($log) $this->yellow->toolbox->log($statusCode==200 ? "info" : "error", "Uninstall extension 'Install ".YellowInstall::VERSION."'");
         return $statusCode;
     }
     

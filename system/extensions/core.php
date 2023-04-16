@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.8.107";
+    const VERSION = "0.8.108";
     const RELEASE = "0.8.22";
     public $content;        // content files
     public $media;          // media files
@@ -165,11 +165,11 @@ class YellowCore {
         if (!is_null($error) && isset($error["type"]) && ($error["type"]==E_ERROR || $error["type"]==E_PARSE)) {
             $fileNameAbsolute = isset($error["file"]) ? $error["file"] : "";
             $fileName = substru($fileNameAbsolute, strlenu($this->system->get("coreServerInstallDirectory")));
-            $this->log("error", "Can't parse file '$fileName'!");
+            $this->toolbox->log("error", "Can't parse file '$fileName'!");
             $this->toolbox->sendHttpHeader($this->toolbox->getHttpStatusFormatted(500));
             $troubleshooting = PHP_SAPI!="cli" ?
                 "<a href=\"".$this->getTroubleshootingUrl()."\">See troubleshooting</a>." : "See ".$this->getTroubleshootingUrl();
-            echo "<br/>\nCheck the log file. Activate the debug mode for more information. $troubleshooting\n";
+            echo "<br/>\nDatenstrom Yellow stopped with fatal error. Activate the debug mode for more information. $troubleshooting\n";
         }
     }
     
@@ -299,22 +299,6 @@ class YellowCore {
         }
     }
     
-    // Write information to log file
-    public function log($action, $message) {
-        $statusCode = 0;
-        foreach ($this->extension->data as $key=>$value) {
-            if (method_exists($value["object"], "onLog")) {
-                $statusCode = $value["object"]->onLog($action, $message);
-                if ($statusCode!=0) break;
-            }
-        }
-        if ($statusCode==0) {
-            $line = date("Y-m-d H:i:s")." ".trim($action)." ".trim($message)."\n";
-            $this->toolbox->appendFile($this->system->get("coreServerInstallDirectory").
-                $this->system->get("coreExtensionDirectory").$this->system->get("coreWebsiteFile"), $line);
-        }
-    }
-    
     // Include layout
     public function layout($name, $arguments = null) {
         $this->lookup->layoutArguments = func_get_args();
@@ -398,6 +382,9 @@ class YellowCore {
     public function isLoaded() {
         return isset($this->extension->data);
     }
+    
+    // TODO: remove later, for backwards compatibility
+    public function log($action, $message) { $this->toolbox->log($action, $message); }
 }
 
 class YellowContent {
@@ -2779,6 +2766,23 @@ class YellowToolbox {
                 (ord($dataBuffer[$pos+1])<<8) + ord($dataBuffer[$pos]);
         }
         return $value;
+    }
+
+    // Write information to log file
+    public function log($action, $message) {
+        $statusCode = 0;
+        foreach ($this->yellow->extension->data as $key=>$value) {
+            if (method_exists($value["object"], "onLog")) {
+                $statusCode = $value["object"]->onLog($action, $message);
+                if ($statusCode!=0) break;
+            }
+        }
+        if ($statusCode==0) {
+            $line = date("Y-m-d H:i:s")." ".trim($action)." ".trim($message)."\n";
+            $this->appendFile($this->yellow->system->get("coreServerInstallDirectory").
+                $this->yellow->system->get("coreExtensionDirectory").
+                $this->yellow->system->get("coreWebsiteFile"), $line);
+        }
     }
 
     // Start timer
