@@ -1974,8 +1974,11 @@ class YellowToolbox {
         $fileHandle = @fopen($fileName, "rb");
         if ($fileHandle) {
             clearstatcache(true, $fileName);
-            $fileSize = $sizeMax ? $sizeMax : filesize($fileName);
-            if ($fileSize) $fileData = fread($fileHandle, $fileSize);
+            if (flock($fileHandle, LOCK_SH)) {
+                $fileSize = $sizeMax ? $sizeMax : filesize($fileName);
+                if ($fileSize) $fileData = fread($fileHandle, $fileSize);
+                flock($fileHandle, LOCK_UN);
+            }
             fclose($fileHandle);
         }
         return $fileData;
@@ -1988,7 +1991,7 @@ class YellowToolbox {
             $path = dirname($fileName);
             if (!is_string_empty($path) && !is_dir($path)) @mkdir($path, 0777, true);
         }
-        $fileHandle = @fopen($fileName, "wb");
+        $fileHandle = @fopen($fileName, "cb");
         if ($fileHandle) {
             clearstatcache(true, $fileName);
             if (flock($fileHandle, LOCK_EX)) {
