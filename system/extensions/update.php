@@ -2,7 +2,7 @@
 // Update extension, https://github.com/annaesvensson/yellow-update
 
 class YellowUpdate {
-    const VERSION = "0.8.93";
+    const VERSION = "0.8.94";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $extensions;             // number of extensions
@@ -82,13 +82,17 @@ class YellowUpdate {
             if ($text=="release") $output = "Datenstrom Yellow ".YellowCore::RELEASE;
             if ($text=="log") {
                 $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreWebsiteFile");
-                $fileHandle = @fopen($fileName, "r");
+                $fileHandle = @fopen($fileName, "rb");
                 if ($fileHandle) {
-                    $dataBufferSize = 512;
-                    fseek($fileHandle, max(0, filesize($fileName) - $dataBufferSize));
-                    $dataBuffer = fread($fileHandle, $dataBufferSize);
-                    if (strlenb($dataBuffer)==$dataBufferSize) {
-                        $dataBuffer = ($pos = strposu($dataBuffer, "\n")) ? substru($dataBuffer, $pos+1) : $dataBuffer;
+                    clearstatcache(true, $fileName);
+                    if (flock($fileHandle, LOCK_SH)) {
+                        $dataBufferSize = 1024;
+                        fseek($fileHandle, max(0, filesize($fileName) - $dataBufferSize));
+                        $dataBuffer = fread($fileHandle, $dataBufferSize);
+                        if (strlenb($dataBuffer)==$dataBufferSize) {
+                            $dataBuffer = ($pos = strposu($dataBuffer, "\n")) ? substru($dataBuffer, $pos+1) : $dataBuffer;
+                        }
+                        flock($fileHandle, LOCK_UN);
                     }
                     fclose($fileHandle);
                 }
