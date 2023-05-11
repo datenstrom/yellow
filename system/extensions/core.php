@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.8.109";
+    const VERSION = "0.8.110";
     const RELEASE = "0.8.22";
     public $content;        // content files
     public $media;          // media files
@@ -1532,6 +1532,37 @@ class YellowLookup {
         return $output;
     }
     
+    // Normalise fields in MIME headers
+    public function normaliseHeaders($input, $type = "mime", $filterStrict = true) {
+        $output = "";
+        if ($type=="mime") {
+            $keysMixedEncoding = array("To", "From", "Reply-To", "Cc", "Bcc");
+            foreach ($input as $key=>$value) {
+                $key = ucwords(preg_replace("/[^a-zA-Z\-]/u", "-", $key), "-");
+                if (in_array($key, $keysMixedEncoding)) {
+                    $text = "$key: ";
+                    foreach (preg_split("/\s*,\s*/", $value) as $email) {
+                        if (!preg_match("/^(.*?)(\s*)<(.*?)>$/", $email, $matches)) {
+                            $matches[1] = $matches[2] = "";
+                            $matches[3] = $email;
+                        }
+                        if ($filterStrict && !preg_match("/[\w\+\-\.\@]+/", $matches[3])) {
+                            $matches[3] = "error-mail-filter";
+                        }
+                        if (substru($text, -2, 2)!=": ") $text .= ",\r\n ";
+                        $text = $this->getMimeHeader($text, $matches[1]);
+                        $text = $this->getMimeHeader($text, "$matches[2]<$matches[3]>", false);
+                    }
+                    $text .= "\r\n";
+                } else {
+                    $text = $this->getMimeHeader("$key: ", $value)."\r\n";
+                }
+                $output .= $text;
+            }
+        }
+        return $output;
+    }
+    
     // Normalise array, make keys with same upper/lower case
     public function normaliseArray($input) {
         $array = array();
@@ -1677,6 +1708,55 @@ class YellowLookup {
             }
         }
         return $attributes;
+    }
+    
+    // Return MIME header field, encode and fold if necessary
+    public function getMimeHeader($text, $field, $allowEncode = true) {
+        if ($allowEncode) {
+            $encode = preg_match("/[\x7F-\xFF]/", $field);
+            $fieldPos = 0;
+            while (true) {
+                $textPos = strlenb($text)-(($pos = strrposb($text, "\n")) ? $pos+1 : 0);
+                $bytesAvailable = max(0, 78-$textPos);
+                $fragment = substrb($field, $fieldPos);
+                if ($encode && !is_string_empty($fragment)) $fragment = "=?UTF-8?B?".base64_encode($fragment)."?=";
+                if ($bytesAvailable<strlenb($fragment)) {
+                    $bytesHandled = $bytesAvailable;
+                    if (!$encode) {
+                        for ($pos=$bytesHandled;$pos>0;--$pos) {
+                            if($field[$fieldPos+$pos]==" ") {
+                                $fragment = substrb($field, $fieldPos, $pos);
+                                $bytesHandled = $pos+1;
+                                break;
+                            }
+                        }
+                        if($pos==0) $encode=true;
+                    }
+                    if ($encode) {
+                        while (true) {
+                            $fragment = substrb($field, $fieldPos, $bytesHandled);
+                            if (!is_string_empty($fragment)) $fragment = "=?UTF-8?B?".base64_encode($fragment)."?=";
+                            if ($bytesAvailable>=strlenb($fragment) || $bytesHandled==0) break;
+                            --$bytesHandled;
+                        }
+                    }
+                    $text .= $fragment."\r\n ";
+                    $fieldPos += $bytesHandled;
+                } else {
+                    $text .= $fragment;
+                    break;
+                }
+            }
+        } else {
+            $textPos = strlenb($text)-(($pos = strrposb($text, "\n")) ? $pos+1 : 0);
+            $bytesAvailable = max(0, 78-$textPos);
+            if ($bytesAvailable<strlenb($field)) {
+                $text .= "\r\n ".ltrim($field);
+            } else {
+                $text .= $field;
+            }
+        }
+        return $text;
     }
     
     // Return directory location
@@ -2769,6 +2849,34 @@ class YellowToolbox {
                 (ord($dataBuffer[$pos+1])<<8) + ord($dataBuffer[$pos]);
         }
         return $value;
+    }
+
+    // Send email message
+    public function mail($action, $headers, $message) {
+        $statusCode = 0;
+        foreach ($this->yellow->extension->data as $key=>$value) {
+            if (method_exists($value["object"], "onMail")) {
+                $statusCode = $value["object"]->onMail($action, $headers, $message);
+                if ($statusCode!=0) break;
+            }
+        }
+        if ($statusCode==0) {
+            $text = $this->yellow->lookup->normaliseHeaders($headers, "mime");
+            $to = $subject = $remaining = $blockKey = "";
+            foreach (preg_split("/\r\n/", $text) as $line) {
+                if (preg_match("/^(.*?):\s*(.*?)$/", $line, $matches) && !is_string_empty($matches[1])) {
+                    $blockKey = $matches[1];
+                    $fragment = $matches[2];
+                } else {
+                    $fragment = $line;
+                }
+                if ($blockKey=="To") { $to .= $fragment; continue; }
+                if ($blockKey=="Subject") { $subject .= $fragment; continue; }
+                $remaining .= $line."\r\n";
+            }
+            $statusCode = sendMail($to, $subject, $message, $remaining) ? 200 : 500;
+        }
+        return $statusCode==200;
     }
 
     // Write information to log file
