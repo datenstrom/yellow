@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.8.110";
+    const VERSION = "0.8.111";
     const RELEASE = "0.8.22";
     public $content;        // content files
     public $media;          // media files
@@ -2874,7 +2874,7 @@ class YellowToolbox {
                 if ($blockKey=="Subject") { $subject .= $fragment; continue; }
                 $remaining .= $line."\r\n";
             }
-            $statusCode = sendMail($to, $subject, $message, $remaining) ? 200 : 500;
+            $statusCode = mail($to, $subject, $message, $remaining) ? 200 : 500;
         }
         return $statusCode==200;
     }

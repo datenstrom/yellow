@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/annaesvensson/yellow-edit
 
 class YellowEdit {
-    const VERSION = "0.8.72";
+    const VERSION = "0.8.73";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -1592,17 +1592,20 @@ class YellowEditResponse {
         $message = preg_replace("/@userlanguage/i", $userLanguage, $message);
         $sitename = $this->yellow->system->get("sitename");
         $siteEmail = $this->yellow->system->get("editSiteEmail");
+        $subject = $this->yellow->language->getText("{$prefix}Subject", $userLanguage);
         $footer = $this->yellow->language->getText("editMailFooter", $userLanguage);
         $footer = str_replace("\\n", "\r\n", $footer);
         $footer = preg_replace("/@sitename/i", $sitename, $footer);
-        $mailTo = mb_encode_mimeheader("$userName")." <$userEmail>";
-        $mailSubject = mb_encode_mimeheader($this->yellow->language->getText("{$prefix}Subject", $userLanguage));
-        $mailHeaders = mb_encode_mimeheader("From: $sitename")." <$siteEmail>\r\n";
-        $mailHeaders .= mb_encode_mimeheader("X-Request-Url: $scheme://$address$base")."\r\n";
-        $mailHeaders .= "Mime-Version: 1.0\r\n";
-        $mailHeaders .= "Content-Type: text/plain; charset=utf-8\r\n";
+        $mailHeaders = array(
+            "To" => "$userName <$userEmail>",
+            "From" => "$sitename <$siteEmail>",
+            "Date" => date(DATE_RFC2822),
+            "Subject" => $subject,
+            "Mime-Version" => "1.0",
+            "Content-Type" => "text/plain; charset=utf-8",
+            "X-Request-Url" => "$scheme://$address$base");
         $mailMessage = "$message\r\n\r\n$url\r\n-- \r\n$footer";
-        return mail($mailTo, $mailSubject, $mailMessage, $mailHeaders);
+        return $this->yellow->toolbox->mail($action, $mailHeaders, $mailMessage);
     }
     
     // Create browser cookies
