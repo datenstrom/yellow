@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.8.111";
+    const VERSION = "0.8.112";
     const RELEASE = "0.8.22";
     public $content;        // content files
     public $media;          // media files
@@ -1730,7 +1730,7 @@ class YellowLookup {
                                 break;
                             }
                         }
-                        if($pos==0) $encode=true;
+                        if($pos==0) $encode = true;
                     }
                     if ($encode) {
                         while (true) {
@@ -2862,16 +2862,16 @@ class YellowToolbox {
         }
         if ($statusCode==0) {
             $text = $this->yellow->lookup->normaliseHeaders($headers, "mime");
-            $to = $subject = $remaining = $blockKey = "";
+            $to = $subject = $remaining = $key = "";
             foreach (preg_split("/\r\n/", $text) as $line) {
                 if (preg_match("/^(.*?):\s*(.*?)$/", $line, $matches) && !is_string_empty($matches[1])) {
-                    $blockKey = $matches[1];
+                    $key = $matches[1];
                     $fragment = $matches[2];
                 } else {
                     $fragment = $line;
                 }
-                if ($blockKey=="To") { $to .= $fragment; continue; }
-                if ($blockKey=="Subject") { $subject .= $fragment; continue; }
+                if ($key=="To") { $to .= $fragment; continue; }
+                if ($key=="Subject") { $subject .= $fragment; continue; }
                 $remaining .= $line."\r\n";
             }
             $statusCode = mail($to, $subject, $message, $remaining) ? 200 : 500;
