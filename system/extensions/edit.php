@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/annaesvensson/yellow-edit
 
 class YellowEdit {
-    const VERSION = "0.8.73";
+    const VERSION = "0.8.74";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -1599,8 +1599,8 @@ class YellowEditResponse {
         $mailHeaders = array(
             "To" => "$userName <$userEmail>",
             "From" => "$sitename <$siteEmail>",
-            "Date" => date(DATE_RFC2822),
             "Subject" => $subject,
+            "Date" => date(DATE_RFC2822),
             "Mime-Version" => "1.0",
             "Content-Type" => "text/plain; charset=utf-8",
             "X-Request-Url" => "$scheme://$address$base");

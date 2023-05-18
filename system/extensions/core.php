@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.8.112";
+    const VERSION = "0.8.113";
     const RELEASE = "0.8.22";
     public $content;        // content files
     public $media;          // media files
@@ -283,7 +283,7 @@ class YellowCore {
     
     // Handle startup
     public function startup() {
-        if ($this->isLoaded()) {
+        if (isset($this->extension->data)) {
             foreach ($this->extension->data as $key=>$value) {
                 if (method_exists($value["object"], "onStartup")) $value["object"]->onStartup();
             }
@@ -292,7 +292,7 @@ class YellowCore {
     
     // Handle shutdown
     public function shutdown() {
-        if ($this->isLoaded()) {
+        if (isset($this->extension->data)) {
             foreach ($this->extension->data as $key=>$value) {
                 if (method_exists($value["object"], "onShutdown")) $value["object"]->onShutdown();
             }
@@ -319,7 +319,7 @@ class YellowCore {
     public function getRequestInformation($scheme = "", $address = "", $base = "") {
         if (is_string_empty($scheme) && is_string_empty($address) && is_string_empty($base)) {
             $url = $this->system->get("coreServerUrl");
-            if ($url=="auto" || $this->isCommandLine()) $url = $this->toolbox->detectServerUrl();
+            if ($url=="auto" || $this->lookup->isCommandLine()) $url = $this->toolbox->detectServerUrl();
             list($scheme, $address, $base) = $this->lookup->getUrlInformation($url);
             $this->system->set("coreServerScheme", $scheme);
             $this->system->set("coreServerAddress", $address);
@@ -373,18 +373,9 @@ class YellowCore {
         return $this->lookup->commandHandler;
     }
     
-    // Check if running at command line
-    public function isCommandLine() {
-        return isset($this->lookup->commandHandler);
-    }
-    
-    // Check if all extensions loaded
-    public function isLoaded() {
-        return isset($this->extension->data);
-    }
-    
     // TODO: remove later, for backwards compatibility
     public function log($action, $message) { $this->toolbox->log($action, $message); }
+    public function isCommandLine() { return $this->lookup->isCommandLine(); }
 }
 
 class YellowContent {
@@ -1875,6 +1866,11 @@ class YellowLookup {
         $systemDirectoryLength = strlenu($this->yellow->system->get("coreSystemDirectory"));
         return substru($fileName, 0, $systemDirectoryLength)==$this->yellow->system->get("coreSystemDirectory");
     }
+    
+    // Check if running at command line
+    public function isCommandLine() {
+        return isset($this->commandHandler);
+    }
 }
 
 class YellowToolbox {
@@ -3241,7 +3237,7 @@ class YellowPage {
         return htmlspecialchars($this->getDateFormatted($key, $format));
     }
     
-    // Return page content, HTML encoded or raw format
+    // Return page content data, HTML encoded or raw format
     public function getContent($rawFormat = false) {
         if ($rawFormat) {
             $this->parseMetaUpdate();
@@ -3251,6 +3247,38 @@ class YellowPage {
             $text = $this->parserData;
         }
         return $text;
+    }
+    
+    // Return page extra data, HTML encoded
+    public function getExtra($name) {
+        $output = "";
+        foreach ($this->yellow->extension->data as $key=>$value) {
+            if (method_exists($value["object"], "onParsePageExtra")) {
+                $outputExtension = $value["object"]->onParsePageExtra($this, $name);
+                if (!is_null($outputExtension)) $output .= $outputExtension;
+            }
+        }
+        if ($name=="header") {
+            $fileNameTheme = $this->yellow->system->get("coreThemeDirectory").$this->yellow->lookup->normaliseName($this->get("theme")).".css";
+            if (is_file($fileNameTheme)) {
+                $locationTheme = $this->yellow->system->get("coreServerBase").
+                    $this->yellow->system->get("coreThemeLocation").$this->yellow->lookup->normaliseName($this->get("theme")).".css";
+                $output .= "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"$locationTheme\" />\n";
+            }
+            $fileNameScript = $this->yellow->system->get("coreThemeDirectory").$this->yellow->lookup->normaliseName($this->get("theme")).".js";
+            if (is_file($fileNameScript)) {
+                $locationScript = $this->yellow->system->get("coreServerBase").
+                    $this->yellow->system->get("coreThemeLocation").$this->yellow->lookup->normaliseName($this->get("theme")).".js";
+                $output .= "<script type=\"text/javascript\" src=\"$locationScript\"></script>\n";
+            }
+            $fileNameFavicon = $this->yellow->system->get("coreThemeDirectory").$this->yellow->lookup->normaliseName($this->get("theme")).".png";
+            if (is_file($fileNameFavicon)) {
+                $locationFavicon = $this->yellow->system->get("coreServerBase").
+                    $this->yellow->system->get("coreThemeLocation").$this->yellow->lookup->normaliseName($this->get("theme")).".png";
+                $output .= "<link rel=\"icon\" type=\"image/png\" href=\"$locationFavicon\" />\n";
+            }
+        }
+        return $output;
     }
     
     // Return parent page, null if none
@@ -3342,38 +3370,6 @@ class YellowPage {
     // Return page response header
     public function getHeader($key) {
         return $this->isHeader($key) ? $this->headerData[$key] : "";
-    }
-    
-    // Return page extra data
-    public function getExtra($name) {
-        $output = "";
-        foreach ($this->yellow->extension->data as $key=>$value) {
-            if (method_exists($value["object"], "onParsePageExtra")) {
-                $outputExtension = $value["object"]->onParsePageExtra($this, $name);
-                if (!is_null($outputExtension)) $output .= $outputExtension;
-            }
-        }
-        if ($name=="header") {
-            $fileNameTheme = $this->yellow->system->get("coreThemeDirectory").$this->yellow->lookup->normaliseName($this->get("theme")).".css";
-            if (is_file($fileNameTheme)) {
-                $locationTheme = $this->yellow->system->get("coreServerBase").
-                    $this->yellow->system->get("coreThemeLocation").$this->yellow->lookup->normaliseName($this->get("theme")).".css";
-                $output .= "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"$locationTheme\" />\n";
-            }
-            $fileNameScript = $this->yellow->system->get("coreThemeDirectory").$this->yellow->lookup->normaliseName($this->get("theme")).".js";
-            if (is_file($fileNameScript)) {
-                $locationScript = $this->yellow->system->get("coreServerBase").
-                    $this->yellow->system->get("coreThemeLocation").$this->yellow->lookup->normaliseName($this->get("theme")).".js";
-                $output .= "<script type=\"text/javascript\" src=\"$locationScript\"></script>\n";
-            }
-            $fileNameFavicon = $this->yellow->system->get("coreThemeDirectory").$this->yellow->lookup->normaliseName($this->get("theme")).".png";
-            if (is_file($fileNameFavicon)) {
-                $locationFavicon = $this->yellow->system->get("coreServerBase").
-                    $this->yellow->system->get("coreThemeLocation").$this->yellow->lookup->normaliseName($this->get("theme")).".png";
-                $output .= "<link rel=\"icon\" type=\"image/png\" href=\"$locationFavicon\" />\n";
-            }
-        }
-        return $output;
     }
     
     // Set page response output

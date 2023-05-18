@@ -2,7 +2,7 @@
 // Static extension, https://github.com/annaesvensson/static-command
 
 class YellowStatic {
-    const VERSION = "0.8.48";
+    const VERSION = "0.8.49";
     public $yellow;                       // access to API
     public $files;                        // number of files
     public $links;                        // number of links
@@ -462,7 +462,7 @@ class YellowStatic {
             $location .= $this->yellow->toolbox->getLocationArguments();
             $fileName = rtrim($this->yellow->system->get("coreCacheDirectory"), "/").$location;
             if (!$this->yellow->lookup->isFileLocation($location)) $fileName .= $this->yellow->system->get("staticDefaultFile");
-            if (is_file($fileName) && is_readable($fileName) && !$this->yellow->isCommandLine()) {
+            if (is_file($fileName) && is_readable($fileName) && !$this->yellow->lookup->isCommandLine()) {
                 $statusCode = $this->yellow->sendFile(200, $fileName, true);
             }
         }
