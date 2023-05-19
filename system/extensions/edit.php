@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/annaesvensson/yellow-edit
 
 class YellowEdit {
-    const VERSION = "0.8.74";
+    const VERSION = "0.8.75";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -63,7 +63,7 @@ class YellowEdit {
             $scheme = $this->yellow->system->get("coreServerScheme");
             $address = $this->yellow->system->get("coreServerAddress");
             $base = rtrim($this->yellow->system->get("coreServerBase").$this->yellow->system->get("editLocation"), "/");
-            list($scheme, $address, $base, $location, $fileName) = $this->yellow->getRequestInformation($scheme, $address, $base);
+            list($scheme, $address, $base, $location, $fileName) = $this->yellow->lookup->getRequestInformation($scheme, $address, $base);
             $this->yellow->page->setRequestInformation($scheme, $address, $base, $location, $fileName, false);
             $statusCode = $this->processRequest($scheme, $address, $base, $location, $fileName);
         }
@@ -1165,7 +1165,7 @@ class YellowEditResponse {
         $class = "page-preview layout-".$page->get("layout");
         $output = "<div class=\"".htmlspecialchars($class)."\"><div class=\"content\"><div class=\"main\">";
         if ($this->yellow->system->get("editToolbarButtons")!="none") $output .= "<h1>".$page->getHtml("titleContent")."</h1>\n";
-        $output .= $page->getContent();
+        $output .= $page->getContentHtml();
         $output .= "</div></div></div>";
         $page->statusCode = 200;
         $page->outputData = $output;

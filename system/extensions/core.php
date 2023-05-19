@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.8.113";
+    const VERSION = "0.8.114";
     const RELEASE = "0.8.22";
     public $content;        // content files
     public $media;          // media files
@@ -98,7 +98,7 @@ class YellowCore {
         $statusCode = 0;
         $this->toolbox->timerStart($time);
         ob_start();
-        list($scheme, $address, $base, $location, $fileName) = $this->getRequestInformation();
+        list($scheme, $address, $base, $location, $fileName) = $this->lookup->getRequestInformation();
         $this->page->setRequestInformation($scheme, $address, $base, $location, $fileName, true);
         foreach ($this->extension->data as $key=>$value) {
             if (method_exists($value["object"], "onRequest")) {
@@ -253,7 +253,7 @@ class YellowCore {
     public function command($line = "") {
         $statusCode = 0;
         $this->toolbox->timerStart($time);
-        list($command, $text) = $this->getCommandInformation($line);
+        list($command, $text) = $this->lookup->getCommandInformation($line);
         foreach ($this->extension->data as $key=>$value) {
             if (method_exists($value["object"], "onCommand")) {
                 $this->lookup->commandHandler = $key;
@@ -310,42 +310,6 @@ class YellowCore {
         return array_pad($this->lookup->layoutArguments, $sizeMin, null);
     }
     
-    // Return troubleshooting URL
-    public function getTroubleshootingUrl() {
-        return "https://datenstrom.se/yellow/help/troubleshooting";
-    }
-    
-    // Return request information
-    public function getRequestInformation($scheme = "", $address = "", $base = "") {
-        if (is_string_empty($scheme) && is_string_empty($address) && is_string_empty($base)) {
-            $url = $this->system->get("coreServerUrl");
-            if ($url=="auto" || $this->lookup->isCommandLine()) $url = $this->toolbox->detectServerUrl();
-            list($scheme, $address, $base) = $this->lookup->getUrlInformation($url);
-            $this->system->set("coreServerScheme", $scheme);
-            $this->system->set("coreServerAddress", $address);
-            $this->system->set("coreServerBase", $base);
-            if ($this->system->get("coreDebugMode")>=3) {
-                echo "YellowCore::getRequestInformation $scheme://$address$base<br/>\n";
-            }
-        }
-        $location = substru($this->toolbox->detectServerLocation(), strlenu($base));
-        $fileName = "";
-        if (is_string_empty($fileName)) $fileName = $this->lookup->findFileFromMediaLocation($location);
-        if (is_string_empty($fileName)) $fileName = $this->lookup->findFileFromContentLocation($location);
-        return array($scheme, $address, $base, $location, $fileName);
-    }
-
-    // Return command information
-    public function getCommandInformation($line = "") {
-        if (is_string_empty($line)) {
-            $line = $this->toolbox->getTextString(array_slice($this->toolbox->getServer("argv"), 1));
-            if ($this->system->get("coreDebugMode")>=3) {
-                echo "YellowCore::getCommandInformation $line<br/>\n";
-            }
-        }
-        return $this->toolbox->getTextList($line, " ", 2);
-    }
-    
     // Return command help
     public function getCommandHelp() {
         $data = array();
@@ -363,14 +327,9 @@ class YellowCore {
         return $data;
     }
     
-    // Return request handler
-    public function getRequestHandler() {
-        return $this->lookup->requestHandler;
-    }
-
-    // Return command handler
-    public function getCommandHandler() {
-        return $this->lookup->commandHandler;
+    // Return troubleshooting URL
+    public function getTroubleshootingUrl() {
+        return "https://datenstrom.se/yellow/help/troubleshooting";
     }
     
     // TODO: remove later, for backwards compatibility
@@ -448,7 +407,7 @@ class YellowContent {
             $address = $this->yellow->page->address;
             $base = $this->yellow->page->base;
             $one = ($pages->offsetGet(0)->location!=$this->yellow->page->location) ? $pages->offsetGet(0) : $this->yellow->page;
-            preg_match_all("/<h(\d) id=\"([^\"]+)\">(.*?)<\/h\d>/i", $one->getContent(), $matches, PREG_SET_ORDER);
+            preg_match_all("/<h(\d) id=\"([^\"]+)\">(.*?)<\/h\d>/i", $one->getContentHtml(), $matches, PREG_SET_ORDER);
             foreach ($matches as $match) {
                 if ($match[1]==2) {
                     $page = new YellowPage($this->yellow);
@@ -1655,6 +1614,47 @@ class YellowLookup {
             $base = $matches[3];
         }
         return array($scheme, $address, $base);
+    }
+    
+    // Return request information
+    public function getRequestInformation($scheme = "", $address = "", $base = "") {
+        if (is_string_empty($scheme) && is_string_empty($address) && is_string_empty($base)) {
+            $url = $this->yellow->system->get("coreServerUrl");
+            if ($url=="auto" || $this->isCommandLine()) $url = $this->yellow->toolbox->detectServerUrl();
+            list($scheme, $address, $base) = $this->getUrlInformation($url);
+            $this->yellow->system->set("coreServerScheme", $scheme);
+            $this->yellow->system->set("coreServerAddress", $address);
+            $this->yellow->system->set("coreServerBase", $base);
+            if ($this->yellow->system->get("coreDebugMode")>=3) {
+                echo "YellowLookup::getRequestInformation $scheme://$address$base<br/>\n";
+            }
+        }
+        $location = substru($this->yellow->toolbox->detectServerLocation(), strlenu($base));
+        $fileName = "";
+        if (is_string_empty($fileName)) $fileName = $this->findFileFromMediaLocation($location);
+        if (is_string_empty($fileName)) $fileName = $this->findFileFromContentLocation($location);
+        return array($scheme, $address, $base, $location, $fileName);
+    }
+    
+    // Return command information
+    public function getCommandInformation($line = "") {
+        if (is_string_empty($line)) {
+            $line = $this->yellow->toolbox->getTextString(array_slice($this->yellow->toolbox->getServer("argv"), 1));
+            if ($this->yellow->system->get("coreDebugMode")>=3) {
+                echo "YellowLookup::getCommandInformation $line<br/>\n";
+            }
+        }
+        return $this->yellow->toolbox->getTextList($line, " ", 2);
+    }
+
+    // Return request handler
+    public function getRequestHandler() {
+        return $this->requestHandler;
+    }
+
+    // Return command handler
+    public function getCommandHandler() {
+        return $this->commandHandler;
     }
     
     // Return attributes from text
@@ -3063,7 +3063,7 @@ class YellowPage {
                 $value = $this->yellow->extension->data[$this->get("parser")];
                 if (method_exists($value["object"], "onParseContentRaw")) {
                     $this->parser = $value["object"];
-                    $this->parserData = $this->getContent(true);
+                    $this->parserData = $this->getContentRaw();
                     $this->parserData = $this->parser->onParseContentRaw($this, $this->parserData);
                     foreach ($this->yellow->extension->data as $key=>$value) {
                         if (method_exists($value["object"], "onParseContentHtml")) {
@@ -3073,7 +3073,7 @@ class YellowPage {
                     }
                 }
             } else {
-                $this->parserData = $this->getContent(true);
+                $this->parserData = $this->getContentRaw();
                 $this->parserData = preg_replace("/\[yellow error\]/i", $this->errorMessage, $this->parserData);
             }
             if (!$this->isExisting("description")) {
@@ -3126,12 +3126,12 @@ class YellowPage {
         if ($this->yellow->lookup->isNestedLocation($this->location, $this->fileName, true)) {
             $this->error(500, "Folder '".dirname($this->fileName)."' may not contain subfolders!");
         }
-        if ($this->yellow->getRequestHandler()=="core" && $this->isExisting("redirect") && $this->statusCode==200) {
+        if ($this->yellow->lookup->getRequestHandler()=="core" && $this->isExisting("redirect") && $this->statusCode==200) {
             $location = $this->yellow->lookup->normaliseLocation($this->get("redirect"), $this->location);
             $location = $this->yellow->lookup->normaliseUrl($this->scheme, $this->address, "", $location);
             $this->status(301, $location);
         }
-        if ($this->yellow->getRequestHandler()=="core" && !$this->isAvailable() && $this->statusCode==200) {
+        if ($this->yellow->lookup->getRequestHandler()=="core" && !$this->isAvailable() && $this->statusCode==200) {
             $this->error(404);
         }
         if ($this->isExisting("pageClean")) $this->outputData = null;
@@ -3237,20 +3237,20 @@ class YellowPage {
         return htmlspecialchars($this->getDateFormatted($key, $format));
     }
     
+    // Return page content data, raw format
+    public function getContentRaw() {
+        $this->parseMetaUpdate();
+        return substrb($this->rawData, $this->metaDataOffsetBytes);
+    }
+    
     // Return page content data, HTML encoded or raw format
-    public function getContent($rawFormat = false) {
-        if ($rawFormat) {
-            $this->parseMetaUpdate();
-            $text = substrb($this->rawData, $this->metaDataOffsetBytes);
-        } else {
-            $this->parseContent();
-            $text = $this->parserData;
-        }
-        return $text;
+    public function getContentHtml() {
+        $this->parseContent();
+        return $this->parserData;
     }
     
     // Return page extra data, HTML encoded
-    public function getExtra($name) {
+    public function getExtraHtml($name) {
         $output = "";
         foreach ($this->yellow->extension->data as $key=>$value) {
             if (method_exists($value["object"], "onParsePageExtra")) {
@@ -3492,6 +3492,10 @@ class YellowPage {
     public function isPage($key) {
         return isset($this->sharedPages[$key]);
     }
+    
+    // TODO: remove later, for backwards compatibility
+    public function getContent($rawFormat = false) { return $rawFormat ? $this->getContentRaw() : $this->getContentHtml(); }
+    public function getExtra($name) { return $this->getExtraHtml($name); }
 }
 
 class YellowPageCollection extends ArrayObject {

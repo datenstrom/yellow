@@ -2,7 +2,7 @@
 // Install extension, https://github.com/annaesvensson/yellow-install
 
 class YellowInstall {
-    const VERSION = "0.8.88";
+    const VERSION = "0.8.89";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -346,7 +346,7 @@ class YellowInstall {
         $rewrite = true;
         if (!$this->isServerBuiltin()) {
             $curlHandle = curl_init();
-            list($scheme, $address, $base) = $this->yellow->getRequestInformation();
+            list($scheme, $address, $base) = $this->yellow->lookup->getRequestInformation();
             $location = $this->yellow->system->get("coreThemeLocation").$this->yellow->lookup->normaliseName($this->yellow->system->get("theme")).".css";
             $url = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
             curl_setopt($curlHandle, CURLOPT_URL, $url);
