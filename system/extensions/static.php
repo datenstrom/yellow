@@ -2,7 +2,7 @@
 // Static extension, https://github.com/annaesvensson/static-command
 
 class YellowStatic {
-    const VERSION = "0.8.49";
+    const VERSION = "0.8.50";
     public $yellow;                       // access to API
     public $files;                        // number of files
     public $links;                        // number of links
@@ -45,32 +45,32 @@ class YellowStatic {
     // Handle command
     public function onCommand($command, $text) {
         switch ($command) {
-            case "build":   $statusCode = $this->processCommandBuild($command, $text); break;
-            case "check":   $statusCode = $this->processCommandCheck($command, $text); break;
-            case "clean":   $statusCode = $this->processCommandClean($command, $text); break;
-            default:        $statusCode = 0;
+            case "generate": $statusCode = $this->processCommandGenerate($command, $text); break;
+            case "check":    $statusCode = $this->processCommandCheck($command, $text); break;
+            case "clean":    $statusCode = $this->processCommandClean($command, $text); break;
+            default:         $statusCode = 0;
         }
         return $statusCode;
     }
     
     // Handle command help
     public function onCommandHelp() {
-        return array("build [directory location]", "check [directory location]", "clean [directory location]");
+        return array("generate [directory location]", "check [directory location]", "clean [directory location]");
     }
 
-    // Process command to build static website
-    public function processCommandBuild($command, $text) {
+    // Process command to generate static website
+    public function processCommandGenerate($command, $text) {
         $statusCode = 0;
         list($path, $location) = $this->yellow->toolbox->getTextArguments($text);
         if (is_string_empty($location) || substru($location, 0, 1)=="/") {
             if ($this->checkStaticSettings()) {
-                $statusCode = $this->buildStaticFiles($path, $location);
+                $statusCode = $this->generateStaticFiles($path, $location);
             } else {
                 $statusCode = 500;
                 $this->files = 0;
                 $this->errors = 1;
                 $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
-                echo "ERROR building files: Please configure StaticUrl in file '$fileName'!\n";
+                echo "ERROR generating files: Please configure StaticUrl in file '$fileName'!\n";
             }
             echo "Yellow $command: $this->files file".($this->files!=1 ? "s" : "");
             echo ", $this->errors error".($this->errors!=1 ? "s" : "")."\n";
@@ -81,8 +81,8 @@ class YellowStatic {
         return $statusCode;
     }
     
-    // Build static files
-    public function buildStaticFiles($path, $locationFilter) {
+    // Generate static files
+    public function generateStaticFiles($path, $locationFilter) {
         $path = rtrim(is_string_empty($path) ? $this->yellow->system->get("staticDirectory") : $path, "/");
         $this->files = $this->errors = 0;
         $this->locationsArguments = $this->locationsArgumentsPagination = array();
@@ -92,43 +92,43 @@ class YellowStatic {
         $locations = $this->getContentLocations();
         $filesEstimated = count($locations);
         foreach ($locations as $location) {
-            echo "\rBuilding static website ".$this->getProgressPercent($this->files, $filesEstimated, 5, 60)."%... ";
+            echo "\rGenerating static website ".$this->getProgressPercent($this->files, $filesEstimated, 5, 60)."%... ";
             if (!preg_match("#^$base$locationFilter#", "$base$location")) continue;
-            $statusCode = max($statusCode, $this->buildStaticFile($path, $location, true));
+            $statusCode = max($statusCode, $this->generateStaticFile($path, $location, true));
         }
         foreach ($this->locationsArguments as $location) {
-            echo "\rBuilding static website ".$this->getProgressPercent($this->files, $filesEstimated, 5, 60)."%... ";
+            echo "\rGenerating static website ".$this->getProgressPercent($this->files, $filesEstimated, 5, 60)."%... ";
             if (!preg_match("#^$base$locationFilter#", "$base$location")) continue;
-            $statusCode = max($statusCode, $this->buildStaticFile($path, $location, true));
+            $statusCode = max($statusCode, $this->generateStaticFile($path, $location, true));
         }
         $filesEstimated = $this->files + count($this->locationsArguments) + count($this->locationsArgumentsPagination);
         foreach ($this->locationsArgumentsPagination as $location) {
-            echo "\rBuilding static website ".$this->getProgressPercent($this->files, $filesEstimated, 5, 95)."%... ";
+            echo "\rGenerating static website ".$this->getProgressPercent($this->files, $filesEstimated, 5, 95)."%... ";
             if (!preg_match("#^$base$locationFilter#", "$base$location")) continue;
             if (substru($location, -1)!=$this->yellow->toolbox->getLocationArgumentsSeparator()) {
-                $statusCode = max($statusCode, $this->buildStaticFile($path, $location, false, true));
+                $statusCode = max($statusCode, $this->generateStaticFile($path, $location, false, true));
             }
             for ($pageNumber=2; $pageNumber<=999; ++$pageNumber) {
-                $statusCodeLocation = $this->buildStaticFile($path, $location.$pageNumber, false, true);
+                $statusCodeLocation = $this->generateStaticFile($path, $location.$pageNumber, false, true);
                 $statusCode = max($statusCode, $statusCodeLocation);
                 if ($statusCodeLocation==100) break;
             }
         }
         if (is_string_empty($locationFilter)) {
             foreach ($this->getMediaLocations() as $location) {
-                $statusCode = max($statusCode, $this->buildStaticFile($path, $location));
+                $statusCode = max($statusCode, $this->generateStaticFile($path, $location));
             }
             foreach ($this->getExtraLocations($path) as $location) {
-                $statusCode = max($statusCode, $this->buildStaticFile($path, $location));
+                $statusCode = max($statusCode, $this->generateStaticFile($path, $location));
             }
-            $statusCode = max($statusCode, $this->buildStaticFile($path, "/error/", false, false, true));
+            $statusCode = max($statusCode, $this->generateStaticFile($path, "/error/", false, false, true));
         }
-        echo "\rBuilding static website 100%... done\n";
+        echo "\rGenerating static website 100%... done\n";
         return $statusCode;
     }
     
-    // Build static file
-    public function buildStaticFile($path, $location, $analyse = false, $probe = false, $error = false) {
+    // Generate static file
+    public function generateStaticFile($path, $location, $analyse = false, $probe = false, $error = false) {
         $this->yellow->content = new YellowContent($this->yellow);
         $this->yellow->page = new YellowPage($this->yellow);
         $this->yellow->page->fileName = substru($location, 1);
@@ -151,10 +151,10 @@ class YellowStatic {
         if ($statusCode>=200) ++$this->files;
         if ($statusCode>=400) {
             ++$this->errors;
-            echo "\rERROR building location '$location', ".$this->yellow->page->getStatusCode(true)."\n";
+            echo "\rERROR generating location '$location', ".$this->yellow->page->getStatusCode(true)."\n";
         }
         if ($this->yellow->system->get("coreDebugMode")>=1) {
-            echo "YellowStatic::buildStaticFile status:$statusCode location:$location<br/>\n";
+            echo "YellowStatic::generateStaticFile status:$statusCode location:$location<br/>\n";
         }
         return $statusCode;
     }
@@ -538,7 +538,7 @@ class YellowStatic {
         list($scheme, $address, $base) = $this->yellow->lookup->getUrlInformation($staticUrl);
         $this->yellow->page->setRequestInformation($scheme, $address, $base, "", "", false);
         foreach ($this->yellow->content->index(true, true) as $page) {
-            if (preg_match("/exclude/i", $page->get("build")) && !$includeAll) continue;
+            if (preg_match("/exclude/i", $page->get("generate")) && !$includeAll) continue;
             if ($page->get("status")=="private" || $page->get("status")=="draft") continue;
             array_push($locations, $page->location);
         }
