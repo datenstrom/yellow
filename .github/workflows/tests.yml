@@ -25,4 +25,4 @@ jobs:
       - name: Set up test environment
         run: php yellow.php skip installation
       - name: Run tests
-        run: php yellow.php build tests
+        run: php yellow.php generate tests
