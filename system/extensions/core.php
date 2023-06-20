@@ -1703,13 +1703,13 @@ class YellowLookup {
                     $bytesHandled = $bytesAvailable;
                     if (!$encode) {
                         for ($pos=$bytesHandled;$pos>0;--$pos) {
-                            if($field[$fieldPos+$pos]==" ") {
+                            if ($field[$fieldPos+$pos]==" ") {
                                 $fragment = substrb($field, $fieldPos, $pos);
                                 $bytesHandled = $pos+1;
                                 break;
                             }
                         }
-                        if($pos==0) $encode = true;
+                        if ($pos==0) $encode = true;
                     }
                     if ($encode) {
                         while (true) {

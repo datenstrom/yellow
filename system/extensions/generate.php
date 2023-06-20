@@ -2,7 +2,7 @@
 // Generate extension, https://github.com/annaesvensson/yellow-generate
 
 class YellowGenerate {
-    const VERSION = "0.8.51";
+    const VERSION = "0.8.52";
     public $yellow;                       // access to API
     public $files;                        // number of files
     public $errors;                       // number of errors
@@ -21,7 +21,7 @@ class YellowGenerate {
     // Handle update
     public function onUpdate($action) {
         if ($action=="install") {
-            if($this->yellow->system->isExisting("commandStaticUrl")) { //TODO: remove later, for backwards compatibility
+            if ($this->yellow->system->isExisting("commandStaticUrl")) { //TODO: remove later, for backwards compatibility
                 $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
                 $settings = array(
                     "generateStaticUrl" => $this->yellow->system->get("commandStaticUrl"),
@@ -62,7 +62,7 @@ class YellowGenerate {
         list($path, $location) = $this->yellow->toolbox->getTextArguments($text);
         if (is_string_empty($location) || substru($location, 0, 1)=="/") {
             if ($this->checkStaticSettings()) {
-                $statusCode = $this->generateStaticFiles($path, $location);
+                $statusCode = $this->generateStatic($path, $location);
             } else {
                 $statusCode = 500;
                 $this->files = 0;
@@ -79,29 +79,44 @@ class YellowGenerate {
         return $statusCode;
     }
     
-    // Generate static files
-    public function generateStaticFiles($path, $locationFilter) {
-        $path = rtrim(is_string_empty($path) ? $this->yellow->system->get("generateStaticDirectory") : $path, "/");
+    // Generate static website
+    public function generateStatic($path, $location) {
+        $statusCode = 200;
         $this->files = $this->errors = 0;
+        $path = rtrim(is_string_empty($path) ? $this->yellow->system->get("generateStaticDirectory") : $path, "/");
+        if (is_string_empty($location)) {
+            $statusCode = $this->cleanStatic($path, $location);
+            foreach ($this->yellow->extension->data as $key=>$value) {
+                if (method_exists($value["object"], "onUpdate")) $value["object"]->onUpdate("clean");
+            }
+        }
+        $statusCode = max($statusCode, $this->generateStaticContent($path, $location, "\rGenerating static website", 5, 95));
+        $statusCode = max($statusCode, $this->generateStaticMedia($path, $location));
+        echo "\rGenerating static website 100%... done\n";
+        return $statusCode;
+    }
+    
+    // Generate static content
+    public function generateStaticContent($path, $locationFilter, $progressText, $increments, $max) {
+        $statusCode = 200;
         $this->locationsArguments = $this->locationsArgumentsPagination = array();
-        $statusCode = is_string_empty($locationFilter) ? $this->cleanStaticFiles($path, $locationFilter) : 200;
         $staticUrl = $this->yellow->system->get("generateStaticUrl");
         list($scheme, $address, $base) = $this->yellow->lookup->getUrlInformation($staticUrl);
         $locations = $this->getContentLocations();
         $filesEstimated = count($locations);
         foreach ($locations as $location) {
-            echo "\rGenerating static website ".$this->getProgressPercent($this->files, $filesEstimated, 5, 60)."%... ";
+            echo "$progressText ".$this->getProgressPercent($this->files, $filesEstimated, $increments, $max/1.5)."%... ";
             if (!preg_match("#^$base$locationFilter#", "$base$location")) continue;
             $statusCode = max($statusCode, $this->generateStaticFile($path, $location, true));
         }
         foreach ($this->locationsArguments as $location) {
-            echo "\rGenerating static website ".$this->getProgressPercent($this->files, $filesEstimated, 5, 60)."%... ";
+            echo "$progressText ".$this->getProgressPercent($this->files, $filesEstimated, $increments, $max/1.5)."%... ";
             if (!preg_match("#^$base$locationFilter#", "$base$location")) continue;
             $statusCode = max($statusCode, $this->generateStaticFile($path, $location, true));
         }
         $filesEstimated = $this->files + count($this->locationsArguments) + count($this->locationsArgumentsPagination);
         foreach ($this->locationsArgumentsPagination as $location) {
-            echo "\rGenerating static website ".$this->getProgressPercent($this->files, $filesEstimated, 5, 95)."%... ";
+            echo "$progressText ".$this->getProgressPercent($this->files, $filesEstimated, $increments, $max)."%... ";
             if (!preg_match("#^$base$locationFilter#", "$base$location")) continue;
             if (substru($location, -1)!=$this->yellow->toolbox->getLocationArgumentsSeparator()) {
                 $statusCode = max($statusCode, $this->generateStaticFile($path, $location, false, true));
@@ -112,6 +127,13 @@ class YellowGenerate {
                 if ($statusCodeLocation==100) break;
             }
         }
+        echo "$progressText ".$this->getProgressPercent(100, 100, $increments, $max)."%... ";
+        return $statusCode;
+    }
+    
+    // Generate static media
+    public function generateStaticMedia($path, $locationFilter) {
+        $statusCode = 200;
         if (is_string_empty($locationFilter)) {
             foreach ($this->getMediaLocations() as $location) {
                 $statusCode = max($statusCode, $this->generateStaticFile($path, $location));
@@ -121,7 +143,6 @@ class YellowGenerate {
             }
             $statusCode = max($statusCode, $this->generateStaticFile($path, "/error/", false, false, true));
         }
-        echo "\rGenerating static website 100%... done\n";
         return $statusCode;
     }
     
@@ -242,13 +263,14 @@ class YellowGenerate {
         }
     }
     
-    // Process command to clean static files
+    // Process command to clean static website
     public function processCommandClean($command, $text) {
         $statusCode = 0;
         list($path, $location) = $this->yellow->toolbox->getTextArguments($text);
         if (is_string_empty($location) || substru($location, 0, 1)=="/") {
-            $statusCode = $this->cleanStaticFiles($path, $location);
-            echo "Yellow $command: Static file".(is_string_empty($location) ? "s" : "")." ".($statusCode!=200 ? "not " : "")."cleaned\n";
+            $statusCode = $this->cleanStatic($path, $location);
+            echo "Yellow $command: Static website";
+            echo " ".($statusCode!=200 ? "not " : "")."cleaned\n";
         } else {
             $statusCode = 400;
             echo "Yellow $command: Invalid arguments\n";
@@ -256,14 +278,11 @@ class YellowGenerate {
         return $statusCode;
     }
     
-    // Clean static files and directories
-    public function cleanStaticFiles($path, $location) {
+    // Clean static website
+    public function cleanStatic($path, $location) {
         $statusCode = 200;
         $path = rtrim(is_string_empty($path) ? $this->yellow->system->get("generateStaticDirectory") : $path, "/");
         if (is_string_empty($location)) {
-            foreach ($this->yellow->extension->data as $key=>$value) {
-                if (method_exists($value["object"], "onUpdate")) $value["object"]->onUpdate("clean");
-            }
             $statusCode = max($statusCode, $this->cleanStaticDirectory($path));
         } else {
             if ($this->yellow->lookup->isFileLocation($location)) {
@@ -334,6 +353,7 @@ class YellowGenerate {
     
     // Return progress in percent
     public function getProgressPercent($now, $total, $increments, $max) {
+        $max = intval($max/$increments) * $increments;
         $percent = intval(($max/$total) * $now);
         if ($increments>1) $percent = intval($percent/$increments) * $increments;
         return min($max, $percent);
