@@ -14,7 +14,7 @@ Die folgenden Erweiterungen sind in der Standardinstallation enthalten:
 * [Edit](https://github.com/annaesvensson/yellow-edit/tree/main/README-de.md) - Webseite im Webbrowser bearbeiten. Entwickelt von Anna Svensson.
 * [Generate](https://github.com/annaesvensson/yellow-generate/tree/main/README-de.md) - Statische Webseite generieren. Entwickelt von Anna Svensson.
 * [Image](https://github.com/annaesvensson/yellow-image/tree/main/README-de.md) - Bilder in unterschiedlichen Größen. Entwickelt von Anna Svensson.
-* [Install](https://github.com/annaesvensson/yellow-install/tree/main/README-de.md) - Eine brandneue Website installieren. Entwickelt von Anna Svensson.
+* [Install](https://github.com/annaesvensson/yellow-install/tree/main/README-de.md) - Eine brandneue Webseite installieren. Entwickelt von Anna Svensson.
 * [Markdown](https://github.com/annaesvensson/yellow-markdown/tree/main/README-de.md) - Textformatierung für Menschen. Entwickelt von Anna Svensson.
 * [Meta](https://github.com/annaesvensson/yellow-meta/tree/main/README-de.md) - Metadaten für Menschen und Maschinen. Entwickelt von Anna Svensson.
 * [Serve](https://github.com/annaesvensson/yellow-serve/tree/main/README-de.md) - Eingebauter Webserver. Entwickelt von Anna Svensson.
