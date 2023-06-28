@@ -13,7 +13,7 @@ Följande tillägg ingår i standardinstallationen:
 * [Core](https://github.com/annaesvensson/yellow-core/tree/main/README-sv.md) - Kärnfunktionalitet på din webbplats. Utvecklad av Anna Svensson.
 * [Edit](https://github.com/annaesvensson/yellow-edit/tree/main/README-sv.md) - Redigera din webbplats i en webbläsare. Utvecklad av Anna Svensson.
 * [Generate](https://github.com/annaesvensson/yellow-generate/tree/main/README-sv.md) - Generera en statisk webbplats. Utvecklad av Anna Svensson.
-* [Image](https://github.com/annaesvensson/yellow-image/tree/main/README-sv.md) - Bilder och miniatyrbilder. Utvecklad av Anna Svensson.
+* [Image](https://github.com/annaesvensson/yellow-image/tree/main/README-sv.md) - Lägg til bilder och miniatyrbilder. Utvecklad av Anna Svensson.
 * [Install](https://github.com/annaesvensson/yellow-install/tree/main/README-sv.md) - Installera en helt ny webbplats. Utvecklad av Anna Svensson.
 * [Markdown](https://github.com/annaesvensson/yellow-markdown/tree/main/README-sv.md) - Textformatering för människor. Utvecklad av Anna Svensson.
 * [Meta](https://github.com/annaesvensson/yellow-meta/tree/main/README-sv.md) - Metadata för människor och maskiner. Utvecklad av Anna Svensson.

@@ -13,7 +13,7 @@ The following extensions are included in the standard installation:
 * [Core](https://github.com/annaesvensson/yellow-core) - Core functionality of your website. Developed by Anna Svensson.
 * [Edit](https://github.com/annaesvensson/yellow-edit) - Edit your website in a web browser. Developed by Anna Svensson.
 * [Generate](https://github.com/annaesvensson/yellow-generate) - Generate a static website. Developed by Anna Svensson.
-* [Image](https://github.com/annaesvensson/yellow-image) - Images and thumbnails. Developed by Anna Svensson.
+* [Image](https://github.com/annaesvensson/yellow-image) - Add images and thumbnails. Developed by Anna Svensson.
 * [Install](https://github.com/annaesvensson/yellow-install) - Install a brand new website. Developed by Anna Svensson.
 * [Markdown](https://github.com/annaesvensson/yellow-markdown) - Text formatting for humans. Developed by Anna Svensson.
 * [Meta](https://github.com/annaesvensson/yellow-meta) - Meta data for humans and machines. Developed by Anna Svensson.
