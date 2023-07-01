@@ -16,7 +16,6 @@ Die folgenden Erweiterungen sind in der Standardinstallation enthalten:
 * [Image](https://github.com/annaesvensson/yellow-image/tree/main/README-de.md) - Bilder in unterschiedlichen Größen hinzufügen. Entwickelt von Anna Svensson.
 * [Install](https://github.com/annaesvensson/yellow-install/tree/main/README-de.md) - Eine brandneue Webseite installieren. Entwickelt von Anna Svensson.
 * [Markdown](https://github.com/annaesvensson/yellow-markdown/tree/main/README-de.md) - Textformatierung für Menschen. Entwickelt von Anna Svensson.
-* [Meta](https://github.com/annaesvensson/yellow-meta/tree/main/README-de.md) - Metadaten für Menschen und Maschinen. Entwickelt von Anna Svensson.
 * [Serve](https://github.com/annaesvensson/yellow-serve/tree/main/README-de.md) - Eingebauter Webserver. Entwickelt von Anna Svensson.
 * [Stockholm](https://github.com/annaesvensson/yellow-stockholm/tree/main/README-de.md) - Stockholm ist ein schlichtes Theme. Entworfen von Anna Svensson.
 * [Update](https://github.com/annaesvensson/yellow-update/tree/main/README-de.md) - Webseite auf dem neusten Stand halten. Entwickelt von Anna Svensson.

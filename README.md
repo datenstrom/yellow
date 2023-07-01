@@ -16,7 +16,6 @@ The following extensions are included in the standard installation:
 * [Image](https://github.com/annaesvensson/yellow-image) - Add images and thumbnails. Developed by Anna Svensson.
 * [Install](https://github.com/annaesvensson/yellow-install) - Install a brand new website. Developed by Anna Svensson.
 * [Markdown](https://github.com/annaesvensson/yellow-markdown) - Text formatting for humans. Developed by Anna Svensson.
-* [Meta](https://github.com/annaesvensson/yellow-meta) - Meta data for humans and machines. Developed by Anna Svensson.
 * [Serve](https://github.com/annaesvensson/yellow-serve) - Built-in web server. Developed by Anna Svensson.
 * [Stockholm](https://github.com/annaesvensson/yellow-stockholm) - Stockholm is a clean theme. Designed by Anna Svensson.
 * [Update](https://github.com/annaesvensson/yellow-update) - Keep your website up to date. Developed by Anna Svensson.
