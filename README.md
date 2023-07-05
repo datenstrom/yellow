@@ -12,9 +12,9 @@ The following extensions are included in the standard installation:
 
 * [Core](https://github.com/annaesvensson/yellow-core) - Core functionality of your website. Developed by Anna Svensson.
 * [Edit](https://github.com/annaesvensson/yellow-edit) - Edit your website in a web browser. Developed by Anna Svensson.
+* [English](https://github.com/annaesvensson/yellow-language/tree/main/translations/english) - English language. Translated by Mark Seuffert.
 * [Generate](https://github.com/annaesvensson/yellow-generate) - Generate a static website. Developed by Anna Svensson.
 * [Image](https://github.com/annaesvensson/yellow-image) - Add images and thumbnails. Developed by Anna Svensson.
-* [Install](https://github.com/annaesvensson/yellow-install) - Install a brand new website. Developed by Anna Svensson.
 * [Markdown](https://github.com/annaesvensson/yellow-markdown) - Text formatting for humans. Developed by Anna Svensson.
 * [Serve](https://github.com/annaesvensson/yellow-serve) - Built-in web server. Developed by Anna Svensson.
 * [Stockholm](https://github.com/annaesvensson/yellow-stockholm) - Stockholm is a clean theme. Designed by Anna Svensson.

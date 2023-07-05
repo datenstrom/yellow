@@ -13,8 +13,8 @@ Die folgenden Erweiterungen sind in der Standardinstallation enthalten:
 * [Core](https://github.com/annaesvensson/yellow-core/tree/main/README-de.md) - Kernfunktionalität deiner Webseite. Entwickelt von Anna Svensson.
 * [Edit](https://github.com/annaesvensson/yellow-edit/tree/main/README-de.md) - Webseite im Webbrowser bearbeiten. Entwickelt von Anna Svensson.
 * [Generate](https://github.com/annaesvensson/yellow-generate/tree/main/README-de.md) - Statische Webseite generieren. Entwickelt von Anna Svensson.
+* [German](https://github.com/annaesvensson/yellow-language/tree/main/translations/german) - Deutsche Sprache. Übersetzt von David Fehrmann.
 * [Image](https://github.com/annaesvensson/yellow-image/tree/main/README-de.md) - Bilder in unterschiedlichen Größen hinzufügen. Entwickelt von Anna Svensson.
-* [Install](https://github.com/annaesvensson/yellow-install/tree/main/README-de.md) - Eine brandneue Webseite installieren. Entwickelt von Anna Svensson.
 * [Markdown](https://github.com/annaesvensson/yellow-markdown/tree/main/README-de.md) - Textformatierung für Menschen. Entwickelt von Anna Svensson.
 * [Serve](https://github.com/annaesvensson/yellow-serve/tree/main/README-de.md) - Eingebauter Webserver. Entwickelt von Anna Svensson.
 * [Stockholm](https://github.com/annaesvensson/yellow-stockholm/tree/main/README-de.md) - Stockholm ist ein schlichtes Theme. Entworfen von Anna Svensson.
