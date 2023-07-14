@@ -19,6 +19,6 @@ Installing is unzipping one file and you are ready to go. The most important thi
 
 ## Acknowledgements
 
-This product is developed by various contributors. Thank you for working together.
+This product was developed with the help of various contributors. Thank you for the good work.
 
 Do you have questions? [Get help](https://datenstrom.se/yellow/help/).
