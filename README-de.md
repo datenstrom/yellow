@@ -8,16 +8,17 @@ Zum Installieren entpackt man eine Datei und los geht's. Die wichtigsten Dinge f
 
 ## Was ist enthalten
 
-Die folgenden Erweiterungen sind in der Standardinstallation enthalten:
-
 * [Core](https://github.com/annaesvensson/yellow-core/tree/main/README-de.md) - Kernfunktionalität deiner Webseite. Entwickelt von Anna Svensson.
 * [Edit](https://github.com/annaesvensson/yellow-edit/tree/main/README-de.md) - Webseite im Webbrowser bearbeiten. Entwickelt von Anna Svensson.
 * [Generate](https://github.com/annaesvensson/yellow-generate/tree/main/README-de.md) - Statische Webseite generieren. Entwickelt von Anna Svensson.
-* [German](https://github.com/annaesvensson/yellow-language/tree/main/translations/german) - Deutsche Sprache. Übersetzt von David Fehrmann.
 * [Image](https://github.com/annaesvensson/yellow-image/tree/main/README-de.md) - Bilder in unterschiedlichen Größen hinzufügen. Entwickelt von Anna Svensson.
 * [Markdown](https://github.com/annaesvensson/yellow-markdown/tree/main/README-de.md) - Textformatierung für Menschen. Entwickelt von Anna Svensson.
 * [Serve](https://github.com/annaesvensson/yellow-serve/tree/main/README-de.md) - Eingebauter Webserver. Entwickelt von Anna Svensson.
 * [Stockholm](https://github.com/annaesvensson/yellow-stockholm/tree/main/README-de.md) - Stockholm ist ein schlichtes Theme. Entworfen von Anna Svensson.
 * [Update](https://github.com/annaesvensson/yellow-update/tree/main/README-de.md) - Webseite auf dem neusten Stand halten. Entwickelt von Anna Svensson.
+
+## Danksagung
+
+Dieses Produkt wird entwickelt von verschiedenen Mitwirkenden. Danke für die gute Zusammenarbeit.
 
 Hast du Fragen? [Hilfe finden](https://datenstrom.se/de/yellow/help/).
