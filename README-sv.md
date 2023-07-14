@@ -8,8 +8,6 @@ För att installera packa upp en fil och du är redo att gå. De viktigaste sake
 
 ## Vad ingår
 
-Följande tillägg ingår i standardinstallationen:
-
 * [Core](https://github.com/annaesvensson/yellow-core/tree/main/README-sv.md) - Kärnfunktionalitet på din webbplats. Utvecklad av Anna Svensson.
 * [Edit](https://github.com/annaesvensson/yellow-edit/tree/main/README-sv.md) - Redigera din webbplats i en webbläsare. Utvecklad av Anna Svensson.
 * [Generate](https://github.com/annaesvensson/yellow-generate/tree/main/README-sv.md) - Generera en statisk webbplats. Utvecklad av Anna Svensson.
@@ -17,7 +15,10 @@ Följande tillägg ingår i standardinstallationen:
 * [Markdown](https://github.com/annaesvensson/yellow-markdown/tree/main/README-sv.md) - Textformatering för människor. Utvecklad av Anna Svensson.
 * [Serve](https://github.com/annaesvensson/yellow-serve/tree/main/README-sv.md) - Inbyggd webbserver. Utvecklad av Anna Svensson.
 * [Stockholm](https://github.com/annaesvensson/yellow-stockholm/tree/main/README-sv.md) - Stockholm är ett rent tema. Designad av Anna Svensson.
-* [Swedish](https://github.com/annaesvensson/yellow-language/tree/main/translations/swedish) - Svenska språket. Översatt av Anna Svensson.
 * [Update](https://github.com/annaesvensson/yellow-update/tree/main/README-sv.md) - Håll din webbplats uppdaterad. Utvecklad av Anna Svensson.
+
+## Tack
+
+Denna produkt är utvecklad av olika bidragsgivare. Tack för ett gott samarbete.
 
 Har du några frågor? [Få hjälp](https://datenstrom.se/sv/yellow/help/).
