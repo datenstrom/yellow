@@ -6,19 +6,16 @@ Datenstrom Yellow är för människor som skapar små webbsidor. https://datenst
 
 För att installera packa upp en fil och du är redo att gå. De viktigaste sakerna för små webbsidor ingår. Du kan lägga till funktioner, språk och teman. Datenstrom Yellow fungerar som webbpubliceringssystem och static-site-generator. [Komma igång](https://datenstrom.se/sv/yellow/help/how-to-get-started).
 
-## Vad ingår
+## Dokumentation
 
-* [Core](https://github.com/annaesvensson/yellow-core/tree/main/README-sv.md) - Kärnfunktionalitet på din webbplats. Utvecklad av Anna Svensson.
-* [Edit](https://github.com/annaesvensson/yellow-edit/tree/main/README-sv.md) - Redigera din webbplats i en webbläsare. Utvecklad av Anna Svensson.
-* [Generate](https://github.com/annaesvensson/yellow-generate/tree/main/README-sv.md) - Generera en statisk webbplats. Utvecklad av Anna Svensson.
-* [Image](https://github.com/annaesvensson/yellow-image/tree/main/README-sv.md) - Lägg til bilder och miniatyrbilder. Utvecklad av Anna Svensson.
-* [Markdown](https://github.com/annaesvensson/yellow-markdown/tree/main/README-sv.md) - Textformatering för människor. Utvecklad av Anna Svensson.
-* [Serve](https://github.com/annaesvensson/yellow-serve/tree/main/README-sv.md) - Inbyggd webbserver. Utvecklad av Anna Svensson.
-* [Stockholm](https://github.com/annaesvensson/yellow-stockholm/tree/main/README-sv.md) - Stockholm är ett rent tema. Designad av Anna Svensson.
-* [Update](https://github.com/annaesvensson/yellow-update/tree/main/README-sv.md) - Håll din webbplats uppdaterad. Utvecklad av Anna Svensson.
+Dokumentationen visar dig hur man gör små webbsidor, wikier och bloggar. Här hittar du instruktioner om hur man anpassar allt. För utvecklare, formgivare och översättare finns beskrivningar av övergripande koncept, inbyggda verktyg och vad som kan göras med API:et. [Hitta hjälp för din webbplats](https://datenstrom.se/sv/yellow/help/).
 
-## Tack
+## Tillägg
 
-Denna produkt är utvecklad av olika bidragsgivare. Tack för ett gott samarbete.
+Tillägg gör din webbplats mer användbar. Här hittar du funktioner, språk och teman. Alla tillägg kommer med dokumentation som förklarar hur de fungerar, samt exempel för att göra ditt liv enklare. Titta på publicerade tilläggen och installera några på din webbplats. [Hitta tillägg för din webbplats](https://github.com/datenstrom/yellow-extensions/tree/main/README-sv.md).
+
+## Samarbete
+
+Jobba med oss, ställ frågor och rapportera fel. Vi är intresserade av vad du vill göra och vilka problem du har. Ju mer vi vet desto bättre kan vi hjälpa till. Vår nätgemenskap är en plats att hjälpa varandra. Där du kan ställa och svara på frågor. [Läs mer om samarbete](https://datenstrom.se/sv/yellow/help/contributing-guidelines).
 
 Har du några frågor? [Få hjälp](https://datenstrom.se/sv/yellow/help/).
