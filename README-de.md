@@ -6,19 +6,16 @@ Datenstrom Yellow ist für Menschen die kleine Webseiten machen. https://datenst
 
 Zum Installieren entpackt man eine Datei und los geht's. Die wichtigsten Dinge für kleine Webseiten sind mit dabei. Du kannst Funktionen, Sprachen und Themes hinzufügen. Datenstrom Yellow funktioniert als Content-Management-System und Static-Site-Generator. [Loslegen](https://datenstrom.se/de/yellow/help/how-to-get-started).
 
-## Was ist enthalten
+## Dokumentation
 
-* [Core](https://github.com/annaesvensson/yellow-core/tree/main/README-de.md) - Kernfunktionalität deiner Webseite. Entwickelt von Anna Svensson.
-* [Edit](https://github.com/annaesvensson/yellow-edit/tree/main/README-de.md) - Webseite im Webbrowser bearbeiten. Entwickelt von Anna Svensson.
-* [Generate](https://github.com/annaesvensson/yellow-generate/tree/main/README-de.md) - Statische Webseite generieren. Entwickelt von Anna Svensson.
-* [Image](https://github.com/annaesvensson/yellow-image/tree/main/README-de.md) - Bilder in unterschiedlichen Größen hinzufügen. Entwickelt von Anna Svensson.
-* [Markdown](https://github.com/annaesvensson/yellow-markdown/tree/main/README-de.md) - Textformatierung für Menschen. Entwickelt von Anna Svensson.
-* [Serve](https://github.com/annaesvensson/yellow-serve/tree/main/README-de.md) - Eingebauter Webserver. Entwickelt von Anna Svensson.
-* [Stockholm](https://github.com/annaesvensson/yellow-stockholm/tree/main/README-de.md) - Stockholm ist ein schlichtes Theme. Entworfen von Anna Svensson.
-* [Update](https://github.com/annaesvensson/yellow-update/tree/main/README-de.md) - Webseite auf dem neusten Stand halten. Entwickelt von Anna Svensson.
+Die Dokumentation zeigt dir wie man kleine Webseiten, Wikis und Blogs macht. Hier findest du Anleitungen wie man alles anpasst. Für Entwickler, Designer und Übersetzer gibt es Beschreibungen von übergreifenden Konzepten, eingebauten Werkzeugen und was man mit der API machen kann. [Hilfe für deine Webseite finden](https://datenstrom.se/de/yellow/help/).
 
-## Danksagung
+## Erweiterungen 
 
-Dieses Produkt wird entwickelt von verschiedenen Mitwirkenden. Danke für die gute Zusammenarbeit.
+Erweiterungen machen deine Webseite nützlicher. Hier findest du Funktionen, Sprachen und Themes. Zu allen Erweiterungen gibt es eine Dokumentation die ihre Funktionsweise erklärt, sowie Beispiele um dir das Leben zu erleichtern. Schau dir die veröffentlichten Erweiterungen an und installiere welche auf deiner Webseite. [Erweiterungen für deine Webseite finden](https://github.com/datenstrom/yellow-extensions/tree/main/README-de.md).
+
+## Zusammenarbeit
+
+Arbeite mit uns, stelle Fragen und melde Fehler. Es interessiert uns was du machen möchtest und welche Probleme du hast. Je mehr wir wissen, desto besser können wir dir helfen. Unsere Netzgemeinschaft ist ein Ort um sich gegenseitig zu helfen. Wo man Fragen stellen und beantworten kann. [Weitere Informationen zum Zusammenarbeiten](https://datenstrom.se/de/yellow/help/contributing-guidelines).
 
 Hast du Fragen? [Hilfe finden](https://datenstrom.se/de/yellow/help/).
