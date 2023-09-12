@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.8.116";
+    const VERSION = "0.8.117";
     const RELEASE = "0.8.22";
     public $content;        // content files
     public $media;          // media files
@@ -1565,6 +1565,8 @@ class YellowLookup {
                 } elseif (!preg_match("#^($pageBase|$mediaBase)#", $location)) {
                     $location = $pageBase.$location;
                 }
+            } else {
+                $location = $pageBase.$pageLocation.$location;
             }
             $location = str_replace("/./", "/", $location);
             $location = str_replace(":", $this->yellow->toolbox->getLocationArgumentsSeparator(), $location);

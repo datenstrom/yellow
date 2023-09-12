@@ -2,7 +2,7 @@
 // Markdown extension, https://github.com/annaesvensson/yellow-markdown
 
 class YellowMarkdown {
-    const VERSION = "0.8.24";
+    const VERSION = "0.8.25";
     public $yellow;         // access to API
     
     // Handle initialisation
@@ -3848,6 +3848,7 @@ class YellowMarkdownParser extends MarkdownExtraParser {
         };
         $this->span_gamut += array("doStrikethrough" => 55);
         $this->block_gamut += array("doNoticeBlocks" => 65);
+        $this->document_gamut += array("doFootnotesLinks" => 55);
         $this->escape_chars .= "~";
         parent::__construct();
     }
@@ -4026,6 +4027,25 @@ class YellowMarkdownParser extends MarkdownExtraParser {
         return "\n".$this->hashBlock($output)."\n\n";
     }
     
+    // Handle footnotes links, normalise ids and links
+    public function doFootnotesLinks($text) {
+        if (!is_null($this->footnotes_assembled)) {
+            $callbackId = function ($matches) {
+                $id = str_replace(":", "-", $matches[2]);
+                return "<$matches[1] id=\"$id\" $matches[3]>";
+            };
+            $text = preg_replace_callback("/<(li|sup) id=\"(fn:\d+)\"(.*?)>/", $callbackId, $text);
+            $text = preg_replace_callback("/<(li|sup) id=\"(fnref\d*:\d+)\"(.*?)>/", $callbackId, $text);
+            $callbackHref = function ($matches) {
+                $href = $this->page->base.$this->page->location.str_replace(":", "-", $matches[2]);
+                return "<$matches[1] href=\"$href\" $matches[3]>";
+            };
+            $text = preg_replace_callback("/<(a) href=\"(#fn:\d+)\"(.*?)>/", $callbackHref, $text);
+            $text = preg_replace_callback("/<(a) href=\"(#fnref\d*:\d+)\"(.*?)>/", $callbackHref, $text);
+        }
+		return $text;
+    }
+
     // Return unique id attribute
     public function getIdAttribute($text) {
         $attr = "";
