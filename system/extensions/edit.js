@@ -901,8 +901,11 @@ yellow.edit = {
     bindActions: function(element) {
         var elements = element.getElementsByTagName("a");
         for (var i=0, l=elements.length; i<l; i++) {
-            if (elements[i].getAttribute("href") && elements[i].getAttribute("href").substring(0, 13)=="#data-action-") {
-                elements[i].setAttribute("data-action", elements[i].getAttribute("href").substring(13));
+            if (elements[i].getAttribute("href") && elements[i].getAttribute("href").indexOf("#data-action-")!=-1) {
+                var position = elements[i].getAttribute("href").indexOf("#data-action-");
+                var action = elements[i].getAttribute("href").substring(position+13);
+                var href = elements[i].getAttribute("href").substring(0, position);
+                if (href=="" || href==yellow.page.base+yellow.page.location) elements[i].setAttribute("data-action", action);
             }
             if (elements[i].getAttribute("data-action")) elements[i].onclick = yellow.onClickAction;
             if (elements[i].getAttribute("data-action")=="toolbar") elements[i].onmousedown = function(e) { e.preventDefault(); };

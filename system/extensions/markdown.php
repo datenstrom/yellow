@@ -2,7 +2,7 @@
 // Markdown extension, https://github.com/annaesvensson/yellow-markdown
 
 class YellowMarkdown {
-    const VERSION = "0.8.25";
+    const VERSION = "0.8.26";
     public $yellow;         // access to API
     
     // Handle initialisation
@@ -3844,7 +3844,7 @@ class YellowMarkdownParser extends MarkdownExtraParser {
         $this->idAttributes = array();
         $this->noticeLevel = 0;
         $this->url_filter_func = function($url) use ($yellow, $page) {
-            return $yellow->lookup->normaliseLocation($url, $page->location);
+            return $yellow->lookup->normaliseLocation($url, $page->getPage("main")->location);
         };
         $this->span_gamut += array("doStrikethrough" => 55);
         $this->block_gamut += array("doNoticeBlocks" => 65);
