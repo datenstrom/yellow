@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.8.117";
+    const VERSION = "0.8.118";
     const RELEASE = "0.8.22";
     public $content;        // content files
     public $media;          // media files
@@ -716,7 +716,8 @@ class YellowSystem {
     
     // Return different value for system setting
     public function getDifferent($key) {
-        return reset(array_diff($this->getAvailable($key), array($this->get($key))));
+        $array = array_diff($this->getAvailable($key), array($this->get($key)));
+        return reset($array);
     }
 
     // Return available values for system setting
