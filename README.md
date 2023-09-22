@@ -8,7 +8,7 @@ Installing is unzipping one file and you are ready to go. The most important thi
 
 ## Extensions 
 
-Extensions make your website more useful. All extensions come with instructions explaining how they work, examples to make your life easier and settings you can adjust. Have a look at published extensions and install some on your website. [Get extensions for your website](https://github.com/datenstrom/yellow-extensions).
+Extensions make your website more useful. All extensions come with instructions explaining how they work, examples to make your life easier and settings you can configure. Have a look at published extensions and install some on your website. [Get extensions for your website](https://github.com/datenstrom/yellow-extensions).
 
 ## Documentation
 
