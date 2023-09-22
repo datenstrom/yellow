@@ -6,13 +6,13 @@ Datenstrom Yellow ist für Menschen die kleine Webseiten machen. https://datenst
 
 Zum Installieren entpackt man eine Datei und los geht's. Die wichtigsten Dinge für kleine Webseiten sind mit dabei. Du kannst Funktionen, Sprachen und Themes hinzufügen. Datenstrom Yellow funktioniert als Content-Management-System und Static-Site-Generator. [Loslegen](https://datenstrom.se/de/yellow/help/how-to-get-started).
 
-## Dokumentation
-
-Die Dokumentation zeigt dir wie man kleine Webseiten, Wikis und Blogs macht. Hier findest du Anleitungen wie man alles anpasst. Für Entwickler, Designer und Übersetzer gibt es Beschreibungen von übergreifenden Konzepten, eingebauten Werkzeugen und was man mit der API machen kann. [Hilfe für deine Webseite finden](https://datenstrom.se/de/yellow/help/).
-
 ## Erweiterungen 
 
-Erweiterungen machen deine Webseite nützlicher. Hier findest du Funktionen, Sprachen und Themes. Zu allen Erweiterungen gibt es eine Dokumentation die ihre Funktionsweise erklärt, sowie Beispiele um dir das Leben zu erleichtern. Schau dir die veröffentlichten Erweiterungen an und installiere welche auf deiner Webseite. [Erweiterungen für deine Webseite finden](https://github.com/datenstrom/yellow-extensions/tree/main/README-de.md).
+Erweiterungen machen deine Webseite nützlicher. Zu allen Erweiterungen gibt es eine Anleitung die ihre Funktionsweise erklärt, Beispiele um dir das Leben zu erleichtern und Einstellungen die du konfigurieren kannst. Schau dir die veröffentlichten Erweiterungen an und installiere welche auf deiner Webseite. [Erweiterungen für deine Webseite finden](https://github.com/datenstrom/yellow-extensions/tree/main/README-de.md).
+
+## Dokumentation
+
+Die Hilfe zeigt dir wie man kleine Webseiten, Wikis und Blogs macht. Hier findest du Anleitungen wie man alles anpasst. Für Entwickler, Designer und Übersetzer gibt es Beschreibungen von übergreifenden Konzepten, eingebauten Werkzeugen und was man mit der API machen kann. [Hilfe für deine Webseite finden](https://datenstrom.se/de/yellow/help/).
 
 ## Zusammenarbeit
 
