@@ -12,7 +12,7 @@ Extensions make your website more useful. All extensions come with instructions 
 
 ## Documentation
 
-The help shows you how to make small websites, wikis and blogs. Here you can find instructions on how to customise everything. For developers, designers and translators there are descriptions of concepts, tools and what can be done with the API. [Get help for your website](https://datenstrom.se/yellow/help/).
+The help shows you how to make small websites, wikis and blogs. Here you can find instructions on how to customise everything. For developers, designers and translators there are descriptions of folders, tools and what can be done with the API. [Get help for your website](https://datenstrom.se/yellow/help/).
 
 ## Contributing
 

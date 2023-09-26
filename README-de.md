@@ -12,7 +12,7 @@ Erweiterungen machen deine Webseite nützlicher. Zu allen Erweiterungen gibt es 
 
 ## Dokumentation
 
-Die Hilfe zeigt dir wie man kleine Webseiten, Wikis und Blogs macht. Hier findest du Anleitungen wie man alles anpasst. Für Entwickler, Designer und Übersetzer gibt es Beschreibungen von Konzepten, Werkzeugen und was man mit der API machen kann. [Hilfe für deine Webseite finden](https://datenstrom.se/de/yellow/help/).
+Die Hilfe zeigt dir wie man kleine Webseiten, Wikis und Blogs macht. Hier findest du Anleitungen wie man alles anpasst. Für Entwickler, Designer und Übersetzer gibt es Beschreibungen von Verzeichnissen, Werkzeugen und was man mit der API machen kann. [Hilfe für deine Webseite finden](https://datenstrom.se/de/yellow/help/).
 
 ## Zusammenarbeit
 

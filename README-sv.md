@@ -12,7 +12,7 @@ Tillägg gör din webbplats mer användbar. Alla tillägg kommer med instruktion
 
 ## Dokumentation
 
-Hjälpen visar dig hur man gör små webbsidor, wikier och bloggar. Här hittar du instruktioner om hur man anpassar allt. För utvecklare, formgivare och översättare finns beskrivningar av koncept, verktyg och vad som kan göras med API:et. [Hitta hjälp för din webbplats](https://datenstrom.se/sv/yellow/help/).
+Hjälpen visar dig hur man gör små webbsidor, wikier och bloggar. Här hittar du instruktioner om hur man anpassar allt. För utvecklare, formgivare och översättare finns beskrivningar av mappar, verktyg och vad som kan göras med API:et. [Hitta hjälp för din webbplats](https://datenstrom.se/sv/yellow/help/).
 
 ## Samarbete
 
