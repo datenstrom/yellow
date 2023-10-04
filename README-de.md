@@ -6,11 +6,11 @@ Datenstrom Yellow ist für Menschen die kleine Webseiten machen. Die wichtigsten
 
 ## Erweiterungen 
 
-Erweiterungen machen deine Webseite nützlicher. Zu allen Erweiterungen gibt es eine Anleitung die ihre Funktionsweise erklärt, Beispiele um dir das Leben zu erleichtern und Einstellungen die du konfigurieren kannst. Schau dir die veröffentlichten Erweiterungen an und installiere welche auf deiner Webseite. [Erweiterungen für deine Webseite finden](https://github.com/datenstrom/yellow-extensions/tree/main/README-de.md).
+Erweiterungen machen deine Webseite nützlicher. Zu jeder Erweiterung gibt es eine Anleitung die ihre Funktionsweise erklärt, Beispiele um dir das Leben zu erleichtern und Einstellungen die du konfigurieren kannst. Schau dir die veröffentlichten Erweiterungen an und installiere welche auf deiner Webseite. [Erweiterungen für deine Webseite finden](https://github.com/datenstrom/yellow-extensions/tree/main/README-de.md).
 
 ## Dokumentation
 
-Die Hilfe zeigt dir wie man kleine Webseiten, Wikis und Blogs macht. Hier findest du Anleitungen wie man alles anpasst. Für Entwickler, Designer und Übersetzer gibt es Beschreibungen von Verzeichnissen, Werkzeugen und was man mit der API machen kann. [Hilfe für deine Webseite finden](https://datenstrom.se/de/yellow/help/).
+Die Hilfe zeigt dir wie man kleine Webseiten, Wikis und Blogs macht. Hier findest du Anleitungen wie man alles anpasst. Für Entwickler, Designer und Übersetzer gibt es Beschreibungen von Dateien, Verzeichnissen und was man mit der API machen kann. [Hilfe für deine Webseite finden](https://datenstrom.se/de/yellow/help/).
 
 ## Zusammenarbeit
 

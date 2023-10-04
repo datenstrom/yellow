@@ -6,11 +6,11 @@ Datenstrom Yellow är för människor som skapar små webbsidor. De viktigaste s
 
 ## Tillägg
 
-Tillägg gör din webbplats mer användbar. Alla tillägg kommer med instruktioner som förklarar hur de fungerar, exempel för att göra ditt liv enklare och inställningar du kan konfigurera. Titta på publicerade tilläggen och installera några på din webbplats. [Hitta tillägg för din webbplats](https://github.com/datenstrom/yellow-extensions/tree/main/README-sv.md).
+Tillägg gör din webbplats mer användbar. Varje tillägg kommer med instruktioner som förklarar hur det fungerar, exempel för att göra ditt liv enklare och inställningar du kan konfigurera. Titta på publicerade tilläggen och installera några på din webbplats. [Hitta tillägg för din webbplats](https://github.com/datenstrom/yellow-extensions/tree/main/README-sv.md).
 
 ## Dokumentation
 
-Hjälpen visar dig hur man gör små webbsidor, wikier och bloggar. Här hittar du instruktioner om hur man anpassar allt. För utvecklare, formgivare och översättare finns beskrivningar av mappar, verktyg och vad som kan göras med API:et. [Hitta hjälp för din webbplats](https://datenstrom.se/sv/yellow/help/).
+Hjälpen visar dig hur man gör små webbsidor, wikier och bloggar. Här hittar du instruktioner om hur man anpassar allt. För utvecklare, formgivare och översättare finns beskrivningar av filer, mappar och vad som kan göras med API:et. [Hitta hjälp för din webbplats](https://datenstrom.se/sv/yellow/help/).
 
 ## Samarbete
 
