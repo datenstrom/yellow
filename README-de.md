@@ -2,9 +2,7 @@
 
 # Datenstrom Yellow 0.8.22
 
-Datenstrom Yellow ist für Menschen die kleine Webseiten machen. [Webseite besuchen](https://datenstrom.se/de/yellow/).
-
-Zum Installieren entpackt man eine Datei und los geht's. Die wichtigsten Dinge für kleine Webseiten sind mit dabei. Du kannst Funktionen, Sprachen und Themes hinzufügen. Datenstrom Yellow funktioniert als Content-Management-System und Static-Site-Generator. [Loslegen](https://datenstrom.se/de/yellow/help/how-to-get-started).
+Datenstrom Yellow ist für Menschen die kleine Webseiten machen. Die wichtigsten Dinge für kleine Webseiten sind mit dabei. Du kannst Funktionen, Sprachen und Themes hinzufügen. Datenstrom Yellow funktioniert als Content-Management-System und Static-Site-Generator. [Herunterladen](https://github.com/datenstrom/yellow/archive/main.zip) und [loslegen](https://datenstrom.se/de/yellow/help/how-to-get-started).
 
 ## Erweiterungen 
 
