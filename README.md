@@ -2,7 +2,7 @@
 
 # Datenstrom Yellow 0.8.22
 
-Datenstrom Yellow is for people who make small websites. Installing is unzipping one file and you are ready to go. The most important things for small websites are included. You can add features, languages and themes. Datenstrom Yellow works as content management system and static site generator. [Get started](https://datenstrom.se/yellow/help/how-to-get-started).
+Datenstrom Yellow is for people who make small websites. Installing is unzipping one file and you are ready to go. The most important things for small websites are included. You can add features, languages and themes. Datenstrom Yellow works as content management system and static site generator. [Download](https://github.com/datenstrom/yellow/archive/main.zip) and [get started](https://datenstrom.se/yellow/help/how-to-get-started).
 
 ## Extensions 
 
