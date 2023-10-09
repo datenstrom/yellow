@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.8.118";
+    const VERSION = "0.8.119";
     const RELEASE = "0.8.22";
     public $content;        // content files
     public $media;          // media files
@@ -819,7 +819,7 @@ class YellowLanguage {
     public function setDefault($key, $value, $language) {
         if (!isset($this->settings[$language])) $this->settings[$language] = new YellowArray();
         $this->settings[$language][$key] = $value;
-        $this->settingsDefaults[$key] = $value;
+        $this->settingsDefaults[$key] = true;
     }
     
     // Set default language settings

@@ -2,7 +2,7 @@
 // Update extension, https://github.com/annaesvensson/yellow-update
 
 class YellowUpdate {
-    const VERSION = "0.8.94";
+    const VERSION = "0.8.95";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $extensions;             // number of extensions
@@ -537,12 +537,18 @@ class YellowUpdate {
                             $language = $matches[2];
                             $settings = new YellowArray();
                             $settings["language"] = $language;
+                            $settings["languageLocale"] = "n/a";
+                            $settings["languageDescription"] = "n/a";
+                            $settings["languageTranslator"] = "Unknown";
                             foreach ($this->yellow->language->settingsDefaults as $key=>$value) {
                                 $require = preg_match("/^([a-z]*)[A-Z]+/", $key, $tokens) ? $tokens[1] : "core";
                                 if ($require=="language") $require = "core";
-                                if ($this->yellow->extension->isExisting($require) &&
-                                    $this->yellow->language->isText($key, $language)) {
-                                    $settings[$key] = $this->yellow->language->getText($key, $language);
+                                if ($this->yellow->extension->isExisting($require)) {
+                                    if ($this->yellow->language->isText($key, $language)) {
+                                        $settings[$key] = $this->yellow->language->getText($key, $language);
+                                    } else {
+                                        $settings[$key] = $this->yellow->language->getText($key, "en");
+                                    }
                                 }
                             }
                         }

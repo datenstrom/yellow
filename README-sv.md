@@ -2,7 +2,7 @@
 
 # Datenstrom Yellow 0.8.22
 
-Datenstrom Yellow är för människor som skapar små webbsidor. De viktigaste sakerna för små webbsidor ingår. Du kan lägga till funktioner, språk och teman. Datenstrom Yellow fungerar som webbpubliceringssystem och static-site-generator. [Ladda ner](https://github.com/datenstrom/yellow/archive/main.zip) och [komma igång](https://datenstrom.se/sv/yellow/help/how-to-get-started).
+Datenstrom Yellow är för människor som skapar små webbsidor. De viktigaste sakerna för små webbsidor ingår. Du kan lägga till funktioner, språk och teman. Datenstrom Yellow fungerar som webbpubliceringssystem och static-site-generator. [Ladda ner Datenstrom Yellow](https://github.com/datenstrom/yellow/archive/main.zip) och [komma igång](https://datenstrom.se/sv/yellow/help/how-to-get-started).
 
 ## Tillägg
 
