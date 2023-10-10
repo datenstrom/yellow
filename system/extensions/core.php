@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.8.119";
+    const VERSION = "0.8.120";
     const RELEASE = "0.8.22";
     public $content;        // content files
     public $media;          // media files
@@ -1794,15 +1794,10 @@ class YellowLookup {
         return $nested;
     }
     
-    // Check if location is available
-    public function isAvailableLocation($location, $fileName) {
-        $available = true;
-        $pathBase = $this->yellow->system->get("coreContentDirectory");
-        if (substru($fileName, 0, strlenu($pathBase))==$pathBase) {
-            $sharedLocation = $this->yellow->content->getHomeLocation($location)."shared/";
-            if (substru($location, 0, strlenu($sharedLocation))==$sharedLocation) $available = false;
-        }
-        return $available;
+    // Check if location is within shared directory
+    public function isSharedLocation($location) {
+        $sharedLocation = $this->yellow->content->getHomeLocation($location)."shared/";
+        return substru($location, 0, strlenu($sharedLocation))==$sharedLocation;
     }
     
     // Check if location is within current HTTP request
@@ -2979,7 +2974,7 @@ class YellowPage {
         $this->statusCode = $statusCode;
         $this->errorMessage = $errorMessage;
         $this->lastModified = 0;
-        $this->available = $this->yellow->lookup->isAvailableLocation($this->location, $this->fileName);
+        $this->available = true;
         $this->visible = true;
         $this->active = $this->yellow->lookup->isActiveLocation($this->location, $this->yellow->page->location);
         $this->parseMetaData();
@@ -3003,6 +2998,7 @@ class YellowPage {
             $this->set("language", $this->yellow->lookup->findContentLanguage($this->fileName, $this->yellow->system->get("language")));
             $this->set("modified", date("Y-m-d H:i:s", $this->yellow->toolbox->getFileModified($this->fileName)));
             $this->parseMetaDataRaw(array("sitename", "author", "layout", "theme", "parser", "status"));
+            $this->parseMetaDataShared();
             $titleHeader = ($this->location==$this->yellow->content->getHomeLocation($this->location)) ?
                 $this->get("sitename") : $this->get("title")." - ".$this->get("sitename");
             if (!$this->isExisting("titleContent")) $this->set("titleContent", $this->get("title"));
@@ -3010,7 +3006,6 @@ class YellowPage {
             if (!$this->isExisting("titleHeader")) $this->set("titleHeader", $titleHeader);
             if ($this->get("status")=="unlisted") $this->visible = false;
             if ($this->get("status")=="shared") $this->available = false;
-            $this->parseMetaDataShared();
         } else {
             $this->set("size", filesize($this->fileName));
             $this->set("type", $this->yellow->toolbox->getFileType($this->fileName));
@@ -3044,13 +3039,14 @@ class YellowPage {
     // Parse page meta data for shared pages
     public function parseMetaDataShared() {
         $this->sharedPages["main"] = $this;
-        if ($this->available && $this->statusCode!=0) {
+        if (!$this->yellow->lookup->isSharedLocation($this->location) && $this->statusCode!=0) {
             foreach ($this->yellow->content->getShared($this->location) as $page) {
-                if ($page->get("status")=="shared") {
-                    $this->sharedPages[basename($page->location)] = $page;
-                    $page->sharedPages["main"] = $this;
-                }
+                $this->sharedPages[basename($page->location)] = $page;
+                $page->sharedPages["main"] = $this;
             }
+        }
+        if ($this->yellow->lookup->isSharedLocation($this->location)) {
+            $this->set("status", "shared");
         }
     }
     
