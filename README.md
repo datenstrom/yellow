@@ -1,6 +1,6 @@
 <p align="right"><a href="README-de.md">Deutsch</a> &nbsp; <a href="README.md">English</a> &nbsp; <a href="README-sv.md">Svenska</a></p>
 
-# Datenstrom Yellow 0.8.22
+# Datenstrom Yellow 0.8.23
 
 Datenstrom Yellow is for people who make small websites. The most important things for small websites are included. You can add features, languages and themes. Datenstrom Yellow works as content management system and static site generator. [Download Datenstrom Yellow](https://github.com/datenstrom/yellow/archive/main.zip) and [get started](https://datenstrom.se/yellow/help/how-to-get-started).
 
