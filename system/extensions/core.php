@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.8.121";
+    const VERSION = "0.8.122";
     const RELEASE = "0.8.23";
     public $content;        // content files
     public $media;          // media files
@@ -932,20 +932,6 @@ class YellowLanguage {
         return $httpFormat ? $this->yellow->toolbox->getHttpDateFormatted($this->modified) : $this->modified;
     }
     
-    // Normalise date into known format
-    public function normaliseDate($text, $language = "") {
-        if (preg_match("/^\d+\-\d+$/", $text)) {
-            $output = $this->getDateFormatted(strtotime($text), $this->getText("coreDateFormatShort", $language), $language);
-        } elseif (preg_match("/^\d+\-\d+\-\d+$/", $text)) {
-            $output = $this->getDateFormatted(strtotime($text), $this->getText("coreDateFormatMedium", $language), $language);
-        } elseif (preg_match("/^\d+\-\d+\-\d+ \d+\:\d+$/", $text)) {
-            $output = $this->getDateFormatted(strtotime($text), $this->getText("coreDateFormatLong", $language), $language);
-        } else {
-            $output = $text;
-        }
-        return $output;
-    }
-    
     // Check if language setting exists
     public function isText($key, $language = "") {
         if (is_string_empty($language)) $language = $this->language;
@@ -1508,9 +1494,9 @@ class YellowLookup {
         foreach ($input as $key=>$value) {
             if (is_string_empty($key) || is_string_empty($value)) continue;
             $keySearch = strtoloweru($key);
-            foreach ($array as $keyNew=>$valueNew) {
-                if (strtoloweru($keyNew)==$keySearch) {
-                    $key = $keyNew;
+            foreach ($array as $keyFound=>$valueFound) {
+                if (strtoloweru($keyFound)==$keySearch) {
+                    $key = $keyFound;
                     break;
                 }
             }
@@ -1519,7 +1505,24 @@ class YellowLookup {
         }
         return $array;
     }
-
+    
+    // Normalise date, make language specific short/medium/long format
+    public function normaliseDate($text, $language = "") {
+        if (preg_match("/^\d+\-\d+$/", $text)) {
+            $format = $this->yellow->language->getText("coreDateFormatShort", $language);
+            $output = $this->yellow->language->getDateFormatted(strtotime($text), $format, $language);
+        } elseif (preg_match("/^\d+\-\d+\-\d+$/", $text)) {
+            $format = $this->yellow->language->getText("coreDateFormatMedium", $language);
+            $output = $this->yellow->language->getDateFormatted(strtotime($text), $format, $language);
+        } elseif (preg_match("/^\d+\-\d+\-\d+ \d+\:\d+$/", $text)) {
+            $format = $this->yellow->language->getText("coreDateFormatLong", $language);
+            $output = $this->yellow->language->getDateFormatted(strtotime($text), $format, $language);
+        } else {
+            $output = $text;
+        }
+        return $output;
+    }
+    
     // Normalise relative path tokens
     public function normalisePath($text) {
         $textFiltered = "";
@@ -3561,26 +3564,8 @@ class YellowPageCollection extends ArrayObject {
         return $this;
     }
     
-    // Sort page collection by page setting
-    public function sort($key, $ascendingOrder = true): YellowPageCollection {
-        $array = $this->getArrayCopy();
-        $sortIndex = 0;
-        foreach ($array as $page) {
-            $page->set("sortIndex", ++$sortIndex);
-        }
-        $callback = function ($a, $b) use ($key, $ascendingOrder) {
-            $result = $ascendingOrder ?
-                strnatcasecmp($a->get($key), $b->get($key)) :
-                strnatcasecmp($b->get($key), $a->get($key));
-            return $result==0 ? $a->get("sortIndex") - $b->get("sortIndex") : $result;
-        };
-        usort($array, $callback);
-        $this->exchangeArray($array);
-        return $this;
-    }
-    
     // Sort page collection by settings similarity
-    public function similar($page, $ascendingOrder = false): YellowPageCollection {
+    public function similar($page): YellowPageCollection {
         $location = $page->location;
         $keywords = strtoloweru($page->get("title").",".$page->get("tag").",".$page->get("author"));
         $tokens = array_unique(array_filter(preg_split("/[,\s\(\)\+\-]/", $keywords), "strlen"));
@@ -3599,9 +3584,65 @@ class YellowPageCollection extends ArrayObject {
                 }
             }
             $this->exchangeArray($array);
-            $this->sort("modified", $ascendingOrder)->sort("sortScore", $ascendingOrder);
+            $this->sort("modified", false)->sort("sortScore", false);
         }
         return $this;
+    }
+    
+    // Sort page collection by page setting
+    public function sort($key, $ascendingOrder = true): YellowPageCollection {
+        $array = $this->getArrayCopy();
+        $sortIndex = 0;
+        foreach ($array as $page) {
+            $page->set("sortIndex", ++$sortIndex);
+        }
+        $callback = function ($a, $b) use ($key, $ascendingOrder) {
+            $result = $ascendingOrder ?
+                strnatcasecmp($a->get($key), $b->get($key)) :
+                strnatcasecmp($b->get($key), $a->get($key));
+            return $result==0 ? $a->get("sortIndex") - $b->get("sortIndex") : $result;
+        };
+        usort($array, $callback);
+        $this->exchangeArray($array);
+        return $this;
+    }
+    
+    // Group page collection by page setting, return array with multiple collections
+    public function group($key, $ascendingOrder = true, $format = ""): array {
+        $array = array();
+        $groupByDate = !is_string_empty($format) && $format!="count";
+        foreach ($this->getIterator() as $page) {
+            if ($page->isExisting($key)) {
+                foreach (preg_split("/\s*,\s*/", $page->get($key)) as $group) {
+                    if ($groupByDate) {
+                         $group = $this->yellow->language->getDateFormatted(strtotime($group), $format);
+                    }
+                    if (!isset($array[$group])) {
+                        $groupSearch = strtoloweru($group);
+                        foreach (array_keys($array) as $groupFound) {
+                            if (strtoloweru($groupFound)==$groupSearch) {
+                                $group = $groupFound;
+                                break;
+                            }
+                        }
+                        $array[$group] = new YellowPageCollection($this->yellow);
+                    }
+                    $array[$group]->append($page);
+                }
+            }
+        }
+        $callbackString = function ($a, $b) use ($ascendingOrder) {
+            return $ascendingOrder ? strnatcasecmp($a, $b) : strnatcasecmp($b, $a);
+        };
+        $callbackCollection = function ($a, $b) use ($ascendingOrder) {
+            return $ascendingOrder ? count($a)-count($b) : count($b)-count($a);
+        };
+        if ($format!="count") {
+            uksort($array, $callbackString);
+        } else {
+            uasort($array, $callbackCollection);
+        }
+        return $array;
     }
 
     // Calculate union, merge page collection
