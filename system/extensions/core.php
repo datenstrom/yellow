@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.8.122";
+    const VERSION = "0.8.123";
     const RELEASE = "0.8.23";
     public $content;        // content files
     public $media;          // media files
@@ -3617,17 +3617,19 @@ class YellowPageCollection extends ArrayObject {
                     if ($groupByDate) {
                          $group = $this->yellow->language->getDateFormatted(strtotime($group), $format);
                     }
-                    if (!isset($array[$group])) {
-                        $groupSearch = strtoloweru($group);
-                        foreach (array_keys($array) as $groupFound) {
-                            if (strtoloweru($groupFound)==$groupSearch) {
-                                $group = $groupFound;
-                                break;
+                    if (!is_string_empty($group)) {
+                        if (!isset($array[$group])) {
+                            $groupSearch = strtoloweru($group);
+                            foreach (array_keys($array) as $groupFound) {
+                                if (strtoloweru($groupFound)==$groupSearch) {
+                                    $group = $groupFound;
+                                    break;
+                                }
                             }
+                            if (!isset($array[$group])) $array[$group] = new YellowPageCollection($this->yellow);
                         }
-                        $array[$group] = new YellowPageCollection($this->yellow);
+                        $array[$group]->append($page);
                     }
-                    $array[$group]->append($page);
                 }
             }
         }
