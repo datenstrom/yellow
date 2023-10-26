@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.8.123";
+    const VERSION = "0.8.124";
     const RELEASE = "0.8.23";
     public $content;        // content files
     public $media;          // media files
@@ -857,28 +857,24 @@ class YellowLanguage {
         return htmlspecialchars($this->getText($key, $language));
     }
     
-    // Return human readable date
-    public function getDateFormatted($timestamp, $format, $language = "") {
-        $dateMonthsNominative = preg_split("/\s*,\s*/", $this->getText("coreDateMonthsNominative", $language));
-        $dateMonthsGenitive = preg_split("/\s*,\s*/", $this->getText("coreDateMonthsGenitive", $language));
-        $dateWeekdays = preg_split("/\s*,\s*/", $this->getText("coreDateWeekdays", $language));
-        $monthNominative = $dateMonthsNominative[date("n", $timestamp) - 1];
-        $monthGenitive = $dateMonthsGenitive[date("n", $timestamp) - 1];
-        $weekday = $dateWeekdays[date("N", $timestamp) - 1];
-        $timeZone = $this->yellow->system->get("coreTimezone");
-        $timeZoneHelper = new DateTime("now", new DateTimeZone($timeZone));
-        $timeZoneOffset = $timeZoneHelper->getOffset();
-        $timeZoneAbbreviation = "GMT".($timeZoneOffset<0 ? "-" : "+").abs(intval($timeZoneOffset/3600));
-        $format = preg_replace("/(?<!\\\)F/", addcslashes($monthNominative, "A..Za..z"), $format);
-        $format = preg_replace("/(?<!\\\)V/", addcslashes($monthGenitive, "A..Za..z"), $format);
-        $format = preg_replace("/(?<!\\\)M/", addcslashes(substru($monthNominative, 0, 3), "A..Za..z"), $format);
-        $format = preg_replace("/(?<!\\\)D/", addcslashes(substru($weekday, 0, 3), "A..Za..z"), $format);
-        $format = preg_replace("/(?<!\\\)l/", addcslashes($weekday, "A..Za..z"), $format);
-        $format = preg_replace("/(?<!\\\)T/", addcslashes($timeZoneAbbreviation, "A..Za..z"), $format);
-        return date($format, $timestamp);
+    // Return text as language specific date, convert to one of the standard formats
+    public function getDateStandard($text, $language = "") {
+        if (preg_match("/^\d+$/", $text)) {
+            $output = $text;
+        } elseif (preg_match("/^\d+\-\d+$/", $text)) {
+            $format = $this->getText("coreDateFormatShort", $language);
+            $output = $this->getDateFormatted(strtotime($text), $format, $language);
+        } elseif (preg_match("/^\d+\-\d+\-\d+$/", $text)) {
+            $format = $this->getText("coreDateFormatMedium", $language);
+            $output = $this->getDateFormatted(strtotime($text), $format, $language);
+        } else {
+            $format = $this->getText("coreDateFormatLong", $language);
+            $output = $this->getDateFormatted(strtotime($text), $format, $language);
+        }
+        return $output;
     }
     
-    // Return human readable date, relative to today
+    // Return timestamp as date, relative to today
     public function getDateRelative($timestamp, $format, $daysLimit, $language = "") {
         $timeDifference = time() - $timestamp;
         $days = abs(intval($timeDifference/86400));
@@ -908,6 +904,27 @@ class YellowLanguage {
             $output = "[$key]";
         }
         return $output;
+    }
+    
+    // Return timestamp as date
+    public function getDateFormatted($timestamp, $format, $language = "") {
+        $dateMonthsNominative = preg_split("/\s*,\s*/", $this->getText("coreDateMonthsNominative", $language));
+        $dateMonthsGenitive = preg_split("/\s*,\s*/", $this->getText("coreDateMonthsGenitive", $language));
+        $dateWeekdays = preg_split("/\s*,\s*/", $this->getText("coreDateWeekdays", $language));
+        $monthNominative = $dateMonthsNominative[date("n", $timestamp) - 1];
+        $monthGenitive = $dateMonthsGenitive[date("n", $timestamp) - 1];
+        $weekday = $dateWeekdays[date("N", $timestamp) - 1];
+        $timeZone = $this->yellow->system->get("coreTimezone");
+        $timeZoneHelper = new DateTime("now", new DateTimeZone($timeZone));
+        $timeZoneOffset = $timeZoneHelper->getOffset();
+        $timeZoneAbbreviation = "GMT".($timeZoneOffset<0 ? "-" : "+").abs(intval($timeZoneOffset/3600));
+        $format = preg_replace("/(?<!\\\)F/", addcslashes($monthNominative, "A..Za..z"), $format);
+        $format = preg_replace("/(?<!\\\)V/", addcslashes($monthGenitive, "A..Za..z"), $format);
+        $format = preg_replace("/(?<!\\\)M/", addcslashes(substru($monthNominative, 0, 3), "A..Za..z"), $format);
+        $format = preg_replace("/(?<!\\\)D/", addcslashes(substru($weekday, 0, 3), "A..Za..z"), $format);
+        $format = preg_replace("/(?<!\\\)l/", addcslashes($weekday, "A..Za..z"), $format);
+        $format = preg_replace("/(?<!\\\)T/", addcslashes($timeZoneAbbreviation, "A..Za..z"), $format);
+        return date($format, $timestamp);
     }
     
     // Return language settings
@@ -1484,41 +1501,6 @@ class YellowLookup {
                 }
                 $output .= $text;
             }
-        }
-        return $output;
-    }
-    
-    // Normalise array, make keys with same upper/lower case
-    public function normaliseArray($input) {
-        $array = array();
-        foreach ($input as $key=>$value) {
-            if (is_string_empty($key) || is_string_empty($value)) continue;
-            $keySearch = strtoloweru($key);
-            foreach ($array as $keyFound=>$valueFound) {
-                if (strtoloweru($keyFound)==$keySearch) {
-                    $key = $keyFound;
-                    break;
-                }
-            }
-            if (!isset($array[$key])) $array[$key] = 0;
-            $array[$key] += $value;
-        }
-        return $array;
-    }
-    
-    // Normalise date, make language specific short/medium/long format
-    public function normaliseDate($text, $language = "") {
-        if (preg_match("/^\d+\-\d+$/", $text)) {
-            $format = $this->yellow->language->getText("coreDateFormatShort", $language);
-            $output = $this->yellow->language->getDateFormatted(strtotime($text), $format, $language);
-        } elseif (preg_match("/^\d+\-\d+\-\d+$/", $text)) {
-            $format = $this->yellow->language->getText("coreDateFormatMedium", $language);
-            $output = $this->yellow->language->getDateFormatted(strtotime($text), $format, $language);
-        } elseif (preg_match("/^\d+\-\d+\-\d+ \d+\:\d+$/", $text)) {
-            $format = $this->yellow->language->getText("coreDateFormatLong", $language);
-            $output = $this->yellow->language->getDateFormatted(strtotime($text), $format, $language);
-        } else {
-            $output = $text;
         }
         return $output;
     }
@@ -2917,7 +2899,6 @@ class YellowToolbox {
     }
     
     // TODO: remove later, for backwards compatibility
-    public function normaliseUpperLower($input) { return $this->yellow->lookup->normaliseArray($input); }
     public function normaliseArguments($text, $appendSlash = true, $filterStrict = true) { return $this->yellow->lookup->normaliseArguments($text, $appendSlash, $filterStrict); }
     public function normalisePath($text) { return $this->yellow->lookup->normalisePath($text); }
 }
@@ -3610,12 +3591,15 @@ class YellowPageCollection extends ArrayObject {
     // Group page collection by page setting, return array with multiple collections
     public function group($key, $ascendingOrder = true, $format = ""): array {
         $array = array();
-        $groupByDate = !is_string_empty($format) && $format!="count";
+        $groupByInitial = $format=="initial";
+        $groupByDate = !is_string_empty($format) && $format!="count" && $format!="initial";
         foreach ($this->getIterator() as $page) {
             if ($page->isExisting($key)) {
                 foreach (preg_split("/\s*,\s*/", $page->get($key)) as $group) {
-                    if ($groupByDate) {
-                         $group = $this->yellow->language->getDateFormatted(strtotime($group), $format);
+                    if ($groupByInitial) {
+                        $group = strtoupperu(substru($group, 0, 1));
+                    } elseif ($groupByDate) {
+                        $group = $this->yellow->language->getDateFormatted(strtotime($group), $format);
                     }
                     if (!is_string_empty($group)) {
                         if (!isset($array[$group])) {
