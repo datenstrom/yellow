@@ -1806,7 +1806,7 @@ class YellowLookup {
     
     // Check if file is a well-known file type
     public function isSafeFile($fileName) {
-        return preg_match("/\.(css|gif|ico|js|jpg|png|svg|woff|woff2)$/", $fileName);
+        return preg_match("/\.(css|gif|ico|js|jpg|map|png|scss|svg|woff|woff2)$/", $fileName);
     }
     
     // Check if file is valid
