@@ -2,7 +2,7 @@
 // Update extension, https://github.com/annaesvensson/yellow-update
 
 class YellowUpdate {
-    const VERSION = "0.8.95";
+    const VERSION = "0.8.96";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $extensions;             // number of extensions
@@ -10,11 +10,11 @@ class YellowUpdate {
     // Handle initialisation
     public function onLoad($yellow) {
         $this->yellow = $yellow;
-        $this->yellow->system->setDefault("updateExtensionUrl", "https://github.com/datenstrom/yellow-extensions");
-        $this->yellow->system->setDefault("updateExtensionFile", "extension.ini");
+        $this->yellow->system->setDefault("updateCurrentRelease", "none");
+        $this->yellow->system->setDefault("updateLatestUrl", "auto");
         $this->yellow->system->setDefault("updateLatestFile", "update-latest.ini");
         $this->yellow->system->setDefault("updateCurrentFile", "update-current.ini");
-        $this->yellow->system->setDefault("updateCurrentRelease", "none");
+        $this->yellow->system->setDefault("updateExtensionFile", "extension.ini");
         $this->yellow->system->setDefault("updateEventPending", "none");
         $this->yellow->system->setDefault("updateEventDaily", "0");
         $this->yellow->system->setDefault("updateTrashTimeout", "7776660");
@@ -111,7 +111,7 @@ class YellowUpdate {
             if ($statusCode==200) {
                 foreach ($settings as $key=>$value) {
                     echo ucfirst($key)." ".$value->get("version")." - ".$this->getExtensionDescription($key, $value)."\n";
-                    echo $this->getExtensionDocumentation($key, $value)."\n";
+                    if ($value->isExisting("documentationUrl")) echo "Read more at ".$value->get("documentationUrl")."\n";
                 }
             }
             if ($statusCode>=400) echo "ERROR checking extensions: ".$this->yellow->page->errorMessage."\n";
@@ -283,11 +283,7 @@ class YellowUpdate {
                 foreach ($this->getExtensionFileNames($settings) as $fileName) {
                     list($entry, $flags) = $this->yellow->toolbox->getTextList($settings[$fileName], ",", 2);
                     if (!$this->yellow->lookup->isContentFile($fileName)) {
-                        if (preg_match("/^@base/i", $entry)) {
-                            $fileNameSource = preg_replace("/@base/i", rtrim($pathBase, "/"), $entry);
-                        } else {
-                            $fileNameSource = $pathBase.$entry;
-                        }
+                        $fileNameSource = $pathBase.$entry;
                         $fileData = $zip->getFromName($fileNameSource);
                         $lastModified = $this->yellow->toolbox->getFileModified($fileName);
                         $statusCode = max($statusCode, $this->updateExtensionFile($fileName, $fileData,
@@ -791,7 +787,8 @@ class YellowUpdate {
             $fileNameLatest = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateLatestFile");
             $expire = $this->yellow->toolbox->getFileModified($fileNameLatest) + 60*10;
             if ($expire<=time()) {
-                $url = $this->yellow->system->get("updateExtensionUrl")."/raw/main/".$this->yellow->system->get("updateLatestFile");
+                $url = $this->yellow->system->get("updateLatestUrl");
+                if ($url=="auto") $url = "https://raw.githubusercontent.com/datenstrom/yellow/main/system/extensions/update-latest.ini";
                 list($statusCode, $fileData) = $this->getExtensionFile($url);
                 if ($statusCode==200 && !$this->yellow->toolbox->createFile($fileNameLatest, $fileData)) {
                     $statusCode = 500;
@@ -892,23 +889,17 @@ class YellowUpdate {
         return "$description $responsible";
     }
     
-    // Return extension documentation
-    public function getExtensionDocumentation($key, $value) {
-        return "Read more at ".($value->isExisting("documentationUrl") ? $value->get("documentationUrl") : $this->yellow->system->get("updateExtensionUrl"));
-    }
-
     // Return extension file
     public function getExtensionFile($url) {
-        $urlRequest = $url;
-        if (preg_match("#^https://github.com/(.+)/raw/(.+)$#", $url, $matches)) $urlRequest = "https://raw.githubusercontent.com/".$matches[1]."/".$matches[2];
         $curlHandle = curl_init();
-        curl_setopt($curlHandle, CURLOPT_URL, $urlRequest);
+        curl_setopt($curlHandle, CURLOPT_URL, $this->getExtensionDownloadUrl($url));
         curl_setopt($curlHandle, CURLOPT_USERAGENT, "Mozilla/5.0 (compatible; YellowUpdate/".YellowUpdate::VERSION."; SoftwareUpdater)");
         curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($curlHandle, CURLOPT_CONNECTTIMEOUT, 30);
         $rawData = curl_exec($curlHandle);
         $statusCode = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);
         $fileData = "";
+        $redirectUrl = ($statusCode>=300 && $statusCode<=399) ? curl_getinfo($curlHandle, CURLINFO_REDIRECT_URL) : "";
         curl_close($curlHandle);
         if ($statusCode==200) {
             $fileData = $rawData;
@@ -919,10 +910,24 @@ class YellowUpdate {
             $statusCode = 500;
             $this->yellow->page->error($statusCode, "Can't download file '$url'!");
         }
+        if ($this->yellow->system->get("coreDebugMode")>=2 && !is_string_empty($redirectUrl)) {
+            echo "YellowUpdate::getExtensionFile redirected to url:$redirectUrl<br/>\n";
+        }
         if ($this->yellow->system->get("coreDebugMode")>=2) {
-            echo "YellowUpdate::getExtensionFile status:$statusCode url:$urlRequest<br/>\n";
+            echo "YellowUpdate::getExtensionFile status:$statusCode url:$url<br/>\n";
         }
         return array($statusCode, $fileData);
+    }
+    
+    // Return extension download URL, redirect to known URL if necessary
+    public function getExtensionDownloadUrl($url) {
+        if (preg_match("#^https://github.com/(.+)/archive/refs/heads/main.zip$#", $url, $matches)) {
+            $url = "https://codeload.github.com/".$matches[1]."/zip/refs/heads/main";
+        }
+        if (preg_match("#^https://github.com/(.+)/raw/main/(.+)$#", $url, $matches)) {
+            $url = "https://raw.githubusercontent.com/".$matches[1]."/main/".$matches[2];
+        }
+        return $url;
     }
     
     // Return time of next daily update
