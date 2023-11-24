@@ -5,10 +5,7 @@ on: [push, pull_request]
 jobs:
   extension-tests:
     name: Extensions
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     steps:
       - name: Check out code
         uses: actions/checkout@v3
