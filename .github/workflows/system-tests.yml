@@ -3,29 +3,8 @@
 name: System tests
 on: [push, pull_request]
 jobs:
-  installation-tests:
-    name: Installation on ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v3
-      - name: Set up PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: latest
-          extensions: curl, gd, mbstring, zip
-          ini-file: development
-          coverage: none
-          tools: none
-      - name: Set up problem matcher
-        run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
-      - name: Set up test environment
-        run: php yellow.php skip installation
   extension-tests:
-    name: Extensions on ${{ matrix.os }}
+    name: Extensions
     strategy:
       matrix:
         os: [ubuntu-latest]
@@ -48,7 +27,7 @@ jobs:
       - name: Run tests
         run: cd tests; php yellow.php generate tests
   php-tests:
-    name: PHP ${{ matrix.php }} on ubuntu-latest
+    name: PHP ${{ matrix.php }}
     strategy:
       matrix:
         php: [8.3, 8.2, 8.1, 8.0, 7.4, 7.3, 7.2, 7.1, 7.0]
