@@ -20,9 +20,9 @@ jobs:
       - name: Set up problem matcher
         run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
       - name: Set up test environment
-        run: php .github/workflows/make-tests.php
+        run: php yellow.php skip installation maximal
       - name: Run tests
-        run: cd tests; php yellow.php generate tests
+        run: php yellow.php generate tests
   php-tests:
     name: PHP ${{ matrix.php }}
     strategy:
@@ -43,6 +43,6 @@ jobs:
       - name: Set up problem matcher
         run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
       - name: Set up test environment
-        run: php yellow.php skip installation
+        run: php yellow.php skip installation minimal
       - name: Run tests
         run: php yellow.php generate tests
