@@ -2,7 +2,7 @@
 // Update extension, https://github.com/annaesvensson/yellow-update
 
 class YellowUpdate {
-    const VERSION = "0.8.96";
+    const VERSION = "0.8.97";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $extensions;             // number of extensions
@@ -233,11 +233,11 @@ class YellowUpdate {
         foreach ($settings as $key=>$value) {
             $fileName = $path.$this->yellow->lookup->normaliseName($key, true, false, true).".zip";
             list($statusCode, $fileData) = $this->getExtensionFile($value->get("downloadUrl"));
-            if (is_string_empty($fileData) || !$this->yellow->toolbox->createFile($fileName.".download", $fileData)) {
+            if ($statusCode==200 && !$this->yellow->toolbox->createFile($fileName.".download", $fileData)) {
                 $statusCode = 500;
                 $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
-                break;
             }
+            if ($statusCode!=200) break;
         }
         if ($statusCode==200) {
             foreach ($settings as $key=>$value) {
@@ -896,17 +896,15 @@ class YellowUpdate {
         curl_setopt($curlHandle, CURLOPT_USERAGENT, "Mozilla/5.0 (compatible; YellowUpdate/".YellowUpdate::VERSION."; SoftwareUpdater)");
         curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($curlHandle, CURLOPT_CONNECTTIMEOUT, 30);
-        $rawData = curl_exec($curlHandle);
+        $fileData = curl_exec($curlHandle);
         $statusCode = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);
-        $fileData = "";
         $redirectUrl = ($statusCode>=300 && $statusCode<=399) ? curl_getinfo($curlHandle, CURLINFO_REDIRECT_URL) : "";
         curl_close($curlHandle);
-        if ($statusCode==200) {
-            $fileData = $rawData;
-        } elseif ($statusCode==0) {
+        if ($statusCode==0) {
             $statusCode = 450;
             $this->yellow->page->error($statusCode, "Can't connect to the update server!");
-        } else {
+        }
+        if ($statusCode!=450 && $statusCode!=200) {
             $statusCode = 500;
             $this->yellow->page->error($statusCode, "Can't download file '$url'!");
         }
