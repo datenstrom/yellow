@@ -4,7 +4,7 @@ name: System tests
 on: [push, pull_request]
 jobs:
   installation-tests:
-    name: Installation on ${{ runner.os }}
+    name: Installation on ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
@@ -25,7 +25,7 @@ jobs:
       - name: Set up test environment
         run: php yellow.php skip installation
   extension-tests:
-    name: Extensions on ${{ runner.os }}
+    name: Extensions on ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest]
@@ -48,7 +48,7 @@ jobs:
       - name: Run tests
         run: cd tests; php yellow.php generate tests
   php-tests:
-    name: PHP ${{ matrix.php }} on ${{ runner.os }}
+    name: PHP ${{ matrix.php }} on ubuntu-latest
     strategy:
       matrix:
         php: [8.3, 8.2, 8.1, 8.0, 7.4, 7.3, 7.2, 7.1, 7.0]
