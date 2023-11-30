@@ -6,7 +6,7 @@ Datenstrom Yellow is for people who make small websites.
 
 ## How to get started
 
-Installing is unzipping one file and you are ready to go. The installer helps you with setting up your website. Your website is immediately available. The most important things for small websites are included. You can add features, languages and themes. [Get started](https://datenstrom.se/yellow/help/how-to-get-started).
+Installing is unzipping one file and you are ready to go. The installer helps you with setting up your website and checks if all requirements have been met. Your website is immediately available. The most important things for small websites are included. You can add features, languages and themes. [Get started](https://datenstrom.se/yellow/help/how-to-get-started).
 
 ## How to get extensions 
 
