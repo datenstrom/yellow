@@ -10,7 +10,7 @@ Follow the installation instructions. The installer helps you with setting up yo
 
 ## How to get extensions 
 
-The available extensions make your website more useful. Here you can find features, languages and themes. There are examples and settings to make your life easier. Have a look at extensions and install some on your website. [Get extensions for your website](https://datenstrom.se/yellow/extensions/).
+The available extensions make your website more useful. Here you can find additional features, languages and themes. There are examples to show you how they can be used. Have a look at extensions and install some on your website. [Get extensions for your website](https://datenstrom.se/yellow/extensions/).
 
 ## How to get help and support
 
