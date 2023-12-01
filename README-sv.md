@@ -6,11 +6,11 @@ Datenstrom Yellow är för människor som skapar små webbsidor.
 
 ## Hur man kommer igång
 
-För att installera packa upp en fil och du är redo att gå. Installationsprogrammet hjälper dig att inreda din webbplats och kontrollerar  om alla krav har uppfyllts. Din webbplats är tillgänglig omedelbart. De viktigaste sakerna för små webbsidor ingår. Du kan lägga till funktioner, språk och teman. [Komma igång](https://datenstrom.se/sv/yellow/help/how-to-get-started).
+Följ installationsanvisningarna. Installationsprogrammet hjälper dig att inreda din webbplats och kontrollerar om alla krav har uppfyllts. Din webbplats är tillgänglig omedelbart. De viktigaste sakerna för små webbsidor ingår i installationen. Du kan lägga till funktioner, språk och teman. [Komma igång](https://datenstrom.se/sv/yellow/help/how-to-get-started).
 
 ## Hur man får tillägg
 
-Tillägg gör din webbplats mer användbar. Varje tillägg kommer med instruktioner som förklarar hur det fungerar, exempel för att göra ditt liv enklare och inställningar du kan konfigurera. Titta på publicerade tilläggen och installera några på din webbplats. [Få tillägg för din webbplats](https://datenstrom.se/sv/yellow/extensions/).
+Tillgängliga tilläggen gör din webbplats mer användbar. Här hittar du ytterligare funktioner, språk och teman. Det finns praktiska exempel som visar hur du använder dem. Titta på tillägg och installera några på din webbplats. [Få tillägg för din webbplats](https://datenstrom.se/sv/yellow/extensions/).
 
 ## Hur man får hjälp och support
 
