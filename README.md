@@ -6,11 +6,11 @@ Datenstrom Yellow is for people who make small websites.
 
 ## How to get started
 
-Download Datenstrom Yellow and follow the installation instructions. The installer helps you with setting up your website and checks if all requirements have been met. Your website is immediately available. The most important things for small websites are included. You can add features, languages and themes. [Get started](https://datenstrom.se/yellow/help/how-to-get-started).
+Download Datenstrom Yellow and follow the installation instructions. The installer helps you with setting up your website and checks if all installation requirements have been met. Your website is immediately available. The most important things for small websites are included. You can add features, languages and themes. [Get started](https://datenstrom.se/yellow/help/how-to-get-started).
 
 ## How to get extensions 
 
-The available extensions make your website more useful. Here you can find additional features, languages and themes. There are practical examples to show you how they can be used. Have a look at extensions and install some on your website. [Get extensions for your website](https://datenstrom.se/yellow/extensions/).
+The available extensions make your website more useful. Here you can find additional features, languages and themes. There are practical examples to show you how the features can be used. Have a look at extensions and install some on your website. [Get extensions for your website](https://datenstrom.se/yellow/extensions/).
 
 ## How to get help and support
 
