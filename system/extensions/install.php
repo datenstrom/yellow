@@ -92,7 +92,7 @@ class YellowInstall {
                     echo "The installation has not been completed. Please run command again.\n";
                 } else {
                     $extensions = count($this->yellow->extension->data);
-                    echo "Yellow $command: $extensions extension".($extensions!=1 ? "s" : "").", 0 errors.\n";
+                    echo "Yellow $command: $extensions extension".($extensions!=1 ? "s" : "").", 0 errors\n";
                 }
             } else {
                 $statusCode = 500;
