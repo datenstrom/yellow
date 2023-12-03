@@ -10,11 +10,11 @@ Download Datenstrom Yellow and follow the installation instructions. The install
 
 ## How to get extensions 
 
-The available extensions make your website more useful. Here you can find additional features, languages and themes. There are practical examples to show you how the features can be used. Have a look at extensions and install some on your website. [Get extensions for your website](https://datenstrom.se/yellow/extensions/).
+The available extensions make your website more useful. Here you can find additional features, languages and themes. There are practical examples to show you how the additional features can be used. Have a look at extensions and install some on your website. [Get extensions for your website](https://datenstrom.se/yellow/extensions/).
 
 ## How to get help and support
 
-The help shows you how to make small websites, wikis and blogs. Here you can find instructions on how to customise everything. For developers, designers and translators there are descriptions of files, folders and what can be done with the API. [Get help for your website](https://datenstrom.se/yellow/help/).
+The help shows you how to make small websites, wikis and blogs. Here you can find instructions on how to customise everything. For developers, designers and translators there are descriptions of files, folders, tools and what can be done with the API. [Get help for your website](https://datenstrom.se/yellow/help/).
 
 ## Developer
 

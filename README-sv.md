@@ -10,11 +10,11 @@ Ladda ner Datenstrom Yellow och följ installationsanvisningarna. Installationsp
 
 ## Hur man får tillägg
 
-Tillgängliga tilläggen gör din webbplats mer användbar. Här hittar du ytterligare funktioner, språk och teman. Det finns praktiska exempel som visar dig hur man använder funktionerna. Titta på tillägg och installera några på din webbplats. [Få tillägg för din webbplats](https://datenstrom.se/sv/yellow/extensions/).
+Tillgängliga tilläggen gör din webbplats mer användbar. Här hittar du ytterligare funktioner, språk och teman. Det finns praktiska exempel som visar dig hur man använder ytterligare funktionerna. Titta på tillägg och installera några på din webbplats. [Få tillägg för din webbplats](https://datenstrom.se/sv/yellow/extensions/).
 
 ## Hur man får hjälp och support
 
-Hjälpen visar dig hur man gör små webbsidor, wikier och bloggar. Här hittar du instruktioner om hur man anpassar allt. För utvecklare, formgivare och översättare finns beskrivningar av filer, mappar och vad som kan göras med API:et. [Få hjälp för din webbplats](https://datenstrom.se/sv/yellow/help/).
+Hjälpen visar dig hur man gör små webbsidor, wikier och bloggar. Här hittar du instruktioner om hur man anpassar allt. För utvecklare, formgivare och översättare finns beskrivningar av filer, mappar, verktyg och vad som kan göras med API:et. [Få hjälp för din webbplats](https://datenstrom.se/sv/yellow/help/).
 
 ## Utvecklare
 

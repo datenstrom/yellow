@@ -2,7 +2,7 @@
 // Install extension, https://github.com/annaesvensson/yellow-install
 
 class YellowInstall {
-    const VERSION = "0.8.91";
+    const VERSION = "0.8.92";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -90,6 +90,9 @@ class YellowInstall {
                 if ($statusCode>=400) {
                     echo "ERROR installing files: ".$this->yellow->page->errorMessage."\n";
                     echo "The installation has not been completed. Please run command again.\n";
+                } else {
+                    $extensions = count($this->yellow->extension->data);
+                    echo "Yellow $command: $extensions extension".($extensions!=1 ? "s" : "").", 0 errors.\n";
                 }
             } else {
                 $statusCode = 500;
