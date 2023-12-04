@@ -2,7 +2,7 @@
 // Install extension, https://github.com/annaesvensson/yellow-install
 
 class YellowInstall {
-    const VERSION = "0.8.92";
+    const VERSION = "0.8.93";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -91,7 +91,7 @@ class YellowInstall {
                     echo "ERROR installing files: ".$this->yellow->page->errorMessage."\n";
                     echo "The installation has not been completed. Please run command again.\n";
                 } else {
-                    $extensions = count($this->yellow->extension->data);
+                    $extensions = $this->getExtensionsCount();
                     echo "Yellow $command: $extensions extension".($extensions!=1 ? "s" : "").", 0 errors\n";
                 }
             } else {
@@ -398,12 +398,15 @@ class YellowInstall {
             $path = $this->yellow->system->get("coreExtensionDirectory");
             $fileData = $this->yellow->toolbox->readFile($path.$this->yellow->system->get("updateLatestFile"));
             $settings = $this->yellow->toolbox->getTextSettings($fileData, "extension");
+            $extensionsNow = 0;
+            $extensionsEstimated = count($settings) - substr_count(strtoloweru($fileData), "tag: language");
             $curlHandle = curl_init();
             foreach ($settings as $key=>$value) {
                 $fileName = $path."install-".$this->yellow->lookup->normaliseName($key, true, false, true).".bin";
                 if (is_file($fileName)) continue;
-                $url = $value->get("downloadUrl");
                 if (preg_match("/language/i", $value->get("tag"))) continue;
+                echo "\rDownloading latest extensions ".$this->getProgressPercent(++$extensionsNow, $extensionsEstimated, 5, 95)."%... ";
+                $url = $value->get("downloadUrl");
                 curl_setopt($curlHandle, CURLOPT_URL, $this->yellow->extension->get("update")->getExtensionDownloadUrl($url));
                 curl_setopt($curlHandle, CURLOPT_USERAGENT, "Mozilla/5.0 (compatible; YellowInstall/".YellowInstall::VERSION).")";
                 curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, 1);
@@ -432,6 +435,7 @@ class YellowInstall {
                 if ($statusCode!=200) break;
             }
             curl_close($curlHandle);
+            echo "\rDownloading latest extensions 100%... done\n";
         }
         return $statusCode;
     }
@@ -467,6 +471,14 @@ class YellowInstall {
             $extensions = array_slice($extensions, 0, 3);
         }
         return $extensions;
+    }
+    
+    // Return extensions installed
+    public function getExtensionsCount() {
+        $fileNameCurrent = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateCurrentFile");
+        $fileData = $this->yellow->toolbox->readFile($fileNameCurrent);
+        $settings = $this->yellow->toolbox->getTextSettings($fileData, "extension");
+        return count($settings);
     }
     
     // Return system languages
@@ -525,6 +537,14 @@ class YellowInstall {
         $rawData .= "<input type=\"hidden\" name=\"status\" value=\"install\" />\n";
         $rawData .= "</form>\n";
         return $rawData;
+    }
+    
+    // Return progress in percent
+    public function getProgressPercent($now, $total, $increments, $max) {
+        $max = intval($max/$increments) * $increments;
+        $percent = intval(($max/$total) * $now);
+        if ($increments>1) $percent = intval($percent/$increments) * $increments;
+        return min($max, $percent);
     }
     
     // Check if running built-in web server
