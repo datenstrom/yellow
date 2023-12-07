@@ -10,7 +10,7 @@ Datenstrom Yellow herunterladen und der Installationsanleitung folgen. Das Insta
 
 ## Wie man Erweiterungen findet
 
-Erweiterungen machen deine Webseite nützlicher. Hier findest du zusätzliche Funktionen, Sprachen und Themes. Es gibt Erweiterungen für eine Kontaktseite, Suchfunktion und vieles mehr. Schau dir die vorhandenen Erweiterungen an und installiere welche auf deiner Webseite. [Erweiterungen für deine Webseite finden](https://datenstrom.se/de/yellow/extensions/).
+Erweiterungen machen deine Webseite nützlicher. Hier findest du zusätzliche Funktionen, Sprachen und Themes. Es gibt eine Erweiterung für eine Kontaktseite, Suchfunktion und vieles mehr. Schau dir die vorhandenen Erweiterungen an und installiere welche auf deiner Webseite. [Erweiterungen für deine Webseite finden](https://datenstrom.se/de/yellow/extensions/).
 
 ## Wie man Hilfe und Support findet
 
