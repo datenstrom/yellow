@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/annaesvensson/yellow-edit
 
 class YellowEdit {
-    const VERSION = "0.8.76";
+    const VERSION = "0.8.77";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -1411,19 +1411,27 @@ class YellowEditResponse {
     public function getPageNewLocation($rawData, $pageLocation, $editNewLocation, $pageMatchLocation = false) {
         $location = is_string_empty($editNewLocation) ? "@title" : $editNewLocation;
         $location = preg_replace("/@title/i", $this->getPageNewTitle($rawData), $location);
-        $location = preg_replace("/@timestamp/i", $this->getPageNewData($rawData, "published", true, "U"), $location);
-        $location = preg_replace("/@date/i", $this->getPageNewData($rawData, "published", true, "Y-m-d"), $location);
-        $location = preg_replace("/@year/i", $this->getPageNewData($rawData, "published", true, "Y"), $location);
-        $location = preg_replace("/@month/i", $this->getPageNewData($rawData, "published", true, "m"), $location);
-        $location = preg_replace("/@day/i", $this->getPageNewData($rawData, "published", true, "d"), $location);
-        $location = preg_replace("/@tag/i", $this->getPageNewData($rawData, "tag", true), $location);
-        $location = preg_replace("/@author/i", $this->getPageNewData($rawData, "author", true), $location);
+        $location = preg_replace("/@timestamp/i", $this->getPageNewData($rawData, "published", "U"), $location);
+        $location = preg_replace("/@date/i", $this->getPageNewData($rawData, "published", "Y-m-d"), $location);
+        $location = preg_replace("/@year/i", $this->getPageNewData($rawData, "published", "Y"), $location);
+        $location = preg_replace("/@month/i", $this->getPageNewData($rawData, "published", "m"), $location);
+        $location = preg_replace("/@day/i", $this->getPageNewData($rawData, "published", "d"), $location);
+        $location = preg_replace("/@tag/i", $this->getPageNewData($rawData, "tag"), $location);
+        $location = preg_replace("/@author/i", $this->getPageNewData($rawData, "author"), $location);
         if (!preg_match("/^\//", $location)) {
             if ($this->yellow->lookup->isFileLocation($pageLocation) || !$pageMatchLocation) {
                 $location = $this->yellow->lookup->getDirectoryLocation($pageLocation).$location;
             } else {
                 $location = $this->yellow->lookup->getDirectoryLocation(rtrim($pageLocation, "/")).$location;
             }
+        }
+        if (preg_match("/\d/", $location)) {
+            $locationNew = "";
+            $tokens = explode("/", $location);
+            for ($i=1; $i<count($tokens); ++$i) {
+                $locationNew .= "/".$this->yellow->lookup->normaliseToken($tokens[$i]);
+            }
+            $location = $locationNew;
         }
         if ($pageMatchLocation) {
             $location = rtrim($location, "/").($this->yellow->lookup->isFileLocation($pageLocation) ? "" : "/");
@@ -1436,17 +1444,17 @@ class YellowEditResponse {
         $title = $this->yellow->toolbox->getMetaData($rawData, "title");
         $titleSlug = $this->yellow->toolbox->getMetaData($rawData, "titleSlug");
         $value = is_string_empty($titleSlug) ? $title : $titleSlug;
-        $value = $this->yellow->lookup->normaliseName($value, true, false, true);
+        $value = $this->yellow->lookup->normaliseName($value, false, false, true);
         return trim(preg_replace("/-+/", "-", $value), "-");
     }
     
     // Return data for new/modified page
-    public function getPageNewData($rawData, $key, $filterFirst = false, $dateFormat = "") {
+    public function getPageNewData($rawData, $key, $dateFormat = "") {
         $value = $this->yellow->toolbox->getMetaData($rawData, $key);
-        if ($filterFirst && preg_match("/^(.*?)\,(.*)$/", $value, $matches)) $value = $matches[1];
+        if (preg_match("/^(.*?)\,(.*)$/", $value, $matches)) $value = $matches[1];
         if (!is_string_empty($dateFormat)) $value = date($dateFormat, strtotime($value));
         if (is_string_empty($value)) $value = "none";
-        $value = $this->yellow->lookup->normaliseName($value, true, false, true);
+        $value = $this->yellow->lookup->normaliseName($value, false, false, true);
         return trim(preg_replace("/-+/", "-", $value), "-");
     }
     
