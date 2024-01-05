@@ -2,11 +2,11 @@
 
 # Datenstrom Yellow 0.8.23
 
-Datenstrom Yellow är för människor som skapar små webbsidor.
+Datenstrom Yellow är för människor som skapar små webbsidor. [Prova demon](https://datenstrom.se/sv/yellow/demo/).
 
 ## Hur man kommer igång
 
-Ladda ner Datenstrom Yellow och följ installationsanvisningarna. Installationsprogrammet hjälper dig att inreda din webbplats och säkerställer att alla installationskrav har uppfyllts. Din webbplats är tillgänglig omedelbart. De viktigaste sakerna för små webbsidor ingår i installationen. Du kan lägga till funktioner, språk och teman. [Komma igång](https://datenstrom.se/sv/yellow/help/how-to-get-started).
+Ladda ner Datenstrom Yellow och följ installationsanvisningarna. Din webbplats är tillgänglig omedelbart. De viktigaste sakerna för små webbsidor ingår i installationen. Du kan lägga till funktioner, språk och teman. [Komma igång](https://datenstrom.se/sv/yellow/help/how-to-get-started).
 
 ## Hur man får tillägg
 
