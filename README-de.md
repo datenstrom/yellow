@@ -2,15 +2,15 @@
 
 # Datenstrom Yellow 0.8.23
 
-Datenstrom Yellow ist für Menschen die kleine Webseiten machen. 
+Datenstrom Yellow ist für Menschen die kleine Webseiten machen. [Demo ausprobieren](https://datenstrom.se/de/yellow/demo/).
 
 ## Wie man loslegt
 
-Datenstrom Yellow herunterladen und der Installationsanleitung folgen. Das Installationsprogramm hilft dir beim Einrichten deiner Webseite und stellt sicher dass alle Installationsanforderungen erfüllt sind. Deine Webseite ist sofort erreichbar. Die wichtigsten Dinge für kleine Webseiten sind mit dabei. Du kannst Funktionen, Sprachen und Themes hinzufügen. [Loslegen](https://datenstrom.se/de/yellow/help/how-to-get-started).
+Eine Datei herunterladen, entpacken und los geht's. Deine Webseite ist sofort erreichbar. Nur die wichtigsten Dinge für kleine Webseiten sind in der Installation mit dabei. Natürlich kann man das später ändern. Du kannst Funktionen, Sprachen und Themes hinzufügen. [Loslegen](https://datenstrom.se/de/yellow/help/how-to-get-started).
 
 ## Wie man Erweiterungen findet
 
-Erweiterungen machen deine Webseite nützlicher. Hier findest du zusätzliche Funktionen, Sprachen und Themes. Es gibt eine Erweiterung für eine Kontaktseite, Suchfunktion und vieles mehr. Schau dir die vorhandenen Erweiterungen an und installiere welche auf deiner Webseite. [Erweiterungen für deine Webseite finden](https://datenstrom.se/de/yellow/extensions/).
+Erweiterungen machen deine Webseite nützlicher. Hier findest du Funktionen, Sprachen und Themes. Es gibt eine Erweiterung für eine Suchfunktion, Bildergalerie und vieles mehr. Schau dir die vorhandenen Erweiterungen an und installiere welche auf deiner Webseite. [Erweiterungen für deine Webseite finden](https://datenstrom.se/de/yellow/extensions/).
 
 ## Wie man Hilfe und Support findet
 
