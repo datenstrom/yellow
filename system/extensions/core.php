@@ -876,9 +876,10 @@ class YellowLanguage {
     
     // Return Unix time as date, relative to today
     public function getDateRelative($timestamp, $format, $daysLimit, $language = "") {
-        $timeDifference = time() - $timestamp;
-        $days = abs(intval($timeDifference/86400));
-        $key = $timeDifference>=0 ? "coreDatePast" : "coreDateFuture";
+        $today = strtotime(date('Y-m-d')); // Today's date without time information
+        $dateDifference = $today - strtotime(date('Y-m-d', $timestamp)); // Difference in days between today and the specified date
+        $days = abs(intval($dateDifference/86400));
+        $key = $dateDifference>=0 ? "coreDatePast" : "coreDateFuture";
         $tokens = preg_split("/\s*,\s*/", $this->getText($key, $language));
         if (count($tokens)>=8) {
             if ($days<=$daysLimit || $daysLimit==0) {
