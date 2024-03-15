@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.8.125";
+    const VERSION = "0.8.126";
     const RELEASE = "0.8.23";
     public $content;        // content files
     public $media;          // media files
@@ -876,7 +876,7 @@ class YellowLanguage {
     
     // Return Unix time as date, relative to today
     public function getDateRelative($timestamp, $format, $daysLimit, $language = "") {
-        $timeDifference = time() - $timestamp;
+        $timeDifference = mktime(0, 0, 0) - strtotime(date("Y-m-d", $timestamp));
         $days = abs(intval($timeDifference/86400));
         $key = $timeDifference>=0 ? "coreDatePast" : "coreDateFuture";
         $tokens = preg_split("/\s*,\s*/", $this->getText($key, $language));
