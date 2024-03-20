@@ -2,7 +2,7 @@
 // Install extension, https://github.com/annaesvensson/yellow-install
 
 class YellowInstall {
-    const VERSION = "0.8.93";
+    const VERSION = "0.8.94";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -177,7 +177,7 @@ class YellowInstall {
         $statusCode = 200;
         if ($this->yellow->extension->isExisting("update")) {
             if ($option=="maximal") {
-                $statusCode = $this->downloadExtensionsLatest();
+                $statusCode = $this->downloadExtensionsAvailable();
                 $path = $this->yellow->system->get("coreExtensionDirectory");
                 foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.bin$/", true, false) as $entry) {
                     if (basename($entry)=="install-language.bin") continue;
@@ -391,12 +391,12 @@ class YellowInstall {
         return $rewrite;
     }
     
-    // Download latest extension files
-    public function downloadExtensionsLatest() {
+    // Download available extension files
+    public function downloadExtensionsAvailable() {
         $statusCode = 200;
         if ($this->yellow->extension->isExisting("update")) {
             $path = $this->yellow->system->get("coreExtensionDirectory");
-            $fileData = $this->yellow->toolbox->readFile($path.$this->yellow->system->get("updateLatestFile"));
+            $fileData = $this->yellow->toolbox->readFile($path.$this->yellow->system->get("updateAvailableFile"));
             $settings = $this->yellow->toolbox->getTextSettings($fileData, "extension");
             $extensionsNow = 0;
             $extensionsEstimated = count($settings) - substr_count(strtoloweru($fileData), "tag: language");
@@ -405,7 +405,7 @@ class YellowInstall {
                 $fileName = $path."install-".$this->yellow->lookup->normaliseName($key, true, false, true).".bin";
                 if (is_file($fileName)) continue;
                 if (preg_match("/language/i", $value->get("tag"))) continue;
-                echo "\rDownloading latest extensions ".$this->getProgressPercent(++$extensionsNow, $extensionsEstimated, 5, 95)."%... ";
+                echo "\rDownloading available extensions ".$this->getProgressPercent(++$extensionsNow, $extensionsEstimated, 5, 95)."%... ";
                 $url = $value->get("downloadUrl");
                 curl_setopt($curlHandle, CURLOPT_URL, $this->yellow->extension->get("update")->getExtensionDownloadUrl($url));
                 curl_setopt($curlHandle, CURLOPT_USERAGENT, "Mozilla/5.0 (compatible; YellowInstall/".YellowInstall::VERSION).")";
@@ -427,15 +427,15 @@ class YellowInstall {
                     $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
                 }
                 if ($this->yellow->system->get("coreDebugMode")>=2 && !is_string_empty($redirectUrl)) {
-                    echo "YellowInstall::downloadExtensionsLatest redirected to url:$redirectUrl<br/>\n";
+                    echo "YellowInstall::downloadExtensionsAvailable redirected to url:$redirectUrl<br/>\n";
                 }
                 if ($this->yellow->system->get("coreDebugMode")>=2) {
-                    echo "YellowInstall::downloadExtensionsLatest status:$statusCode url:$url<br/>\n";
+                    echo "YellowInstall::downloadExtensionsAvailable status:$statusCode url:$url<br/>\n";
                 }
                 if ($statusCode!=200) break;
             }
             curl_close($curlHandle);
-            echo "\rDownloading latest extensions 100%... done\n";
+            echo "\rDownloading available extensions 100%... done\n";
         }
         return $statusCode;
     }
