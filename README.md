@@ -12,7 +12,7 @@ Download one file, unzip it and you are ready to go. Your website is immediately
 
 Extensions make your website more useful. Here you can find features, languages and themes. There is an extension for a search feature, image gallery and much more. Have a look at the available extensions and install some on your website. [Get extensions for your website](https://datenstrom.se/yellow/extensions/).
 
-## How to get help and support
+## How to get help
 
 The help shows you how to make small websites, wikis and blogs. Here you can find instructions on how to customise everything. For developers, designers and translators there are descriptions of files, folders and what can be done with the API. [Get help for your website](https://datenstrom.se/yellow/help/).
 
