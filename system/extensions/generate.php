@@ -2,7 +2,7 @@
 // Generate extension, https://github.com/annaesvensson/yellow-generate
 
 class YellowGenerate {
-    const VERSION = "0.8.52";
+    const VERSION = "0.8.53";
     public $yellow;                       // access to API
     public $files;                        // number of files
     public $errors;                       // number of errors
@@ -18,24 +18,6 @@ class YellowGenerate {
         $this->yellow->system->setDefault("generateStaticErrorFile", "404.html");
     }
     
-    // Handle update
-    public function onUpdate($action) {
-        if ($action=="install") {
-            if ($this->yellow->system->isExisting("commandStaticUrl")) { //TODO: remove later, for backwards compatibility
-                $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
-                $settings = array(
-                    "generateStaticUrl" => $this->yellow->system->get("commandStaticUrl"),
-                    "generateStaticDirectory" => $this->yellow->system->get("commandStaticDirectory"),
-                    "generateStaticDefaultFile" => $this->yellow->system->get("commandStaticDefaultFile"),
-                    "generateStaticErrorFile" => $this->yellow->system->get("commandStaticErrorFile"));
-                if (!$this->yellow->system->save($fileName, $settings)) {
-                    $this->yellow->toolbox->log("error", "Can't write file '$fileName'!");
-                }
-                $this->yellow->toolbox->log("info", "Import settings for 'Generate ".YellowGenerate::VERSION."'");
-            }
-        }
-    }
-
     // Handle request
     public function onRequest($scheme, $address, $base, $location, $fileName) {
        return $this->processRequestCache($scheme, $address, $base, $location, $fileName);
