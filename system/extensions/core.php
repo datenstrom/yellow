@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.8.126";
+    const VERSION = "0.8.127";
     const RELEASE = "0.8.23";
     public $content;        // content files
     public $media;          // media files
@@ -371,19 +371,17 @@ class YellowContent {
         if ($absoluteLocation) $location = substru($location, strlenu($this->yellow->page->base));
         foreach ($this->scanLocation($this->getParentLocation($location)) as $page) {
             if ($page->location==$location) {
-                if (!$this->yellow->lookup->isRootLocation($page->location)) {
-                    $found = true;
-                    break;
-                }
+                $found = true;
+                break;
             }
         }
         return $found ? $page : null;
     }
     
     // Return page collection with all pages
-    public function index($showInvisible = false, $multiLanguage = false, $levelMax = 0) {
+    public function index($showInvisible = false, $multiLanguage = false) {
         $rootLocation = $multiLanguage ? "" : $this->getRootLocation($this->yellow->page->location);
-        return $this->getChildrenRecursive($rootLocation, $showInvisible, $levelMax);
+        return $this->getChildrenRecursive($rootLocation, $showInvisible);
     }
     
     // Return page collection with top-level navigation
@@ -431,7 +429,7 @@ class YellowContent {
         foreach ($this->scanLocation("") as $page) {
             if ($content = $this->find(substru($page->location, 4).$locationEnd)) {
                 if ($content->isAvailable() && ($content->isVisible() || $showInvisible)) {
-                    if (!$this->yellow->lookup->isRootLocation($content->location)) $pages->append($content);
+                    $pages->append($content);
                 }
             }
         }
@@ -448,7 +446,9 @@ class YellowContent {
         $languages = array();
         if ($this->yellow->system->get("coreMultiLanguageMode")) {
             foreach ($this->scanLocation("") as $page) {
-                if ($page->isAvailable() && ($page->isVisible() || $showInvisible)) array_push($languages, $page->get("language"));
+                if ($page->isAvailable() && ($page->isVisible() || $showInvisible)) {
+                    array_push($languages, $page->get("language"));
+                }
             }
         }
         return $languages;
@@ -459,7 +459,7 @@ class YellowContent {
         $pages = new YellowPageCollection($this->yellow);
         foreach ($this->scanLocation($location) as $page) {
             if ($page->isAvailable() && ($page->isVisible() || $showInvisible)) {
-                if (!$this->yellow->lookup->isRootLocation($page->location) && is_readable($page->fileName)) $pages->append($page);
+                $pages->append($page);
             }
         }
         return $pages;
@@ -471,7 +471,7 @@ class YellowContent {
         $pages = new YellowPageCollection($this->yellow);
         foreach ($this->scanLocation($location) as $page) {
             if ($page->isAvailable() && ($page->isVisible() || $showInvisible)) {
-                if (!$this->yellow->lookup->isRootLocation($page->location) && is_readable($page->fileName)) $pages->append($page);
+                $pages->append($page);
             }
             if (!$this->yellow->lookup->isFileLocation($page->location) && $levelMax!=0) {
                 $pages->merge($this->getChildrenRecursive($page->location, $showInvisible, $levelMax));
@@ -567,18 +567,16 @@ class YellowMedia {
         if ($absoluteLocation) $location = substru($location, strlenu($this->yellow->system->get("coreServerBase")));
         foreach ($this->scanLocation($this->getParentLocation($location)) as $file) {
             if ($file->location==$location) {
-                if ($this->yellow->lookup->isFileLocation($file->location)) {
-                    $found = true;
-                    break;
-                }
+                $found = true;
+                break;
             }
         }
         return $found ? $file : null;
     }
     
     // Return page collection with all media files
-    public function index($showInvisible = false, $multiPass = false, $levelMax = 0) {
-        return $this->getChildrenRecursive("", $showInvisible, $levelMax);
+    public function index($showInvisible = false, $multiPass = false) {
+        return $this->getChildrenRecursive("", $showInvisible);
     }
     
     // Return page collection that's empty
@@ -591,7 +589,7 @@ class YellowMedia {
         $files = new YellowPageCollection($this->yellow);
         foreach ($this->scanLocation($location) as $file) {
             if ($file->isAvailable() && ($file->isVisible() || $showInvisible)) {
-                if ($this->yellow->lookup->isFileLocation($file->location)) $files->append($file);
+                $files->append($file);
             }
         }
         return $files;
@@ -603,7 +601,7 @@ class YellowMedia {
         $files = new YellowPageCollection($this->yellow);
         foreach ($this->scanLocation($location) as $file) {
             if ($file->isAvailable() && ($file->isVisible() || $showInvisible)) {
-                if ($this->yellow->lookup->isFileLocation($file->location)) $files->append($file);
+                $files->append($file);
             }
             if (!$this->yellow->lookup->isFileLocation($file->location) && $levelMax!=0) {
                 $files->merge($this->getChildrenRecursive($file->location, $showInvisible, $levelMax));
@@ -2989,13 +2987,15 @@ class YellowPage {
             if (!$this->isExisting("titleContent")) $this->set("titleContent", $this->get("title"));
             if (!$this->isExisting("titleNavigation")) $this->set("titleNavigation", $this->get("title"));
             if (!$this->isExisting("titleHeader")) $this->set("titleHeader", $titleHeader);
-            if ($this->get("status")=="unlisted") $this->visible = false;
+            if ($this->yellow->lookup->isRootLocation($this->location) || !is_readable($this->fileName)) $this->available = false;
             if ($this->get("status")=="shared") $this->available = false;
+            if ($this->get("status")=="unlisted") $this->visible = false;
         } else {
             $this->set("size", filesize($this->fileName));
             $this->set("type", $this->yellow->toolbox->getFileType($this->fileName));
             $this->set("group", $this->yellow->toolbox->getFileGroup($this->fileName, $this->yellow->system->get("coreMediaDirectory")));
             $this->set("modified", date("Y-m-d H:i:s", $this->yellow->toolbox->getFileModified($this->fileName)));
+            if (!$this->yellow->lookup->isFileLocation($this->location)) $this->available = false;
         }
         foreach ($this->yellow->extension->data as $key=>$value) {
             if (method_exists($value["object"], "onParseMetaData")) $value["object"]->onParseMetaData($this);
