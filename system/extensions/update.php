@@ -2,7 +2,7 @@
 // Update extension, https://github.com/annaesvensson/yellow-update
 
 class YellowUpdate {
-    const VERSION = "0.8.99";
+    const VERSION = "0.8.100";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $extensions;             // number of extensions
@@ -850,11 +850,7 @@ class YellowUpdate {
 
     // Return extension root pages for content files
     public function getExtensionContentRootPages() {
-        $rootPages = array();
-        foreach ($this->yellow->content->scanLocation("") as $page) {
-            if ($page->isAvailable() && $page->isVisible()) array_push($rootPages, $page);
-        }
-        return $rootPages;
+        return $this->yellow->content->scanLocation("");
     }
 
     // Return extension files names for content files
