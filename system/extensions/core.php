@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.8.127";
+    const VERSION = "0.8.128";
     const RELEASE = "0.8.23";
     public $content;        // content files
     public $media;          // media files
@@ -1066,7 +1066,7 @@ class YellowExtension {
     // Load extensions
     public function load($path) {
         foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.php$/", true, false) as $entry) {
-            $this->modified = max($this->modified, filemtime($entry));
+            $this->modified = max($this->modified, $this->yellow->toolbox->getFileModified($entry));
             require_once($entry);
             $name = $this->yellow->lookup->normaliseName(basename($entry), true, true);
             $this->register(lcfirst($name), "Yellow".ucfirst($name));
@@ -2012,6 +2012,33 @@ class YellowToolbox {
             }
         }
         return $entries;
+    }
+    
+    // Return directory information recursively, Unix time and file count
+    public function getDirectoryInformationRecursive($path, $levelMax = 0) {
+        --$levelMax;
+        $modified = $fileCount = 0;
+        $directoryHandle = @opendir($path);
+        if ($directoryHandle) {
+            $path = rtrim($path, "/");
+            while (($entry = readdir($directoryHandle))!==false) {
+                if (substru($entry, 0, 1)==".") continue;
+                $modified = max($modified, $this->getFileModified("$path/$entry"));
+                if (is_file("$path/$entry")) ++$fileCount;
+            }
+            rewinddir($directoryHandle);
+            if ($levelMax!=0) {
+                while (($entry = readdir($directoryHandle))!==false) {
+                    if (substru($entry, 0, 1)==".") continue;
+                    if (is_dir("$path/$entry")) {
+                        list($modifiedBelow, $fileCountBelow) = $this->getDirectoryInformationRecursive("$path/$entry", $levelMax);
+                        $modified = max($modified, $modifiedBelow);
+                        $fileCount += $fileCountBelow;
+                    }
+                }
+            }
+        }
+        return array($modified, $fileCount);
     }
     
     // Read file, empty string if not found
@@ -3063,6 +3090,30 @@ class YellowPage {
                 echo "YellowPage::parseContent location:".$this->location."<br/>\n";
             }
         }
+    }
+    
+    // Parse page content element, experimental
+    public function parseContentElement($name, $text, $attrributes, $type) {
+        $output = null;
+        foreach ($this->yellow->extension->data as $key=>$value) {
+            if (method_exists($value["object"], "onParseContentElement")) {
+                $output = $value["object"]->onParseContentElement($this, $name, $text, $attrributes, $type);
+                if (!is_null($output)) break;
+            }
+            if (method_exists($value["object"], "onParseContentShortcut")) {
+                $output = $value["object"]->onParseContentShortcut($this, $name, $text, $type);
+                if (!is_null($output)) break;
+            }
+        }
+        if (is_null($output)) {
+            if ($name=="yellow" && $type=="inline" && $text=="error") {
+                $output = $this->errorMessage;
+            }
+        }
+        if ($this->yellow->system->get("coreDebugMode")>=3 && !is_string_empty($name)) {
+            echo "YellowPage::parseContentElement name:$name type:$type<br/>\n";
+        }
+        return $output;
     }
     
     // Parse page content shortcut
