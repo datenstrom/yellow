@@ -22,7 +22,7 @@ class YellowUpdate {
     
     // Handle update
     public function onUpdate($action) {
-        if ($action=="install" || $action=="update") { //TODO: remove later, for backwards compatibility
+        if ($action=="clean" || $action=="update") { //TODO: remove later, for backwards compatibility
             $fileNameOld = $this->yellow->system->get("coreExtensionDirectory")."update-latest.ini";
             if (is_file($fileNameOld) && !$this->yellow->toolbox->deleteFile($fileNameOld)) {
                 $this->yellow->toolbox->log("error", "Can't delete file '$fileNameOld'!");
