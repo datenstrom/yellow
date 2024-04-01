@@ -2,7 +2,7 @@
 // Image extension, https://github.com/annaesvensson/yellow-image
 
 class YellowImage {
-    const VERSION = "0.8.19";
+    const VERSION = "0.8.20";
     public $yellow;             // access to API
 
     // Handle initialisation
@@ -26,8 +26,8 @@ class YellowImage {
         }
     }
 
-    // Handle page content of shortcut
-    public function onParseContentShortcut($page, $name, $text, $type) {
+    // Handle page content element
+    public function onParseContentElement($page, $name, $text, $attributes, $type) {
         $output = null;
         if ($name=="image" && $type=="inline") {
             list($name, $alt, $style, $width, $height) = $this->yellow->toolbox->getTextArguments($text);

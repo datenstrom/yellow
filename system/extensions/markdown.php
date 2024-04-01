@@ -2,7 +2,7 @@
 // Markdown extension, https://github.com/annaesvensson/yellow-markdown
 
 class YellowMarkdown {
-    const VERSION = "0.8.26";
+    const VERSION = "0.8.27";
     public $yellow;         // access to API
     
     // Handle initialisation
@@ -3887,13 +3887,13 @@ class YellowMarkdownParser extends MarkdownExtraParser {
     
     // Handle shortcuts, block style
     public function _doAutoLinks_shortcutBlock_callback($matches) {
-        $output = $this->page->parseContentShortcut($matches[1], trim($matches[2]), "block");
+        $output = $this->page->parseContentElement($matches[1], trim($matches[2]), "", "block");
         return is_null($output) ? $matches[0] : $this->hashBlock($output);
     }
     
     // Handle shortcuts, inline style
     public function _doAutoLinks_shortcutInline_callback($matches) {
-        $output = $this->page->parseContentShortcut($matches[1], trim($matches[2]), "inline");
+        $output = $this->page->parseContentElement($matches[1], trim($matches[2]), "", "inline");
         return is_null($output) ? $matches[0] : $this->hashPart($output);
     }
     
@@ -3905,7 +3905,7 @@ class YellowMarkdownParser extends MarkdownExtraParser {
     
     // Handle shortcuts, symbol style
     public function _doAutoLinks_shortcutSymbol_callback($matches) {
-        $output = $this->page->parseContentShortcut("", $matches[1], "symbol");
+        $output = $this->page->parseContentElement("", $matches[1], "", "symbol");
         return is_null($output) ? $matches[0] : $this->hashPart($output);
     }
     
@@ -3913,7 +3913,7 @@ class YellowMarkdownParser extends MarkdownExtraParser {
     public function _doFencedCodeBlocks_callback($matches) {
         $text = $matches[4];
         $name = is_string_empty($matches[2]) ? "" : trim("$matches[2] $matches[3]");
-        $output = $this->page->parseContentShortcut($name, $text, "code");
+        $output = $this->page->parseContentElement($name, $text, "", "code");
         if (is_null($output)) {
             $attr = $this->doExtraAttributes("pre", ".$matches[2] $matches[3]");
             $output = "<pre$attr><code>".htmlspecialchars($text, ENT_NOQUOTES)."</code></pre>";

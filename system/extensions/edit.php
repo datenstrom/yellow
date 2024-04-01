@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/annaesvensson/yellow-edit
 
 class YellowEdit {
-    const VERSION = "0.8.77";
+    const VERSION = "0.8.78";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -93,8 +93,8 @@ class YellowEdit {
             rtrim($this->yellow->system->get("editLocation"), "/").$page->location));
     }
     
-    // Handle page content of shortcut
-    public function onParseContentShortcut($page, $name, $text, $type) {
+    // Handle page content element
+    public function onParseContentElement($page, $name, $text, $attributes, $type) {
         $output = null;
         if ($name=="edit" && $type=="inline") {
             list($target, $description) = $this->yellow->toolbox->getTextList($text, " ", 2);

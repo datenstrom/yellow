@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.8.128";
+    const VERSION = "0.8.129";
     const RELEASE = "0.8.23";
     public $content;        // content files
     public $media;          // media files
@@ -385,25 +385,9 @@ class YellowContent {
     }
     
     // Return page collection with top-level navigation
-    public function top($showInvisible = false, $showOnePager = true) {
+    public function top($showInvisible = false) {
         $rootLocation = $this->getRootLocation($this->yellow->page->location);
-        $pages = $this->getChildren($rootLocation, $showInvisible);
-        if (count($pages)==1 && $showOnePager) {
-            $scheme = $this->yellow->page->scheme;
-            $address = $this->yellow->page->address;
-            $base = $this->yellow->page->base;
-            $one = ($pages->offsetGet(0)->location!=$this->yellow->page->location) ? $pages->offsetGet(0) : $this->yellow->page;
-            preg_match_all("/<h(\d) id=\"([^\"]+)\">(.*?)<\/h\d>/i", $one->getContentHtml(), $matches, PREG_SET_ORDER);
-            foreach ($matches as $match) {
-                if ($match[1]==2) {
-                    $page = new YellowPage($this->yellow);
-                    $page->setRequestInformation($scheme, $address, $base, $one->location."#".$match[2], $one->fileName, false);
-                    $page->parseMeta("---\nTitle: $match[3]\n---\n");
-                    $pages->append($page);
-                }
-            }
-        }
-        return $pages;
+        return $this->getChildren($rootLocation, $showInvisible);
     }
     
     // Return page collection with path ancestry
@@ -2013,8 +1997,13 @@ class YellowToolbox {
         }
         return $entries;
     }
+
+    // Return directory information, modification date and file count
+    public function getDirectoryInformation($path) {
+        return $this->getDirectoryInformationRecursive($path, 1);
+    }
     
-    // Return directory information recursively, Unix time and file count
+    // Return directory information recursively, modification date and file count
     public function getDirectoryInformationRecursive($path, $levelMax = 0) {
         --$levelMax;
         $modified = $fileCount = 0;
@@ -2026,8 +2015,8 @@ class YellowToolbox {
                 $modified = max($modified, $this->getFileModified("$path/$entry"));
                 if (is_file("$path/$entry")) ++$fileCount;
             }
-            rewinddir($directoryHandle);
             if ($levelMax!=0) {
+                rewinddir($directoryHandle);
                 while (($entry = readdir($directoryHandle))!==false) {
                     if (substru($entry, 0, 1)==".") continue;
                     if (is_dir("$path/$entry")) {
@@ -2037,6 +2026,7 @@ class YellowToolbox {
                     }
                 }
             }
+            closedir($directoryHandle);
         }
         return array($modified, $fileCount);
     }
@@ -3100,7 +3090,7 @@ class YellowPage {
                 $output = $value["object"]->onParseContentElement($this, $name, $text, $attrributes, $type);
                 if (!is_null($output)) break;
             }
-            if (method_exists($value["object"], "onParseContentShortcut")) {
+            if (method_exists($value["object"], "onParseContentShortcut")) { //TODO: remove later, for backwards compatibility
                 $output = $value["object"]->onParseContentShortcut($this, $name, $text, $type);
                 if (!is_null($output)) break;
             }
@@ -3116,25 +3106,8 @@ class YellowPage {
         return $output;
     }
     
-    // Parse page content shortcut
-    public function parseContentShortcut($name, $text, $type) {
-        $output = null;
-        foreach ($this->yellow->extension->data as $key=>$value) {
-            if (method_exists($value["object"], "onParseContentShortcut")) {
-                $output = $value["object"]->onParseContentShortcut($this, $name, $text, $type);
-                if (!is_null($output)) break;
-            }
-        }
-        if (is_null($output)) {
-            if ($name=="yellow" && $type=="inline" && $text=="error") {
-                $output = $this->errorMessage;
-            }
-        }
-        if ($this->yellow->system->get("coreDebugMode")>=3 && !is_string_empty($name)) {
-            echo "YellowPage::parseContentShortcut name:$name type:$type<br/>\n";
-        }
-        return $output;
-    }
+    // TODO: remove later, for backwards compatibility
+    public function parseContentShortcut($name, $text, $type) { return $this->parseContentElement($name, $text, "", $type); }
     
     // Parse page
     public function parsePage() {

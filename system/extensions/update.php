@@ -2,7 +2,7 @@
 // Update extension, https://github.com/annaesvensson/yellow-update
 
 class YellowUpdate {
-    const VERSION = "0.8.100";
+    const VERSION = "0.8.101";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $extensions;             // number of extensions
@@ -74,8 +74,8 @@ class YellowUpdate {
         return array("about [extension]", "install [extension]", "uninstall [extension]", "update [extension]");
     }
     
-    // Parse page content shortcut
-    public function onParseContentShortcut($page, $name, $text, $type) {
+    // Handle page content element
+    public function onParseContentElement($page, $name, $text, $attributes, $type) {
         $output = null;
         if ($name=="yellow" && $type=="inline") {
             if ($text=="about") {
