@@ -21,7 +21,7 @@ jobs:
         run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
       - name: Set up test environment
         run: |
-          php yellow.php skip installation maximal
+          php yellow.php skip installation large
           echo "Generate:exclude" > content/contact/page.md 
           echo "Generate:exclude" > content/search/page.md
       - name: Run tests
@@ -46,6 +46,6 @@ jobs:
       - name: Set up problem matcher
         run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
       - name: Set up test environment
-        run: php yellow.php skip installation minimal
+        run: php yellow.php skip installation
       - name: Run tests
         run: php yellow.php generate tests
