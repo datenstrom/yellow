@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.8.130";
+    const VERSION = "0.8.131";
     const RELEASE = "0.8.23";
     public $content;        // content files
     public $media;          // media files
@@ -1657,6 +1657,27 @@ class YellowLookup {
             }
         }
         return $attributes;
+    }
+    
+    // Return HTML attributes from generic Markdown attributes
+    public function getHtmlAttributes($text) {
+        $htmlAttributes = "";
+        $htmlAttributesData = array();
+        foreach (explode(" ", $text) as $token) {
+            if (substru($token, 0, 1)==".") {
+                if (!isset($htmlAttributesData["class"])) {
+                    $htmlAttributesData["class"] = substru($token, 1);
+                } else {
+                    $htmlAttributesData["class"] .= " ".substru($token, 1);
+                }
+            }
+            if (substru($token, 0, 1)=="#") $htmlAttributesData["id"] = substru($token, 1);
+            if (preg_match("/^([\w]+)=(.+)/", $token, $matches)) $htmlAttributesData[$matches[1]] = $matches[2];
+        }
+        foreach ($htmlAttributesData as $key=>$value) {
+            $htmlAttributes .= " $key=\"".htmlspecialchars($value)."\"";
+        }
+        return $htmlAttributes;
     }
     
     // Return MIME header field, encode and fold if necessary
