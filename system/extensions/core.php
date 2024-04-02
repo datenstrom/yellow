@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.8.129";
+    const VERSION = "0.8.130";
     const RELEASE = "0.8.23";
     public $content;        // content files
     public $media;          // media files
@@ -1965,10 +1965,17 @@ class YellowToolbox {
     
     // Return files and directories
     public function getDirectoryEntries($path, $regex = "/.*/", $sort = true, $directories = true, $includePath = true) {
+        return $this->getDirectoryEntriesRecursive($path, $regex, $sort, $directories, $includePath, 1);
+    }
+    
+    // Return files and directories recursively
+    public function getDirectoryEntriesRecursive($path, $regex = "/.*/", $sort = true, $directories = true, $includePath = true, $levelMax = 0) {
+        --$levelMax;
         $entries = array();
         $directoryHandle = @opendir($path);
         if ($directoryHandle) {
             $path = rtrim($path, "/");
+            $directoryEntries = array();
             while (($entry = readdir($directoryHandle))!==false) {
                 if (substru($entry, 0, 1)==".") continue;
                 $entry = $this->yellow->lookup->normaliseUnicode($entry);
@@ -1979,25 +1986,20 @@ class YellowToolbox {
                         if (is_file("$path/$entry")) array_push($entries, $includePath ? "$path/$entry" : $entry);
                     }
                 }
+                if (is_dir("$path/$entry") && $levelMax!=0) array_push($directoryEntries, "$path/$entry");
             }
-            if ($sort) natcasesort($entries);
+            if ($sort) {
+                natcasesort($entries);
+                natcasesort($directoryEntries);
+            }
             closedir($directoryHandle);
+            foreach ($directoryEntries as $directoryEntry) {
+                $entries = array_merge($entries, $this->getDirectoryEntriesRecursive($directoryEntry, $regex, $sort, $directories, $includePath, $levelMax));
+            }
         }
         return $entries;
     }
     
-    // Return files and directories recursively
-    public function getDirectoryEntriesRecursive($path, $regex = "/.*/", $sort = true, $directories = true, $levelMax = 0) {
-        --$levelMax;
-        $entries = $this->getDirectoryEntries($path, $regex, $sort, $directories);
-        if ($levelMax!=0) {
-            foreach ($this->getDirectoryEntries($path, "/.*/", $sort, true) as $entry) {
-                $entries = array_merge($entries, $this->getDirectoryEntriesRecursive($entry, $regex, $sort, $directories, $levelMax));
-            }
-        }
-        return $entries;
-    }
-
     // Return directory information, modification date and file count
     public function getDirectoryInformation($path) {
         return $this->getDirectoryInformationRecursive($path, 1);
@@ -2010,23 +2012,19 @@ class YellowToolbox {
         $directoryHandle = @opendir($path);
         if ($directoryHandle) {
             $path = rtrim($path, "/");
+            $directoryEntries = array();
             while (($entry = readdir($directoryHandle))!==false) {
                 if (substru($entry, 0, 1)==".") continue;
                 $modified = max($modified, $this->getFileModified("$path/$entry"));
                 if (is_file("$path/$entry")) ++$fileCount;
-            }
-            if ($levelMax!=0) {
-                rewinddir($directoryHandle);
-                while (($entry = readdir($directoryHandle))!==false) {
-                    if (substru($entry, 0, 1)==".") continue;
-                    if (is_dir("$path/$entry")) {
-                        list($modifiedBelow, $fileCountBelow) = $this->getDirectoryInformationRecursive("$path/$entry", $levelMax);
-                        $modified = max($modified, $modifiedBelow);
-                        $fileCount += $fileCountBelow;
-                    }
-                }
+                if (is_dir("$path/$entry") && $levelMax!=0) array_push($directoryEntries, "$path/$entry");
             }
             closedir($directoryHandle);
+            foreach ($directoryEntries as $directoryEntry) {
+                list($modifiedBelow, $fileCountBelow) = $this->getDirectoryInformationRecursive($directoryEntry, $levelMax);
+                $modified = max($modified, $modifiedBelow);
+                $fileCount += $fileCountBelow;
+            }
         }
         return array($modified, $fileCount);
     }
