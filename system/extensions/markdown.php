@@ -2,7 +2,7 @@
 // Markdown extension, https://github.com/annaesvensson/yellow-markdown
 
 class YellowMarkdown {
-    const VERSION = "0.8.27";
+    const VERSION = "0.8.28";
     public $yellow;         // access to API
     
     // Handle initialisation
@@ -3911,9 +3911,10 @@ class YellowMarkdownParser extends MarkdownExtraParser {
     
     // Handle fenced code blocks
     public function _doFencedCodeBlocks_callback($matches) {
+        $name = $this->getBlockName($matches[2], $matches[3]);
         $text = $matches[4];
-        $name = is_string_empty($matches[2]) ? "" : trim("$matches[2] $matches[3]");
-        $output = $this->page->parseContentElement($name, $text, "", "code");
+        $attributes = $matches[3];
+        $output = $this->page->parseContentElement($name, $text, $attributes, "code");
         if (is_null($output)) {
             $attr = $this->doExtraAttributes("pre", ".$matches[2] $matches[3]");
             $output = "<pre$attr><code>".htmlspecialchars($text, ENT_NOQUOTES)."</code></pre>";
@@ -4007,19 +4008,25 @@ class YellowMarkdownParser extends MarkdownExtraParser {
     
     // Handle notice blocks over multiple lines
     public function _doNoticeBlocks_callback($matches) {
-        $lines = $matches[1];
-        $attr = "";
-        $text = preg_replace("/^[ ]*![ ]?/m", "", $lines);
-        if (preg_match("/^[ ]*".$this->id_class_attr_catch_re."[ ]*\n([\S\s]*)$/m", $text, $matches)) {
-            $attr = $this->doExtraAttributes("div", $dummy =& $matches[1]);
-            $text = $matches[2];
+        $name = $attributes = $attr = "";
+        $text = preg_replace("/^[ ]*![ ]?/m", "", $matches[1]);
+        if (preg_match("/^[ ]*".$this->id_class_attr_catch_re."[ ]*\n([\S\s]*)$/m", $text, $parts)) {
+            $name = $this->getBlockName("", $parts[1]);
+            $text = $parts[2];
+            $attributes = $parts[1];
+            $attr = $this->doExtraAttributes("div", $parts[1]);
         } elseif ($this->noticeLevel==0) {
-            $level = strspn(str_replace(array("![", " "), "", $lines), "!");
+            $level = strspn(str_replace(array("![", " "), "", $matches[1]), "!");
             $attr = " class=\"notice$level\"";
         }
         if (!is_string_empty($text)) {
             ++$this->noticeLevel;
-            $output = "<div$attr>\n".$this->runBlockGamut($text)."\n</div>";
+            $output = $this->page->parseContentElement($name, "[--notice--]", $attributes, "notice");
+            if (!is_null($output) && preg_match("/^(.+)(\[--notice--\])(.+)$/s", $output, $parts)) {
+                $output = $parts[1].$this->runBlockGamut($text).$parts[3];
+            } else {
+                $output = "<div$attr>\n".$this->runBlockGamut($text)."\n</div>";
+            }
             --$this->noticeLevel;
         } else {
             $output = "<div$attr></div>";
@@ -4044,6 +4051,19 @@ class YellowMarkdownParser extends MarkdownExtraParser {
             $text = preg_replace_callback("/<(a) href=\"(#fnref\d*:\d+)\"(.*?)>/", $callbackHref, $text);
         }
 		return $text;
+    }
+                                      
+    // Return suitable name for code block or notice block
+    public function getBlockName($language, $attributes) {
+        if (!is_string_empty($language)) {
+            $name = ltrim($language, ".");
+        } else {
+            $name = "";
+            foreach (explode(" ", $attributes) as $token) {
+                if (substru($token, 0, 1)==".") { $name = substru($token, 1); break; }
+            }
+        }
+        return $name;
     }
 
     // Return unique id attribute
