@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.8.131";
+    const VERSION = "0.8.132";
     const RELEASE = "0.8.23";
     public $content;        // content files
     public $media;          // media files
@@ -1456,6 +1456,27 @@ class YellowLookup {
         return $output;
     }
     
+    // Normalise name and email for a single address
+    public function normaliseAddress($input, $type = "mail", $filterStrict = true) {
+        $output = "";
+        if ($type=="mail") {
+            if (preg_match("/^(.*?)(\s*)<(.*?)>$/", $input, $matches)) {
+                $name = $matches[1];
+                $email = $matches[3];
+            } else {
+                $name = "";
+                $email = $input;
+            }
+            $name = preg_replace("/[^\pL\d\-\. ]/u", "", $name);
+            $name = preg_replace("/\s+/s", " ", $name);
+            if ($filterStrict && !preg_match("/^[\w\+\-\.\@]+$/", $email)) {
+                $email = "error-mail-filter";
+            }
+            $output = is_string_empty($name) ? "<$email>" : "$name <$email>";
+        }
+        return $output;
+    }
+    
     // Normalise fields in MIME headers
     public function normaliseHeaders($input, $type = "mime", $filterStrict = true) {
         $output = "";
@@ -1470,7 +1491,7 @@ class YellowLookup {
                             $matches[1] = $matches[2] = "";
                             $matches[3] = $email;
                         }
-                        if ($filterStrict && !preg_match("/[\w\+\-\.\@]+/", $matches[3])) {
+                        if ($filterStrict && !preg_match("/^[\w\+\-\.\@]+$/", $matches[3])) {
                             $matches[3] = "error-mail-filter";
                         }
                         if (substru($text, -2, 2)!=": ") $text .= ",\r\n ";

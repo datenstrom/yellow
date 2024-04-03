@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/annaesvensson/yellow-edit
 
 class YellowEdit {
-    const VERSION = "0.8.78";
+    const VERSION = "0.8.79";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -1605,8 +1605,8 @@ class YellowEditResponse {
         $footer = str_replace("\\n", "\r\n", $footer);
         $footer = preg_replace("/@sitename/i", $sitename, $footer);
         $mailHeaders = array(
-            "To" => "$userName <$userEmail>",
-            "From" => "$sitename <$siteEmail>",
+            "To" => $this->yellow->lookup->normaliseAddress("$userName <$userEmail>"),
+            "From" => $this->yellow->lookup->normaliseAddress("$sitename <$siteEmail>"),
             "Subject" => $subject,
             "Date" => date(DATE_RFC2822),
             "Mime-Version" => "1.0",
