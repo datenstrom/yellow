@@ -1470,7 +1470,7 @@ class YellowLookup {
             $name = preg_replace("/[^\pL\d\-\. ]/u", "", $name);
             $name = preg_replace("/\s+/s", " ", $name);
             if ($filterStrict && !preg_match("/^[\w\+\-\.\@]+$/", $email)) {
-                $email = "error-mail-filter";
+                $email = "error-mail-address";
             }
             $output = is_string_empty($name) ? "<$email>" : "$name <$email>";
         }
@@ -1493,10 +1493,10 @@ class YellowLookup {
                         }
                         if (!is_string_empty($matches[1]) && !preg_match("/^[\pL\d\-\. ]+$/u", $matches[1])) {
                             $matches[1] = $matches[2] = "";
-                            $matches[3] = "error-mail-filter";
+                            $matches[3] = "error-mail-address";
                         }
                         if ($filterStrict && !preg_match("/^[\w\+\-\.\@]+$/", $matches[3])) {
-                            $matches[3] = "error-mail-filter";
+                            $matches[3] = "error-mail-address";
                         }
                         if (substru($text, -2, 2)!=": ") $text .= ",\r\n ";
                         $text = $this->getMimeHeader($text, $matches[1]);
