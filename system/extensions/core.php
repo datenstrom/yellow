@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.8.132";
+    const VERSION = "0.8.133";
     const RELEASE = "0.8.23";
     public $content;        // content files
     public $media;          // media files
@@ -1490,6 +1490,10 @@ class YellowLookup {
                         if (!preg_match("/^(.*?)(\s*)<(.*?)>$/", $email, $matches)) {
                             $matches[1] = $matches[2] = "";
                             $matches[3] = $email;
+                        }
+                        if (!is_string_empty($matches[1]) && !preg_match("/^[\pL\d\-\. ]+$/u", $matches[1])) {
+                            $matches[1] = $matches[2] = "";
+                            $matches[3] = "error-mail-filter";
                         }
                         if ($filterStrict && !preg_match("/^[\w\+\-\.\@]+$/", $matches[3])) {
                             $matches[3] = "error-mail-filter";
