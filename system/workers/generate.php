@@ -2,7 +2,7 @@
 // Generate extension, https://github.com/annaesvensson/yellow-generate
 
 class YellowGenerate {
-    const VERSION = "0.8.54";
+    const VERSION = "0.9.1";
     public $yellow;                       // access to API
     public $files;                        // number of files
     public $errors;                       // number of errors
@@ -386,13 +386,13 @@ class YellowGenerate {
         foreach ($fileNames as $fileName) {
             array_push($locations, $this->yellow->lookup->findMediaLocationFromFile($fileName));
         }
-        $extensionPath = $this->yellow->system->get("coreExtensionDirectory");
-        $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($extensionPath, "/.*/", false, false);
+        $themePath = $this->yellow->system->get("coreThemeDirectory");
+        $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($themePath, "/.*/", false, false);
         foreach ($fileNames as $fileName) {
             array_push($locations, $this->yellow->lookup->findMediaLocationFromFile($fileName));
         }
-        $themePath = $this->yellow->system->get("coreThemeDirectory");
-        $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($themePath, "/.*/", false, false);
+        $workerPath = $this->yellow->system->get("coreWorkerDirectory");
+        $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($workerPath, "/.*/", false, false);
         foreach ($fileNames as $fileName) {
             array_push($locations, $this->yellow->lookup->findMediaLocationFromFile($fileName));
         }
@@ -402,17 +402,17 @@ class YellowGenerate {
     // Return media locations to ignore
     public function getMediaLocationsIgnore() {
         $locations = array("");
-        $extensionPath = $this->yellow->system->get("coreExtensionDirectory");
-        $extensionDirectoryLength = strlenu($this->yellow->system->get("coreExtensionDirectory"));
+        $workerPath = $this->yellow->system->get("coreWorkerDirectory");
+        $workerDirectoryLength = strlenu($this->yellow->system->get("coreWorkerDirectory"));
         if ($this->yellow->extension->isExisting("bundle")) {
-            foreach ($this->yellow->toolbox->getDirectoryEntries($extensionPath, "/^bundle-(.*)/", false, false) as $entry) {
+            foreach ($this->yellow->toolbox->getDirectoryEntries($workerPath, "/^bundle-(.*)/", false, false) as $entry) {
                 list($locationsBundle) = $this->yellow->extension->get("bundle")->getBundleInformation($entry);
                 $locations = array_merge($locations, $locationsBundle);
             }
         }
         if ($this->yellow->extension->isExisting("edit")) {
-            foreach ($this->yellow->toolbox->getDirectoryEntries($extensionPath, "/^edit\.(.*)/", false, false) as $entry) {
-                $location = $this->yellow->system->get("coreExtensionLocation").substru($entry, $extensionDirectoryLength);
+            foreach ($this->yellow->toolbox->getDirectoryEntries($workerPath, "/^edit\.(.*)/", false, false) as $entry) {
+                $location = $this->yellow->system->get("coreExtensionLocation").substru($entry, $workerDirectoryLength);
                 array_push($locations, $location);
             }
         }

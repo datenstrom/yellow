@@ -2,7 +2,7 @@
 // Install extension, https://github.com/annaesvensson/yellow-install
 
 class YellowInstall {
-    const VERSION = "0.8.95";
+    const VERSION = "0.9.1";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -132,7 +132,7 @@ class YellowInstall {
     // Update languages
     public function updateLanguages($option) {
         $statusCode = 200;
-        $path = $this->yellow->system->get("coreExtensionDirectory")."install-language.bin";
+        $path = $this->yellow->system->get("coreWorkerDirectory")."install-language.bin";
         $zip = new ZipArchive();
         if ($zip->open($path)===true) {
             $pathBase = "";
@@ -143,7 +143,7 @@ class YellowInstall {
                 $fileDataIni = $zip->getFromName($pathBase."translations/$extension/extension.ini");
                 $statusCode = max($statusCode, $this->updateLanguageArchive($fileDataPhp, $fileDataIni, $pathBase, "install"));
             }
-            $this->yellow->extension->load($this->yellow->system->get("coreExtensionDirectory"));
+            $this->yellow->extension->load($this->yellow->system->get("coreWorkerDirectory"));
             $this->yellow->language->load($this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreLanguageFile"));
             $zip->close();
         } else {
@@ -161,7 +161,7 @@ class YellowInstall {
             $extension = lcfirst($settings->get("extension"));
             $version = $settings->get("version");
             $modified = strtotime($settings->get("published"));
-            $fileNamePhp = $this->yellow->system->get("coreExtensionDirectory").$extension.".php";
+            $fileNamePhp = $this->yellow->system->get("coreWorkerDirectory").$extension.".php";
             if (!is_string_empty($extension) && !is_string_empty($version) && !is_file($fileNamePhp)) {
                 $statusCode = max($statusCode, $this->yellow->extension->get("update")->updateExtensionSettings($extension, $action, $settings));
                 $statusCode = max($statusCode, $this->yellow->extension->get("update")->updateExtensionFile(
@@ -183,7 +183,7 @@ class YellowInstall {
                     $settings = $this->yellow->toolbox->getTextSettings($fileData, "extension");
                     $extensions = $this->getAvailableExtensionsRequired($settings, $option);
                     $statusCode = $this->downloadExtensionsAvailable($settings, $extensions);
-                    $path = $this->yellow->system->get("coreExtensionDirectory");
+                    $path = $this->yellow->system->get("coreWorkerDirectory");
                     foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^install-.*\.bin$/", true, false) as $entry) {
                         if (basename($entry)=="install-language.bin") continue;
                         if (preg_match("/^install-(.*?)\.bin/", basename($entry), $matches) && !in_array($matches[1], $extensions)) continue;
@@ -196,7 +196,7 @@ class YellowInstall {
                 }
             }
             if (!is_string_empty($extension)) {
-                $path = $this->yellow->system->get("coreExtensionDirectory")."install-".$extension.".bin";
+                $path = $this->yellow->system->get("coreWorkerDirectory")."install-".$extension.".bin";
                 if (is_file($path)) {
                     $statusCode = $this->yellow->extension->get("update")->updateExtensionArchive($path, "install");
                 }
@@ -288,20 +288,20 @@ class YellowInstall {
     public function removeInstall($log = false) {
         $statusCode = 200;
         if (function_exists("opcache_reset")) opcache_reset();
-        $path = $this->yellow->system->get("coreExtensionDirectory");
+        $path = $this->yellow->system->get("coreWorkerDirectory");
         foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^install-.*\.bin$/", true, false) as $entry) {
             if (!$this->yellow->toolbox->deleteFile($entry)) {
                 $statusCode = 500;
                 $this->yellow->page->error($statusCode, "Can't delete file '$entry'!");
             }
         }
-        $fileName = $this->yellow->system->get("coreExtensionDirectory")."install.php";
+        $fileName = $this->yellow->system->get("coreWorkerDirectory")."install.php";
         if ($statusCode==200 && !$this->yellow->toolbox->deleteFile($fileName)) {
             $statusCode = 500;
             $this->yellow->page->error($statusCode, "Can't delete file '$fileName'!");
         }
         if ($statusCode==200) unset($this->yellow->extension->data["install"]);
-        $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateCurrentFile");
+        $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreExtensionFile");
         $fileData = $this->yellow->toolbox->readFile($fileName);
         $fileDataNew = $this->yellow->toolbox->unsetTextSettings($fileData, "extension", "install");
         if ($statusCode==200 && !$this->yellow->toolbox->createFile($fileName, $fileDataNew)) {
@@ -337,7 +337,7 @@ class YellowInstall {
     // Check web server complete upload
     public function checkServerComplete() {
         $complete = true;
-        $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateCurrentFile");
+        $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreExtensionFile");
         $fileData = $this->yellow->toolbox->readFile($fileName);
         $settings = $this->yellow->toolbox->getTextSettings($fileData, "extension");
         $fileNames = array($fileName);
@@ -405,7 +405,7 @@ class YellowInstall {
     public function downloadExtensionsAvailable($settings, $extensions) {
         $statusCode = 200;
         if ($this->yellow->extension->isExisting("update")) {
-            $path = $this->yellow->system->get("coreExtensionDirectory");
+            $path = $this->yellow->system->get("coreWorkerDirectory");
             $extensionsNow = 0;
             $extensionsTotal = count($extensions);
             $curlHandle = curl_init();
@@ -495,7 +495,7 @@ class YellowInstall {
     
     // Return extensions installed
     public function getExtensionsCount() {
-        $fileNameCurrent = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateCurrentFile");
+        $fileNameCurrent = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreExtensionFile");
         $fileData = $this->yellow->toolbox->readFile($fileNameCurrent);
         $settings = $this->yellow->toolbox->getTextSettings($fileData, "extension");
         return count($settings);

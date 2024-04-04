@@ -2,7 +2,7 @@
 // Image extension, https://github.com/annaesvensson/yellow-image
 
 class YellowImage {
-    const VERSION = "0.8.20";
+    const VERSION = "0.9.1";
     public $yellow;             // access to API
 
     // Handle initialisation

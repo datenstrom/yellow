@@ -2,8 +2,8 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.8.133";
-    const RELEASE = "0.8.23";
+    const VERSION = "0.9.1";
+    const RELEASE = "0.9";
     public $content;        // content files
     public $media;          // media files
     public $system;         // system settings
@@ -40,13 +40,13 @@ class YellowCore {
         $this->system->setDefault("coreContentErrorFile", "page-error-(.*).md");
         $this->system->setDefault("coreLanguageFile", "yellow-language.ini");
         $this->system->setDefault("coreUserFile", "yellow-user.ini");
+        $this->system->setDefault("coreExtensionFile", "yellow-extension.ini");
         $this->system->setDefault("coreWebsiteFile", "yellow-website.log");
         $this->system->setDefault("coreMediaLocation", "/media/");
         $this->system->setDefault("coreDownloadLocation", "/media/downloads/");
         $this->system->setDefault("coreImageLocation", "/media/images/");
         $this->system->setDefault("coreThumbnailLocation", "/media/thumbnails/");
         $this->system->setDefault("coreExtensionLocation", "/media/extensions/");
-        $this->system->setDefault("coreThemeLocation", "/media/themes/");
         $this->system->setDefault("coreMultiLanguageMode", "0");
         $this->system->setDefault("coreDebugMode", "0");
     }
@@ -77,17 +77,19 @@ class YellowCore {
         $this->system->set("coreLayoutDirectory", "system/layouts/");
         $this->system->set("coreThemeDirectory", "system/themes/");
         $this->system->set("coreTrashDirectory", "system/trash/");
+        $this->system->set("coreWorkerDirectory", "system/workers/");
         list($pathInstall, $pathRoot, $pathHome) = $this->lookup->findFileSystemInformation();
         $this->system->set("coreServerInstallDirectory", $pathInstall);
         $this->system->set("coreServerRootDirectory", $pathRoot);
         $this->system->set("coreServerHomeDirectory", $pathHome);
+        $this->system->set("coreThemeLocation", "/media/extensions/"); // TODO: remove later, for backwards compatibility
         register_shutdown_function(array($this, "processFatalError"));
         if ($this->system->get("coreDebugMode")>=1) {
             ini_set("display_errors", 1);
             error_reporting(E_ALL);
         }
         date_default_timezone_set($this->system->get("coreTimezone"));
-        $this->extension->load($this->system->get("coreExtensionDirectory"));
+        $this->extension->load($this->system->get("coreWorkerDirectory"));
         $this->language->load($this->system->get("coreExtensionDirectory").$this->system->get("coreLanguageFile"));
         $this->user->load($this->system->get("coreExtensionDirectory").$this->system->get("coreUserFile"));
         $this->startup();
@@ -1104,7 +1106,7 @@ class YellowLookup {
     
     // Return file system information
     public function findFileSystemInformation() {
-        $pathInstall = substru(__DIR__, 0, 1-strlenu($this->yellow->system->get("coreExtensionDirectory")));
+        $pathInstall = substru(__DIR__, 0, 1-strlenu($this->yellow->system->get("coreWorkerDirectory")));
         $pathBase = $this->yellow->system->get("coreContentDirectory");
         $pathRoot = $this->yellow->system->get("coreMultiLanguageMode") ? "default/" : "";
         $pathHome = "home/";
@@ -1287,16 +1289,16 @@ class YellowLookup {
     // Return media location from file path
     public function findMediaLocationFromFile($fileName) {
         $location = "";
-        $extensionDirectoryLength = strlenu($this->yellow->system->get("coreExtensionDirectory"));
         $themeDirectoryLength = strlenu($this->yellow->system->get("coreThemeDirectory"));
+        $workerDirectoryLength = strlenu($this->yellow->system->get("coreWorkerDirectory"));
         $mediaDirectoryLength = strlenu($this->yellow->system->get("coreMediaDirectory"));
-        if (substru($fileName, 0, $extensionDirectoryLength)==$this->yellow->system->get("coreExtensionDirectory")) {
-            if ($this->isSafeFile($fileName)) {
-                $location = $this->yellow->system->get("coreExtensionLocation").substru($fileName, $extensionDirectoryLength);
+        if (substru($fileName, 0, $themeDirectoryLength)==$this->yellow->system->get("coreThemeDirectory")) {
+            if  ($this->isSafeFile($fileName)) {
+                $location = $this->yellow->system->get("coreExtensionLocation").substru($fileName, $themeDirectoryLength);
             }
-        } elseif (substru($fileName, 0, $themeDirectoryLength)==$this->yellow->system->get("coreThemeDirectory")) {
+        } elseif (substru($fileName, 0, $workerDirectoryLength)==$this->yellow->system->get("coreWorkerDirectory")) {
             if ($this->isSafeFile($fileName)) {
-                $location = $this->yellow->system->get("coreThemeLocation").substru($fileName, $themeDirectoryLength);
+                $location = $this->yellow->system->get("coreExtensionLocation").substru($fileName, $workerDirectoryLength);
             }
         } elseif (substru($fileName, 0, $mediaDirectoryLength)==$this->yellow->system->get("coreMediaDirectory")) {
             $location = "/".$fileName;
@@ -1308,15 +1310,12 @@ class YellowLookup {
     public function findFileFromMediaLocation($location) {
         $fileName = "";
         $extensionLocationLength = strlenu($this->yellow->system->get("coreExtensionLocation"));
-        $themeLocationLength = strlenu($this->yellow->system->get("coreThemeLocation"));
         $mediaLocationLength = strlenu($this->yellow->system->get("coreMediaLocation"));
         if (substru($location, 0, $extensionLocationLength)==$this->yellow->system->get("coreExtensionLocation")) {
             if ($this->isSafeFile($location)) {
-                $fileName = $this->yellow->system->get("coreExtensionDirectory").substru($location, $extensionLocationLength);
-            }
-        } elseif (substru($location, 0, $themeLocationLength)==$this->yellow->system->get("coreThemeLocation")) {
-            if ($this->isSafeFile($location)) {
-                $fileName = $this->yellow->system->get("coreThemeDirectory").substru($location, $themeLocationLength);
+                $fileNameOne = $this->yellow->system->get("coreThemeDirectory").substru($location, $extensionLocationLength);
+                $fileNameTwo = $this->yellow->system->get("coreWorkerDirectory").substru($location, $extensionLocationLength);
+                $fileName = is_file($fileNameOne) ? $fileNameOne : $fileNameTwo;
             }
         } elseif (substru($location, 0, $mediaLocationLength)==$this->yellow->system->get("coreMediaLocation")) {
             $fileName = substru($location, 1);
@@ -3306,23 +3305,21 @@ class YellowPage {
             }
         }
         if ($name=="header") {
+            $extensionLocation = $this->yellow->system->get("coreServerBase").$this->yellow->system->get("coreExtensionLocation");
             $fileNameTheme = $this->yellow->system->get("coreThemeDirectory").$this->yellow->lookup->normaliseName($this->get("theme")).".css";
             if (is_file($fileNameTheme)) {
-                $locationTheme = $this->yellow->system->get("coreServerBase").
-                    $this->yellow->system->get("coreThemeLocation").$this->yellow->lookup->normaliseName($this->get("theme")).".css";
-                $output .= "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"$locationTheme\" />\n";
+                $fileLocation = $extensionLocation.$this->yellow->lookup->normaliseName($this->get("theme")).".css";
+                $output .= "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"$fileLocation\" />\n";
             }
             $fileNameScript = $this->yellow->system->get("coreThemeDirectory").$this->yellow->lookup->normaliseName($this->get("theme")).".js";
             if (is_file($fileNameScript)) {
-                $locationScript = $this->yellow->system->get("coreServerBase").
-                    $this->yellow->system->get("coreThemeLocation").$this->yellow->lookup->normaliseName($this->get("theme")).".js";
-                $output .= "<script type=\"text/javascript\" src=\"$locationScript\"></script>\n";
+                $fileLocation = $extensionLocation.$this->yellow->lookup->normaliseName($this->get("theme")).".js";
+                $output .= "<script type=\"text/javascript\" src=\"$fileLocation\"></script>\n";
             }
             $fileNameFavicon = $this->yellow->system->get("coreThemeDirectory").$this->yellow->lookup->normaliseName($this->get("theme")).".png";
             if (is_file($fileNameFavicon)) {
-                $locationFavicon = $this->yellow->system->get("coreServerBase").
-                    $this->yellow->system->get("coreThemeLocation").$this->yellow->lookup->normaliseName($this->get("theme")).".png";
-                $output .= "<link rel=\"icon\" type=\"image/png\" href=\"$locationFavicon\" />\n";
+                $fileLocation = $extensionLocation.$this->yellow->lookup->normaliseName($this->get("theme")).".png";
+                $output .= "<link rel=\"icon\" type=\"image/png\" href=\"$fileLocation\" />\n";
             }
         }
         return $output;

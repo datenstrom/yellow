@@ -2,7 +2,7 @@
 // Update extension, https://github.com/annaesvensson/yellow-update
 
 class YellowUpdate {
-    const VERSION = "0.8.101";
+    const VERSION = "0.9.1";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $extensions;             // number of extensions
@@ -13,7 +13,6 @@ class YellowUpdate {
         $this->yellow->system->setDefault("updateCurrentRelease", "none");
         $this->yellow->system->setDefault("updateAvailableUrl", "auto");
         $this->yellow->system->setDefault("updateAvailableFile", "update-available.ini");
-        $this->yellow->system->setDefault("updateCurrentFile", "update-current.ini");
         $this->yellow->system->setDefault("updateExtensionFile", "extension.ini");
         $this->yellow->system->setDefault("updateEventPending", "none");
         $this->yellow->system->setDefault("updateEventDaily", "0");
@@ -363,7 +362,7 @@ class YellowUpdate {
 
     // Update pending patches
     public function updatePatchPending() {
-        $fileName = $this->yellow->system->get("coreExtensionDirectory")."updatepatch.bin";
+        $fileName = $this->yellow->system->get("coreWorkerDirectory")."updatepatch.bin";
         if (is_file($fileName)) {
             if ($this->yellow->system->get("coreDebugMode")>=2) echo "YellowUpdate::updatePatchPending file:$fileName<br/>\n";
             if (!$this->yellow->extension->isExisting("updatepatch")) {
@@ -443,7 +442,7 @@ class YellowUpdate {
     // Update extension settings
     public function updateExtensionSettings($extension, $action, $settings) {
         $statusCode = 200;
-        $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateCurrentFile");
+        $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreExtensionFile");
         $fileData = $fileDataNew = $this->yellow->toolbox->readFile($fileName);
         if ($action=="install" || $action=="update") {
             $settingsCurrent = $this->yellow->toolbox->getTextSettings($fileData, "extension");
@@ -778,7 +777,7 @@ class YellowUpdate {
         $statusCode = 200;
         $settings = array();
         if ($current) {
-            $fileNameCurrent = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateCurrentFile");
+            $fileNameCurrent = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreExtensionFile");
             $fileData = $this->yellow->toolbox->readFile($fileNameCurrent);
             $settings = $this->yellow->toolbox->getTextSettings($fileData, "extension");
             foreach ($settings->getArrayCopy() as $key=>$value) {
