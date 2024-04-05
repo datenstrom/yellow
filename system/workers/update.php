@@ -2,7 +2,7 @@
 // Update extension, https://github.com/annaesvensson/yellow-update
 
 class YellowUpdate {
-    const VERSION = "0.9.1";
+    const VERSION = "0.9.2";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $extensions;             // number of extensions
@@ -21,12 +21,6 @@ class YellowUpdate {
     
     // Handle update
     public function onUpdate($action) {
-        if ($action=="clean" || $action=="update") { //TODO: remove later, for backwards compatibility
-            $fileNameOld = $this->yellow->system->get("coreExtensionDirectory")."update-latest.ini";
-            if (is_file($fileNameOld) && !$this->yellow->toolbox->deleteFile($fileNameOld)) {
-                $this->yellow->toolbox->log("error", "Can't delete file '$fileNameOld'!");
-            }
-        }
         if ($action=="clean" || $action=="daily") {
             $statusCode = 200;
             $path = $this->yellow->system->get("coreExtensionDirectory");
