@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/annaesvensson/yellow-edit
 
 class YellowEdit {
-    const VERSION = "0.9.1";
+    const VERSION = "0.9.2";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -1347,8 +1347,8 @@ class YellowEditResponse {
         $statusCode = 200;
         $rawData = "";
         if ($this->yellow->extension->isExisting("update")) {
-            list($statusCodeCurrent, $settingsCurrent) = $this->yellow->extension->get("update")->getExtensionSettings(false);
-            list($statusCodeLatest, $settingsLatest) = $this->yellow->extension->get("update")->getExtensionSettings(true);
+            list($statusCodeCurrent, $settingsCurrent) = $this->yellow->extension->get("update")->getExtensionSettings(true);
+            list($statusCodeLatest, $settingsLatest) = $this->yellow->extension->get("update")->getExtensionSettings(false);
             $statusCode = max($statusCodeCurrent, $statusCodeLatest);
             foreach ($settingsCurrent as $key=>$value) {
                 if ($settingsLatest->isExisting($key)) {
