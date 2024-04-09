@@ -2,7 +2,7 @@
 // Generate extension, https://github.com/annaesvensson/yellow-generate
 
 class YellowGenerate {
-    const VERSION = "0.9.1";
+    const VERSION = "0.9.2";
     public $yellow;                       // access to API
     public $files;                        // number of files
     public $errors;                       // number of errors
@@ -74,6 +74,7 @@ class YellowGenerate {
         }
         $statusCode = max($statusCode, $this->generateStaticContent($path, $location, "\rGenerating static website", 5, 95));
         $statusCode = max($statusCode, $this->generateStaticMedia($path, $location));
+        $statusCode = max($statusCode, $this->generateStaticSystem($path, $location));
         echo "\rGenerating static website 100%... done\n";
         return $statusCode;
     }
@@ -120,14 +121,22 @@ class YellowGenerate {
             foreach ($this->getMediaLocations() as $location) {
                 $statusCode = max($statusCode, $this->generateStaticFile($path, $location));
             }
-            foreach ($this->getExtraLocations($path) as $location) {
+        }
+        return $statusCode;
+    }
+
+    // Generate static system
+    public function generateStaticSystem($path, $locationFilter) {
+        $statusCode = 200;
+        if (is_string_empty($locationFilter)) {
+            foreach ($this->getSystemLocations($path) as $location) {
                 $statusCode = max($statusCode, $this->generateStaticFile($path, $location));
             }
             $statusCode = max($statusCode, $this->generateStaticFile($path, "/error/", false, false, true));
         }
         return $statusCode;
     }
-    
+
     // Generate static file
     public function generateStaticFile($path, $location, $analyse = false, $probe = false, $error = false) {
         $this->yellow->content->pages = array();
@@ -381,58 +390,66 @@ class YellowGenerate {
     // Return media locations
     public function getMediaLocations() {
         $locations = array();
-        $mediaPath = $this->yellow->system->get("coreMediaDirectory");
-        $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($mediaPath, "/.*/", false, false);
+        $path = $this->yellow->system->get("coreMediaDirectory");
+        $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($path, "/.*/", false, false);
         foreach ($fileNames as $fileName) {
-            array_push($locations, $this->yellow->lookup->findMediaLocationFromFile($fileName));
+            $location = $this->yellow->lookup->findMediaLocationFromFile($fileName);
+            if (!is_string_empty($location)) array_push($locations, $location);
         }
-        $themePath = $this->yellow->system->get("coreThemeDirectory");
-        $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($themePath, "/.*/", false, false);
+        return $locations;
+    }
+
+    // Return system locations
+    public function getSystemLocations($pathIgnore) {
+        $locations = array();
+        $path = $this->yellow->system->get("coreWorkerDirectory");
+        $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($path, "/.*/", false, false);
         foreach ($fileNames as $fileName) {
-            array_push($locations, $this->yellow->lookup->findMediaLocationFromFile($fileName));
+            $location = $this->yellow->lookup->findSystemLocationFromFile($fileName);
+            if (!is_string_empty($location)) array_push($locations, $location);
         }
-        $workerPath = $this->yellow->system->get("coreWorkerDirectory");
-        $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($workerPath, "/.*/", false, false);
+        $path = $this->yellow->system->get("coreThemeDirectory");
+        $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($path, "/.*/", false, false);
         foreach ($fileNames as $fileName) {
-            array_push($locations, $this->yellow->lookup->findMediaLocationFromFile($fileName));
+            $location = $this->yellow->lookup->findSystemLocationFromFile($fileName);
+            if (!is_string_empty($location)) array_push($locations, $location);
         }
-        return array_diff($locations, $this->getMediaLocationsIgnore());
+        $path = $this->yellow->system->get("coreLayoutDirectory");
+        $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive($path, "/.*/", false, false);
+        foreach ($fileNames as $fileName) {
+            $location = $this->yellow->lookup->findSystemLocationFromFile($fileName);
+            if (!is_string_empty($location)) array_push($locations, $location);
+        }
+        $regexIgnore = "#^(/".
+            $this->yellow->system->get("coreContentDirectory")."|/".
+            $this->yellow->system->get("coreMediaDirectory")."|/".
+            $this->yellow->system->get("coreSystemDirectory")."|/".
+            $this->yellow->system->get("generateStaticDirectory")."|/$pathIgnore/|/yellow.php)#";
+        $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive(".", "/.*/", false, false);
+        foreach ($fileNames as $fileName) {
+            $location = substru($fileName, 1);
+            if (!preg_match($regexIgnore, $location)) array_push($locations, $location);
+        }
+        return array_diff($locations, $this->getSystemLocationsIgnore());
     }
     
-    // Return media locations to ignore
-    public function getMediaLocationsIgnore() {
-        $locations = array("");
-        $workerPath = $this->yellow->system->get("coreWorkerDirectory");
+    // Return system locations to ignore
+    public function getSystemLocationsIgnore() {
+        $locations = array();
+        $path = $this->yellow->system->get("coreWorkerDirectory");
         $workerDirectoryLength = strlenu($this->yellow->system->get("coreWorkerDirectory"));
         if ($this->yellow->extension->isExisting("bundle")) {
-            foreach ($this->yellow->toolbox->getDirectoryEntries($workerPath, "/^bundle-(.*)/", false, false) as $entry) {
+            foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^bundle-(.*)/", false, false) as $entry) {
                 list($locationsBundle) = $this->yellow->extension->get("bundle")->getBundleInformation($entry);
                 $locations = array_merge($locations, $locationsBundle);
             }
         }
         if ($this->yellow->extension->isExisting("edit")) {
-            foreach ($this->yellow->toolbox->getDirectoryEntries($workerPath, "/^edit\.(.*)/", false, false) as $entry) {
-                $location = $this->yellow->system->get("coreExtensionLocation").substru($entry, $workerDirectoryLength);
+            foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^edit(\-|\.)(.*)/", false, false) as $entry) {
+                $location = $this->yellow->system->get("coreAssetLocation").substru($entry, $workerDirectoryLength);
                 array_push($locations, $location);
             }
         }
         return array_unique($locations);
-    }
-    
-    // Return extra locations
-    public function getExtraLocations($path) {
-        $locations = array();
-        $pathIgnore = "($path/|".
-            $this->yellow->system->get("generateStaticDirectory")."|".
-            $this->yellow->system->get("coreContentDirectory")."|".
-            $this->yellow->system->get("coreMediaDirectory")."|".
-            $this->yellow->system->get("coreSystemDirectory").")";
-        $fileNames = $this->yellow->toolbox->getDirectoryEntriesRecursive(".", "/.*/", false, false);
-        foreach ($fileNames as $fileName) {
-            $fileName = substru($fileName, 2);
-            if (preg_match("#^$pathIgnore#", $fileName) || $fileName=="yellow.php") continue;
-            array_push($locations, "/".$fileName);
-        }
-        return $locations;
     }
 }

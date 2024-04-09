@@ -1,6 +1,6 @@
 <?php
 // Core extension, https://github.com/annaesvensson/yellow-core
-// This file is only needed for backwards compatibility with Datenstrom Yellow 0.8.23
+// This file is only needed for backwards compatibility with Datenstrom Yellow 0.8
 // Please note that the latest core can be found in file `system/workers/core.php`
     
 class YellowCore {
