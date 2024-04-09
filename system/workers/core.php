@@ -1327,7 +1327,7 @@ class YellowLookup {
         return substru($key, -8, 8)=="Location" ? $this->findFileFromMediaLocation($this->yellow->system->get($key)) : "";
     }
     
-    // Return media location from file path
+    // Return system location from file path, for virtually mapped system files
     public function findSystemLocationFromFile($fileName) {
         $location = "";
         $layoutDirectoryLength = strlenu($this->yellow->system->get("coreLayoutDirectory"));
@@ -1349,7 +1349,7 @@ class YellowLookup {
         return $location;
     }
     
-    // Return file path from media location
+    // Return file path from system location, for virtually mapped system files
     public function findFileFromSystemLocation($location) {
         $fileName = "";
         $assetLocationLength = strlenu($this->yellow->system->get("coreAssetLocation"));
