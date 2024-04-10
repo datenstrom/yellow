@@ -1,7 +1,7 @@
 <?php
 // Core extension, https://github.com/annaesvensson/yellow-core
 // This file is only needed for backwards compatibility with Datenstrom Yellow 0.8
-// Please note that the latest core can be found in file `system/workers/core.php`
+// Please note that the latest core can be found in file "system/workers/core.php"
     
 class YellowCore {
     const VERSION = "0.8.134";
@@ -40,7 +40,7 @@ class YellowCore {
             $fileName = "yellow.php";
             $fileData = $fileDataNew = $this->readFile($fileName);
             $fileDataNew = str_replace("system/extensions/core.php", "system/workers/core.php", $fileDataNew);
-            if ($fileData!=$fileDataNew && !$this->createFile($fileName, $fileDataNew)) {
+            if ($fileData!=$fileDataNew && !$this->writeFile($fileName, $fileDataNew)) {
                 $statusCode = 500;
                 header("HTTP/1.0 500 Server error");
                 echo "Something went wrong during core update: Can't write file '$fileName'! <br/>\n";
@@ -68,8 +68,8 @@ class YellowCore {
         return $fileData;
     }
     
-    // Create file
-    public function createFile($fileName, $fileData, $mkdir = false) {
+    // Write file
+    public function writeFile($fileName, $fileData, $mkdir = false) {
         $ok = false;
         if ($mkdir) {
             $path = dirname($fileName);

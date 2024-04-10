@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.9.2";
+    const VERSION = "0.9.3";
     const RELEASE = "0.9";
     public $content;        // content files
     public $media;          // media files
@@ -659,7 +659,7 @@ class YellowSystem {
         }
         $fileData = $this->yellow->toolbox->readFile($fileName);
         $fileData = $this->yellow->toolbox->setTextSettings($fileData, "", "", $settingsNew);
-        return $this->yellow->toolbox->createFile($fileName, $fileData);
+        return $this->yellow->toolbox->writeFile($fileName, $fileData);
     }
     
     // Set default system setting
@@ -980,7 +980,7 @@ class YellowUser {
         }
         $fileData = $this->yellow->toolbox->readFile($fileName);
         $fileData = $this->yellow->toolbox->setTextSettings($fileData, "email", $email, $settingsNew);
-        return $this->yellow->toolbox->createFile($fileName, $fileData);
+        return $this->yellow->toolbox->writeFile($fileName, $fileData);
     }
     
     // Remove user settings from file
@@ -989,7 +989,7 @@ class YellowUser {
         if (isset($this->settings[$email])) unset($this->settings[$email]);
         $fileData = $this->yellow->toolbox->readFile($fileName);
         $fileData = $this->yellow->toolbox->unsetTextSettings($fileData, "email", $email);
-        return $this->yellow->toolbox->createFile($fileName, $fileData);
+        return $this->yellow->toolbox->writeFile($fileName, $fileData);
     }
     
     // Set current email
@@ -2118,8 +2118,8 @@ class YellowToolbox {
         return $fileData;
     }
     
-    // Create file
-    public function createFile($fileName, $fileData, $mkdir = false) {
+    // Write file
+    public function writeFile($fileName, $fileData, $mkdir = false) {
         $ok = false;
         if ($mkdir) {
             $path = dirname($fileName);
@@ -2138,6 +2138,9 @@ class YellowToolbox {
         }
         return $ok;
     }
+    
+    // TODO: remove later, for backwards compatibility
+    public function createFile($fileName, $fileData, $mkdir = false) { return $this->writeFile($fileName, $fileData, $mkdir); }
     
     // Append file
     public function appendFile($fileName, $fileData, $mkdir = false) {

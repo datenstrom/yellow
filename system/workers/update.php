@@ -2,7 +2,7 @@
 // Update extension, https://github.com/annaesvensson/yellow-update
 
 class YellowUpdate {
-    const VERSION = "0.9.2";
+    const VERSION = "0.9.3";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $extensions;             // number of extensions
@@ -232,7 +232,7 @@ class YellowUpdate {
         foreach ($settings as $key=>$value) {
             $fileName = $path.$this->yellow->lookup->normaliseName($key, true, false, true).".zip";
             list($statusCode, $fileData) = $this->getExtensionFile($value->get("downloadUrl"));
-            if ($statusCode==200 && !$this->yellow->toolbox->createFile($fileName.".download", $fileData)) {
+            if ($statusCode==200 && !$this->yellow->toolbox->writeFile($fileName.".download", $fileData)) {
                 $statusCode = 500;
                 $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
             }
@@ -325,7 +325,7 @@ class YellowUpdate {
             if (preg_match("/optional/i", $flags) && $this->yellow->extension->isExisting($extension)) $create = $update = $delete = false;
             if (preg_match("/careful/i", $flags) && is_file($fileName) && $lastModified!=$oldModified) $update = false;
             if ($create) {
-                if (!$this->yellow->toolbox->createFile($fileName, $fileData, true) ||
+                if (!$this->yellow->toolbox->writeFile($fileName, $fileData, true) ||
                     !$this->yellow->toolbox->modifyFile($fileName, $newModified)) {
                     $statusCode = 500;
                     $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
@@ -333,7 +333,7 @@ class YellowUpdate {
             }
             if ($update) {
                 if (!$this->yellow->toolbox->deleteFile($fileName, $this->yellow->system->get("coreTrashDirectory")) ||
-                    !$this->yellow->toolbox->createFile($fileName, $fileData) ||
+                    !$this->yellow->toolbox->writeFile($fileName, $fileData) ||
                     !$this->yellow->toolbox->modifyFile($fileName, $newModified)) {
                     $statusCode = 500;
                     $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
@@ -457,7 +457,7 @@ class YellowUpdate {
         } elseif ($action=="uninstall") {
             $fileDataNew = $this->yellow->toolbox->unsetTextSettings($fileData, "extension", $extension);
         }
-        if ($fileData!=$fileDataNew && !$this->yellow->toolbox->createFile($fileName, $fileDataNew)) {
+        if ($fileData!=$fileDataNew && !$this->yellow->toolbox->writeFile($fileName, $fileDataNew)) {
             $statusCode = 500;
             $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
         }
@@ -500,7 +500,7 @@ class YellowUpdate {
                 }
             }
         }
-        if ($fileData!=$fileDataNew && !$this->yellow->toolbox->createFile($fileName, $fileDataNew)) {
+        if ($fileData!=$fileDataNew && !$this->yellow->toolbox->writeFile($fileName, $fileDataNew)) {
             $statusCode = 500;
             $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
         }
@@ -572,7 +572,7 @@ class YellowUpdate {
                 }
             }
         }
-        if ($fileData!=$fileDataNew && !$this->yellow->toolbox->createFile($fileName, $fileDataNew)) {
+        if ($fileData!=$fileDataNew && !$this->yellow->toolbox->writeFile($fileName, $fileDataNew)) {
             $statusCode = 500;
             $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
         }
@@ -789,7 +789,7 @@ class YellowUpdate {
                 $url = $this->yellow->system->get("updateAvailableUrl");
                 if ($url=="auto") $url = "https://raw.githubusercontent.com/datenstrom/yellow/main/system/extensions/update-available.ini";
                 list($statusCode, $fileData) = $this->getExtensionFile($url);
-                if ($statusCode==200 && !$this->yellow->toolbox->createFile($fileNameAvailable, $fileData)) {
+                if ($statusCode==200 && !$this->yellow->toolbox->writeFile($fileNameAvailable, $fileData)) {
                     $statusCode = 500;
                     $this->yellow->page->error($statusCode, "Can't write file '$fileNameAvailable'!");
                 }

@@ -2,7 +2,7 @@
 // Install extension, https://github.com/annaesvensson/yellow-install
 
 class YellowInstall {
-    const VERSION = "0.9.1";
+    const VERSION = "0.9.2";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -253,7 +253,7 @@ class YellowInstall {
             $textOld = str_replace("\\n", "\n", $this->yellow->language->getText("{$name}Text", "en"));
             $textNew = str_replace("\\n", "\n", $this->yellow->language->getText("{$name}Text", $language));
             $fileData = str_replace($textOld, $textNew, $fileData);
-            if (!$this->yellow->toolbox->createFile($fileName, $fileData)) {
+            if (!$this->yellow->toolbox->writeFile($fileName, $fileData)) {
                 $statusCode = 500;
                 $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
             }
@@ -276,7 +276,7 @@ class YellowInstall {
             if (!is_string_empty($fileData)) $fileData .= "\n";
             $fileData .= "Language: $language\n";
             $fileData .= "media/images/photo.jpg: ".$this->yellow->language->getText("installExampleImage", $language)."\n";
-            if (!$this->yellow->toolbox->createFile($fileName, $fileData)) {
+            if (!$this->yellow->toolbox->writeFile($fileName, $fileData)) {
                 $statusCode = 500;
                 $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
             }
@@ -304,7 +304,7 @@ class YellowInstall {
         $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreExtensionFile");
         $fileData = $this->yellow->toolbox->readFile($fileName);
         $fileDataNew = $this->yellow->toolbox->unsetTextSettings($fileData, "extension", "install");
-        if ($statusCode==200 && !$this->yellow->toolbox->createFile($fileName, $fileDataNew)) {
+        if ($statusCode==200 && !$this->yellow->toolbox->writeFile($fileName, $fileDataNew)) {
             $statusCode = 500;
             $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
         }
@@ -429,7 +429,7 @@ class YellowInstall {
                     $statusCode = 500;
                     $this->yellow->page->error($statusCode, "Can't download file '$url'!");
                 }
-                if ($statusCode==200 && !$this->yellow->toolbox->createFile($fileName, $fileData)) {
+                if ($statusCode==200 && !$this->yellow->toolbox->writeFile($fileName, $fileData)) {
                     $statusCode = 500;
                     $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
                 }

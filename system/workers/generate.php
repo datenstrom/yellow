@@ -2,7 +2,7 @@
 // Generate extension, https://github.com/annaesvensson/yellow-generate
 
 class YellowGenerate {
-    const VERSION = "0.9.2";
+    const VERSION = "0.9.3";
     public $yellow;                       // access to API
     public $files;                        // number of files
     public $errors;                       // number of errors
@@ -195,7 +195,7 @@ class YellowGenerate {
         }
         $fileName = $this->getStaticFile($path, $location, $statusCode);
         if (is_file($fileName)) $this->yellow->toolbox->deleteFile($fileName);
-        if (!$this->yellow->toolbox->createFile($fileName, $fileData, true) ||
+        if (!$this->yellow->toolbox->writeFile($fileName, $fileData, true) ||
             !$this->yellow->toolbox->modifyFile($fileName, $modified)) {
             $statusCode = 500;
             $this->yellow->page->statusCode = $statusCode;

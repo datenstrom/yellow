@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/annaesvensson/yellow-edit
 
 class YellowEdit {
-    const VERSION = "0.9.2";
+    const VERSION = "0.9.3";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -49,7 +49,7 @@ class YellowEdit {
                 if (!$cleanup) $fileDataNew .= $line;
             }
             $fileDataNew = rtrim($fileDataNew)."\n";
-            if ($fileData!=$fileDataNew && !$this->yellow->toolbox->createFile($fileNameUser, $fileDataNew)) {
+            if ($fileData!=$fileDataNew && !$this->yellow->toolbox->writeFile($fileNameUser, $fileDataNew)) {
                 $this->yellow->toolbox->log("error", "Can't write file '$fileNameUser'!");
             }
         }
@@ -117,9 +117,9 @@ class YellowEdit {
     public function onParsePageExtra($page, $name) {
         $output = null;
         if ($this->editable && $name=="header") {
-            $extensionLocation = $this->yellow->system->get("coreServerBase").$this->yellow->system->get("coreExtensionLocation");
-            $output = "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"{$extensionLocation}edit.css\" />\n";
-            $output .= "<script type=\"text/javascript\" src=\"{$extensionLocation}edit.js\"></script>\n";
+            $assetLocation = $this->yellow->system->get("coreServerBase").$this->yellow->system->get("coreAssetLocation");
+            $output = "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"{$assetLocation}edit.css\" />\n";
+            $output .= "<script type=\"text/javascript\" src=\"{$assetLocation}edit.js\"></script>\n";
             $output .= "<script type=\"text/javascript\">\n";
             $output .= "// <![CDATA[\n";
             $output .= "yellow.page = ".json_encode($this->response->getPageData($page)).";\n";
@@ -723,7 +723,7 @@ class YellowEdit {
             $page = $this->response->getPageNew($scheme, $address, $base, $location, $fileName,
                 $rawData, $this->response->getEndOfLine());
             if (!$page->isError()) {
-                if ($this->yellow->toolbox->createFile($page->fileName, $page->rawData, true)) {
+                if ($this->yellow->toolbox->writeFile($page->fileName, $page->rawData, true)) {
                     $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $page->location);
                     $statusCode = $this->yellow->sendStatus(303, $location);
                 } else {
@@ -751,10 +751,10 @@ class YellowEdit {
             if (!$page->isError()) {
                 if ($this->yellow->lookup->isFileLocation($location)) {
                     $ok = $this->yellow->toolbox->renameFile($fileName, $page->fileName, true) &&
-                        $this->yellow->toolbox->createFile($page->fileName, $page->rawData);
+                        $this->yellow->toolbox->writeFile($page->fileName, $page->rawData);
                 } else {
                     $ok = $this->yellow->toolbox->renameDirectory(dirname($fileName), dirname($page->fileName), true) &&
-                        $this->yellow->toolbox->createFile($page->fileName, $page->rawData);
+                        $this->yellow->toolbox->writeFile($page->fileName, $page->rawData);
                 }
                 if ($ok) {
                     $location = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $page->location);
@@ -1182,7 +1182,7 @@ class YellowEditResponse {
         if ($file->get("type")=="html" || $file->get("type")=="svg") {
             $fileData = $this->yellow->toolbox->readFile($fileNameTemp);
             $fileData = $this->yellow->lookup->normaliseData($fileData, $file->get("type"));
-            if (is_string_empty($fileData) || !$this->yellow->toolbox->createFile($fileNameTemp, $fileData)) {
+            if (is_string_empty($fileData) || !$this->yellow->toolbox->writeFile($fileNameTemp, $fileData)) {
                 $file->error(500, "Can't write file '$fileNameTemp'!");
             }
         }
@@ -1744,7 +1744,7 @@ class YellowEditResponse {
         $rawData = $this->yellow->toolbox->readFile($fileName);
         $rawData = $this->yellow->toolbox->setMetaData($rawData, "pageOriginalLocation", $location);
         $rawData = $this->yellow->toolbox->setMetaData($rawData, "pageOriginalFileName", $fileName);
-        return $this->yellow->toolbox->createFile($fileName, $rawData) &&
+        return $this->yellow->toolbox->writeFile($fileName, $rawData) &&
             $this->yellow->toolbox->deleteFile($fileName, $this->yellow->system->get("coreTrashDirectory"));
     }
     
@@ -1753,7 +1753,7 @@ class YellowEditResponse {
         $rawData = $this->yellow->toolbox->readFile($fileName);
         $rawData = $this->yellow->toolbox->setMetaData($rawData, "pageOriginalLocation", $location);
         $rawData = $this->yellow->toolbox->setMetaData($rawData, "pageOriginalFileName", $fileName);
-        return $this->yellow->toolbox->createFile($fileName, $rawData) &&
+        return $this->yellow->toolbox->writeFile($fileName, $rawData) &&
             $this->yellow->toolbox->deleteDirectory(dirname($fileName), $this->yellow->system->get("coreTrashDirectory"));
     }
     
@@ -1779,7 +1779,7 @@ class YellowEditResponse {
         }
         return !is_string_empty($fileNameDeleted) && $this->yellow->lookup->isContentFile($fileNameRestored) &&
             $this->yellow->toolbox->renameFile($fileNameDeleted, $fileNameRestored, true) &&
-            $this->yellow->toolbox->createFile($fileNameRestored, $rawDataRestored);
+            $this->yellow->toolbox->writeFile($fileNameRestored, $rawDataRestored);
     }
     
     // Restore deleted directory from trash
@@ -1805,7 +1805,7 @@ class YellowEditResponse {
         }
         return !is_string_empty($pathDeleted) && $this->yellow->lookup->isContentFile($fileNameRestored) &&
             $this->yellow->toolbox->renameDirectory($pathDeleted, dirname($fileNameRestored), true) &&
-            $this->yellow->toolbox->createFile($fileNameRestored, $rawDataRestored);
+            $this->yellow->toolbox->writeFile($fileNameRestored, $rawDataRestored);
     }
     
     // Check if location has been deleted
