@@ -2,7 +2,7 @@
 // Install extension, https://github.com/annaesvensson/yellow-install
 
 class YellowInstall {
-    const VERSION = "0.9.2";
+    const VERSION = "0.9.3";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -526,7 +526,12 @@ class YellowInstall {
         if ($this->yellow->system->get("generateStaticUrl")=="auto" && getenv("URL")!==false) $settings["generateStaticUrl"] = getenv("URL");
         if ($this->yellow->system->get("generateStaticUrl")=="auto" && $skipInstallation) $settings["generateStaticUrl"] = "http://localhost:8000/";
         if ($this->yellow->system->get("coreTimezone")=="UTC") $settings["coreTimezone"] = $this->yellow->toolbox->detectServerTimezone();
-        if ($this->yellow->system->get("updateEventPending")=="none") $settings["updateEventPending"] = "website/install";
+        if ($this->yellow->system->get("updateEventPending")=="none") {
+            $settings["updateEventPending"] = "website/install";
+        } else {
+            $themeStandard = ",".$this->yellow->system->get("theme")."/install";
+            $settings["updateEventPending"] = $this->yellow->system->get("updateEventPending").$themeStandard;
+        }
         $settings["updateCurrentRelease"] = YellowCore::RELEASE;
         return $settings;
     }
