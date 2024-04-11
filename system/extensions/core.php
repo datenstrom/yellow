@@ -28,7 +28,7 @@ class YellowCore {
     public function command($line = "") {
         $statusCode = $this->processCoreUpdate();
         if ($statusCode==303) {
-            echo "Flux capacitor has reached 1.21 gigawatts. Please run command again.\n";
+            echo "Yellow flux capacitor has reached 1.21 gigawatts. Please run command again.\n";
         }
         return $statusCode<400 ? 0 : 1;
     }

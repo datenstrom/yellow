@@ -204,7 +204,7 @@ class YellowUpdate {
         $this->updateEventPending();
         $statusCode = $this->updateExtensionPending();
         if ($statusCode==303) {
-            echo "Detected ZIP file".($this->extensions!=1 ? "s" : "");
+            echo "Yellow detected ZIP file".($this->extensions!=1 ? "s" : "");
             echo ", $this->extensions extension".($this->extensions!=1 ? "s" : "")." installed. Please run command again.\n";
         }
         return $statusCode;
