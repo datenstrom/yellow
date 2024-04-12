@@ -2,7 +2,7 @@
 // Install extension, https://github.com/annaesvensson/yellow-install
 
 class YellowInstall {
-    const VERSION = "0.9.3";
+    const VERSION = "0.9.4";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -163,7 +163,7 @@ class YellowInstall {
             $modified = strtotime($settings->get("published"));
             $fileNamePhp = $this->yellow->system->get("coreWorkerDirectory").$extension.".php";
             if (!is_string_empty($extension) && !is_string_empty($version) && !is_file($fileNamePhp)) {
-                $statusCode = max($statusCode, $this->yellow->extension->get("update")->updateExtensionSettings($extension, $action, $settings));
+                $statusCode = max($statusCode, $this->yellow->extension->get("update")->updateExtensionSettings($extension, $action, $fileDataIni));
                 $statusCode = max($statusCode, $this->yellow->extension->get("update")->updateExtensionFile(
                     $fileNamePhp, $fileDataPhp, $modified, 0, 0, "create", $extension));
                 $this->yellow->toolbox->log($statusCode==200 ? "info" : "error", ucfirst($action)." extension '".ucfirst($extension)." $version'");

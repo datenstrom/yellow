@@ -2,7 +2,7 @@
 // Update extension, https://github.com/annaesvensson/yellow-update
 
 class YellowUpdate {
-    const VERSION = "0.9.3";
+    const VERSION = "0.9.4";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $extensions;             // number of extensions
@@ -277,7 +277,7 @@ class YellowUpdate {
             $settings = $this->yellow->toolbox->getTextSettings($fileData, "");
             list($extension, $version, $newModified, $oldModified) = $this->getExtensionInformation($settings);
             if (!is_string_empty($extension) && !is_string_empty($version)) {
-                $statusCode = max($statusCode, $this->updateExtensionSettings($extension, $action, $settings));
+                $statusCode = max($statusCode, $this->updateExtensionSettings($extension, $action, $fileData));
                 $paths = $this->getExtensionDirectories($zip, $pathBase);
                 foreach ($this->getExtensionFileNames($settings) as $fileName) {
                     list($entry, $flags) = $this->yellow->toolbox->getTextList($settings[$fileName], ",", 2);
@@ -434,14 +434,15 @@ class YellowUpdate {
     }
     
     // Update extension settings
-    public function updateExtensionSettings($extension, $action, $settings) {
+    public function updateExtensionSettings($extension, $action, $text = "") {
         $statusCode = 200;
         $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreExtensionFile");
         $fileData = $fileDataNew = $this->yellow->toolbox->readFile($fileName);
         if ($action=="install" || $action=="update") {
             $settingsCurrent = $this->yellow->toolbox->getTextSettings($fileData, "extension");
             $settingsCurrent[$extension] = new YellowArray();
-            foreach ($settings as $key=>$value) $settingsCurrent[$extension][$key] = $value;
+            $block = $this->yellow->toolbox->getTextSettings($text, "");
+            foreach ($block as $key=>$value) $settingsCurrent[$extension][$key] = $value;
             $settingsCurrent->uksort("strnatcasecmp");
             $fileDataNew = "";
             foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
@@ -618,7 +619,7 @@ class YellowUpdate {
                 $statusCode = max($statusCode, $this->removeExtensionFile($fileName));
             }
             if ($statusCode==200) {
-                $statusCode = max($statusCode, $this->updateExtensionSettings($extension, $action, $settings));
+                $statusCode = max($statusCode, $this->updateExtensionSettings($extension, $action));
                 $statusCode = max($statusCode, $this->updateSystemSettings($extension, $action));
                 $statusCode = max($statusCode, $this->updateLanguageSettings($extension, $action));
             }
