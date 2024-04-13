@@ -6,7 +6,7 @@ Datenstrom Yellow är för människor som skapar små webbsidor. [Prova demon](h
 
 ## Hur man kommer igång
 
-Ladda ner en fil, packa upp den och kopiera allt till din webbserver. Din webbplats är tillgänglig omedelbart. De viktigaste sakerna ingår i installationen. Naturligtvis kan du ändra detta senare. Det finns tillägg med ytterligare funktioner, språk och teman som du kan installera. [Komma igång](https://datenstrom.se/sv/yellow/help/how-to-get-started).
+Ladda ner en fil, packa upp den och kopiera allt till din webbserver. Din webbplats är tillgänglig omedelbart. De viktigaste sakerna ingår. Naturligtvis kan du ändra det senare. Det finns tillägg med ytterligare funktioner, språk och teman som du kan installera. [Komma igång](https://datenstrom.se/sv/yellow/help/how-to-get-started).
 
 ## Hur man får tillägg
 
