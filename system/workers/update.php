@@ -390,15 +390,17 @@ class YellowUpdate {
                 }
             }
             if ($this->yellow->system->get("updateEventPending")!="none") {
-                foreach (explode(",", $this->yellow->system->get("updateEventPending")) as $token) {
+                foreach (preg_split("/\s*,\s*/", $this->yellow->system->get("updateEventPending")) as $token) {
                     list($extension, $action) = $this->yellow->toolbox->getTextList($token, "/", 2);
-                    if ($this->yellow->extension->isExisting($extension) && $action!="uninstall") {
-                        $value = $this->yellow->extension->data[$extension];
-                        if (method_exists($value["object"], "onUpdate")) $value["object"]->onUpdate($action);
+                    if ($action!="uninstall") {
+                        $this->updateSystemSettings($extension, $action);
+                        $this->updateLanguageSettings($extension, $action);
+                        if ($this->yellow->extension->isExisting($extension)) {
+                            $value = $this->yellow->extension->data[$extension];
+                            if (method_exists($value["object"], "onUpdate")) $value["object"]->onUpdate($action);
+                        }
                     }
                 }
-                $this->updateSystemSettings("all", $action);
-                $this->updateLanguageSettings("all", $action);
                 $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
                 if (!$this->yellow->system->save($fileName, array("updateEventPending" => "none"))) {
                     $this->yellow->toolbox->log("error", "Can't write file '$fileName'!");
@@ -470,29 +472,31 @@ class YellowUpdate {
         $statusCode = 200;
         $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
         $fileData = $fileDataNew = $this->yellow->toolbox->readFile($fileName);
-        if ($action=="install" || $action=="update") {
-            $fileDataStart = $fileDataSettings = "";
-            $settings = new YellowArray();
-            $settings->exchangeArray($this->yellow->system->settingsDefaults->getArrayCopy());
-            foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
-                if (preg_match("/^\#/", $line)) {
-                    if (is_string_empty($fileDataStart)) $fileDataStart = $line."\n";
-                    continue;
-                }
-                if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
-                    if (!is_string_empty($matches[1]) && !is_string_empty($matches[2])) {
-                        $settings[$matches[1]] = $matches[2];
+        if (!is_string_empty($extension)) {
+            $regex = "/^".ucfirst($extension)."[A-Z]+/";
+            if ($action=="install" || $action=="update") {
+                $fileDataStart = $fileDataSettings = "";
+                $settings = new YellowArray();
+                $settings->exchangeArray($this->yellow->system->settingsDefaults->getArrayCopy());
+                foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
+                    if (preg_match("/^\#/", $line)) {
+                        if (is_string_empty($fileDataStart)) $fileDataStart = $line."\n";
+                        continue;
+                    }
+                    if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
+                        if (!is_string_empty($matches[1]) && !is_string_empty($matches[2])) {
+                            if (!preg_match($regex, $matches[1]) || $settings->isExisting($matches[1])) {
+                                $settings[$matches[1]] = $matches[2];
+                            }
+                        }
                     }
                 }
-            }
-            foreach ($settings as $key=>$value) {
-                $fileDataSettings .= ucfirst($key).(is_string_empty($value) ? ":\n" : ": $value\n");
-            }
-            $fileDataNew = $fileDataStart.$fileDataSettings;
-        } elseif ($action=="uninstall") {
-            if (!is_string_empty($extension)) {
+                foreach ($settings as $key=>$value) {
+                    $fileDataSettings .= ucfirst($key).(is_string_empty($value) ? ":\n" : ": $value\n");
+                }
+                $fileDataNew = $fileDataStart.$fileDataSettings;
+            } elseif ($action=="uninstall") {
                 $fileDataNew = "";
-                $regex = "/^".ucfirst($extension)."[A-Z]+/";
                 foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
                     if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
                         if (!is_string_empty($matches[1]) && preg_match($regex, $matches[1])) continue;
@@ -513,58 +517,60 @@ class YellowUpdate {
         $statusCode = 200;
         $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreLanguageFile");
         $fileData = $fileDataNew = $this->yellow->toolbox->readFile($fileName);
-        if ($action=="install" || $action=="update") {
-            $fileDataStart = $fileDataSettings = $language = "";
-            $settings = new YellowArray();
-            foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
-                if (preg_match("/^\#/", $line)) {
-                    if (is_string_empty($fileDataStart)) $fileDataStart = $line."\n";
-                    continue;
-                }
-                if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
-                    if (!is_string_empty($matches[1]) && !is_string_empty($matches[2])) {
-                        if (lcfirst($matches[1])=="language") {
-                            if (!is_array_empty($settings)) {
-                                if (!is_string_empty($fileDataSettings)) $fileDataSettings .= "\n";
-                                foreach ($settings as $key=>$value) {
-                                    $fileDataSettings .= (strposu($key, "/") ? $key : ucfirst($key)).": $value\n";
+        if (!is_string_empty($extension) && ucfirst($extension)!="Language") {
+            $regex = "/^".ucfirst($extension)."[A-Z]+/";
+            if ($action=="install" || $action=="update") {
+                $fileDataStart = $fileDataSettings = $language = "";
+                $settings = new YellowArray();
+                foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
+                    if (preg_match("/^\#/", $line)) {
+                        if (is_string_empty($fileDataStart)) $fileDataStart = $line."\n";
+                        continue;
+                    }
+                    if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
+                        if (!is_string_empty($matches[1]) && !is_string_empty($matches[2])) {
+                            if (lcfirst($matches[1])=="language") {
+                                if (!is_array_empty($settings)) {
+                                    if (!is_string_empty($fileDataSettings)) $fileDataSettings .= "\n";
+                                    foreach ($settings as $key=>$value) {
+                                        $fileDataSettings .= (strposu($key, "/") ? $key : ucfirst($key)).": $value\n";
+                                    }
                                 }
-                            }
-                            $language = $matches[2];
-                            $settings = new YellowArray();
-                            $settings["language"] = $language;
-                            $settings["languageLocale"] = "n/a";
-                            $settings["languageDescription"] = "n/a";
-                            $settings["languageTranslator"] = "Unknown";
-                            foreach ($this->yellow->language->settingsDefaults as $key=>$value) {
-                                $require = preg_match("/^([a-z]*)[A-Z]+/", $key, $tokens) ? $tokens[1] : "core";
-                                if ($require=="language") $require = "core";
-                                if ($this->yellow->extension->isExisting($require)) {
-                                    if ($this->yellow->language->isText($key, $language)) {
-                                        $settings[$key] = $this->yellow->language->getText($key, $language);
-                                    } else {
-                                        $settings[$key] = $this->yellow->language->getText($key, "en");
+                                $language = $matches[2];
+                                $settings = new YellowArray();
+                                $settings["language"] = $language;
+                                $settings["languageLocale"] = "n/a";
+                                $settings["languageDescription"] = "n/a";
+                                $settings["languageTranslator"] = "Unknown";
+                                foreach ($this->yellow->language->settingsDefaults as $key=>$value) {
+                                    $require = preg_match("/^([a-z]*)[A-Z]+/", $key, $tokens) ? $tokens[1] : "core";
+                                    if ($require=="language") $require = "core";
+                                    if ($this->yellow->extension->isExisting($require)) {
+                                        if ($this->yellow->language->isText($key, $language)) {
+                                            $settings[$key] = $this->yellow->language->getText($key, $language);
+                                        } else {
+                                            $settings[$key] = $this->yellow->language->getText($key, "en");
+                                        }
                                     }
                                 }
                             }
-                        }
-                        if (!is_string_empty($language)) {
-                            $settings[$matches[1]] = $matches[2];
+                            if (!is_string_empty($language)) {
+                                if (!preg_match($regex, $matches[1]) || $settings->isExisting($matches[1])) {
+                                    $settings[$matches[1]] = $matches[2];
+                                }
+                            }
                         }
                     }
                 }
-            }
-            if (!is_array_empty($settings)) {
-                if (!is_string_empty($fileDataSettings)) $fileDataSettings .= "\n";
-                foreach ($settings as $key=>$value) {
-                    $fileDataSettings .= (strposu($key, "/") ? $key : ucfirst($key)).": $value\n";
+                if (!is_array_empty($settings)) {
+                    if (!is_string_empty($fileDataSettings)) $fileDataSettings .= "\n";
+                    foreach ($settings as $key=>$value) {
+                        $fileDataSettings .= (strposu($key, "/") ? $key : ucfirst($key)).": $value\n";
+                    }
                 }
-            }
-            $fileDataNew = $fileDataStart.$fileDataSettings;
-        } elseif ($action=="uninstall") {
-            if (!is_string_empty($extension) && ucfirst($extension)!="Language") {
+                $fileDataNew = $fileDataStart.$fileDataSettings;
+            } elseif ($action=="uninstall") {
                 $fileDataNew = "";
-                $regex = "/^".ucfirst($extension)."[A-Z]+/";
                 foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
                     if (preg_match("/^\s*(.*?)\s*:\s*(.*?)\s*$/", $line, $matches)) {
                         if (!is_string_empty($matches[1]) && preg_match($regex, $matches[1])) continue;

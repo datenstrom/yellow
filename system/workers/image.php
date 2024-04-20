@@ -2,7 +2,7 @@
 // Image extension, https://github.com/annaesvensson/yellow-image
 
 class YellowImage {
-    const VERSION = "0.9.1";
+    const VERSION = "0.9.2";
     public $yellow;             // access to API
 
     // Handle initialisation
@@ -10,8 +10,8 @@ class YellowImage {
         $this->yellow = $yellow;
         $this->yellow->system->setDefault("imageUploadWidthMax", "1280");
         $this->yellow->system->setDefault("imageUploadHeightMax", "1280");
-        $this->yellow->system->setDefault("imageUploadJpgQuality", "80");
-        $this->yellow->system->setDefault("imageThumbnailJpgQuality", "80");
+        $this->yellow->system->setDefault("imageUploadJpegQuality", "80");
+        $this->yellow->system->setDefault("imageThumbnailJpegQuality", "80");
     }
     
     // Handle update
@@ -59,19 +59,19 @@ class YellowImage {
                 $this->yellow->toolbox->detectImageInformation($fileName, $file->get("type"));
             $widthMax = $this->yellow->system->get("imageUploadWidthMax");
             $heightMax = $this->yellow->system->get("imageUploadHeightMax");
-            if ($type=="gif" || $type=="jpg" || $type=="png") {
+            if ($type=="gif" || $type=="jpeg" || $type=="png") {
                 if ($widthInput>$widthMax || $heightInput>$heightMax) {
                     list($widthOutput, $heightOutput) = $this->getImageDimensionsFit($widthInput, $heightInput, $widthMax, $heightMax);
                     $image = $this->loadImage($fileName, $type);
                     $image = $this->resizeImage($image, $widthInput, $heightInput, $widthOutput, $heightOutput);
                     $image = $this->orientImage($image, $orientation);
-                    if (!$this->saveImage($image, $fileName, $type, $this->yellow->system->get("imageUploadJpgQuality"))) {
+                    if (!$this->saveImage($image, $fileName, $type, $this->yellow->system->get("imageUploadJpegQuality"))) {
                         $file->error(500, "Can't write file '$fileName'!");
                     }
                 } elseif ($orientation>1) {
                     $image = $this->loadImage($fileName, $type);
                     $image = $this->orientImage($image, $orientation);
-                    if (!$this->saveImage($image, $fileName, $type, $this->yellow->system->get("imageUploadJpgQuality"))) {
+                    if (!$this->saveImage($image, $fileName, $type, $this->yellow->system->get("imageUploadJpegQuality"))) {
                         $file->error(500, "Can't write file '$fileName'!");
                     }
                 }
@@ -100,7 +100,7 @@ class YellowImage {
                 $image = $this->resizeImage($image, $widthInput, $heightInput, $widthOutput, $heightOutput);
                 $image = $this->orientImage($image, $orientation);
                 if (is_file($fileNameOutput)) $this->yellow->toolbox->deleteFile($fileNameOutput);
-                if (!$this->saveImage($image, $fileNameOutput, $type, $this->yellow->system->get("imageThumbnailJpgQuality")) ||
+                if (!$this->saveImage($image, $fileNameOutput, $type, $this->yellow->system->get("imageThumbnailJpegQuality")) ||
                     !$this->yellow->toolbox->modifyFile($fileNameOutput, $this->yellow->toolbox->getFileModified($fileName))) {
                     $this->yellow->page->error(500, "Can't write file '$fileNameOutput'!");
                 }
@@ -126,9 +126,9 @@ class YellowImage {
     public function loadImage($fileName, $type) {
         $image = false;
         switch ($type) {
-            case "gif": $image = @imagecreatefromgif($fileName); break;
-            case "jpg": $image = @imagecreatefromjpeg($fileName); break;
-            case "png": $image = @imagecreatefrompng($fileName); break;
+            case "gif":  $image = @imagecreatefromgif($fileName); break;
+            case "jpeg": $image = @imagecreatefromjpeg($fileName); break;
+            case "png":  $image = @imagecreatefrompng($fileName); break;
         }
         return $image;
     }
@@ -137,9 +137,9 @@ class YellowImage {
     public function saveImage($image, $fileName, $type, $quality) {
         $ok = false;
         switch ($type) {
-            case "gif": $ok = @imagegif($image, $fileName); break;
-            case "jpg": $ok = @imagejpeg($image, $fileName, $quality); break;
-            case "png": $ok = @imagepng($image, $fileName); break;
+            case "gif":  $ok = @imagegif($image, $fileName); break;
+            case "jpeg": $ok = @imagejpeg($image, $fileName, $quality); break;
+            case "png":  $ok = @imagepng($image, $fileName); break;
         }
         return $ok;
     }

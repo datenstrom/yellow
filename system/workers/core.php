@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.9.3";
+    const VERSION = "0.9.4";
     const RELEASE = "0.9";
     public $content;        // content files
     public $media;          // media files
@@ -82,8 +82,6 @@ class YellowCore {
         $this->system->set("coreServerInstallDirectory", $pathInstall);
         $this->system->set("coreServerRootDirectory", $pathRoot);
         $this->system->set("coreServerHomeDirectory", $pathHome);
-        $this->system->set("coreExtensionLocation", "/assets/"); // TODO: remove later, for backwards compatibility
-        $this->system->set("coreThemeLocation", "/assets/"); // TODO: remove later, for backwards compatibility
         register_shutdown_function(array($this, "processFatalError"));
         if ($this->system->get("coreDebugMode")>=1) {
             ini_set("display_errors", 1);
@@ -730,7 +728,6 @@ class YellowSystem {
         }
         return !is_array_empty($values) ? $values : array($valueDefault);
     }
-    public function getValues($key) { return $this->getAvailable($key); } //TODO: remove later, for backwards compatibility
     
     // Return system settings
     public function getSettings($filterStart = "", $filterEnd = "") {
@@ -1861,7 +1858,7 @@ class YellowLookup {
     
     // Check if file is a well-known file type
     public function isSafeFile($fileName) {
-        return preg_match("/\.(css|gif|ico|js|jpg|map|png|scss|svg|woff|woff2)$/", $fileName);
+        return preg_match("/\.(css|gif|ico|js|jpeg|jpg|map|png|scss|svg|woff|woff2)$/", $fileName);
     }
     
     // Check if file is valid
@@ -2013,6 +2010,7 @@ class YellowToolbox {
             "ico" => "image/x-icon",
             "js" => "application/javascript",
             "json" => "application/json",
+            "jpeg" => "image/jpeg",
             "jpg" => "image/jpeg",
             "md" => "text/markdown",
             "png" => "image/png",
@@ -2138,9 +2136,6 @@ class YellowToolbox {
         }
         return $ok;
     }
-    
-    // TODO: remove later, for backwards compatibility
-    public function createFile($fileName, $fileData, $mkdir = false) { return $this->writeFile($fileName, $fileData, $mkdir); }
     
     // Append file
     public function appendFile($fileName, $fileData, $mkdir = false) {
@@ -2788,7 +2783,7 @@ class YellowToolbox {
         return array($width, $height);
     }
     
-    // Detect image width, height, orientation and type for GIF/JPG/PNG/SVG
+    // Detect image width, height, orientation and type for GIF/JPEG/PNG/SVG
     public function detectImageInformation($fileName, $fileType = "") {
         $width = $height = $orientation = 0;
         $type = "";
@@ -2803,7 +2798,7 @@ class YellowToolbox {
                     $height = (ord($dataHeader[3])<<8) + ord($dataHeader[2]);
                     $type = $fileType;
                 }
-            } elseif ($fileType=="jpg") {
+            } elseif ($fileType=="jpeg" || $fileType=="jpg") {
                 $dataBufferSizeMax = filesize($fileName);
                 $dataBufferSize = min($dataBufferSizeMax, 4096);
                 if ($dataBufferSize) $dataBuffer = fread($fileHandle, $dataBufferSize);
@@ -2987,10 +2982,6 @@ class YellowToolbox {
     public function isNotModified($lastModifiedFormatted) {
         return $this->getServer("HTTP_IF_MODIFIED_SINCE")==$lastModifiedFormatted;
     }
-    
-    // TODO: remove later, for backwards compatibility
-    public function normaliseArguments($text, $appendSlash = true, $filterStrict = true) { return $this->yellow->lookup->normaliseArguments($text, $appendSlash, $filterStrict); }
-    public function normalisePath($text) { return $this->yellow->lookup->normalisePath($text); }
 }
 
 class YellowPage {
@@ -3164,10 +3155,6 @@ class YellowPage {
                 $output = $value["object"]->onParseContentElement($this, $name, $text, $attrributes, $type);
                 if (!is_null($output)) break;
             }
-            if (method_exists($value["object"], "onParseContentShortcut")) { //TODO: remove later, for backwards compatibility
-                $output = $value["object"]->onParseContentShortcut($this, $name, $text, $type);
-                if (!is_null($output)) break;
-            }
         }
         if (is_null($output)) {
             if ($name=="yellow" && $type=="inline" && $text=="error") {
@@ -3179,9 +3166,6 @@ class YellowPage {
         }
         return $output;
     }
-    
-    // TODO: remove later, for backwards compatibility
-    public function parseContentShortcut($name, $text, $type) { return $this->parseContentElement($name, $text, "", $type); }
     
     // Parse page
     public function parsePage() {
@@ -3567,10 +3551,6 @@ class YellowPage {
     public function isPage($key) {
         return isset($this->sharedPages[$key]);
     }
-    
-    // TODO: remove later, for backwards compatibility
-    public function getContent($rawFormat = false) { return $rawFormat ? $this->getContentRaw() : $this->getContentHtml(); }
-    public function getExtra($name) { return $this->getExtraHtml($name); }
 }
 
 class YellowPageCollection extends ArrayObject {
@@ -3984,7 +3964,6 @@ function substrb() {
 function is_string_empty($string) {
     return is_null($string) || $string==="";
 }
-function strempty($string) { return is_null($string) || $string===""; } //TODO: remove later, for backwards compatibility
 
 // Check if array is empty
 function is_array_empty($array) {

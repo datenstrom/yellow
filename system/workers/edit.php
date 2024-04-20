@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/annaesvensson/yellow-edit
 
 class YellowEdit {
-    const VERSION = "0.9.3";
+    const VERSION = "0.9.4";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -16,7 +16,7 @@ class YellowEdit {
         $this->yellow->system->setDefault("editSiteEmail", "noreply");
         $this->yellow->system->setDefault("editLocation", "/edit/");
         $this->yellow->system->setDefault("editUploadNewLocation", "/media/@group/@filename");
-        $this->yellow->system->setDefault("editUploadExtensions", ".gif, .jpg, .mp3, .ogg, .pdf, .png, .svg, .zip");
+        $this->yellow->system->setDefault("editUploadExtensions", ".gif, .jpeg, .jpg, .mp3, .ogg, .pdf, .png, .svg, .zip");
         $this->yellow->system->setDefault("editKeyboardShortcuts", "ctrl+b bold, ctrl+i italic, ctrl+k strikethrough, ctrl+e code, ctrl+s save, ctrl+alt+p preview");
         $this->yellow->system->setDefault("editToolbarButtons", "auto");
         $this->yellow->system->setDefault("editEndOfLine", "auto");
@@ -1535,7 +1535,7 @@ class YellowEditResponse {
         $fileType = $this->yellow->toolbox->getFileType($fileNameShort);
         $locationMedia = $this->yellow->system->get("coreMediaLocation");
         $locationGroup = $this->yellow->system->get("coreDownloadLocation");
-        if (preg_match("/(gif|jpg|png|svg)$/", $fileType)) {
+        if (preg_match("/(gif|jpeg|jpg|png|svg)$/", $fileType)) {
             $locationGroup = $this->yellow->system->get("coreImageLocation");
         }
         if (preg_match("#^$locationMedia(.+?)\/#", $locationGroup, $matches)) {

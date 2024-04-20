@@ -381,7 +381,7 @@ class YellowInstall {
         if (!$this->isServerBuiltin()) {
             $curlHandle = curl_init();
             list($scheme, $address, $base) = $this->yellow->lookup->getRequestInformation();
-            $location = $this->yellow->system->get("coreThemeLocation").$this->yellow->lookup->normaliseName($this->yellow->system->get("theme")).".css";
+            $location = $this->yellow->system->get("coreAssetLocation").$this->yellow->lookup->normaliseName($this->yellow->system->get("theme")).".css";
             $url = $this->yellow->lookup->normaliseUrl($scheme, $address, $base, $location);
             curl_setopt($curlHandle, CURLOPT_URL, $url);
             curl_setopt($curlHandle, CURLOPT_USERAGENT, "Mozilla/5.0 (compatible; YellowInstall/".YellowInstall::VERSION).")";
