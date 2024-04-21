@@ -2816,7 +2816,7 @@ class YellowToolbox {
                             ($dataMarker>="\xcd" && $dataMarker<="\xcf")) {
                             $width = (ord($dataBuffer[$pos+7])<<8) + ord($dataBuffer[$pos+8]);
                             $height = (ord($dataBuffer[$pos+5])<<8) + ord($dataBuffer[$pos+6]);
-                            $type = $fileType;
+                            $type = "jpeg";
                             break;
                         }
                         $length = (ord($dataBuffer[$pos+2])<<8) + ord($dataBuffer[$pos+3]) + 2;
