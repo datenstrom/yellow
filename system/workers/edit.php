@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/annaesvensson/yellow-edit
 
 class YellowEdit {
-    const VERSION = "0.9.4";
+    const VERSION = "0.9.5";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -1083,6 +1083,7 @@ class YellowEditResponse {
         if ($this->yellow->content->find($page->location)) {
             $page->location = $this->getPageNewLocation($page->rawData, $page->location, $page->get("editNewLocation"));
             $page->fileName = $this->getPageNewFile($page->location, $page->fileName, $page->get("published"));
+            $pageCounter = 0;
             while ($this->yellow->content->find($page->location) || is_string_empty($page->fileName)) {
                 $page->rawData = $this->yellow->toolbox->setMetaData($page->rawData, "title", $this->getTitleNext($page->rawData));
                 $page->rawData = $this->yellow->lookup->normaliseLines($page->rawData, $endOfLine);
@@ -1175,10 +1176,10 @@ class YellowEditResponse {
     // Return uploaded file
     public function getFileUpload($scheme, $address, $base, $pageLocation, $fileNameTemp, $fileNameShort) {
         $file = new YellowPage($this->yellow);
-        $file->setRequestInformation($scheme, $address, $base, "/".$fileNameTemp, $fileNameTemp, false);
+        $file->setRequestInformation($scheme, $address, $base, "/".$fileNameShort, $fileNameShort, false);
         $file->parseMeta(null);
+        $file->set("fileNameTemp", $fileNameTemp);
         $file->set("fileNameShort", $fileNameShort);
-        $file->set("type", $this->yellow->toolbox->getFileType($fileNameShort));
         if ($file->get("type")=="html" || $file->get("type")=="svg") {
             $fileData = $this->yellow->toolbox->readFile($fileNameTemp);
             $fileData = $this->yellow->lookup->normaliseData($fileData, $file->get("type"));
@@ -1187,8 +1188,10 @@ class YellowEditResponse {
             }
         }
         $this->editMediaFile($file, "upload", $this->userEmail);
+        $fileNameShort = basename($file->fileName);
         $file->location = $this->getFileNewLocation($fileNameShort, $pageLocation, $file->get("fileNewLocation"));
         $file->fileName = substru($file->location, 1);
+        $fileCounter = 0;
         while (is_file($file->fileName)) {
             $fileNameShort = $this->getFileNext(basename($file->fileName));
             $file->location = $this->getFileNewLocation($fileNameShort, $pageLocation, $file->get("fileNewLocation"));

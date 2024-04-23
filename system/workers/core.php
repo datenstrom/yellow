@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.9.4";
+    const VERSION = "0.9.5";
     const RELEASE = "0.9";
     public $content;        // content files
     public $media;          // media files
@@ -2244,6 +2244,11 @@ class YellowToolbox {
         return $deleted;
     }
     
+    // Return file size
+    public function getFileSize($fileName) {
+        return is_file($fileName) ? filesize($fileName) : 0;
+    }
+    
     // Return file type
     public function getFileType($fileName) {
         return strtoloweru(($pos = strrposu($fileName, ".")) ? substru($fileName, $pos+1) : "");
@@ -3073,7 +3078,7 @@ class YellowPage {
             if ($this->get("status")=="shared") $this->available = false;
             if ($this->get("status")=="unlisted") $this->visible = false;
         } else {
-            $this->set("size", filesize($this->fileName));
+            $this->set("size", $this->yellow->toolbox->getFileSize($this->fileName));
             $this->set("type", $this->yellow->toolbox->getFileType($this->fileName));
             $this->set("group", $this->yellow->toolbox->getFileGroup($this->fileName, $this->yellow->system->get("coreMediaDirectory")));
             $this->set("modified", date("Y-m-d H:i:s", $this->yellow->toolbox->getFileModified($this->fileName)));

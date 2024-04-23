@@ -2,7 +2,7 @@
 // Image extension, https://github.com/annaesvensson/yellow-image
 
 class YellowImage {
-    const VERSION = "0.9.2";
+    const VERSION = "0.9.3";
     public $yellow;             // access to API
 
     // Handle initialisation
@@ -12,6 +12,7 @@ class YellowImage {
         $this->yellow->system->setDefault("imageUploadHeightMax", "1280");
         $this->yellow->system->setDefault("imageUploadJpegQuality", "80");
         $this->yellow->system->setDefault("imageThumbnailJpegQuality", "80");
+        $this->yellow->system->setDefault("imageJpegExtension", "auto");
     }
     
     // Handle update
@@ -54,7 +55,7 @@ class YellowImage {
     // Handle media file changes
     public function onEditMediaFile($file, $action, $email) {
         if ($action=="upload") {
-            $fileName = $file->fileName;
+            $fileName = $file->get("fileNameTemp");
             list($widthInput, $heightInput, $orientation, $type) =
                 $this->yellow->toolbox->detectImageInformation($fileName, $file->get("type"));
             $widthMax = $this->yellow->system->get("imageUploadWidthMax");
@@ -76,6 +77,10 @@ class YellowImage {
                     }
                 }
             }
+            if ($type=="jpeg") {
+                $file->fileName = dirname($file->fileName)."/".pathinfo($file->fileName, PATHINFO_FILENAME).$this->getImageExtension($file->fileName, $type);
+                $file->set("type", $this->yellow->toolbox->getFileType($file->fileName));
+            }
         }
     }
 
@@ -93,7 +98,7 @@ class YellowImage {
             $pathThumb = $this->yellow->lookup->findMediaDirectory("coreThumbnailLocation");
             $fileNameThumb = ltrim(str_replace(array("/", "\\", "."), "-", dirname($fileNameShort)."/".pathinfo($fileName, PATHINFO_FILENAME)), "-");
             $fileNameThumb .= "-".$widthOutput."x".$heightOutput;
-            $fileNameThumb .= ".".pathinfo($fileName, PATHINFO_EXTENSION);
+            $fileNameThumb .= $this->getImageExtension($fileName, $type);
             $fileNameOutput = $pathThumb.$fileNameThumb;
             if ($this->isFileNotUpdated($fileName, $fileNameOutput)) {
                 $image = $this->loadImage($fileName, $type);
@@ -120,6 +125,14 @@ class YellowImage {
             $heightOutput = $heightOutput * ($heightMax / $heightOutput);
         }
         return array(intval($widthOutput), intval($heightOutput));
+    }
+    
+    // Return image extension
+    public function getImageExtension($fileName, $type) {
+        $jpegExtension = $this->yellow->system->get("imageJpegExtension");
+        $fileExtension = ".".pathinfo($fileName, PATHINFO_EXTENSION);
+        if ($jpegExtension!="auto" && $type=="jpeg") $fileExtension = $jpegExtension;
+        return $fileExtension;
     }
 
     // Load image from file
