@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.9.5";
+    const VERSION = "0.9.6";
     const RELEASE = "0.9";
     public $content;        // content files
     public $media;          // media files
@@ -3656,14 +3656,14 @@ class YellowPageCollection extends ArrayObject {
     public function sort($key, $ascendingOrder = true): YellowPageCollection {
         $array = $this->getArrayCopy();
         $sortIndex = 0;
+        $sortKeys = array();
         foreach ($array as $page) {
-            $page->set("sortIndex", ++$sortIndex);
+            $sortKeys[$page->location] = $page->get($key)." ".++$sortIndex;
         }
-        $callback = function ($a, $b) use ($key, $ascendingOrder) {
-            $result = $ascendingOrder ?
-                strnatcasecmp($a->get($key), $b->get($key)) :
-                strnatcasecmp($b->get($key), $a->get($key));
-            return $result==0 ? $a->get("sortIndex") - $b->get("sortIndex") : $result;
+        $callback = function ($a, $b) use ($sortKeys, $ascendingOrder) {
+            return $ascendingOrder ?
+                strnatcasecmp($sortKeys[$a->location], $sortKeys[$b->location]) :
+                strnatcasecmp($sortKeys[$b->location], $sortKeys[$a->location]);
         };
         usort($array, $callback);
         $this->exchangeArray($array);
