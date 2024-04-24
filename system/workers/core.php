@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.9.6";
+    const VERSION = "0.9.7";
     const RELEASE = "0.9";
     public $content;        // content files
     public $media;          // media files
@@ -3153,11 +3153,11 @@ class YellowPage {
     }
     
     // Parse page content element, experimental
-    public function parseContentElement($name, $text, $attrributes, $type) {
+    public function parseContentElement($name, $text, $attributes, $type) {
         $output = null;
         foreach ($this->yellow->extension->data as $key=>$value) {
             if (method_exists($value["object"], "onParseContentElement")) {
-                $output = $value["object"]->onParseContentElement($this, $name, $text, $attrributes, $type);
+                $output = $value["object"]->onParseContentElement($this, $name, $text, $attributes, $type);
                 if (!is_null($output)) break;
             }
         }
@@ -3397,8 +3397,17 @@ class YellowPage {
     }
     
     // Return page URL
-    public function getUrl() {
-        return $this->yellow->lookup->normaliseUrl($this->scheme, $this->address, $this->base, $this->location);
+    public function getUrl($canoncialUrl = false) {
+        if ($canoncialUrl) {
+            $scheme = $this->yellow->system->get("coreServerScheme");
+            $address = $this->yellow->system->get("coreServerAddress");
+            $location = $this->yellow->system->get("coreServerBase").$this->location;
+        } else {
+            $scheme = $this->scheme;
+            $address = $this->address;
+            $location = $this->base.$this->location;
+        }
+        return "$scheme://$address$location";
     }
     
     // Return page base
