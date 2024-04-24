@@ -3397,8 +3397,8 @@ class YellowPage {
     }
     
     // Return page URL
-    public function getUrl($canoncialUrl = false) {
-        if ($canoncialUrl) {
+    public function getUrl($canonicalUrl = false) {
+        if ($canonicalUrl) {
             $scheme = $this->yellow->system->get("coreServerScheme");
             $address = $this->yellow->system->get("coreServerAddress");
             $location = $this->yellow->system->get("coreServerBase").$this->location;
