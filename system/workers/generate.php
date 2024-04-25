@@ -2,7 +2,7 @@
 // Generate extension, https://github.com/annaesvensson/yellow-generate
 
 class YellowGenerate {
-    const VERSION = "0.9.4";
+    const VERSION = "0.9.5";
     public $yellow;                       // access to API
     public $files;                        // number of files
     public $errors;                       // number of errors
@@ -163,7 +163,7 @@ class YellowGenerate {
             ++$this->errors;
             echo "\rERROR generating location '$location', ".$this->yellow->page->getStatusCode(true)."\n";
         }
-        if ($this->yellow->system->get("coreDebugMode")>=1) {
+        if ($this->yellow->system->get("coreDebugMode")>=2) {
             echo "YellowGenerate::generateStaticFile status:$statusCode location:$location<br/>\n";
         }
         return $statusCode;
