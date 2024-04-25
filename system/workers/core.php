@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.9.7";
+    const VERSION = "0.9.8";
     const RELEASE = "0.9";
     public $content;        // content files
     public $media;          // media files
@@ -379,9 +379,9 @@ class YellowContent {
         return $found ? $page : null;
     }
     
-    // Return page collection with all pages
-    public function index($showInvisible = false, $multiLanguage = false) {
-        $rootLocation = $multiLanguage ? "" : $this->getRootLocation($this->yellow->page->location);
+    // Return page collection with pages of the website
+    public function index($showInvisible = false) {
+        $rootLocation = $this->getRootLocation($this->yellow->page->location);
         return $this->getChildrenRecursive($rootLocation, $showInvisible);
     }
     
@@ -559,8 +559,8 @@ class YellowMedia {
         return $found ? $file : null;
     }
     
-    // Return page collection with all media files
-    public function index($showInvisible = false, $multiPass = false) {
+    // Return page collection with media files
+    public function index($showInvisible = false) {
         return $this->getChildrenRecursive("", $showInvisible);
     }
     

@@ -2,7 +2,7 @@
 // Generate extension, https://github.com/annaesvensson/yellow-generate
 
 class YellowGenerate {
-    const VERSION = "0.9.3";
+    const VERSION = "0.9.4";
     public $yellow;                       // access to API
     public $files;                        // number of files
     public $errors;                       // number of errors
@@ -373,13 +373,13 @@ class YellowGenerate {
     }
 
     // Return content locations
-    public function getContentLocations($includeAll = false) {
+    public function getContentLocations() {
         $locations = array();
         $staticUrl = $this->yellow->system->get("generateStaticUrl");
         list($scheme, $address, $base) = $this->yellow->lookup->getUrlInformation($staticUrl);
         $this->yellow->page->setRequestInformation($scheme, $address, $base, "", "", false);
-        foreach ($this->yellow->content->index(true, true) as $page) {
-            if (preg_match("/exclude/i", $page->get("generate")) && !$includeAll) continue;
+        foreach ($this->yellow->content->getChildrenRecursive("", true) as $page) {
+            if (preg_match("/exclude/i", $page->get("generate"))) continue;
             if ($page->get("status")=="private" || $page->get("status")=="draft") continue;
             array_push($locations, $page->location);
         }
