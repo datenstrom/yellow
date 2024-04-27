@@ -111,15 +111,20 @@ a:hover {
     border-spacing: 0;
     border-collapse: collapse;
 }
-.content th {
+.content th:not([align]) {
     text-align: left;
-    padding: 0.3em;
-    border-bottom: 1px solid var(--separator);
 }
+.content th,
 .content td {
-    text-align: left;
     padding: 0.3em;
-    padding-right: 2em;
+    padding-left: 2em;
+}
+.content th:first-child,
+.content td:first-child {
+    padding: 0.3em;
+}
+.content th {
+    border-bottom: 1px solid var(--separator);
 }
 .content code,
 .content pre {
