@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/annaesvensson/yellow-edit
 
 class YellowEdit {
-    const VERSION = "0.9.5";
+    const VERSION = "0.9.6";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -1078,17 +1078,16 @@ class YellowEditResponse {
         $rawData = $this->yellow->lookup->normaliseLines($rawData, $endOfLine);
         $page = new YellowPage($this->yellow);
         $page->setRequestInformation($scheme, $address, $base, $location, $fileName, false);
-        $page->parseMeta($rawData);
-        $this->editContentFile($page, "create", $this->userEmail);
+        $page->parseMeta($rawData, 200);
         if ($this->yellow->content->find($page->location)) {
             $page->location = $this->getPageNewLocation($page->rawData, $page->location, $page->get("editNewLocation"));
-            $page->fileName = $this->getPageNewFile($page->location, $page->fileName, $page->get("published"));
+            $page->fileName = $this->getPageNewFile($page->location, $page->fileName, $page->get("editNewPrefix"));
             $pageCounter = 0;
             while ($this->yellow->content->find($page->location) || is_string_empty($page->fileName)) {
                 $page->rawData = $this->yellow->toolbox->setMetaData($page->rawData, "title", $this->getTitleNext($page->rawData));
                 $page->rawData = $this->yellow->lookup->normaliseLines($page->rawData, $endOfLine);
                 $page->location = $this->getPageNewLocation($page->rawData, $page->location, $page->get("editNewLocation"));
-                $page->fileName = $this->getPageNewFile($page->location, $page->fileName, $page->get("published"));
+                $page->fileName = $this->getPageNewFile($page->location, $page->fileName, $page->get("editNewPrefix"));
                 if (++$pageCounter>999) break;
             }
             if ($this->yellow->content->find($page->location) || is_string_empty($page->fileName)) {
@@ -1100,6 +1099,7 @@ class YellowEditResponse {
         if (!$this->isUserAccess("create", $page->location)) {
             $page->error(500, "Page '".$page->get("title")."' is restricted!");
         }
+        $this->editContentFile($page, "create", $this->userEmail);
         return $page;
     }
     
@@ -1111,14 +1111,13 @@ class YellowEditResponse {
         $rawData = $this->extension->merge->merge($rawDataSource, $rawDataEdit, $rawDataFile);
         $page = new YellowPage($this->yellow);
         $page->setRequestInformation($scheme, $address, $base, $location, $fileName, false);
-        $page->parseMeta($rawData);
+        $page->parseMeta($rawData, 200);
         $pageSource = new YellowPage($this->yellow);
         $pageSource->setRequestInformation($scheme, $address, $base, $location, $fileName, false);
-        $pageSource->parseMeta($rawDataSource);
-        $this->editContentFile($page, "edit", $this->userEmail);
+        $pageSource->parseMeta($rawDataSource, 200);
         if ($this->isMetaModified($pageSource, $page) && $page->location!=$this->yellow->content->getHomeLocation($page->location)) {
             $page->location = $this->getPageNewLocation($page->rawData, $page->location, $page->get("editNewLocation"), true);
-            $page->fileName = $this->getPageNewFile($page->location, $page->fileName, $page->get("published"));
+            $page->fileName = $this->getPageNewFile($page->location, $page->fileName, $page->get("editNewPrefix"));
             if ($page->location!=$pageSource->location && ($this->yellow->content->find($page->location) || is_string_empty($page->fileName))) {
                 $page->error(500, "Page '".$page->get("title")."' is not possible!");
             }
@@ -1128,6 +1127,7 @@ class YellowEditResponse {
             !$this->isUserAccess("edit", $pageSource->location)) {
             $page->error(500, "Page '".$page->get("title")."' is restricted!");
         }
+        $this->editContentFile($page, "edit", $this->userEmail);
         return $page;
     }
     
@@ -1136,11 +1136,11 @@ class YellowEditResponse {
         $rawData = $this->yellow->lookup->normaliseLines($rawData, $endOfLine);
         $page = new YellowPage($this->yellow);
         $page->setRequestInformation($scheme, $address, $base, $location, $fileName, false);
-        $page->parseMeta($rawData);
-        $this->editContentFile($page, "delete", $this->userEmail);
+        $page->parseMeta($rawData, 200);
         if (!$this->isUserAccess("delete", $page->location)) {
             $page->error(500, "Page '".$page->get("title")."' is restricted!");
         }
+        $this->editContentFile($page, "delete", $this->userEmail);
         return $page;
     }
 
@@ -1149,10 +1149,10 @@ class YellowEditResponse {
         $page = new YellowPage($this->yellow);
         $page->setRequestInformation($scheme, $address, $base, $location, $fileName, false);
         $page->parseMeta("");
-        $this->editContentFile($page, "restore", $this->userEmail);
         if (!$this->isUserAccess("restore", $page->location)) {
             $page->error(500, "Page '".$page->get("title")."' is restricted!");
         }
+        $this->editContentFile($page, "restore", $this->userEmail);
         return $page;
     }
     
