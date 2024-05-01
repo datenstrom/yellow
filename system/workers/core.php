@@ -2129,6 +2129,7 @@ class YellowToolbox {
             if (flock($fileHandle, LOCK_EX)) {
                 ftruncate($fileHandle, 0);
                 fwrite($fileHandle, $fileData);
+                fflush($fileHandle);
                 flock($fileHandle, LOCK_UN);
             }
             fclose($fileHandle);
@@ -2149,6 +2150,7 @@ class YellowToolbox {
             clearstatcache(true, $fileName);
             if (flock($fileHandle, LOCK_EX)) {
                 fwrite($fileHandle, $fileData);
+                fflush($fileHandle);
                 flock($fileHandle, LOCK_UN);
             }
             fclose($fileHandle);
