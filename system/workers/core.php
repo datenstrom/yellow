@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.9.8";
+    const VERSION = "0.9.9";
     const RELEASE = "0.9";
     public $content;        // content files
     public $media;          // media files
@@ -166,7 +166,7 @@ class YellowCore {
         if (!is_null($error) && isset($error["type"]) && ($error["type"]==E_ERROR || $error["type"]==E_PARSE)) {
             $fileNameAbsolute = isset($error["file"]) ? $error["file"] : "";
             $fileName = substru($fileNameAbsolute, strlenu($this->system->get("coreServerInstallDirectory")));
-            $this->toolbox->log("error", "Can't parse file '$fileName'!");
+            $this->toolbox->log("error", "Process file '$fileName' with fatal error!");
             $this->toolbox->sendHttpHeader($this->toolbox->getHttpStatusFormatted(500));
             $troubleshooting = PHP_SAPI!="cli" ?
                 "<a href=\"".$this->toolbox->getTroubleshootingUrl()."\">See troubleshooting</a>." : "See ".$this->toolbox->getTroubleshootingUrl();
