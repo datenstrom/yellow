@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/annaesvensson/yellow-edit
 
 class YellowEdit {
-    const VERSION = "0.9.7";
+    const VERSION = "0.9.8";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -1079,7 +1079,7 @@ class YellowEditResponse {
         $page = new YellowPage($this->yellow);
         $page->setRequestInformation($scheme, $address, $base, $location, $fileName, false);
         $page->parseMeta($rawData, 200);
-        $this->editContentFile($page, "normalise", $this->userEmail);
+        $this->editContentFile($page, "precreate", $this->userEmail);
         if ($this->yellow->content->find($page->location)) {
             $page->location = $this->getPageNewLocation($page->rawData, $page->location, $page->get("editNewLocation"));
             $page->fileName = $this->getPageNewFile($page->location, $page->fileName, $page->get("editNewPrefix"));
@@ -1113,7 +1113,7 @@ class YellowEditResponse {
         $page = new YellowPage($this->yellow);
         $page->setRequestInformation($scheme, $address, $base, $location, $fileName, false);
         $page->parseMeta($rawData, 200);
-        $this->editContentFile($page, "normalise", $this->userEmail);
+        $this->editContentFile($page, "preedit", $this->userEmail);
         $pageSource = new YellowPage($this->yellow);
         $pageSource->setRequestInformation($scheme, $address, $base, $location, $fileName, false);
         $pageSource->parseMeta($rawDataSource, 200);
