@@ -2,12 +2,12 @@
 // Generate extension, https://github.com/annaesvensson/yellow-generate
 
 class YellowGenerate {
-    const VERSION = "0.9.5";
-    public $yellow;                       // access to API
-    public $files;                        // number of files
-    public $errors;                       // number of errors
-    public $locationsArguments;           // locations with location arguments detected
-    public $locationsArgumentsPagination; // locations with pagination arguments detected
+    const VERSION = "0.9.6";
+    public $yellow;                  // access to API
+    public $files;                   // number of files
+    public $errors;                  // number of errors
+    public $locationsWithArguments;  // locations with arguments detected
+    public $locationsWithPagination; // locations with pagination detected
     
     // Handle initialisation
     public function onLoad($yellow) {
@@ -82,7 +82,7 @@ class YellowGenerate {
     // Generate static content
     public function generateStaticContent($path, $locationFilter, $progressText, $increments, $max) {
         $statusCode = 200;
-        $this->locationsArguments = $this->locationsArgumentsPagination = array();
+        $this->locationsWithArguments = $this->locationsWithPagination = array();
         $staticUrl = $this->yellow->system->get("generateStaticUrl");
         list($scheme, $address, $base) = $this->yellow->lookup->getUrlInformation($staticUrl);
         $locations = $this->getContentLocations();
@@ -92,18 +92,15 @@ class YellowGenerate {
             if (!preg_match("#^$base$locationFilter#", "$base$location")) continue;
             $statusCode = max($statusCode, $this->generateStaticFile($path, $location, true));
         }
-        foreach ($this->locationsArguments as $location) {
+        foreach ($this->locationsWithArguments as $location) {
             echo "$progressText ".$this->getProgressPercent($this->files, $filesEstimated, $increments, $max/1.5)."%... ";
             if (!preg_match("#^$base$locationFilter#", "$base$location")) continue;
             $statusCode = max($statusCode, $this->generateStaticFile($path, $location, true));
         }
-        $filesEstimated = $this->files + count($this->locationsArguments) + count($this->locationsArgumentsPagination);
-        foreach ($this->locationsArgumentsPagination as $location) {
+        $filesEstimated = $this->files + count($this->locationsWithArguments) + count($this->locationsWithPagination);
+        foreach ($this->locationsWithPagination as $location) {
             echo "$progressText ".$this->getProgressPercent($this->files, $filesEstimated, $increments, $max)."%... ";
             if (!preg_match("#^$base$locationFilter#", "$base$location")) continue;
-            if (substru($location, -1)!=$this->yellow->toolbox->getLocationArgumentsSeparator()) {
-                $statusCode = max($statusCode, $this->generateStaticFile($path, $location, false, true));
-            }
             for ($pageNumber=2; $pageNumber<=999; ++$pageNumber) {
                 $statusCodeLocation = $this->generateStaticFile($path, $location.$pageNumber, false, true);
                 $statusCode = max($statusCode, $statusCodeLocation);
@@ -155,7 +152,7 @@ class YellowGenerate {
         } else {
             $statusCode = $this->copyStaticFile($path, $location);
         }
-        if ($statusCode==200 && $analyse) $this->analyseLocations($scheme, $address, $base, $fileData);
+        if ($statusCode==200 && $analyse) $this->analyseStaticLocations($scheme, $address, $base, $fileData);
         if ($statusCode==404 && $probe) $statusCode = 100;
         if ($statusCode==404 && $error) $statusCode = 200;
         if ($statusCode>=200) ++$this->files;
@@ -219,8 +216,8 @@ class YellowGenerate {
         return $statusCode;
     }
     
-    // Analyse locations with arguments
-    public function analyseLocations($scheme, $address, $base, $rawData) {
+    // Analyse static locations with arguments
+    public function analyseStaticLocations($scheme, $address, $base, $rawData) {
         preg_match_all("/<(.*?)href=\"([^\"]+)\"(.*?)>/i", $rawData, $matches);
         foreach ($matches[2] as $match) {
             $location = rawurldecode($match);
@@ -235,19 +232,18 @@ class YellowGenerate {
             $location = substru($location, strlenu($base));
             if (!$this->yellow->toolbox->isLocationArguments($location)) continue;
             if (!$this->yellow->toolbox->isLocationArgumentsPagination($location)) {
-                $location = rtrim($location, "/")."/";
-                if (!isset($this->locationsArguments[$location])) {
-                    $this->locationsArguments[$location] = $location;
+                if (!isset($this->locationsWithArguments[$location])) {
+                    $this->locationsWithArguments[$location] = $location;
                     if ($this->yellow->system->get("coreDebugMode")>=2) {
-                        echo "YellowGenerate::analyseLocations detected location:$location<br/>\n";
+                        echo "YellowGenerate::analyseStaticLocations detected location:$location<br/>\n";
                     }
                 }
             } else {
                 $location = rtrim($location, "0..9");
-                if (!isset($this->locationsArgumentsPagination[$location])) {
-                    $this->locationsArgumentsPagination[$location] = $location;
+                if (!isset($this->locationsWithPagination[$location])) {
+                    $this->locationsWithPagination[$location] = $location;
                     if ($this->yellow->system->get("coreDebugMode")>=2) {
-                        echo "YellowGenerate::analyseLocations detected location:$location<br/>\n";
+                        echo "YellowGenerate::analyseStaticLocations detected location:$location<br/>\n";
                     }
                 }
             }

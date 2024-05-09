@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.9.9";
+    const VERSION = "0.9.10";
     const RELEASE = "0.9";
     public $content;        // content files
     public $media;          // media files
@@ -1535,6 +1535,11 @@ class YellowLookup {
         return $output;
     }
     
+    // Normalise CSS class
+    public function normaliseClass($text) {
+        return str_replace(array(" ", "_"), array("-", "-"), strtoloweru($text));
+    }
+    
     // Normalise relative path tokens
     public function normalisePath($text) {
         $textFiltered = "";
@@ -1593,10 +1598,15 @@ class YellowLookup {
     }
     
     // Normalise location arguments
-    public function normaliseArguments($text, $appendSlash = true, $filterStrict = true) {
-        if ($appendSlash) $text .= "/";
+    public function normaliseArguments($text, $filterStrict = true) {
         if ($filterStrict) $text = str_replace(" ", "-", strtoloweru($text));
-        $text = str_replace(":", $this->yellow->toolbox->getLocationArgumentsSeparator(), $text);
+        $separator = $this->yellow->toolbox->getLocationArgumentsSeparator();
+        $text = str_replace(":", $separator, $text);
+        if (preg_match("/^(.*\/)?page$separator.*$/", $text)) {
+            $text = rtrim($text, "/");
+        } else {
+            $text = rtrim($text, "/")."/";
+        }
         return str_replace(array("%2F","%3A","%3D"), array("/",":","="), rawurlencode($text));
     }
     
@@ -1940,8 +1950,7 @@ class YellowToolbox {
             $locationArguments .= "$key:$value";
         }
         if (!is_string_empty($locationArguments)) {
-            $locationArguments = $this->yellow->lookup->normaliseArguments($locationArguments, false, false);
-            if (!$this->isLocationArgumentsPagination($locationArguments)) $locationArguments .= "/";
+            $locationArguments = $this->yellow->lookup->normaliseArguments($locationArguments);
         }
         return $locationArguments;
     }
@@ -1958,8 +1967,7 @@ class YellowToolbox {
             }
         }
         if (!is_string_empty($locationArguments)) {
-            $locationArguments = $this->yellow->lookup->normaliseArguments($locationArguments, false, false);
-            if (!$this->isLocationArgumentsPagination($locationArguments)) $locationArguments .= "/";
+            $locationArguments = $this->yellow->lookup->normaliseArguments($locationArguments);
         }
         return $locationArguments;
     }
@@ -2982,7 +2990,7 @@ class YellowToolbox {
     // Check if there are pagination arguments in current HTTP request
     public function isLocationArgumentsPagination($location) {
         $separator = $this->getLocationArgumentsSeparator();
-        return preg_match("/^(.*\/)?page$separator.*$/", $location);
+        return preg_match("/^(.*\/)?page$separator\d+$/", $location);
     }
 
     // Check if unmodified since last HTTP request

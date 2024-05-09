@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/annaesvensson/yellow-edit
 
 class YellowEdit {
-    const VERSION = "0.9.8";
+    const VERSION = "0.9.9";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -1594,7 +1594,7 @@ class YellowEditResponse {
             $expire = time() + 60*60*24;
             $actionToken = $this->createActionToken($email, $action, $expire);
             $locationArguments = "/action:$action/email:$email/expire:$expire/language:$userLanguage/actiontoken:$actionToken/";
-            $url = "$scheme://$address$base".$this->yellow->lookup->normaliseArguments($locationArguments, false, false);
+            $url = "$scheme://$address$base".$this->yellow->lookup->normaliseArguments($locationArguments, false);
         }
         $prefix = "edit".ucfirst($action);
         $message = $this->yellow->language->getText("{$prefix}Message", $userLanguage);
