@@ -10,7 +10,7 @@ Eine Datei herunterladen, entpacken und alles auf deinen Webserver kopieren. Dei
 
 ## Wie man Erweiterungen findet
 
-Erweiterungen machen deine Webseite nützlicher. Hier findest du zusätzliche Funktionen, Sprachen und Themes. Der Core hat die Kernfunktionalität deiner Website. Alles andere bestimmst du. Es gibt eine Erweiterung für Bilder, eine Suchfunktion und vieles mehr. [Erweiterungen für deine Webseite finden](https://datenstrom.se/de/yellow/extensions/).
+Mach deine Website nützlicher. Erweiterungen bieten dir zusätzliche Funktionen, Sprachen und Themes. Der Core hat die Kernfunktionalität deiner Website. Alles andere bestimmst du. Es gibt eine Erweiterung für Bilder, eine Suchfunktion und vieles mehr. [Erweiterungen für deine Webseite finden](https://datenstrom.se/de/yellow/extensions/).
 
 ## Wie man Hilfe findet
 
