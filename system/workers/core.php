@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.9.10";
+    const VERSION = "0.9.11";
     const RELEASE = "0.9";
     public $content;        // content files
     public $media;          // media files
@@ -1950,7 +1950,7 @@ class YellowToolbox {
             $locationArguments .= "$key:$value";
         }
         if (!is_string_empty($locationArguments)) {
-            $locationArguments = $this->yellow->lookup->normaliseArguments($locationArguments);
+            $locationArguments = $this->yellow->lookup->normaliseArguments($locationArguments, false);
         }
         return $locationArguments;
     }
@@ -1967,7 +1967,7 @@ class YellowToolbox {
             }
         }
         if (!is_string_empty($locationArguments)) {
-            $locationArguments = $this->yellow->lookup->normaliseArguments($locationArguments);
+            $locationArguments = $this->yellow->lookup->normaliseArguments($locationArguments, false);
         }
         return $locationArguments;
     }
