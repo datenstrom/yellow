@@ -444,6 +444,7 @@ yellow.edit = {
 
     // Resize pane
     resizePane: function(paneId, paneAction, paneStatus) {
+        if(!document.getElementById(paneId)) return;
         var elementBar = document.getElementById("yellow-bar-content");
         var paneLeft = yellow.toolbox.getOuterLeft(elementBar);
         var paneTop = yellow.toolbox.getOuterTop(elementBar) + yellow.toolbox.getOuterHeight(elementBar) + 10;
