@@ -444,66 +444,67 @@ yellow.edit = {
 
     // Resize pane
     resizePane: function(paneId, paneAction, paneStatus) {
-        if(!document.getElementById(paneId)) return;
-        var elementBar = document.getElementById("yellow-bar-content");
-        var paneLeft = yellow.toolbox.getOuterLeft(elementBar);
-        var paneTop = yellow.toolbox.getOuterTop(elementBar) + yellow.toolbox.getOuterHeight(elementBar) + 10;
-        var paneWidth = yellow.toolbox.getOuterWidth(elementBar);
-        var paneHeight = yellow.toolbox.getWindowHeight() - paneTop - Math.min(yellow.toolbox.getOuterHeight(elementBar) + 10, (yellow.toolbox.getWindowWidth()-yellow.toolbox.getOuterWidth(elementBar))/2);
-        switch (paneId) {
-            case "yellow-pane-account":
-            case "yellow-pane-configure":
-                yellow.toolbox.setOuterLeft(document.getElementById(paneId), paneLeft);
-                yellow.toolbox.setOuterTop(document.getElementById(paneId), paneTop);
-                yellow.toolbox.setOuterWidth(document.getElementById(paneId), paneWidth);
-                var elementWidth = yellow.toolbox.getWidth(document.getElementById(paneId));
-                var actionsWidth = yellow.toolbox.getOuterWidth(document.getElementById(paneId+"-settings-actions"));
-                var fieldsWidth = yellow.toolbox.getOuterWidth(document.getElementById(paneId+"-settings-fields"));
-                var separatorWidth = Math.max(10, ((elementWidth-fieldsWidth)/2)-actionsWidth);
-                yellow.toolbox.setOuterWidth(document.getElementById(paneId+"-settings-separator"), separatorWidth);
-                break;
-            case "yellow-pane-create":
-            case "yellow-pane-edit":
-            case "yellow-pane-delete":
-                yellow.toolbox.setOuterLeft(document.getElementById(paneId), paneLeft);
-                yellow.toolbox.setOuterTop(document.getElementById(paneId), paneTop);
-                yellow.toolbox.setOuterHeight(document.getElementById(paneId), paneHeight);
-                yellow.toolbox.setOuterWidth(document.getElementById(paneId), paneWidth);
-                var elementWidth = yellow.toolbox.getWidth(document.getElementById(paneId));
-                yellow.toolbox.setOuterWidth(document.getElementById(paneId+"-text"), elementWidth);
-                yellow.toolbox.setOuterWidth(document.getElementById(paneId+"-preview"), elementWidth);
-                var buttonsWidth = 0;
-                var buttonsWidthMax = yellow.toolbox.getOuterWidth(document.getElementById(paneId+"-toolbar")) -
-                    yellow.toolbox.getOuterWidth(document.getElementById(paneId+"-toolbar-main")) - 1;
-                var element = document.getElementById(paneId+"-toolbar-buttons").firstChild;
-                for (; element; element=element.nextSibling) {
-                    element.removeAttribute("style");
-                    buttonsWidth += yellow.toolbox.getOuterWidth(element);
-                    if (buttonsWidth>buttonsWidthMax) yellow.toolbox.setVisible(element, false);
-                }
-                yellow.toolbox.setOuterWidth(document.getElementById(paneId+"-toolbar-title"), buttonsWidthMax);
-                var height1 = yellow.toolbox.getHeight(document.getElementById(paneId));
-                var height2 = yellow.toolbox.getOuterHeight(document.getElementById(paneId+"-toolbar"));
-                yellow.toolbox.setOuterHeight(document.getElementById(paneId+"-text"), height1 - height2);
-                yellow.toolbox.setOuterHeight(document.getElementById(paneId+"-preview"), height1 - height2);
-                var elementLink = document.getElementById(paneId+"-bar");
-                var position = yellow.toolbox.getOuterLeft(elementLink) + yellow.toolbox.getOuterWidth(elementLink)/2;
-                position -= yellow.toolbox.getOuterLeft(document.getElementById(paneId)) + 1;
-                yellow.toolbox.setOuterLeft(document.getElementById(paneId+"-arrow"), position);
-                break;
-            case "yellow-pane-menu":
-                yellow.toolbox.setOuterLeft(document.getElementById("yellow-pane-menu"), paneLeft + paneWidth - yellow.toolbox.getOuterWidth(document.getElementById("yellow-pane-menu")));
-                yellow.toolbox.setOuterTop(document.getElementById("yellow-pane-menu"), paneTop);
-                var elementLink = document.getElementById("yellow-pane-menu-bar");
-                var position = yellow.toolbox.getOuterLeft(elementLink) + yellow.toolbox.getOuterWidth(elementLink)/2;
-                position -= yellow.toolbox.getOuterLeft(document.getElementById("yellow-pane-menu"));
-                yellow.toolbox.setOuterLeft(document.getElementById("yellow-pane-menu-arrow"), position);
-                break;
-            default:
-                yellow.toolbox.setOuterLeft(document.getElementById(paneId), paneLeft);
-                yellow.toolbox.setOuterTop(document.getElementById(paneId), paneTop);
-                yellow.toolbox.setOuterWidth(document.getElementById(paneId), paneWidth);
-                break;
+        if (document.getElementById(paneId)) {
+            var elementBar = document.getElementById("yellow-bar-content");
+            var paneLeft = yellow.toolbox.getOuterLeft(elementBar);
+            var paneTop = yellow.toolbox.getOuterTop(elementBar) + yellow.toolbox.getOuterHeight(elementBar) + 10;
+            var paneWidth = yellow.toolbox.getOuterWidth(elementBar);
+            var paneHeight = yellow.toolbox.getWindowHeight() - paneTop - Math.min(yellow.toolbox.getOuterHeight(elementBar) + 10, (yellow.toolbox.getWindowWidth()-yellow.toolbox.getOuterWidth(elementBar))/2);
+            switch (paneId) {
+                case "yellow-pane-account":
+                case "yellow-pane-configure":
+                    yellow.toolbox.setOuterLeft(document.getElementById(paneId), paneLeft);
+                    yellow.toolbox.setOuterTop(document.getElementById(paneId), paneTop);
+                    yellow.toolbox.setOuterWidth(document.getElementById(paneId), paneWidth);
+                    var elementWidth = yellow.toolbox.getWidth(document.getElementById(paneId));
+                    var actionsWidth = yellow.toolbox.getOuterWidth(document.getElementById(paneId+"-settings-actions"));
+                    var fieldsWidth = yellow.toolbox.getOuterWidth(document.getElementById(paneId+"-settings-fields"));
+                    var separatorWidth = Math.max(10, ((elementWidth-fieldsWidth)/2)-actionsWidth);
+                    yellow.toolbox.setOuterWidth(document.getElementById(paneId+"-settings-separator"), separatorWidth);
+                    break;
+                case "yellow-pane-create":
+                case "yellow-pane-edit":
+                case "yellow-pane-delete":
+                    yellow.toolbox.setOuterLeft(document.getElementById(paneId), paneLeft);
+                    yellow.toolbox.setOuterTop(document.getElementById(paneId), paneTop);
+                    yellow.toolbox.setOuterHeight(document.getElementById(paneId), paneHeight);
+                    yellow.toolbox.setOuterWidth(document.getElementById(paneId), paneWidth);
+                    var elementWidth = yellow.toolbox.getWidth(document.getElementById(paneId));
+                    yellow.toolbox.setOuterWidth(document.getElementById(paneId+"-text"), elementWidth);
+                    yellow.toolbox.setOuterWidth(document.getElementById(paneId+"-preview"), elementWidth);
+                    var buttonsWidth = 0;
+                    var buttonsWidthMax = yellow.toolbox.getOuterWidth(document.getElementById(paneId+"-toolbar")) -
+                        yellow.toolbox.getOuterWidth(document.getElementById(paneId+"-toolbar-main")) - 1;
+                    var element = document.getElementById(paneId+"-toolbar-buttons").firstChild;
+                    for (; element; element=element.nextSibling) {
+                        element.removeAttribute("style");
+                        buttonsWidth += yellow.toolbox.getOuterWidth(element);
+                        if (buttonsWidth>buttonsWidthMax) yellow.toolbox.setVisible(element, false);
+                    }
+                    yellow.toolbox.setOuterWidth(document.getElementById(paneId+"-toolbar-title"), buttonsWidthMax);
+                    var height1 = yellow.toolbox.getHeight(document.getElementById(paneId));
+                    var height2 = yellow.toolbox.getOuterHeight(document.getElementById(paneId+"-toolbar"));
+                    yellow.toolbox.setOuterHeight(document.getElementById(paneId+"-text"), height1 - height2);
+                    yellow.toolbox.setOuterHeight(document.getElementById(paneId+"-preview"), height1 - height2);
+                    var elementLink = document.getElementById(paneId+"-bar");
+                    var position = yellow.toolbox.getOuterLeft(elementLink) + yellow.toolbox.getOuterWidth(elementLink)/2;
+                    position -= yellow.toolbox.getOuterLeft(document.getElementById(paneId)) + 1;
+                    yellow.toolbox.setOuterLeft(document.getElementById(paneId+"-arrow"), position);
+                    break;
+                case "yellow-pane-menu":
+                    yellow.toolbox.setOuterLeft(document.getElementById("yellow-pane-menu"), paneLeft + paneWidth - yellow.toolbox.getOuterWidth(document.getElementById("yellow-pane-menu")));
+                    yellow.toolbox.setOuterTop(document.getElementById("yellow-pane-menu"), paneTop);
+                    var elementLink = document.getElementById("yellow-pane-menu-bar");
+                    var position = yellow.toolbox.getOuterLeft(elementLink) + yellow.toolbox.getOuterWidth(elementLink)/2;
+                    position -= yellow.toolbox.getOuterLeft(document.getElementById("yellow-pane-menu"));
+                    yellow.toolbox.setOuterLeft(document.getElementById("yellow-pane-menu-arrow"), position);
+                    break;
+                default:
+                    yellow.toolbox.setOuterLeft(document.getElementById(paneId), paneLeft);
+                    yellow.toolbox.setOuterTop(document.getElementById(paneId), paneTop);
+                    yellow.toolbox.setOuterWidth(document.getElementById(paneId), paneWidth);
+                    break;
+            }
         }
     },
     
