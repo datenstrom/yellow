@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.9.11";
+    const VERSION = "0.9.12";
     const RELEASE = "0.9";
     public $content;        // content files
     public $media;          // media files
@@ -602,16 +602,17 @@ class YellowMedia {
 
     // Return parent location
     public function getParentLocation($location) {
+        $parentLocation = "";
         $token = rtrim($this->yellow->system->get("coreMediaLocation"), "/");
         if (preg_match("#^($token.*\/).+?$#", $location, $matches)) {
             if ($matches[1]!="$token/" || $this->yellow->lookup->isFileLocation($location)) $parentLocation = $matches[1];
         }
-        if (is_string_empty($parentLocation)) $parentLocation = "";
         return $parentLocation;
     }
     
     // Return top-level location
     public function getParentTopLocation($location) {
+        $parentTopLocation = "";
         $token = rtrim($this->yellow->system->get("coreMediaLocation"), "/");
         if (preg_match("#^($token.+?\/)#", $location, $matches)) $parentTopLocation = $matches[1];
         if (is_string_empty($parentTopLocation)) $parentTopLocation = "$token/";
