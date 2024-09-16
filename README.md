@@ -10,7 +10,7 @@ Download one file, unzip it and copy everything to your web server. Your website
 
 ## How to get extensions 
 
-Extensions give you additional features, languages and themes. The core has the core functionality of your website. Everything else is up to you. There is an image gallery, calendar feature, search feature and much more. [Get extensions for your website](https://datenstrom.se/yellow/extensions/).
+Extensions give you additional features, languages and themes. The core has the core functionality of your website. Everything else is up to you. There is an image gallery, event calendar, search feature and much more. [Get extensions for your website](https://datenstrom.se/yellow/extensions/).
 
 ## How to get help
 

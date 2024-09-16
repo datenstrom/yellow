@@ -10,7 +10,7 @@ Ladda ner en fil, packa upp den och kopiera allt till din webbserver. Din webbpl
 
 ## Hur man får tillägg
 
-Tillägg ger dig ytterligare funktioner, språk och teman. Det som kallas core har kärnfunktionaliteten på din webbplats. Allt annat är upp till dig. Det finns ett bildgalleri, kalenderfunktion,  sökfunktion och så mycket mer. [Få tillägg för din webbplats](https://datenstrom.se/sv/yellow/extensions/).
+Tillägg ger dig ytterligare funktioner, språk och teman. Det som kallas core har kärnfunktionaliteten på din webbplats. Allt annat är upp till dig. Det finns ett bildgalleri, evenemangskalender, sökfunktion och så mycket mer. [Få tillägg för din webbplats](https://datenstrom.se/sv/yellow/extensions/).
 
 ## Hur man får hjälp
 
