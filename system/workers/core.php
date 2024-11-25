@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.9.12";
+    const VERSION = "0.9.13";
     const RELEASE = "0.9";
     public $content;        // content files
     public $media;          // media files
@@ -2417,7 +2417,7 @@ class YellowToolbox {
     // Return array of variable size from text, space separated
     public function getTextArguments($text, $optional = "-", $sizeMin = 9) {
         $text = preg_replace("/\s+/s", " ", trim($text));
-        $tokens = str_getcsv($text, " ", "\"");
+        $tokens = str_getcsv($text, " ", "\"", "");
         foreach ($tokens as $key=>$value) {
             if (is_null($value) || $value==$optional) $tokens[$key] = "";
         }
