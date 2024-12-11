@@ -2,7 +2,7 @@
 // Markdown extension, https://github.com/annaesvensson/yellow-markdown
 
 class YellowMarkdown {
-    const VERSION = "0.9.2";
+    const VERSION = "0.9.3";
     public $yellow;         // access to API
     
     // Handle initialisation
@@ -3881,7 +3881,7 @@ class YellowMarkdownParser extends MarkdownExtraParser {
         $text = preg_replace_callback("/\[\-\-(.*?)\-\-\]/", array($this, "_doAutoLinks_shortcutComment_callback"), $text);
         $text = preg_replace_callback("/\:([\w\+\-\_]+)\:/", array($this, "_doAutoLinks_shortcutSymbol_callback"), $text);
         $text = preg_replace_callback("/((http|https|ftp):\/\/\S+[^\'\"\,\.\;\:\*\~\s]+)/", array($this, "_doAutoLinks_url_callback"), $text);
-        $text = preg_replace_callback("/([\w\+\-\.]+@[\w\-\.]+\.[\w]{2,4})/", array($this, "_doAutoLinks_email_callback"), $text);
+        $text = preg_replace_callback("/([\w\+\-\.]+@[\w\-\.]+\.[\w]+)/", array($this, "_doAutoLinks_email_callback"), $text);
         return $text;
     }
     
