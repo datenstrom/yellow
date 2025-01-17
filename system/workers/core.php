@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.9.13";
+    const VERSION = "0.9.14";
     const RELEASE = "0.9";
     public $content;        // content files
     public $media;          // media files
@@ -395,11 +395,13 @@ class YellowContent {
     public function path($location, $absoluteLocation = false) {
         $pages = new YellowPageCollection($this->yellow);
         if ($absoluteLocation) $location = substru($location, strlenu($this->yellow->page->base));
-        if ($page = $this->find($location)) {
-            $pages->prepend($page);
-            for (; $parent = $page->getParent(); $page=$parent) {
-                $pages->prepend($parent);
-            }
+        $page = null;
+        while (!$this->yellow->lookup->isRootLocation($location)) {
+            $page = $this->find($location);
+            if ($page) $pages->prepend($page);
+            $location = $this->getParentLocation($location);
+        }
+        if ($page) {
             $home = $this->find($this->getHomeLocation($page->location));
             if ($home && $home->location!=$page->location) $pages->prepend($home);
         }
