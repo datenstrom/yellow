@@ -18,4 +18,4 @@ The help shows you how to make small websites, wikis and blogs. Here you will fi
 
 ## Acknowledgements
 
-Made in Europe with various contributors. Thank you for the good work.
+Made in Europe with many contributors. Thank you for the good work.
