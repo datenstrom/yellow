@@ -18,4 +18,4 @@ Hjälpen visar dig hur man gör små webbsidor, wikier och bloggar. Här hittar 
 
 ## Tack
 
-Tillverkad i Europa med olika bidragsgivare. Tack för ett bra jobb.
+Tillverkad i Europa med många bidragsgivare. Tack för ett bra jobb.
