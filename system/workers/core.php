@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.9.14";
+    const VERSION = "0.9.15";
     const RELEASE = "0.9";
     public $content;        // content files
     public $media;          // media files
@@ -3023,7 +3023,6 @@ class YellowPage {
     public $lastModified;           // last modification date
     public $available;              // page is available? (boolean)
     public $visible;                // page is visible location? (boolean)
-    public $active;                 // page is active location? (boolean)
     public $cacheable;              // page is cacheable? (boolean)
 
     public function __construct($yellow) {
@@ -3059,7 +3058,6 @@ class YellowPage {
         $this->lastModified = 0;
         $this->available = true;
         $this->visible = true;
-        $this->active = $this->yellow->lookup->isActiveLocation($this->location, $this->yellow->page->location);
         $this->parseMetaData();
     }
     
@@ -3546,7 +3544,7 @@ class YellowPage {
 
     // Check if page is within current HTTP request
     public function isActive() {
-        return $this->active;
+        return $this->yellow->lookup->isActiveLocation($this->location, $this->yellow->page->location);
     }
     
     // Check if page is cacheable

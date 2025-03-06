@@ -2,7 +2,7 @@
 // Generate extension, https://github.com/annaesvensson/yellow-generate
 
 class YellowGenerate {
-    const VERSION = "0.9.6";
+    const VERSION = "0.9.7";
     public $yellow;                  // access to API
     public $files;                   // number of files
     public $errors;                  // number of errors
@@ -136,7 +136,6 @@ class YellowGenerate {
 
     // Generate static file
     public function generateStaticFile($path, $location, $analyse = false, $probe = false, $error = false) {
-        $this->yellow->content->pages = array();
         $this->yellow->page = new YellowPage($this->yellow);
         $this->yellow->page->fileName = substru($location, 1);
         if (!is_readable($this->yellow->page->fileName)) {
