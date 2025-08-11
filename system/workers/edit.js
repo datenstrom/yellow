@@ -74,7 +74,7 @@ yellow.edit = {
     
     // Handle page cache
     pageShow: function(e) {
-        if (e.persisted && yellow.user.email && !this.getCookie("csrftoken")) {
+        if (e.persisted && yellow.user.email && !this.getCookie("yellowcsrftoken")) {
             window.location.reload();
         }
     },
@@ -214,7 +214,7 @@ yellow.edit = {
                 "<div class=\"yellow-status\"><p id=\"yellow-pane-quit-status\" class=\""+paneStatus+"\">"+this.getText("QuitStatus", "", paneStatus)+"</p></div>"+
                 "<div class=\"yellow-fields\">"+
                 "<input type=\"hidden\" name=\"action\" value=\"quit\" />"+
-                "<input type=\"hidden\" name=\"csrftoken\" value=\""+yellow.toolbox.encodeHtml(this.getCookie("csrftoken"))+"\" />"+
+                "<input type=\"hidden\" name=\"yellowcsrftoken\" value=\""+yellow.toolbox.encodeHtml(this.getCookie("yellowcsrftoken"))+"\" />"+
                 "<p><label for=\"yellow-pane-quit-name\">"+this.getText("SignupName")+"</label><br /><input class=\"yellow-form-control\" name=\"name\" id=\"yellow-pane-quit-name\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("name"))+"\" /></p>"+
                 "<p><input class=\"yellow-btn\" type=\"submit\" value=\""+this.getText("DeleteButton")+"\" /></p>"+
                 "</div>"+
@@ -231,7 +231,7 @@ yellow.edit = {
                 "<div id=\"yellow-pane-account-settings-separator\" class=\"yellow-settings-left yellow-settings-separator\">&nbsp;</div>"+
                 "<div id=\"yellow-pane-account-settings-fields\" class=\"yellow-settings-right yellow-fields\">"+
                 "<input type=\"hidden\" name=\"action\" value=\"account\" />"+
-                "<input type=\"hidden\" name=\"csrftoken\" value=\""+yellow.toolbox.encodeHtml(this.getCookie("csrftoken"))+"\" />"+
+                "<input type=\"hidden\" name=\"yellowcsrftoken\" value=\""+yellow.toolbox.encodeHtml(this.getCookie("yellowcsrftoken"))+"\" />"+
                 "<p><label for=\"yellow-pane-account-name\">"+this.getText("SignupName")+"</label><br /><input class=\"yellow-form-control\" name=\"name\" id=\"yellow-pane-account-name\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("name"))+"\" /></p>"+
                 "<p><label for=\"yellow-pane-account-email\">"+this.getText("SignupEmail")+"</label><br /><input class=\"yellow-form-control\" name=\"email\" id=\"yellow-pane-account-email\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("email"))+"\" /></p>"+
                 "<p><label for=\"yellow-pane-account-password\">"+this.getText("SignupPassword")+"</label><br /><input class=\"yellow-form-control\" type=\"password\" name=\"password\" id=\"yellow-pane-account-password\" maxlength=\"64\" value=\"\" /></p>"+
@@ -254,7 +254,7 @@ yellow.edit = {
                 "<div id=\"yellow-pane-configure-settings-separator\" class=\"yellow-settings-left yellow-settings-separator\">&nbsp;</div>"+
                 "<div id=\"yellow-pane-configure-settings-fields\" class=\"yellow-settings-right yellow-fields\">"+
                 "<input type=\"hidden\" name=\"action\" value=\"configure\" />"+
-                "<input type=\"hidden\" name=\"csrftoken\" value=\""+yellow.toolbox.encodeHtml(this.getCookie("csrftoken"))+"\" />"+
+                "<input type=\"hidden\" name=\"yellowcsrftoken\" value=\""+yellow.toolbox.encodeHtml(this.getCookie("yellowcsrftoken"))+"\" />"+
                 "<p><label for=\"yellow-pane-configure-sitename\">"+this.getText("ConfigureSitename")+"</label><br /><input class=\"yellow-form-control\" name=\"sitename\" id=\"yellow-pane-configure-sitename\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("sitename"))+"\" /></p>"+
                 "<p><label for=\"yellow-pane-configure-author\">"+this.getText("ConfigureAuthor")+"</label><br /><input class=\"yellow-form-control\" name=\"author\" id=\"yellow-pane-configure-author\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("author"))+"\" /></p>"+
                 "<p><label for=\"yellow-pane-configure-email\">"+this.getText("ConfigureEmail")+"</label><br /><input class=\"yellow-form-control\" name=\"email\" id=\"yellow-pane-configure-email\" maxlength=\"64\" value=\""+yellow.toolbox.encodeHtml(this.getRequest("email"))+"\" /></p>"+
@@ -671,7 +671,7 @@ yellow.edit = {
     
     // Process submit
     processSubmit: function(arguments) {
-        var settings = { "action":"none", "csrftoken":this.getCookie("csrftoken") };
+        var settings = { "action":"none", "yellowcsrftoken":this.getCookie("yellowcsrftoken") };
         var tokens = arguments.split("/");
         for (var i=0; i<tokens.length; i++) {
             var pair = tokens[i].split(/[:=]/);
@@ -808,7 +808,7 @@ yellow.edit = {
             var thisObject = this;
             var formData = new FormData();
             formData.append("action", "preview");
-            formData.append("csrftoken", this.getCookie("csrftoken"));
+            formData.append("yellowcsrftoken", this.getCookie("yellowcsrftoken"));
             formData.append("rawdataedit", elementText.value);
             formData.append("rawdataendofline", yellow.page.rawDataEndOfLine);
             var request = new XMLHttpRequest();
@@ -857,7 +857,7 @@ yellow.edit = {
                 var thisObject = this;
                 var formData = new FormData();
                 formData.append("action", "upload");
-                formData.append("csrftoken", this.getCookie("csrftoken"));
+                formData.append("yellowcsrftoken", this.getCookie("yellowcsrftoken"));
                 formData.append("file", file);
                 var request = new XMLHttpRequest();
                 request.open("POST", window.location.pathname, true);

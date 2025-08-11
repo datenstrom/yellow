@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/annaesvensson/yellow-edit
 
 class YellowEdit {
-    const VERSION = "0.9.10";
+    const VERSION = "0.9.11";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -870,8 +870,8 @@ class YellowEdit {
     // Check user authentication
     public function checkUserAuth($scheme, $address, $base, $location, $fileName) {
         $action = $this->yellow->page->getRequest("action");
-        $authToken = $this->yellow->toolbox->getCookie("authtoken");
-        $csrfToken = $this->yellow->toolbox->getCookie("csrftoken");
+        $authToken = $this->yellow->toolbox->getCookie("yellowauthtoken");
+        $csrfToken = $this->yellow->toolbox->getCookie("yellowcsrftoken");
         if (is_string_empty($action) || $this->isRequestSameSite("POST", $scheme, $address)) {
             if ($action=="login") {
                 $email = $this->yellow->page->getRequest("email");
@@ -886,7 +886,7 @@ class YellowEdit {
                     $this->response->userFailedExpire = PHP_INT_MAX;
                 }
             } elseif (!is_string_empty($authToken) && !is_string_empty($csrfToken)) {
-                $csrfTokenReceived = isset($_POST["csrftoken"]) ? $_POST["csrftoken"] : "";
+                $csrfTokenReceived = isset($_POST["yellowcsrftoken"]) ? $_POST["yellowcsrftoken"] : "";
                 $csrfTokenIrrelevant = is_string_empty($action);
                 if ($this->response->checkAuthToken($authToken, $csrfToken, $csrfTokenReceived, $csrfTokenIrrelevant)) {
                     $this->response->userEmail = $email = $this->response->getAuthEmail($authToken);
@@ -1302,7 +1302,10 @@ class YellowEditResponse {
     public function getRequestData() {
         $data = array();
         foreach ($_REQUEST as $key=>$value) {
-            if ($key=="password" || $key=="authtoken" || $key=="csrftoken" || $key=="actiontoken" || substru($key, 0, 7)=="rawdata") continue;
+            if ($key=="password" || $key=="yellowauthtoken" || $key=="yellowcsrftoken" ||
+                substru($key, 0, 7)=="rawdata") {
+                continue;
+            }
             $data["request".ucfirst($key)] = trim($value);
         }
         return $data;
@@ -1626,14 +1629,14 @@ class YellowEditResponse {
         $expire = time() + $this->yellow->system->get("editLoginSessionTimeout");
         $authToken = $this->createAuthToken($email, $expire);
         $csrfToken = $this->createCsrfToken();
-        setcookie("authtoken", $authToken, $expire, "$base/", "", $scheme=="https", true);
-        setcookie("csrftoken", $csrfToken, $expire, "$base/", "", $scheme=="https", false);
+        setcookie("yellowauthtoken", $authToken, $expire, "$base/", "", $scheme=="https", true);
+        setcookie("yellowcsrftoken", $csrfToken, $expire, "$base/", "", $scheme=="https", false);
     }
     
     // Destroy browser cookies
     public function destroyCookies($scheme, $address, $base) {
-        setcookie("authtoken", "", 1, "$base/");
-        setcookie("csrftoken", "", 1, "$base/");
+        setcookie("yellowauthtoken", "", 1, "$base/");
+        setcookie("yellowcsrftoken", "", 1, "$base/");
     }
     
     // Create authentication token
