@@ -2,7 +2,7 @@
 // Update extension, https://github.com/annaesvensson/yellow-update
 
 class YellowUpdate {
-    const VERSION = "0.9.4";
+    const VERSION = "0.9.5";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $extensions;             // number of extensions
@@ -13,6 +13,7 @@ class YellowUpdate {
         $this->yellow->system->setDefault("updateCurrentRelease", "none");
         $this->yellow->system->setDefault("updateAvailableUrl", "auto");
         $this->yellow->system->setDefault("updateAvailableFile", "update-available.ini");
+        $this->yellow->system->setDefault("updateInstalledFile", "update-installed.ini");
         $this->yellow->system->setDefault("updateExtensionFile", "extension.ini");
         $this->yellow->system->setDefault("updateEventPending", "none");
         $this->yellow->system->setDefault("updateEventDaily", "0");
@@ -254,6 +255,7 @@ class YellowUpdate {
     public function updateExtensions($action) {
         $statusCode = 200;
         if (function_exists("opcache_reset")) opcache_reset();
+        $this->yellow->page->setHeader("Clear-Site-Data", "cache");
         $path = $this->yellow->system->get("coreExtensionDirectory");
         foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.zip$/", true, false) as $entry) {
             $statusCode = max($statusCode, $this->updateExtensionArchive($entry, $action));
@@ -370,6 +372,7 @@ class YellowUpdate {
             }
             unset($this->yellow->extension->data["updatepatch"]);
             if (function_exists("opcache_reset")) opcache_reset();
+            $this->yellow->page->setHeader("Clear-Site-Data", "cache");
             if (!$this->yellow->toolbox->deleteFile($fileName)) {
                 $this->yellow->toolbox->log("error", "Can't delete file '$fileName'!");
             }
@@ -438,7 +441,7 @@ class YellowUpdate {
     // Update extension settings
     public function updateExtensionSettings($extension, $action, $text = "") {
         $statusCode = 200;
-        $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreExtensionFile");
+        $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateInstalledFile");
         $fileData = $fileDataNew = $this->yellow->toolbox->readFile($fileName);
         if ($action=="install" || $action=="update") {
             $settingsCurrent = $this->yellow->toolbox->getTextSettings($fileData, "extension");
@@ -609,6 +612,7 @@ class YellowUpdate {
     public function removeExtensions($settings) {
         $statusCode = 200;
         if (function_exists("opcache_reset")) opcache_reset();
+        $this->yellow->page->setHeader("Clear-Site-Data", "cache");
         foreach ($settings as $extension=>$block) {
             $statusCode = max($statusCode, $this->removeExtensionArchive($extension, "uninstall", $block));
         }
@@ -778,7 +782,7 @@ class YellowUpdate {
         $statusCode = 200;
         $settings = array();
         if ($current) {
-            $fileNameCurrent = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreExtensionFile");
+            $fileNameCurrent = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateInstalledFile");
             $fileData = $this->yellow->toolbox->readFile($fileNameCurrent);
             $settings = $this->yellow->toolbox->getTextSettings($fileData, "extension");
             foreach ($settings->getArrayCopy() as $key=>$value) {

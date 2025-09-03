@@ -2,7 +2,7 @@
 // Install extension, https://github.com/annaesvensson/yellow-install
 
 class YellowInstall {
-    const VERSION = "0.9.4";
+    const VERSION = "0.9.5";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -301,7 +301,7 @@ class YellowInstall {
             $this->yellow->page->error($statusCode, "Can't delete file '$fileName'!");
         }
         if ($statusCode==200) unset($this->yellow->extension->data["install"]);
-        $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreExtensionFile");
+        $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateInstalledFile");
         $fileData = $this->yellow->toolbox->readFile($fileName);
         $fileDataNew = $this->yellow->toolbox->unsetTextSettings($fileData, "extension", "install");
         if ($statusCode==200 && !$this->yellow->toolbox->writeFile($fileName, $fileDataNew)) {
@@ -337,7 +337,7 @@ class YellowInstall {
     // Check web server complete upload
     public function checkServerComplete() {
         $complete = true;
-        $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreExtensionFile");
+        $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateInstalledFile");
         $fileData = $this->yellow->toolbox->readFile($fileName);
         $settings = $this->yellow->toolbox->getTextSettings($fileData, "extension");
         $fileNames = array($fileName);
@@ -495,7 +495,7 @@ class YellowInstall {
     
     // Return extensions installed
     public function getExtensionsCount() {
-        $fileNameCurrent = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreExtensionFile");
+        $fileNameCurrent = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateInstalledFile");
         $fileData = $this->yellow->toolbox->readFile($fileNameCurrent);
         $settings = $this->yellow->toolbox->getTextSettings($fileData, "extension");
         return count($settings);

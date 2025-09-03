@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.9.15";
+    const VERSION = "0.9.16";
     const RELEASE = "0.9";
     public $content;        // content files
     public $media;          // media files
@@ -40,7 +40,6 @@ class YellowCore {
         $this->system->setDefault("coreContentErrorFile", "page-error-(.*).md");
         $this->system->setDefault("coreLanguageFile", "yellow-language.ini");
         $this->system->setDefault("coreUserFile", "yellow-user.ini");
-        $this->system->setDefault("coreExtensionFile", "yellow-extension.ini");
         $this->system->setDefault("coreWebsiteFile", "yellow-website.log");
         $this->system->setDefault("coreAssetLocation", "/assets/");
         $this->system->setDefault("coreMediaLocation", "/media/");
