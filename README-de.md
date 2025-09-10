@@ -4,6 +4,8 @@
 
 Datenstrom Yellow ist für Menschen die kleine Webseiten machen. [Demo ausprobieren](https://datenstrom.se/de/yellow/demo/).
 
+<p align="left"><img src="SCREENSHOT.png" alt="Bildschirmfoto"></p>
+
 ## Wie man loslegt
 
 Lade eine Datei herunter, entpacke und kopiere alles auf deinen Webserver. Deine Webseite ist sofort erreichbar. Die wichtigsten Dinge sind mit dabei. Du kannst später weitere Funktionen hinzufügen. Es gibt Erweiterungen mit zusätzlichen Funktionen, Sprachen und Themes die du installieren kannst. [Loslegen](https://datenstrom.se/de/yellow/help/how-to-get-started).
