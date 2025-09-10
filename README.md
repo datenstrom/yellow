@@ -4,6 +4,8 @@
 
 Datenstrom Yellow is for people who make small websites. [Try the demo](https://datenstrom.se/yellow/demo/).
 
+<p align="left"><img src="SCREENSHOT.png" alt="Screenshot"></p>
+
 ## How to get started
 
 Download one file, unzip it and copy everything to your web server. Your website is immediately available. The most important things are included. You can add more features later. There are extensions with additional features, languages and themes that you can install. [Get started](https://datenstrom.se/yellow/help/how-to-get-started).
