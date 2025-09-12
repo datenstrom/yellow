@@ -20,4 +20,4 @@ Die Hilfe zeigt dir wie man kleine Webseiten, Wikis und Blogs macht. Hier findes
 
 ## Danksagung
 
-Hergestellt in Europa. Danke an Benutzer, Entwickler, Designer und Übersetzer.
+Hergestellt in Europa. Danke an alle Benutzer, Entwickler, Designer und Übersetzer.
