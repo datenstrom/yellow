@@ -20,4 +20,4 @@ Hjälpen visar dig hur man gör små webbsidor, wikier och bloggar. Här hittar 
 
 ## Tack
 
-Tillverkad i Europa. Tack till användare, utvecklare, formgivare och översättare.
+Tillverkad i Europa. Tack till alla användare, utvecklare, formgivare och översättare.
