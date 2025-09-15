@@ -5,18 +5,16 @@
 :root {
     --bg: #fff;
     --code-bg: #f7f7f7;
-    --notice1-bg: #fffbf0;
-    --notice2-bg: #fdf0f0;
-    --notice3-bg: #f0f8fe;
+    --important-bg: #f0f8fe;
+    --note-bg: #fffbf0;
     --heading: #111;
     --text: #666;
     --code: #666;
     --link: #07d;
     --link-active: #29f;
     --blockquote-accent: #29f;
-    --notice1-accent: #fb0;
-    --notice2-accent: #d00;
-    --notice3-accent: #08e;
+    --important-accent: #08e;
+    --note-accent: #fb0;
     --separator: #ddd;
     --border: #bbb;
     --font: "Open Sans", Helvetica, sans-serif;
@@ -160,26 +158,17 @@ a:hover {
     font-weight: bold;
     border-left: 3px solid var(--blockquote-accent);
 }
-.content .notice1 {
+.content .important {
     margin: 1em 0;
     padding: 10px 1em;
-    background-color: var(--notice1-bg);
-    border-left: 10px solid var(--notice1-accent);
+    background-color: var(--important-bg);
+    border-left: 10px solid var(--important-accent);
 }
-.content .notice2 {
+.content .note {
     margin: 1em 0;
     padding: 10px 1em;
-    background-color: var(--notice2-bg);
-    border-left: 10px solid var(--notice2-accent);
-}
-.content .notice3,
-.content .notice4,
-.content .notice5,
-.content .notice6 {
-    margin: 1em 0;
-    padding: 10px 1em;
-    background-color: var(--notice3-bg);
-    border-left: 10px solid var(--notice3-accent);
+    background-color: var(--note-bg);
+    border-left: 10px solid var(--note-accent);
 }
 .content .flexible {
     position: relative;

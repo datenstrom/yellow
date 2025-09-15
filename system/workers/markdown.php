@@ -2,7 +2,7 @@
 // Markdown extension, https://github.com/annaesvensson/yellow-markdown
 
 class YellowMarkdown {
-    const VERSION = "0.9.3";
+    const VERSION = "0.9.4";
     public $yellow;         // access to API
     
     // Handle initialisation
@@ -3836,18 +3836,16 @@ class YellowMarkdownParser extends MarkdownExtraParser {
     public $yellow;             // access to API
     public $page;               // access to page
     public $idAttributes;       // id attributes
-    public $noticeLevel;        // recursive level
 
     public function __construct($yellow, $page) {
         $this->yellow = $yellow;
         $this->page = $page;
         $this->idAttributes = array();
-        $this->noticeLevel = 0;
         $this->url_filter_func = function($url) use ($yellow, $page) {
             return $yellow->lookup->normaliseLocation($url, $page->getPage("main")->location);
         };
         $this->span_gamut += array("doStrikethrough" => 55);
-        $this->block_gamut += array("doNoticeBlocks" => 65);
+        $this->block_gamut += array("doGeneralBlocks" => 65);
         $this->document_gamut += array("doFootnotesLinks" => 55);
         $this->escape_chars .= "~";
         parent::__construct();
@@ -4001,13 +3999,13 @@ class YellowMarkdownParser extends MarkdownExtraParser {
         return preg_replace_callback("/((?>^[ ]*>[ ]?.+\n(.+\n)*)+)/m", array($this, "_doBlockQuotes_callback"), $text);
     }
     
-    // Handle notice blocks
-    public function doNoticeBlocks($text) {
-        return preg_replace_callback("/((?>^[ ]*!(?!\[)[ ]?.+\n(.+\n)*)+)/m", array($this, "_doNoticeBlocks_callback"), $text);
+    // Handle general block elements
+    public function doGeneralBlocks($text) {
+        return preg_replace_callback("/((?>^[ ]*!(?!\[)[ ]?.+\n(.+\n)*)+)/m", array($this, "_doGeneralBlocks_callback"), $text);
     }
     
-    // Handle notice blocks over multiple lines
-    public function _doNoticeBlocks_callback($matches) {
+    // Handle general block elements over multiple lines
+    public function _doGeneralBlocks_callback($matches) {
         $name = $attributes = $attr = "";
         $text = preg_replace("/^[ ]*![ ]?/m", "", $matches[1]);
         if (preg_match("/^[ ]*".$this->id_class_attr_catch_re."[ ]*\n([\S\s]*)$/m", $text, $parts)) {
@@ -4015,19 +4013,14 @@ class YellowMarkdownParser extends MarkdownExtraParser {
             $text = $parts[2];
             $attributes = $parts[1];
             $attr = $this->doExtraAttributes("div", $parts[1]);
-        } elseif ($this->noticeLevel==0) {
-            $level = strspn(str_replace(array("![", " "), "", $matches[1]), "!");
-            $attr = " class=\"notice$level\"";
         }
         if (!is_string_empty($text)) {
-            ++$this->noticeLevel;
-            $output = $this->page->parseContentElement($name, "[--notice--]", $attributes, "notice");
-            if (!is_null($output) && preg_match("/^(.+)(\[--notice--\])(.+)$/s", $output, $parts)) {
+            $output = $this->page->parseContentElement($name, "[--general--]", $attributes, "general");
+            if (!is_null($output) && preg_match("/^(.+)(\[--general--\])(.+)$/s", $output, $parts)) {
                 $output = $parts[1].$this->runBlockGamut($text).$parts[3];
             } else {
                 $output = "<div$attr>\n".$this->runBlockGamut($text)."\n</div>";
             }
-            --$this->noticeLevel;
         } else {
             $output = "<div$attr></div>";
         }
@@ -4053,7 +4046,7 @@ class YellowMarkdownParser extends MarkdownExtraParser {
 		return $text;
     }
                                       
-    // Return suitable name for code block or notice block
+    // Return suitable name for code block or general block element
     public function getBlockName($language, $attributes) {
         if (!is_string_empty($language)) {
             $name = ltrim($language, ".");

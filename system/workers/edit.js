@@ -594,22 +594,22 @@ yellow.edit = {
         var elementPreview = document.getElementById(this.paneId+"-preview");
         if (!yellow.toolbox.isVisible(elementPreview) && !elementText.readOnly) {
             switch (status) {
-                case "h1":              yellow.editor.setMarkdown(elementText, "# ", "insert-multiline-block", true); break;
-                case "h2":              yellow.editor.setMarkdown(elementText, "## ", "insert-multiline-block", true); break;
-                case "h3":              yellow.editor.setMarkdown(elementText, "### ", "insert-multiline-block", true); break;
+                case "h1":              yellow.editor.setMarkdown(elementText, "# ", "insert-multiline-block", "", true); break;
+                case "h2":              yellow.editor.setMarkdown(elementText, "## ", "insert-multiline-block", "", true); break;
+                case "h3":              yellow.editor.setMarkdown(elementText, "### ", "insert-multiline-block", "", true); break;
                 case "paragraph":       yellow.editor.setMarkdown(elementText, "", "remove-multiline-block");
                                         yellow.editor.setMarkdown(elementText, "", "remove-fenced-block"); break;
-                case "notice":          yellow.editor.setMarkdown(elementText, "! ", "insert-multiline-block", true); break;
-                case "quote":           yellow.editor.setMarkdown(elementText, "> ", "insert-multiline-block", true); break;
-                case "pre":             yellow.editor.setMarkdown(elementText, "```\n", "insert-fenced-block", true); break;
-                case "bold":            yellow.editor.setMarkdown(elementText, "**", "insert-inline", true); break;
-                case "italic":          yellow.editor.setMarkdown(elementText, "*", "insert-inline", true); break;
-                case "strikethrough":   yellow.editor.setMarkdown(elementText, "~~", "insert-inline", true); break;
-                case "code":            yellow.editor.setMarkdown(elementText, "`", "insert-autodetect", true); break;
-                case "ul":              yellow.editor.setMarkdown(elementText, "* ", "insert-multiline-block", true); break;
-                case "ol":              yellow.editor.setMarkdown(elementText, "1. ", "insert-multiline-block", true); break;
-                case "tl":              yellow.editor.setMarkdown(elementText, "- [ ] ", "insert-multiline-block", true); break;
-                case "link":            yellow.editor.setMarkdown(elementText, "[link](url)", "insert", false, yellow.editor.getMarkdownLink); break;
+                case "important":       yellow.editor.setMarkdown(elementText, "! ", "insert-multiline-block", "important", true); break;
+                case "quote":           yellow.editor.setMarkdown(elementText, "> ", "insert-multiline-block", "", true); break;
+                case "pre":             yellow.editor.setMarkdown(elementText, "```\n", "insert-fenced-block", "", true); break;
+                case "bold":            yellow.editor.setMarkdown(elementText, "**", "insert-inline", "", true); break;
+                case "italic":          yellow.editor.setMarkdown(elementText, "*", "insert-inline", "", true); break;
+                case "strikethrough":   yellow.editor.setMarkdown(elementText, "~~", "insert-inline", "", true); break;
+                case "code":            yellow.editor.setMarkdown(elementText, "`", "insert-autodetect", "", true); break;
+                case "ul":              yellow.editor.setMarkdown(elementText, "* ", "insert-multiline-block", "", true); break;
+                case "ol":              yellow.editor.setMarkdown(elementText, "1. ", "insert-multiline-block", "", true); break;
+                case "tl":              yellow.editor.setMarkdown(elementText, "- [ ] ", "insert-multiline-block", "", true); break;
+                case "link":            yellow.editor.setMarkdown(elementText, "[link](url)", "insert", "", false, yellow.editor.getMarkdownLink); break;
                 case "text":            yellow.editor.setMarkdown(elementText, arguments, "insert"); break;
                 case "status":          yellow.editor.setMetaData(elementText, "status", true); break;
                 case "file":            this.showFileDialog(); break;
@@ -721,8 +721,8 @@ yellow.edit = {
                 "<li><a href=\"#\" id=\"yellow-popup-format-h2\" data-action=\"toolbar\" data-status=\"h2\">"+this.getText("ToolbarH2")+"</a></li>"+
                 "<li><a href=\"#\" id=\"yellow-popup-format-h3\" data-action=\"toolbar\" data-status=\"h3\">"+this.getText("ToolbarH3")+"</a></li>"+
                 "<li><a href=\"#\" id=\"yellow-popup-format-paragraph\" data-action=\"toolbar\" data-status=\"paragraph\">"+this.getText("ToolbarParagraph")+"</a></li>"+
+                "<li><a href=\"#\" id=\"yellow-popup-format-important\" data-action=\"toolbar\" data-status=\"important\">"+this.getText("ToolbarImportant")+"</a></li>"+
                 "<li><a href=\"#\" id=\"yellow-popup-format-pre\" data-action=\"toolbar\" data-status=\"pre\">"+this.getText("ToolbarPre")+"</a></li>"+
-                "<li><a href=\"#\" id=\"yellow-popup-format-notice\" data-action=\"toolbar\" data-status=\"notice\">"+this.getText("ToolbarNotice")+"</a></li>"+
                 "<li><a href=\"#\" id=\"yellow-popup-format-quote\" data-action=\"toolbar\" data-status=\"quote\">"+this.getText("ToolbarQuote")+"</a></li>"+
                 "</ul>";
                 break;
@@ -1041,8 +1041,8 @@ yellow.edit = {
 yellow.editor = {
 
     // Set Markdown formatting
-    setMarkdown: function(element, prefix, type, toggle, callback) {
-        var information = this.getMarkdownInformation(element, prefix, type);
+    setMarkdown: function(element, prefix, type, name, toggle, callback) {
+        var information = this.getMarkdownInformation(element, prefix, type, name);
         var selectionStart = (information.type.indexOf("block")!=-1) ? information.top : information.start;
         var selectionEnd = (information.type.indexOf("block")!=-1) ? information.bottom : information.end;
         if (information.found && toggle) information.type = information.type.replace("insert", "remove");
@@ -1056,28 +1056,20 @@ yellow.editor = {
         var textSelectionNew, selectionStartNew, selectionEndNew;
         switch (information.type) {
             case "insert-multiline-block":
-                textSelectionNew = this.getMarkdownMultilineBlock(textSelection, information);
-                selectionStartNew = information.start + this.getMarkdownDifference(textSelection, textSelectionNew, true);
-                selectionEndNew = information.end + this.getMarkdownDifference(textSelection, textSelectionNew);
-                if (information.start==information.top && information.start!=information.end) selectionStartNew = information.top;
-                if (information.end==information.top && information.start!=information.end) selectionEndNew = information.top;
-                break;
             case "remove-multiline-block":
                 textSelectionNew = this.getMarkdownMultilineBlock(textSelection, information);
-                selectionStartNew = information.start + this.getMarkdownDifference(textSelection, textSelectionNew, true);
-                selectionEndNew = information.end + this.getMarkdownDifference(textSelection, textSelectionNew);
-                if (selectionStartNew<=information.top) selectionStartNew = information.top;
-                if (selectionEndNew<=information.top) selectionEndNew = information.top;
+                selectionStartNew = information.top;
+                selectionEndNew = information.bottom + this.getMarkdownDifference(textSelection, textSelectionNew);
                 break;
             case "insert-fenced-block":
                 textSelectionNew = this.getMarkdownFencedBlock(textSelection, information);
-                selectionStartNew = information.start + information.prefix.length;
-                selectionEndNew = information.end + this.getMarkdownDifference(textSelection, textSelectionNew) - information.prefix.length;
+                selectionStartNew = information.top + information.prefix.length;
+                selectionEndNew = information.bottom + this.getMarkdownDifference(textSelection, textSelectionNew) - information.prefix.length;
                 break;
             case "remove-fenced-block":
                 textSelectionNew = this.getMarkdownFencedBlock(textSelection, information);
-                selectionStartNew = information.start - information.prefix.length;
-                selectionEndNew = information.end + this.getMarkdownDifference(textSelection, textSelectionNew) + information.prefix.length;
+                selectionStartNew = information.top - information.prefix.length;
+                selectionEndNew = information.bottom + this.getMarkdownDifference(textSelection, textSelectionNew) + information.prefix.length;
                 break;
             case "insert-inline":
                 textSelectionNew = information.prefix + textSelection + information.prefix;
@@ -1105,7 +1097,7 @@ yellow.editor = {
     },
     
     // Return Markdown formatting information
-    getMarkdownInformation: function(element, prefix, type) {
+    getMarkdownInformation: function(element, prefix, type, name) {
         var text = element.value;
         var start = element.selectionStart;
         var end = element.selectionEnd;
@@ -1120,6 +1112,7 @@ yellow.editor = {
                 type = "insert-inline"; prefix = "`";
             }
         }
+        var attributes = name ? prefix+" {."+name+"}\n" : "";
         var found = false;
         if (type.indexOf("multiline-block")!=-1) {
             if (text.substring(top, top+prefix.length)==prefix) found = true;
@@ -1139,23 +1132,15 @@ yellow.editor = {
                 }
             }
         }
-        return { "text":text, "prefix":prefix, "type":type, "start":start, "end":end, "top":top, "bottom":bottom, "found":found };
+        return { "text":text, "prefix":prefix, "type":type, "attributes":attributes, "start":start, "end":end, "top":top, "bottom":bottom, "found":found };
     },
     
     // Return Markdown length difference
-    getMarkdownDifference: function(textSelection, textSelectionNew, firstTextLine) {
-        var textSelectionLength, textSelectionLengthNew;
-        if (firstTextLine) {
-            var position = textSelection.indexOf("\n");
-            var positionNew = textSelectionNew.indexOf("\n");
-            textSelectionLength = position!=-1 ? position+1 : textSelection.length+1;
-            textSelectionLengthNew = positionNew!=-1 ? positionNew+1 : textSelectionNew.length+1;
-        } else {
-            var position = textSelection.indexOf("\n");
-            var positionNew = textSelectionNew.indexOf("\n");
-            textSelectionLength = position!=-1 ? textSelection.length : textSelection.length+1;
-            textSelectionLengthNew = positionNew!=-1 ? textSelectionNew.length : textSelectionNew.length+1;
-        }
+    getMarkdownDifference: function(textSelection, textSelectionNew) {
+        var position = textSelection.indexOf("\n");
+        var positionNew = textSelectionNew.indexOf("\n");
+        var textSelectionLength = position!=-1 ? textSelection.length : textSelection.length+1;
+        var textSelectionLengthNew = positionNew!=-1 ? textSelectionNew.length : textSelectionNew.length+1;
         return textSelectionLengthNew - textSelectionLength;
     },
     
@@ -1166,14 +1151,15 @@ yellow.editor = {
         for (var i=0; i<lines.length; i++) {
             var matches = lines[i].match(/^(\s*[\#\*\-\!\>\s]+)?(\s+\[.\]|\s*\d+\.)?[ \t]+/);
             if (matches) {
-                textSelectionNew += lines[i].substring(matches[0].length);
+                var attributesOnly = lines[i].match(/^\s*!\s*\{\./);
+                if (!attributesOnly) textSelectionNew += lines[i].substring(matches[0].length);
             } else {
                 textSelectionNew += lines[i];
             }
         }
         textSelection = textSelectionNew;
         if (information.type.indexOf("remove")==-1) {
-            textSelectionNew = "";
+            textSelectionNew = information.attributes;
             var linePrefix = information.prefix;
             lines = yellow.toolbox.getTextLines(textSelection.length!=0 ? textSelection : "\n");
             for (var i=0; i<lines.length; i++) {
