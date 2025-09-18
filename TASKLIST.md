@@ -27,6 +27,7 @@ You can help us with open tasks for Datenstrom Yellow:
 - [ ] Updated feed extension, short URL for the feed.xml. Users don't like the long URL, it's ugly. 
 - [ ] Updated sitemap extension, short URL for the sitemap.xml. Users don't like the long URL, it's ugly.
 - [x] Removed googlecalendar, googlemap and youtube extension. General dislike for invasive services.
+- [ ] Tested performance with thousands of content files. For people who make large websites.
 - [ ] Published comment extension, no longer experimental. Due to public demand.
 - [ ] Published math extension, no longer experimental. Due to scientific demand.
 
