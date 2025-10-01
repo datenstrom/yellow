@@ -6,7 +6,6 @@
     --bg: #fff;
     --code-bg: #f7f7f7;
     --important-bg: #f0f8fe;
-    --note-bg: #fffbf0;
     --heading: #111;
     --text: #333;
     --code: #666;
@@ -14,7 +13,6 @@
     --link-active: #29f;
     --blockquote-accent: #29f;
     --important-accent: #08e;
-    --note-accent: #fb0;
     --separator: #ddd;
     --border: #bbb;
     --font: "Open Sans", Helvetica, sans-serif;
@@ -163,12 +161,6 @@ a:hover {
     padding: 10px 1em;
     background-color: var(--important-bg);
     border-left: 10px solid var(--important-accent);
-}
-.content .note {
-    margin: 1em 0;
-    padding: 10px 1em;
-    background-color: var(--note-bg);
-    border-left: 10px solid var(--note-accent);
 }
 .content .flexible {
     position: relative;
@@ -380,3 +372,5 @@ a:hover {
         border: none !important;
     }
 }
+
+/* Custom */

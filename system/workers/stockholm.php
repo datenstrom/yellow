@@ -2,7 +2,7 @@
 // Stockholm extension, https://github.com/annaesvensson/yellow-stockholm
 
 class YellowStockholm {
-    const VERSION = "0.9.4";
+    const VERSION = "0.9.5";
     public $yellow;         // access to API
     
     // Handle initialisation
