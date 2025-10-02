@@ -2,7 +2,7 @@
 
 You can help us with open tasks for Datenstrom Yellow:
 
-- [x] Updated Datenstrom community, moved to a new repository on GitHub. 
+- [x] Updated Datenstrom community, moved to a new repository on GitHub. Discussions need a dedicated place.
 - [ ] Added support for installing extensions in web browser. Users want to install extensions in browser.
 - [ ] Added support for light and dark mode to all themes. Light and dark mode is expected on mobile devices.
 - [ ] Added support for page history in wiki extension. Users want to see/compare what has changed.
@@ -25,7 +25,8 @@ You can help us with open tasks for Datenstrom Yellow:
 - [ ] Updated icon extension, SVG stack instead of WOFF font. Developers want consistent files formats.
 - [ ] Updated image extension, different media files for light and dark mode. Give users more control.
 - [ ] Updated mailer extension, make standalone SMTP extension. Websites may not have a working mail system.
-- [x] Updated Markdown extension, better block elements. Make it more intuitive.
+- [x] Updated Markdown extension, improved email handling for long TLD. TLD with more than 3 characters.
+- [x] Updated Markdown extension, syntax for block elements has changed. Make it more intuitive.
 - [ ] Updated feed extension, short URL for the feed.xml. Users don't like the long URL, it's ugly. 
 - [ ] Updated sitemap extension, short URL for the sitemap.xml. Users don't like the long URL, it's ugly.
 - [x] Removed googlecalendar, googlemap and youtube extension. General dislike for invasive services.
