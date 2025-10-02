@@ -2,6 +2,7 @@
 
 You can help us with open tasks for Datenstrom Yellow:
 
+- [x] Updated Datenstrom community, moved to a new repository on GitHub. 
 - [ ] Added support for installing extensions in web browser. Users want to install extensions in browser.
 - [ ] Added support for light and dark mode to all themes. Light and dark mode is expected on mobile devices.
 - [ ] Added support for page history in wiki extension. Users want to see/compare what has changed.
@@ -12,7 +13,7 @@ You can help us with open tasks for Datenstrom Yellow:
 - [ ] Updated help, release notes and latest changes in one place. Users want to know what's new.
 - [ ] Updated help, Swedish translation for missing pages. Better multi language documentation.
 - [ ] Updated API, YellowPageCollection no longer derives from ArrayObject. ArrayObject interface is strange.
-- [x] Updated API, renamed parser type "notice" to "general". Make it more intuitive.
+- [x] Updated API, changed parser type notice to parser type general. Make it more intuitive.
 - [ ] Updated contact extension, message delivery with brute force protection. Spammers gonna spam.
 - [ ] Updated edit extension, autocomplete for links and tags. Users do less, software does more.
 - [ ] Updated edit extension, settings dialog with dropdown menus. Users want important system settings in browser.
@@ -20,11 +21,11 @@ You can help us with open tasks for Datenstrom Yellow:
 - [ ] Updated edit extension toolbar, improved emoji and icon selection dialog. Give users more control.
 - [ ] Updated edit extension toolbar, improved link and file selection dialog. Give users more control.
 - [ ] Updated edit extension toolbar, menu for buttons on small screens. Disappearing buttons.
-- [x] Updated gallery extension, popup can be triggered from link. Give users more flexibility.
+- [x] Updated gallery extension, popup can be triggered by clicking on a link. Give users more flexibility.
 - [ ] Updated icon extension, SVG stack instead of WOFF font. Developers want consistent files formats.
 - [ ] Updated image extension, different media files for light and dark mode. Give users more control.
 - [ ] Updated mailer extension, make standalone SMTP extension. Websites may not have a working mail system.
-- [x] Updated markdown extension, general block element for formatting with CSS. Make it more intuitive.
+- [x] Updated Markdown extension, better block elements. Make it more intuitive.
 - [ ] Updated feed extension, short URL for the feed.xml. Users don't like the long URL, it's ugly. 
 - [ ] Updated sitemap extension, short URL for the sitemap.xml. Users don't like the long URL, it's ugly.
 - [x] Removed googlecalendar, googlemap and youtube extension. General dislike for invasive services.
