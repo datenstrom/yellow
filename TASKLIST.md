@@ -16,9 +16,10 @@ You can help us with open tasks for Datenstrom Yellow:
 - [ ] Updated contact extension, message delivery with brute force protection. Spammers gonna spam.
 - [ ] Updated edit extension, autocomplete for links and tags. Users do less, software does more.
 - [ ] Updated edit extension, settings dialog with dropdown menus. Users want important system settings in browser.
-- [x] Updated edit extension, upload with different JPEG file name extensions. Mobile devices use different formats. 
-- [ ] Updated edit extension toolbar, improved emoji and icon selection dialog. Give users more control. 
+- [x] Updated edit extension, upload with different JPEG file name extensions. Mobile devices use different formats.
+- [ ] Updated edit extension toolbar, improved emoji and icon selection dialog. Give users more control.
 - [ ] Updated edit extension toolbar, improved link and file selection dialog. Give users more control.
+- [ ] Updated edit extension toolbar, menu for buttons on small screens. Disappearing buttons.
 - [x] Updated gallery extension, popup can be triggered from link. Give users more flexibility.
 - [ ] Updated icon extension, SVG stack instead of WOFF font. Developers want consistent files formats.
 - [ ] Updated image extension, different media files for light and dark mode. Give users more control.
