@@ -9,9 +9,8 @@ You can help us with open tasks for Datenstrom Yellow:
 - [ ] Added support for dynamic loading of JS/CSS files in bundler. Better page loading time.
 - [ ] Added support for web forms in Markdown. Users can create email contact forms or a feedback/survey forms.
 - [ ] Added support for Wysiwyg editor for Markdown. Users can edit websites without much knowledge.
-- [x] Moved Datenstrom community to its own repository on GitHub. Discussions need a dedicated place.
-- [ ] Updated help, release notes and latest changes in one place. Users want to know what's new.
-- [ ] Updated help, Swedish translation for missing pages. Better multi language documentation.
+- [x] Improved website with more information about latest changes. Users want to know what's new in one place.
+- [ ] Improved website, Swedish translation for missing help pages. Better multi language documentation.
 - [ ] Updated API, YellowPageCollection no longer derives from ArrayObject. ArrayObject interface is strange.
 - [x] Updated API, changed content element type notice to general. Make it more intuitive.
 - [ ] Updated contact extension, message delivery with brute force protection. Spammers gonna spam.
@@ -31,6 +30,7 @@ You can help us with open tasks for Datenstrom Yellow:
 - [ ] Updated sitemap extension, short URL for the sitemap.xml. Users don't like the long URL, it's ugly.
 - [ ] Published comment extension, no longer experimental. Due to public demand.
 - [ ] Published math extension, no longer experimental. Due to scientific demand.
+- [ ] Published maintenance extension, no longer experimental. Due to practical demand.
 - [ ] Tested performance with thousands of content files. For people who make large websites.
 
 Do you have questions? [Get help](https://datenstrom.se/yellow/help/).
