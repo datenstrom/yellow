@@ -9,7 +9,7 @@ You can help us with open tasks for Datenstrom Yellow:
 - [ ] Added support for dynamic loading of JS/CSS files in bundler. Better page loading time.
 - [ ] Added support for web forms in Markdown. Users can create email contact forms or a feedback/survey forms.
 - [ ] Added support for Wysiwyg editor for Markdown. Users can edit websites without much knowledge.
-- [x] Improved website with more information about latest changes. Users want to know what's new in one place.
+- [x] Improved website with more information about product changes. Users want to know what's new in one place.
 - [ ] Improved website, Swedish translation for missing help pages. Better multi language documentation.
 - [ ] Updated API, YellowPageCollection no longer derives from ArrayObject. ArrayObject interface is strange.
 - [x] Updated API, changed content element type notice to general. Make it more intuitive.
@@ -23,7 +23,6 @@ You can help us with open tasks for Datenstrom Yellow:
 - [x] Updated gallery extension, popup can be triggered by clicking on a link. Give users more flexibility.
 - [ ] Updated icon extension, SVG stack instead of WOFF font. Developers want consistent files formats.
 - [ ] Updated image extension, different media files for light and dark mode. Give users more control.
-- [ ] Updated mailer extension, make standalone SMTP extension. Websites may not have a working mail system.
 - [x] Updated Markdown extension, improved email handling for long TLD. TLD with more than 3 characters.
 - [x] Updated Markdown extension, syntax for block elements has changed. Make it more intuitive.
 - [ ] Updated feed extension, short URL for the feed.xml. Users don't like the long URL, it's ugly. 
@@ -31,6 +30,7 @@ You can help us with open tasks for Datenstrom Yellow:
 - [ ] Published comment extension, no longer experimental. Due to public demand.
 - [ ] Published math extension, no longer experimental. Due to scientific demand.
 - [ ] Published maintenance extension, no longer experimental. Due to practical demand.
+- [ ] Published SMTP extension, send emails to remote server. Websites may not have a working mail system.
 - [ ] Tested performance with thousands of content files. For people who make large websites.
 
 Do you have questions? [Get help](https://datenstrom.se/yellow/help/).
