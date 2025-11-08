@@ -347,7 +347,7 @@ yellow.edit = {
                 break;
             default: elementDiv.innerHTML =
                 "<a href=\"#\" class=\"yellow-close\" data-action=\"close\"><i class=\"yellow-icon yellow-icon-close\" aria-label=\""+this.getText("CancelButton")+"\"></i></a>"+
-                "<div class=\"yellow-error\">Pane '"+paneId+"' was not found. Oh no...</div>";
+                "<div class=\"yellow-error\">Pane '"+paneId+"' was not found. Oh no…</div>";
         }
         elementPane.appendChild(elementDiv);
         yellow.toolbox.insertAfter(elementPane, document.getElementsByTagName("body")[0].firstChild);
