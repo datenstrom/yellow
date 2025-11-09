@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.9.16";
+    const VERSION = "0.9.17";
     const RELEASE = "0.9";
     public $content;        // content files
     public $media;          // media files
@@ -1870,7 +1870,7 @@ class YellowLookup {
     
     // Check if file is a well-known file type
     public function isSafeFile($fileName) {
-        return preg_match("/\.(css|gif|ico|js|jpeg|jpg|map|png|scss|svg|woff|woff2)$/", $fileName);
+        return preg_match("/\.(css|gif|ico|js|jpeg|jpg|json|map|png|scss|svg|webmanifest|woff|woff2)$/", $fileName);
     }
     
     // Check if file is valid
@@ -2027,6 +2027,7 @@ class YellowToolbox {
             "scss" => "text/x-scss",
             "svg" => "image/svg+xml",
             "txt" => "text/plain",
+            "webmanifest" => "application/manifest+json",
             "woff" => "application/font-woff",
             "woff2" => "application/font-woff2",
             "xml" => "text/xml; charset=utf-8");
