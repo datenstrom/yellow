@@ -13,6 +13,7 @@ You can help us with open tasks for Datenstrom Yellow:
 - [ ] Improved website, Swedish translation for missing help pages. Better multi language documentation.
 - [ ] Updated API, YellowPageCollection no longer derives from ArrayObject. ArrayObject interface is strange.
 - [x] Updated API, changed content element type notice to general. Make it more intuitive.
+- [x] Updated core extension, support for webmanifest files was added. Websites and web applications use it.
 - [ ] Updated contact extension, message delivery with brute force protection. Spammers gonna spam.
 - [ ] Updated edit extension, autocomplete for links and tags. Users do less, software does more.
 - [ ] Updated edit extension, settings dialog with dropdown menus. Users want important system settings in browser.
