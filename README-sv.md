@@ -16,7 +16,7 @@ Tillägg ger dig ytterligare funktioner, språk och teman. Det som kallas core h
 
 ## Hur man får hjälp
 
-Hjälpen visar dig hur man gör små webbsidor, wikier och bloggar. Här hittar du instruktioner om hur man anpassar allt. För utvecklare finns beskrivningar av filer, mappar, verktyg och vad som kan göras med API:et. [Få hjälp för din webbplats](https://datenstrom.se/sv/yellow/help/).
+Hjälpen visar dig hur man gör små webbsidor, wikier och bloggar. Här hittar du instruktioner om hur du anpassar utseendet på din webbplats. För utvecklare finns beskrivningar av filer, mappar och vad som kan göras med API:et. [Få hjälp för din webbplats](https://datenstrom.se/sv/yellow/help/).
 
 ## Tack
 
