@@ -441,7 +441,7 @@ class YellowInstall {
                 }
                 if ($statusCode!=200) break;
             }
-            curl_close($curlHandle);
+            if (PHP_VERSION_ID<80000) curl_close($curlHandle);
             echo "\rDownloading available extensions 100%... done\n";
         }
         return $statusCode;
