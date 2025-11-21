@@ -16,7 +16,7 @@ Erweiterungen bieten dir zusätzliche Funktionen, Sprachen und Themes. Der Core 
 
 ## Wie man Hilfe findet
 
-Die Hilfe zeigt dir wie man kleine Webseiten, Wikis und Blogs macht. Hier findest du Anleitungen wie du das Aussehen deiner Website anpasst. Für Entwickler gibt es Beschreibungen von Dateien, Verzeichnissen und was man mit der API machen kann. [Hilfe für deine Webseite finden](https://datenstrom.se/de/yellow/help/).
+Die Hilfe zeigt dir wie man kleine Webseiten, Wikis und Blogs macht. Hier findest du Anleitungen wie du deine Webseite anpasst. Für Entwickler gibt es Beschreibungen von Dateien, Verzeichnissen und was man mit der API machen kann. [Hilfe für deine Webseite finden](https://datenstrom.se/de/yellow/help/).
 
 ## Danksagung
 
