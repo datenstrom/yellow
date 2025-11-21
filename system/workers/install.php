@@ -2,7 +2,7 @@
 // Install extension, https://github.com/annaesvensson/yellow-install
 
 class YellowInstall {
-    const VERSION = "0.9.5";
+    const VERSION = "0.9.6";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -390,7 +390,7 @@ class YellowInstall {
             curl_setopt($curlHandle, CURLOPT_SSL_VERIFYPEER, false);
             curl_exec($curlHandle);
             $statusCode = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);
-            curl_close($curlHandle);
+            if (PHP_VERSION_ID<80000) curl_close($curlHandle);
             if ($statusCode!=200) {
                 $rewrite = false;
                 if ($this->yellow->system->get("coreDebugMode")>=1 && !$rewrite) {
