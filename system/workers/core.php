@@ -3338,10 +3338,19 @@ class YellowPage {
         if ($name=="header") {
             $assetLocation = $this->yellow->system->get("coreServerBase").$this->yellow->system->get("coreAssetLocation");
             $fileNameTheme = $this->yellow->system->get("coreThemeDirectory").$this->yellow->lookup->normaliseName($this->get("theme")).".css";
-            if (is_file($fileNameTheme)) {
-                $fileLocation = $assetLocation.$this->yellow->lookup->normaliseName($this->get("theme")).".css";
-                $output .= "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"$fileLocation\" />\n";
-            }
+
+            $pathThemes = $this->yellow->system->get("coreThemeDirectory");
+            $fileNameCss = $this->yellow->lookup->normaliseName($this->get("theme")).".css";
+            $themeName = $this->yellow->lookup->normaliseName($this->get("theme"));
+            $folderContent = array_diff(scandir($pathThemes), ['.','..']);
+
+            if (in_array($fileNameCss, $folderContent) && !in_array($themeName, $folderContent )) {
+                if (is_file($fileNameTheme)) {
+                 $fileLocation = $assetLocation.$this->yellow->lookup->normaliseName($this->get("theme")).".css";
+                    $output .= "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"$fileLocation\" />\n";
+                }
+            } 
+
             $fileNameScript = $this->yellow->system->get("coreThemeDirectory").$this->yellow->lookup->normaliseName($this->get("theme")).".js";
             if (is_file($fileNameScript)) {
                 $fileLocation = $assetLocation.$this->yellow->lookup->normaliseName($this->get("theme")).".js";
