@@ -2,7 +2,7 @@
 // Markdown extension, https://github.com/annaesvensson/yellow-markdown
 
 class YellowMarkdown {
-    const VERSION = "0.9.4";
+    const VERSION = "0.9.5";
     public $yellow;         // access to API
     
     // Handle initialisation
@@ -20,7 +20,7 @@ class YellowMarkdown {
 }
 
 // PHP Markdown Lib
-// Copyright (c) 2004-2018 Michel Fortin
+// Copyright (c) 2004-2021 Michel Fortin
 // <https://michelf.ca/>
 // All rights reserved.
 //
@@ -61,7 +61,7 @@ class MarkdownParser {
 	 * Define the package version
 	 * @var string
 	 */
-	const MARKDOWNLIB_VERSION = "1.9.0";
+	const MARKDOWNLIB_VERSION = "1.9.1";
 
 	/**
 	 * Simple function interface - Initialize the parser and return the result
@@ -397,7 +397,7 @@ class MarkdownParser {
 		$block_tags_b_re = 'p|div|h[1-6]|blockquote|pre|table|dl|ol|ul|address|'.
 						   'script|noscript|style|form|fieldset|iframe|math|svg|'.
 						   'article|section|nav|aside|hgroup|header|footer|'.
-						   'figure';
+						   'figure|details|summary';
 
 		// Regular expression for the content of a block tag.
 		$nested_tags_level = 4;
@@ -2283,7 +2283,7 @@ class MarkdownExtraParser extends MarkdownParser {
 	 * Tags that are always treated as block tags
 	 * @var string
 	 */
-	protected $block_tags_re = 'p|div|h[1-6]|blockquote|pre|table|dl|ol|ul|address|form|fieldset|iframe|hr|legend|article|section|nav|aside|hgroup|header|footer|figcaption|figure';
+	protected $block_tags_re = 'p|div|h[1-6]|blockquote|pre|table|dl|ol|ul|address|form|fieldset|iframe|hr|legend|article|section|nav|aside|hgroup|header|footer|figcaption|figure|details|summary';
 
 	/**
 	 * Tags treated as block tags only if the opening tag is alone on its line
@@ -2870,6 +2870,7 @@ class MarkdownExtraParser extends MarkdownParser {
 	protected function _doAnchors_inline_callback($matches) {
 		$link_text		=  $this->runSpanGamut($matches[2]);
 		$url			=  $matches[3] === '' ? $matches[4] : $matches[3];
+		$title_quote	=& $matches[6];
 		$title			=& $matches[7];
 		$attr  = $this->doExtraAttributes("a", $dummy =& $matches[8]);
 
@@ -2882,7 +2883,7 @@ class MarkdownExtraParser extends MarkdownParser {
 		$url = $this->encodeURLAttribute($url);
 
 		$result = "<a href=\"$url\"";
-		if (isset($title)) {
+		if (isset($title) && $title_quote) {
 			$title = $this->encodeAttribute($title);
 			$result .=  " title=\"$title\"";
 		}
@@ -2994,13 +2995,14 @@ class MarkdownExtraParser extends MarkdownParser {
 	protected function _doImages_inline_callback($matches) {
 		$alt_text		= $matches[2];
 		$url			= $matches[3] === '' ? $matches[4] : $matches[3];
+		$title_quote	=& $matches[6];
 		$title			=& $matches[7];
 		$attr  = $this->doExtraAttributes("img", $dummy =& $matches[8]);
 
 		$alt_text = $this->encodeAttribute($alt_text);
 		$url = $this->encodeURLAttribute($url);
 		$result = "<img src=\"$url\" alt=\"$alt_text\"";
-		if (isset($title)) {
+		if (isset($title) && $title_quote) {
 			$title = $this->encodeAttribute($title);
 			$result .=  " title=\"$title\""; // $title already quoted
 		}
