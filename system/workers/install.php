@@ -2,7 +2,7 @@
 // Install extension, https://github.com/annaesvensson/yellow-install
 
 class YellowInstall {
-    const VERSION = "0.9.6";
+    const VERSION = "0.9.7";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -320,7 +320,7 @@ class YellowInstall {
         }
         if (!$this->checkServerComplete()) $this->yellow->exitFatalError("Datenstrom Yellow requires complete upload!");
         if (!$this->checkServerWrite()) $this->yellow->exitFatalError("Datenstrom Yellow requires write access!");
-        if (!$this->checkServerConfiguration()) $this->yellow->exitFatalError("Datenstrom Yellow requires configuration file!");
+        if (!$this->checkServerHtaccess()) $this->yellow->exitFatalError("Datenstrom Yellow requires htaccess file!");
         if (!$this->checkServerRewrite()) $this->yellow->exitFatalError("Datenstrom Yellow requires rewrite support!");
     }
     
@@ -369,8 +369,8 @@ class YellowInstall {
         return $this->yellow->system->save($fileName, array());
     }
     
-    // Check web server configuration file
-    public function checkServerConfiguration() {
+    // Check web server htaccess file
+    public function checkServerHtaccess() {
         list($name) = $this->yellow->toolbox->detectServerInformation();
         return strtoloweru($name)!="apache" || is_file(".htaccess");
     }
