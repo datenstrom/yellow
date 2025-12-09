@@ -3,4 +3,5 @@
 LICENSE.md export-ignore
 README*.md export-ignore
 SCREENSHOT*.png export-ignore
+STYLEGUIDE.md export-ignore
 TASKLIST.md export-ignore
