@@ -2,7 +2,7 @@
 // Update extension, https://github.com/annaesvensson/yellow-update
 
 class YellowUpdate {
-    const VERSION = "0.9.7";
+    const VERSION = "0.9.8";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $extensions;             // number of extensions
@@ -17,7 +17,6 @@ class YellowUpdate {
         $this->yellow->system->setDefault("updateExtensionFile", "extension.ini");
         $this->yellow->system->setDefault("updateEventPending", "none");
         $this->yellow->system->setDefault("updateEventDaily", "0");
-        $this->yellow->system->setDefault("updateLogEntries", "20");
         $this->yellow->system->setDefault("updateTrashTimeout", "7776660");
     }
     
@@ -55,7 +54,6 @@ class YellowUpdate {
         if ($statusCode==0) {
             switch ($command) {
                 case "about":       $statusCode = $this->processCommandAbout($command, $text); break;
-                case "log":         $statusCode = $this->processCommandLog($command, $text); break;
                 case "install":     $statusCode = $this->processCommandInstall($command, $text); break;
                 case "uninstall":   $statusCode = $this->processCommandUninstall($command, $text); break;
                 case "update":      $statusCode = $this->processCommandUpdate($command, $text); break;
@@ -67,25 +65,17 @@ class YellowUpdate {
     
     // Handle command help
     public function onCommandHelp() {
-        return array("about [extension]", "log [filter]", "install [extension]", "uninstall [extension]", "update [extension]");
+        return array("about [extension]", "install [extension]", "uninstall [extension]", "update [extension]");
     }
     
     // Handle page content element
     public function onParseContentElement($page, $name, $text, $attributes, $type) {
         $output = null;
-        if ($name=="yellow" && $type=="inline") {
-            if ($text=="about") {
-                list($dummy, $settingsCurrent) = $this->getExtensionSettings(true);
-                $output = "Datenstrom Yellow ".YellowCore::RELEASE."<br />\n";
-                foreach ($settingsCurrent as $key=>$value) {
-                    $output .= ucfirst($key)." ".$value->get("version")."<br />\n";
-                }
-            }
-            if ($text=="log") {
-                $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreWebsiteFile");
-                $output = htmlspecialchars($this->getFileData($fileName, $this->yellow->system->get("updateLogEntries")));
-                $output = str_replace("\n", "<br />\n", $output);
-                if (is_string_empty($output)) $output = "No entries in log file\n";
+        if ($name=="about" && $type=="inline") {
+            list($dummy, $settingsCurrent) = $this->getExtensionSettings(true);
+            $output = "Datenstrom Yellow ".YellowCore::RELEASE."<br />\n";
+            foreach ($settingsCurrent as $key=>$value) {
+                $output .= ucfirst($key)." ".$value->get("version")."<br />\n";
             }
         }
         return $output;
@@ -111,16 +101,6 @@ class YellowUpdate {
                 echo ucfirst($key)." ".$value->get("version")."\n";
             }
         }
-        return $statusCode;
-    }
-
-    // Process command to show log file
-    public function processCommandLog($command, $text) {
-        $statusCode = 200;
-        $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreWebsiteFile");
-        $fileData = $this->getFileData($fileName, $this->yellow->system->get("updateLogEntries"), $text);
-        echo $fileData;
-        if (is_string_empty($fileData)) echo "Yellow $command: No entries in log file\n";
         return $statusCode;
     }
     
@@ -940,72 +920,5 @@ class YellowUpdate {
             $timeOffset = ($timeOffset+ord($char)) % 60;
         }
         return mktime(0, 0, 0) + 60*60*24 + $timeOffset;
-    }
-    
-    // Return entries in log file
-    public function getFileData($fileName, $entriesMax = 0, $filter = "") {
-        $fileData = "";
-        $fileHandle = @fopen($fileName, "rb");
-        if ($fileHandle) {
-            clearstatcache(true, $fileName);
-            if (flock($fileHandle, LOCK_SH)) {
-                $entriesFound = 0;
-                $filter = strtoloweru($filter);
-                $filePos = filesize($fileName)-1;
-                $fileTop = -1;
-                while (($line = $this->getFileLinePrevious($fileHandle, $filePos, $fileTop, $dataBuffer))!==false) {
-                    if (is_string_empty($filter) || strposu(strtoloweru($line), $filter)!==false) {
-                        $fileData = $line.$fileData;
-                        ++$entriesFound;
-                        if ($entriesFound==$entriesMax) break;
-                    }
-                }
-                flock($fileHandle, LOCK_UN);
-            }
-            fclose($fileHandle);
-        }
-        return $fileData;
-    }
-
-    // Return previous text line from file, false if not found
-    public function getFileLinePrevious($fileHandle, &$filePos, &$fileTop, &$dataBuffer) {
-        if ($filePos>=0) {
-            $line = "";
-            $lineEndingSearch = false;
-            $this->getFileLineBuffer($fileHandle, $filePos, $fileTop, $dataBuffer);
-            $endPos = $filePos - $fileTop;
-            for (;$filePos>=0; --$filePos) {
-                $currentPos = $filePos - $fileTop;
-                if ($dataBuffer===false) {
-                    $line = false;
-                    break;
-                }
-                if ($dataBuffer[$currentPos]=="\n" && $lineEndingSearch) {
-                    $line = substru($dataBuffer, $currentPos+1, $endPos-$currentPos).$line;
-                    break;
-                }
-                if ($currentPos==0) {
-                    $line = substru($dataBuffer, $currentPos, $endPos-$currentPos+1).$line;
-                    $this->getFileLineBuffer($fileHandle, $filePos-1, $fileTop, $dataBuffer);
-                    $endPos =  $filePos-1 - $fileTop;
-                }
-                $lineEndingSearch = true;
-            }
-        } else {
-            $line = false;
-        }
-        return $line;
-    }
-    
-    // Update text line buffer
-    public function getFileLineBuffer($fileHandle, $filePos, &$fileTop, &$dataBuffer) {
-        if ($filePos>=0) {
-            $top = intval($filePos/4096) * 4096;
-            if ($fileTop!=$top) {
-                $fileTop = $top;
-                fseek($fileHandle, $fileTop);
-                $dataBuffer = fread($fileHandle, 4096);
-            }
-        }
     }
 }
