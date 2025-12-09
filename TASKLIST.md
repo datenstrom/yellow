@@ -1,4 +1,4 @@
-# Product tasklist
+# Datenstrom Yellow tasklist
 
 You can help us with open tasks for Datenstrom Yellow:
 
