@@ -3,23 +3,31 @@
 First download a copy of the PHP standards and do not read them.
 Burn them, it's a great symbolic gesture. 
 
-Here's what you should check to apply our coding standards: 
+Here's how to format code:
 
-* **Classes:** Use **PascalCase** (e.g., `YellowExample`).
-* **Properties/Variables:** Use **camelCase** (e.g., `$yellow`, `$statusCode`, `$outputLines`).
-* **Methods/Functions:** Use **camelCase** (e.g., `onLoad`, `onParseContentElement`).
-* **Brace Placement:** The opening brace (`{`) for classes, methods, and control structures is on the same line. Closing braces (`}`) are placed on their own line.
-* **Indentation:** **4 spaces** are used for each indentation.
-* **Spacing:**
-    * One space is used after control structures (`switch`, `if`, `while`, etc.) and before the opening parenthesis (e.g., `if ($name=="example" && ($type=="block" || $type=="inline"))`).
-    * Operators are typically surrounded by spaces (e.g., `$statusCode = $returnStatus != 0 ? 500 : 200;`).
-* **Comments:**
-    * Write the name and repository URL as single-line comment after the opening `<?php` tag in your `extension.php` file (e.g. `// Example extension, https://github.com/username/yellow-example`).
-    * Use single-line C-style comments (`//`) to describe the class purpose, extension source, property roles, and method handlers (e.g., `// access to API`, `// Handle initialisation`).
-    * **In-line Comments:** Comments are placed above the code block they describe or next to property declarations. Don't use code comments inside methods and functions.
-* Use the **long opening tag `<?php`** in your extension files, avoid the final closing tag `?>`. 
-* More to come...
+* Use consistent indentation with 4 spaces, no tabs.
+* Classe names should use PascalCase, e.g. `YellowCore`, `YellowExampleFeature`.
+* Method/function names should use use camelCase, e.g. `getRequestInformation`, `onLoad`.
+* Property/variable names should use camelCase, e.g. `$yellow`, `$statusCode`, `$fileName`.
+* HTML/CSS classes and ids should use kebab-case, e.g. `yellow-toolbar`, `company-logo`.
+* One space is used after keywords such as `if`, `switch`, `case`, `for`, `while`, `return`,  
+  e.g. `switch ($statusCode)`, `return $statusCode`.
+* One space is used around parentheses and compound logical operations,  
+  e.g. `if ($name=="example" && ($type=="block" || $type=="inline"))`.
+* Start each source file with link to a website, that contains license and contact information,  
+  e.g. `// Core extension, https://github.com/annaesvensson/yellow-core`.
+* Use a single-line comment to describe classes, methods and properties,  
+  e.g. `// Return request information`.
+* Opening braces `{` are on the same line, closing braces `}` are placed on their own line.
+* Don't use code comments inside methods and functions, if unsure refactor code.
+* Keep methods relatively small, sweet and focused on one thing, if unsure do less.
 
-It's best to have a look at the code of some extensions in your `system/workers` folder. Make yourself familiar with our coding and documentation standards. Then you can dive into any extension and find a well-known structure in which you can quickly find your way around. Make sure you have completed the [self-review checklist](https://github.com/annaesvensson/yellow-publish/blob/main/self-review-checklist.md) before announcing a new extension.
+Here's how to format documentation:
+
+* Use Markdown for documentation
+* Add a screenshot when possible
+* Include many examples
+
+A few more tips for developers. It's best to have a look at the code of some extensions in your `system/workers` folder. Make yourself familiar with our coding style as well, for example with the file `system/workers/core.php`. Then you can dive into any extension and find a well-known structure in which you can quickly find your way around. The style is not that important, but that we all use the same one.
 
 Do you have questions? [Get help](https://datenstrom.se/yellow/help/).
