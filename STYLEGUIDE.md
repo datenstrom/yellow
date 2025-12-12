@@ -13,7 +13,7 @@ Here's how to format code:
 * HTML/CSS related names should use kebab-case, e.g. `yellow-toolbar`, `company-logo`.
 * Opening braces `{` are on the same line, closing braces `}` are placed on their own line.
 * One space is used after keywords such as `if`, `switch`, `case`, `for`, `while`, `return`,  
-  e.g. `switch ($statusCode)`, `return $statusCode`.
+  e.g. `switch ($statusCode)`, `for ($i=0; $i<$length; ++$i)`, `return $statusCode`.
 * One space is used around parentheses and compound logical operations,  
   e.g. `if ($name=="example" && ($type=="block" || $type=="inline"))`.
 * Start each source file with link to a website, that contains license and contact information,  
@@ -39,8 +39,9 @@ Here's how to format documentation:
 
 * Use Markdown for documentation
 * Add a screenshot when possible
-* Include many examples
-
-A few more tips for developers. It's best to have a look at the code of some extensions in your `system/workers` folder. Make yourself familiar with our coding style as well, for example with the file `system/workers/core.php`. Then you can dive into any extension and find a well-known structure in which you can quickly find your way around. The style is not that important, but that we all use the same one.
+* Include multiple examples for users to copy/paste, if unsure add more examples.
+* Don't use the words "simple, fast, user-friendly, flexible", anyone can claim that.
+  
+A few more tips for developers. It's best to have a look at the code of some extensions in your `system/workers` folder. Make yourself familiar with our coding style as well, for example with file `system/workers/core.php`. Then you can dive into any extension and find a well-known structure in which you can quickly find your way around. The style is not that important, but that we all use the same one.
 
 Do you have questions? [Get help](https://datenstrom.se/yellow/help/).
