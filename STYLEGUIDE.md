@@ -6,10 +6,12 @@ Burn them, it's a great symbolic gesture.
 Here's how to format code:
 
 * Use consistent indentation with 4 spaces, no tabs.
+* Use double quotes for strings, no single quotes, e.g. `"Coffee is good for you"`.
 * Classe names should use PascalCase, e.g. `YellowCore`, `YellowExampleFeature`.
-* Method/function names should use use camelCase, e.g. `getRequestInformation`, `onLoad`.
+* Method/function names should use camelCase, e.g. `getRequestInformation`, `onLoad`.
 * Property/variable names should use camelCase, e.g. `$yellow`, `$statusCode`, `$fileName`.
-* HTML/CSS classes and ids should use kebab-case, e.g. `yellow-toolbar`, `company-logo`.
+* HTML/CSS related names should use kebab-case, e.g. `yellow-toolbar`, `company-logo`.
+* Opening braces `{` are on the same line, closing braces `}` are placed on their own line.
 * One space is used after keywords such as `if`, `switch`, `case`, `for`, `while`, `return`,  
   e.g. `switch ($statusCode)`, `return $statusCode`.
 * One space is used around parentheses and compound logical operations,  
@@ -18,9 +20,20 @@ Here's how to format code:
   e.g. `// Core extension, https://github.com/annaesvensson/yellow-core`.
 * Use a single-line comment to describe classes, methods and properties,  
   e.g. `// Return request information`.
-* Opening braces `{` are on the same line, closing braces `}` are placed on their own line.
 * Don't use code comments inside methods and functions, if unsure refactor code.
 * Keep methods relatively small, sweet and focused on one thing, if unsure do less.
+
+Here's how to format repositories:
+
+* Repository names should be short and singular, e.g. `yellow-fika`, `yellow-image`.
+* Version numbers should begin with the release number, e.g. `0.9.1`, `0.9.2`, `0.9.3`.
+* Copy the PHP file into the repository, use a flat folder structure,  e.g. `fika.php`.
+* Copy optional supporting files, file names should use the same prefix everywhere,  
+  e.g. `fika.html`, `fika.css`, `fika.js`, `fika-library.min.js`, `fika-logo.png`.
+* Edit installation information and file actions in file `extension.ini`.
+* Provide user documentation in `English`, other languages are optional.
+* Don't put more than one extension into a repository, unless it's a complete website.
+* Keep extensions relatively small, sweet and focused on one thing, if unsure do less.
 
 Here's how to format documentation:
 
