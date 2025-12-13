@@ -27,7 +27,7 @@ First download a copy of the PHP standards and burn them, it's a great symbolic 
 * Repository names should be singular, e.g. `yellow-core`, `yellow-fika`, `yellow-image`.
 * Version numbers should begin with the release number, e.g. `0.9.1`, `0.9.2`, `0.9.3`.
 * Copy the PHP file into the repository, use a flat folder structure,  e.g. `fika.php`.
-* Copy optional supporting files, file names should use the same prefix everywhere,  
+* Copy optional supporting files into the repository, use the same prefix everywhere,  
   e.g. `fika.html`, `fika.css`, `fika.js`, `fika-library.min.js`, `fika-logo.png`.
 * Edit installation information and file actions in file `extension.ini`.
 * Provide documentation in `English`, other languages are optional.
