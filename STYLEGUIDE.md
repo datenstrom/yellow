@@ -6,10 +6,10 @@ First download a copy of the PHP standards and burn them, it's a great symbolic 
 
 * Use consistent indentation with 4 spaces, no tabs.
 * Use double quotes for strings, no single quotes, e.g. `"Coffee is good for you"`.
-* Classe names should use PascalCase, e.g. `YellowCore`, `YellowFika`, `YellowImage`.
+* Classe names should use PascalCase, e.g. `YellowCore`, `YellowEdit`, `YellowFika`.
 * Method/function names should use camelCase, e.g. `getRequestInformation`, `onLoad`.
 * Property/variable names should use camelCase, e.g. `$yellow`, `$statusCode`, `$fileName`.
-* HTML/CSS related names should use kebab-case, e.g. `yellow-toolbar`, `company-logo`.
+* HTML/CSS related names should use kebab-case, e.g. `yellow-toolbar`, `fika-logo`.
 * Opening braces `{` are on the same line, closing braces `}` are placed on their own line.
 * One space is used after keywords such as `if`, `switch`, `case`, `for`, `while`, `return`,  
   e.g. `switch ($statusCode)`, `for ($i=0; $i<$length; ++$i)`, `return $statusCode`.
@@ -22,9 +22,9 @@ First download a copy of the PHP standards and burn them, it's a great symbolic 
 * Don't use code comments inside methods and functions, if unsure refactor code.
 * Keep methods relatively small, sweet and focused on one thing, if unsure do less.
 
-## How to format repositories
+## How to format extensions
 
-* Repository names should be singular, e.g. `yellow-core`, `yellow-fika`, `yellow-image`.
+* Extension names should be singular, no space, e.g. `Core`, `Edit`, `Fika`.
 * Version numbers should begin with the release number, e.g. `0.9.1`, `0.9.2`, `0.9.3`.
 * Copy the PHP file into the repository, use a flat folder structure,  e.g. `fika.php`.
 * Copy optional supporting files into the repository, use the same prefix everywhere,  
@@ -37,7 +37,7 @@ First download a copy of the PHP standards and burn them, it's a great symbolic 
 ## How to format documentation
 
 * Use Markdown for documentation
-* The title should include name and version, e.g. `Core 0.9.1`.
+* The title should include name and version number, e.g. `Core 0.9.1`.
 * The description should be one line, e.g. `Core functionality of your website`.
 * Images should be in PNG format, a screenshot is recommended, e.g. `SCREENSHOT.png`
 * Headings should be arranged in the following order, all are optional:  
