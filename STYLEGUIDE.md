@@ -7,7 +7,7 @@ Here's how to format code:
 
 * Use consistent indentation with 4 spaces, no tabs.
 * Use double quotes for strings, no single quotes, e.g. `"Coffee is good for you"`.
-* Classe names should use PascalCase, e.g. `YellowCore`, `YellowFika`, `YellowMarkdown`.
+* Classe names should use PascalCase, e.g. `YellowCore`, `YellowFika`, `YellowImage`.
 * Method/function names should use camelCase, e.g. `getRequestInformation`, `onLoad`.
 * Property/variable names should use camelCase, e.g. `$yellow`, `$statusCode`, `$fileName`.
 * HTML/CSS related names should use kebab-case, e.g. `yellow-toolbar`, `company-logo`.
@@ -25,7 +25,7 @@ Here's how to format code:
 
 Here's how to format repositories:
 
-* Repository names should be short and singular, e.g. `yellow-core`, `yellow-fika`.
+* Repository names should be singular, e.g. `yellow-core`, `yellow-fika`, `yellow-image`.
 * Version numbers should begin with the release number, e.g. `0.9.1`, `0.9.2`, `0.9.3`.
 * Copy the PHP file into the repository, use a flat folder structure,  e.g. `fika.php`.
 * Copy optional supporting files, file names should use the same prefix everywhere,  
@@ -49,7 +49,7 @@ Here's how to format documentation:
   `Acknowledgements` - optional  
   `Developer`, `Designer`, `Translator`
 * Give multiple examples for users to copy/paste, if unsure add more examples.
-* Don't use the words "easy, fast, user-friendly, flexible", anyone can claim that.
+* Don't use the words "easy, fast, flexible, user-friendly", anyone can claim that.
 
 A few more tips for developers. It's best to have a look at the code of some extensions in your `system/workers` folder. Make yourself familiar with our coding style as well, for example with file `system/workers/core.php`. Then you can dive into any extension and find a well-known structure in which you can quickly find your way around. The style is not that important, but that we all use the same one.
 
