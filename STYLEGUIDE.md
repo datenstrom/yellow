@@ -1,9 +1,8 @@
 # Datenstrom Yellow style guide
 
-First download a copy of the PHP standards and do not read them.
-Burn them, it's a great symbolic gesture. 
+First download a copy of the PHP standards and burn them, it's a great symbolic gesture. 
 
-Here's how to format code:
+## How to format code
 
 * Use consistent indentation with 4 spaces, no tabs.
 * Use double quotes for strings, no single quotes, e.g. `"Coffee is good for you"`.
@@ -23,7 +22,7 @@ Here's how to format code:
 * Don't use code comments inside methods and functions, if unsure refactor code.
 * Keep methods relatively small, sweet and focused on one thing, if unsure do less.
 
-Here's how to format repositories:
+## How to format repositories
 
 * Repository names should be singular, e.g. `yellow-core`, `yellow-fika`, `yellow-image`.
 * Version numbers should begin with the release number, e.g. `0.9.1`, `0.9.2`, `0.9.3`.
@@ -31,26 +30,31 @@ Here's how to format repositories:
 * Copy optional supporting files, file names should use the same prefix everywhere,  
   e.g. `fika.html`, `fika.css`, `fika.js`, `fika-library.min.js`, `fika-logo.png`.
 * Edit installation information and file actions in file `extension.ini`.
-* Provide user documentation in `English`, other languages are optional.
+* Provide documentation in `English`, other languages are optional.
 * Don't put more than one extension into a repository, unless it's a complete website.
 * Keep extensions relatively small, sweet and focused on one thing, if unsure do less.
 
-Here's how to format documentation:
+## How to format documentation
 
 * Use Markdown for documentation
 * The title should include name and version, e.g. `Core 0.9.1`.
 * The description should be one line, e.g. `Core functionality of your website`.
-* Images should be in PNG format, e.g. `SCREENSHOT.png`
-* Headings should be arranged in the following order:  
+* Images should be in PNG format, a screenshot is recommended, e.g. `SCREENSHOT.png`
+* Headings should be arranged in the following order, all are optional:  
   `How to install an extension`  
   `How to...`  
-  `Examples` - optional  
-  `Settings` - optional  
-  `Acknowledgements` - optional  
+  `Examples`  
+  `Settings`  
+  `Acknowledgements`  
   `Developer`, `Designer`, `Translator`
 * Give multiple examples for users to copy/paste, if unsure add more examples.
 * Don't use the words "easy, fast, flexible, user-friendly", anyone can claim that.
 
-A few more tips for developers. It's best to have a look at the code of some extensions in your `system/workers` folder. Make yourself familiar with our coding style as well, for example with file `system/workers/core.php`. Then you can dive into any extension and find a well-known structure in which you can quickly find your way around. The style is not that important, but that we all use the same one.
+## Examples
+
+* https://github.com/datenstrom/yellow-examplefeature - Example feature for Datenstrom Yellow.
+* https://github.com/datenstrom/yellow-exampletheme - Example theme for Datenstrom Yellow.
+* https://github.com/annaesvensson/yellow-core - Core functionality of your website. 
+* https://github.com/annaesvensson/yellow-edit - Edit your website in a web browser.
 
 Do you have questions? [Get help](https://datenstrom.se/yellow/help/).
