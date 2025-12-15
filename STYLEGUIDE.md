@@ -5,7 +5,7 @@ First download a copy of the PHP standards and burn them, it's a great symbolic 
 ## How to format code
 
 * Use consistent indentation with 4 spaces, no tabs.
-* Use double quotes for strings, no single quotes, e.g. `"Coffee is good for you"`.
+* Use double quotes for strings, not single quotes, e.g. `"Coffee is good for you"`.
 * Classe names should use PascalCase, e.g. `YellowCore`, `YellowEdit`, `YellowFika`.
 * Method/function names should use camelCase, e.g. `getRequestInformation`, `onLoad`.
 * Property/variable names should use camelCase, e.g. `$yellow`, `$statusCode`, `$fileName`.
@@ -24,7 +24,7 @@ First download a copy of the PHP standards and burn them, it's a great symbolic 
 
 ## How to format extensions
 
-* Extension names should be singular without space, e.g. `Core`, `Edit`, `Fika`.
+* Extension names should be singular, without space, e.g. `Core`, `Edit`, `Fika`.
 * Version numbers should begin with the release number, e.g. `0.9.1`, `0.9.2`, `0.9.3`.
 * Descriptions should be one line, e.g. `Core functionality of your website`.
 * File names should use use kebab-case, the extension name is used as prefix,  
@@ -38,10 +38,10 @@ First download a copy of the PHP standards and burn them, it's a great symbolic 
 
 ## How to format documentation
 
-* Use Markdown for text formatting.
+* Use Markdown for text formatting, consistent identation with 4 spaces, no tabs.
 * Titles should be one line and may contain the version number, e.g. `Core 0.9.1`.
 * Descriptions should be one line, e.g. `Core functionality of your website`.
-* Headings should be in the following order, applies mostly to extensions:  
+* Headings should be in the following order, applies to `README.md` files only:  
   `How to install an extension`  
   `How to...`  
   `Examples`  
@@ -52,7 +52,12 @@ First download a copy of the PHP standards and burn them, it's a great symbolic 
   `Author` = name of the author  
   `Email` = email of the author  
   `Tag` = page tag(s) for categorisation, comma separated  
-* Link targets can be added with HTML, e.g. `<a id="settings-coffee"></a>`.
+* Use HTML to add a language switcher suitable for GitHub and Codeberg,  
+  e.g. `<p align="right"><a href="README.md">English</a> &nbsp; <a href="README-sv.md">Svenska</a></p>`.
+* Use HTML to add a screenshot suitable for GitHub and Codeberg,  
+  e.g. `<p align="center"><img src="SCREENSHOT.png" alt="Screenshot"></p>`.
+* Use HTML at the beginning of a line to add additional link targets,  
+  e.g. `<a id="settings-page"></a>`, `<a id="settings-files"></a>`.
 * Give multiple examples for users to copy/paste, if unsure add more examples.
 * Don't use the words "easy, fast, flexible, user-friendly", anyone can claim that.
 
