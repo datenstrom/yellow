@@ -23,7 +23,7 @@ You should use the following guidelines for your code:
 
 You should use the following guidelines for your documentation:
 
-* Use Markdown for text formatting, consistent indentation with 4 spaces, no tabs.
+* Use Markdown for text formatting, no tabs for identation.
 * Titles may contain a version number, e.g. `API for developers`, `Core 0.9.1`.
 * Descriptions should be one line max, e.g. `Core functionality of your website`.
 * Help files should use a `[toc]` shortcut to make a table of contents.
@@ -56,7 +56,7 @@ You should use the following guidelines for your extension:
 
 * Extension names should be a singular word, no spaces, e.g. `Core`, `Edit`, `Fika`.
 * Version numbers should begin with the release number, e.g. `0.9.1`, `0.9.2`, `0.9.3`.
-* Descriptions should be one line, e.g. `Core functionality of your website`.
+* Descriptions should be one line max, e.g. `Core functionality of your website`.
 * File names should use use kebab-case, the extension name is used as prefix,  
   e.g. `fika.php`, `fika.css`, `fika.js`, `fika-library.min.js`, `fika-stack.svg`.
 * Repository names should use kebap-case, e.g. `yellow-core`, `yellow-edit`, `yellow-fika`.
