@@ -36,10 +36,10 @@ You can help us with open tasks for Datenstrom Yellow:
 
 ## How to improve technology
 
-You can find core functionality in the core and everythig else in extensions. Good technology is made for people. Imagine what the user wants to do and what would make their life easier. Remember to focus on people. Not on technical details and lots of features. Did you improve an extension? The first option is to send a pull request to the developer, it may or may not be accepted. The second option is to discuss your changes with the Datenstrom community. The third option is to make a new extension with the modified code.
+You can find core functionality in the [core](https://github.com/annaesvensson/yellow-core) and everythig else in [extensions](https://datenstrom.se/yellow/extensions/). Good technology is made for people. Imagine what the user wants to do and what would make their life easier. Remember to focus on people. Not on technical details and lots of features. Did you improve an extension? The first option is to send a pull request to the developer, it may or may not be accepted. The second option is to discuss your changes with the Datenstrom community. The third option is to make a new extension with the modified code.
 
 ## How to improve documentation
 
-You can find cross-topic documentation in the help and more detailed documentation in extensions. Typically the documentation of an extension consists of multiple sections, with examples to copy/paste and settings you can customise. Review the entire documentation from the perspective of the user. Imagine what the user wants to do and what would make their life easier. Did you improve documentation? Fork the relevant repository. Upload your changes and send a pull request to the developer.
+You can find cross-topic documentation in the [help](https://github.com/annaesvensson/yellow-help) and more detailed documentation in [extensions](https://datenstrom.se/yellow/extensions/). Typically the documentation of an extension consists of multiple sections, with examples to copy/paste and settings you can customise. Review the entire documentation from the perspective of the user. Imagine what the user wants to do and what would make their life easier. Did you improve documentation? Fork the relevant repository. Upload your changes and send a pull request to the developer.
 
 Do you have questions? [Get help](https://datenstrom.se/yellow/help/).
