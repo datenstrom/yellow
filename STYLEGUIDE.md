@@ -41,17 +41,19 @@ You should use the following guidelines for your documentation:
 * Titles should be one line and may contain the version number, e.g. `Core 0.9.1`.
 * Descriptions should be one line, e.g. `Core functionality of your website`.
 * Help files should use a `[toc]` shortcut to make a table of contents.
-* Readme files should use the following order for headings:  
-  `How to install an extension`  
+* Readme files should start with a section to explain how to install an extension.
+* Readme files should use the following order for headings, all are optional:  
   `How to...`  
   `Examples`  
   `Settings`  
   `Acknowledgements`  
   `Developer`, `Designer`, `Translator`
-* Settings and other key-value pairs should use the following style:  
+* Settings should be described in the following style:  
   `Author` = name of the author  
   `Email` = email of the author  
-  `Tag` = page tag(s) for categorisation, comma separated  
+* Files should be described in the following style:  
+  `system/extensions/yellow-system.ini` = file with system settings  
+  `system/extensions/yellow-language.ini` = file with language settings  
 * Use HTML to add a language switcher suitable for GitHub and Codeberg,  
   e.g. `<p align="right"><a href="README.md">English</a> &nbsp; <a href="README-sv.md">Svenska</a></p>`.
 * Use HTML to add a screenshot suitable for GitHub and Codeberg,  
