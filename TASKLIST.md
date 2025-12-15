@@ -12,6 +12,7 @@ You can help us with open tasks for Datenstrom Yellow:
 - [x] Improved website with more information about product changes. Users want to know what's new in one place.
 - [ ] Improved website, Swedish translation for missing help pages. Better multi language documentation.
 - [ ] Updated API, YellowPageCollection no longer derives from ArrayObject. ArrayObject interface is strange.
+- [ ] Updated API, changed getAvailable() to enumerate(). Designers want to use non-flattened themes.
 - [x] Updated API, changed content element type notice to general. Make it more intuitive.
 - [x] Updated core extension, support for webmanifest files was added. Websites and web applications use it.
 - [ ] Updated contact extension, message delivery with brute force protection. Spammers gonna spam.
@@ -34,9 +35,9 @@ You can help us with open tasks for Datenstrom Yellow:
 - [ ] Published SMTP extension, send emails to remote server. Websites may not have a working mail system.
 - [ ] Tested performance with thousands of content files. For people who make large websites.
 
-## How to improve technology
+## How to improve code
 
-You can find core functionality in the [core](https://github.com/annaesvensson/yellow-core) and everythig else in [extensions](https://datenstrom.se/yellow/extensions/). Good technology is made for people. Imagine what the user wants to do and what would make their life easier. Remember to focus on people. Not on technical details and lots of features. Did you improve an extension? The first option is to send a pull request to the developer, it may or may not be accepted. The second option is to discuss your changes with the Datenstrom community. The third option is to make a new extension with the modified code.
+You can find core functionality in the [core](https://github.com/annaesvensson/yellow-core) and everythig else in [extensions](https://datenstrom.se/yellow/extensions/). Good technology is made for people. Imagine what the user wants to do and what would make their life easier. Remember to focus on people. Not on technical details and lots of features. Did you improve code? The first option is to send a pull request to the developer, it may or may not be accepted. The second option is to discuss your changes with the Datenstrom community. The third option is to make a new extension with the modified code.
 
 ## How to improve documentation
 
