@@ -19,7 +19,7 @@ You should use the following guidelines for your code:
   e.g. `// Return request information`.
 * Download a copy of the PHP standards and burn them, it's a great symbolic gesture.
 * Keep methods relatively small, sweet and focused on one thing, if unsure do less.
-* Don't have code comments inside methods and functions, if unsure refactor code.
+* Don't have code comments inside methods and functions.
 
 You should use the following guidelines for your extensions:
 
@@ -33,7 +33,7 @@ You should use the following guidelines for your extensions:
 * Repository screenshots/thumbnails should be in PNG image format, e.g. `SCREENSHOT.png`.
 * Repositories should have a flat folder structure, file actions are stored in file `extension.ini`.
 * Keep extensions relatively small, sweet and focused on one thing, if unsure do less.
-* Don't have more than one extension per repository, unless it's a complete website.
+* Don't have more than one extension per repository.
 
 You should use the following guidelines for your documentation:
 
@@ -49,11 +49,13 @@ You should use the following guidelines for your documentation:
   `Acknowledgements`  
   `Developer`, `Designer`, `Translator`
 * Settings should be described in the following style:  
-  `Author` = name of the author  
-  `Email` = email of the author  
+  `CoreServerUrl` = URL of the website  
+  `CoreTimezone` = timezone of the website  
+  `CoreDebugMode` = enable debug mode, 0 to 3  
 * Files should be described in the following style:  
   `system/extensions/yellow-system.ini` = file with system settings  
   `system/extensions/yellow-language.ini` = file with language settings  
+  `system/extensions/yellow-user.ini` = file with user settings  
 * Use HTML to add a language switcher suitable for GitHub and Codeberg,  
   e.g. `<p align="right"><a href="README.md">English</a> &nbsp; <a href="README-sv.md">Svenska</a></p>`.
 * Use HTML to add a screenshot suitable for GitHub and Codeberg,  
