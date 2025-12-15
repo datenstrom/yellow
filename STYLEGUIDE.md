@@ -23,7 +23,7 @@ You should use the following guidelines for your code:
 
 You should use the following guidelines for your extensions:
 
-* Extension names should be singular, without space, e.g. `Core`, `Edit`, `Fika`.
+* Extension names should be a singular word, no spaces, e.g. `Core`, `Edit`, `Fika`.
 * Version numbers should begin with the release number, e.g. `0.9.1`, `0.9.2`, `0.9.3`.
 * Descriptions should be one line, e.g. `Core functionality of your website`.
 * File names should use use kebab-case, the extension name is used as prefix,  
@@ -40,18 +40,18 @@ You should use the following guidelines for your documentation:
 * Use Markdown for text formatting.
 * Titles should be one line and may contain the version number, e.g. `Core 0.9.1`.
 * Descriptions should be one line, e.g. `Core functionality of your website`.
-* Headings should be in the following order, applies to `README.md` files only:  
+* Help files should use a `[toc]` shortcut to make a table of contents.
+* Readme files should use the following order for headings:  
   `How to install an extension`  
   `How to...`  
   `Examples`  
   `Settings`  
   `Acknowledgements`  
   `Developer`, `Designer`, `Translator`
-* Settings and other key-value pairs should be presented in the following style:  
+* Settings and other key-value pairs should use the following style:  
   `Author` = name of the author  
   `Email` = email of the author  
   `Tag` = page tag(s) for categorisation, comma separated  
-* Use a `[toc]` shortcut to make a table of contents, applies to help files only.
 * Use HTML to add a language switcher suitable for GitHub and Codeberg,  
   e.g. `<p align="right"><a href="README.md">English</a> &nbsp; <a href="README-sv.md">Svenska</a></p>`.
 * Use HTML to add a screenshot suitable for GitHub and Codeberg,  
