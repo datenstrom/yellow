@@ -19,42 +19,41 @@ First download a copy of the PHP standards and burn them, it's a great symbolic 
   e.g. `// Core extension, https://github.com/annaesvensson/yellow-core`.
 * Use a single-line comment to describe classes, methods and properties,  
   e.g. `// Return request information`.
-* Don't use code comments inside methods and functions, if unsure refactor code.
 * Keep methods relatively small, sweet and focused on one thing, if unsure do less.
+* Don't have code comments inside methods and functions, if unsure refactor code.
 
 ## How to format extensions
 
-* Extension names should be singular, no space, e.g. `Core`, `Edit`, `Fika`.
+* Extension names should be singular without space, e.g. `Core`, `Edit`, `Fika`.
 * Version numbers should begin with the release number, e.g. `0.9.1`, `0.9.2`, `0.9.3`.
-* Copy the PHP file into the repository, use a flat folder structure,  e.g. `fika.php`.
-* Copy optional supporting files into the repository, use the same prefix everywhere,  
-  e.g. `fika.html`, `fika.css`, `fika.js`, `fika-library.min.js`, `fika-logo.png`.
-* Edit installation information and file actions in file `extension.ini`.
-* Provide documentation in `English`, other languages are optional.
-* Don't put more than one extension into a repository, unless it's a complete website.
+* Descriptions should be one line, e.g. `Core functionality of your website`.
+* File names should use use kebab-case, the extension name is used as prefix,  
+  e.g. `fika.php`, `fika.css`, `fika.js`, `fika-library.min.js`, `fika-stack.svg`.
+* Repository names should use kebap-case, e.g. `yellow-core`, `yellow-edit`, `yellow-fika`.
+* Repository documentation should be in `English`, other languages are optional.
+* Repository screenshots/thumbnails should be in PNG image format, e.g. `SCREENSHOT.png`.
+* Repositories should have a flat folder structure, file actions are stored in file `extension.ini`.
 * Keep extensions relatively small, sweet and focused on one thing, if unsure do less.
+* Don't have more than one extension per repository, unless it's a complete website.
 
 ## How to format documentation
 
-* Use Markdown for documentation
-* The title should include name and version number, e.g. `Core 0.9.1`.
-* The description should be one line, e.g. `Core functionality of your website`.
-* Images should be in PNG format, a screenshot is recommended, e.g. `SCREENSHOT.png`
-* Headings should be arranged in the following order, all are optional:  
+* Use Markdown for text formatting.
+* Titles should be one line and may contain the version number, e.g. `Core 0.9.1`.
+* Descriptions should be one line, e.g. `Core functionality of your website`.
+* Headings should be in the following order, applies mostly to extensions:  
   `How to install an extension`  
   `How to...`  
   `Examples`  
   `Settings`  
   `Acknowledgements`  
   `Developer`, `Designer`, `Translator`
+* Settings and other key-value pairs should be presented in the following style:  
+  `Author` = name of the author  
+  `Email` = email of the author  
+  `Tag` = page tag(s) for categorisation, comma separated  
+* Link targets can be added with HTML, e.g. `<a id="settings-coffee"></a>`.
 * Give multiple examples for users to copy/paste, if unsure add more examples.
 * Don't use the words "easy, fast, flexible, user-friendly", anyone can claim that.
-
-## Examples
-
-* https://github.com/datenstrom/yellow-examplefeature - Example feature for Datenstrom Yellow.
-* https://github.com/datenstrom/yellow-exampletheme - Example theme for Datenstrom Yellow.
-* https://github.com/annaesvensson/yellow-core - Core functionality of your website. 
-* https://github.com/annaesvensson/yellow-edit - Edit your website in a web browser.
 
 Do you have questions? [Get help](https://datenstrom.se/yellow/help/).
