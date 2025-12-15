@@ -7,7 +7,7 @@ You should use the following guidelines for your code:
 * Classe names should use PascalCase, e.g. `YellowCore`, `YellowEdit`, `YellowFika`.
 * Method/function names should use camelCase, e.g. `getRequestInformation`, `onLoad`.
 * Property/variable names should use camelCase, e.g. `$yellow`, `$statusCode`, `$fileName`.
-* HTML/CSS related names should use kebab-case, e.g. `yellow-toolbar`, `fika-logo`.
+* HTML/CSS related names should use kebab-case, e.g. `yellow`, `edit-toolbar`, `fika-logo`.
 * Opening braces `{` are on the same line, closing braces `}` are placed on their own line.
 * One space is used after keywords such as `if`, `switch`, `case`, `for`, `while`, `return`,  
   e.g. `switch ($statusCode)`, `for ($i=0; $i<$length; ++$i)`, `return $statusCode`.
@@ -21,25 +21,11 @@ You should use the following guidelines for your code:
 * Keep methods relatively small, sweet and focused on one thing, if unsure do less.
 * Don't have code comments inside methods and functions.
 
-You should use the following guidelines for your extensions:
-
-* Extension names should be a singular word, no spaces, e.g. `Core`, `Edit`, `Fika`.
-* Version numbers should begin with the release number, e.g. `0.9.1`, `0.9.2`, `0.9.3`.
-* Descriptions should be one line, e.g. `Core functionality of your website`.
-* File names should use use kebab-case, the extension name is used as prefix,  
-  e.g. `fika.php`, `fika.css`, `fika.js`, `fika-library.min.js`, `fika-stack.svg`.
-* Repository names should use kebap-case, e.g. `yellow-core`, `yellow-edit`, `yellow-fika`.
-* Repository documentation should be in `English`, other languages are optional.
-* Repository screenshots/thumbnails should be in PNG image format, e.g. `SCREENSHOT.png`.
-* Repositories should have a flat folder structure, file actions are stored in file `extension.ini`.
-* Keep extensions relatively small, sweet and focused on one thing, if unsure do less.
-* Don't have more than one extension per repository.
-
 You should use the following guidelines for your documentation:
 
-* Use Markdown for text formatting.
-* Titles should be one line and may contain the version number, e.g. `Core 0.9.1`.
-* Descriptions should be one line, e.g. `Core functionality of your website`.
+* Use Markdown for text formatting, consistent indentation with 4 spaces, no tabs.
+* Titles may contain a version number, e.g. `API for developers`, `Core 0.9.1`.
+* Descriptions should be one line max, e.g. `Core functionality of your website`.
 * Help files should use a `[toc]` shortcut to make a table of contents.
 * Readme files should start with a section to explain how to install an extension.
 * Readme files should use the following order for headings, all are optional:  
@@ -65,5 +51,19 @@ You should use the following guidelines for your documentation:
 * Give multiple examples for users to copy/paste, if unsure add more examples.
 * Review the entire documentation from the perspective of the user.
 * Don't use the words "easy, flexible, user-friendly".
+  
+You should use the following guidelines for your extension:
+
+* Extension names should be a singular word, no spaces, e.g. `Core`, `Edit`, `Fika`.
+* Version numbers should begin with the release number, e.g. `0.9.1`, `0.9.2`, `0.9.3`.
+* Descriptions should be one line, e.g. `Core functionality of your website`.
+* File names should use use kebab-case, the extension name is used as prefix,  
+  e.g. `fika.php`, `fika.css`, `fika.js`, `fika-library.min.js`, `fika-stack.svg`.
+* Repository names should use kebap-case, e.g. `yellow-core`, `yellow-edit`, `yellow-fika`.
+* Repository documentation should be in `English`, other languages are optional.
+* Repository screenshots/thumbnails should be in PNG image format, e.g. `SCREENSHOT.png`.
+* Repositories should have a flat folder structure, file actions are stored in file `extension.ini`.
+* Keep extensions relatively small, sweet and focused on one thing, if unsure do less.
+* Don't have more than one extension per repository.
 
 Do you have questions? [Get help](https://datenstrom.se/yellow/help/).
