@@ -37,7 +37,7 @@ You should use the following guidelines for your extensions:
 
 You should use the following guidelines for your documentation:
 
-* Use Markdown for [text formatting](https://datenstrom.se/yellow/help/how-to-change-the-content).
+* Use Markdown for text formatting.
 * Titles should be one line and may contain the version number, e.g. `Core 0.9.1`.
 * Descriptions should be one line, e.g. `Core functionality of your website`.
 * Headings should be in the following order, applies to `README.md` files only:  
@@ -59,6 +59,7 @@ You should use the following guidelines for your documentation:
 * Use HTML at the beginning of a line to add additional link targets,  
   e.g. `<a id="settings-page"></a>`, `<a id="settings-files"></a>`.
 * Give multiple examples for users to copy/paste, if unsure add more examples.
+* Review the entire documentation from the perspective of the user.
 * Don't use the words "easy, flexible, user-friendly".
 
 Do you have questions? [Get help](https://datenstrom.se/yellow/help/).
