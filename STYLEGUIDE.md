@@ -1,8 +1,6 @@
 # Datenstrom Yellow style guide
 
-First download a copy of the PHP standards and burn them, it's a great symbolic gesture. 
-
-## How to format code
+You should use the following guidelines for your code:
 
 * Use consistent indentation with 4 spaces, no tabs.
 * Use double quotes for strings, not single quotes, e.g. `"Coffee is good for you"`.
@@ -19,10 +17,11 @@ First download a copy of the PHP standards and burn them, it's a great symbolic 
   e.g. `// Core extension, https://github.com/annaesvensson/yellow-core`.
 * Use a single-line comment to describe classes, methods and properties,  
   e.g. `// Return request information`.
+* Download a copy of the PHP standards and burn them, it's a great symbolic gesture.
 * Keep methods relatively small, sweet and focused on one thing, if unsure do less.
 * Don't have code comments inside methods and functions, if unsure refactor code.
 
-## How to format extensions
+You should use the following guidelines for your extensions:
 
 * Extension names should be singular, without space, e.g. `Core`, `Edit`, `Fika`.
 * Version numbers should begin with the release number, e.g. `0.9.1`, `0.9.2`, `0.9.3`.
@@ -36,9 +35,9 @@ First download a copy of the PHP standards and burn them, it's a great symbolic 
 * Keep extensions relatively small, sweet and focused on one thing, if unsure do less.
 * Don't have more than one extension per repository, unless it's a complete website.
 
-## How to format documentation
+You should use the following guidelines for your documentation:
 
-* Use Markdown for text formatting, consistent identation with 4 spaces, no tabs.
+* Use Markdown for [text formatting](https://datenstrom.se/yellow/help/how-to-change-the-content).
 * Titles should be one line and may contain the version number, e.g. `Core 0.9.1`.
 * Descriptions should be one line, e.g. `Core functionality of your website`.
 * Headings should be in the following order, applies to `README.md` files only:  
@@ -52,6 +51,7 @@ First download a copy of the PHP standards and burn them, it's a great symbolic 
   `Author` = name of the author  
   `Email` = email of the author  
   `Tag` = page tag(s) for categorisation, comma separated  
+* Use a `[toc]` shortcut to make a table of contents, applies to help files only.
 * Use HTML to add a language switcher suitable for GitHub and Codeberg,  
   e.g. `<p align="right"><a href="README.md">English</a> &nbsp; <a href="README-sv.md">Svenska</a></p>`.
 * Use HTML to add a screenshot suitable for GitHub and Codeberg,  
@@ -59,6 +59,6 @@ First download a copy of the PHP standards and burn them, it's a great symbolic 
 * Use HTML at the beginning of a line to add additional link targets,  
   e.g. `<a id="settings-page"></a>`, `<a id="settings-files"></a>`.
 * Give multiple examples for users to copy/paste, if unsure add more examples.
-* Don't use the words "easy, fast, flexible, user-friendly", anyone can claim that.
+* Don't use the words "easy, flexible, user-friendly".
 
 Do you have questions? [Get help](https://datenstrom.se/yellow/help/).
