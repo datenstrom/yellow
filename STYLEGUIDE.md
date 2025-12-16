@@ -23,7 +23,7 @@ You should use the following guidelines for your code:
 
 You should use the following guidelines for your documentation:
 
-* Use Markdown for text formatting, no tabs for identation.
+* Use Markdown for text formatting, no tabs.
 * Titles may contain a version number, e.g. `API for developers`, `Core 0.9.1`.
 * Descriptions should be one line max, e.g. `Core functionality of your website`.
 * Help files should use a `[toc]` shortcut to make a table of contents.
@@ -57,12 +57,13 @@ You should use the following guidelines for your extension:
 * Extension names should be a singular word, no spaces, e.g. `Core`, `Edit`, `Fika`.
 * Version numbers should begin with the release number, e.g. `0.9.1`, `0.9.2`, `0.9.3`.
 * Descriptions should be one line max, e.g. `Core functionality of your website`.
-* File names should use use kebab-case, the extension name is used as prefix,  
+* File names should use kebab-case, the extension name is used as prefix,  
   e.g. `fika.php`, `fika.css`, `fika.js`, `fika-library.min.js`, `fika-stack.svg`.
 * Repository names should use kebap-case, e.g. `yellow-core`, `yellow-edit`, `yellow-fika`.
-* Repository documentation should be in `English`, other languages are optional.
-* Repository screenshots/thumbnails should be in PNG image format, e.g. `SCREENSHOT.png`.
+* Repository documentation files should be in Markdown format, e.g. `README.md` 
+* Repository screenshots/previews should be in PNG image format, e.g. `SCREENSHOT.png`.
 * Repositories should have a flat folder structure, file actions are stored in file `extension.ini`.
+* Check the spelling, British English is the reference language, other languages are optional.
 * Keep extensions relatively small, sweet and focused on one thing, if unsure do less.
 * Don't have more than one extension per repository.
 
