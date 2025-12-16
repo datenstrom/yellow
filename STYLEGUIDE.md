@@ -4,7 +4,7 @@ You should use the following guidelines for your code:
 
 * Use consistent indentation with 4 spaces, no tabs.
 * Use double quotes for strings, not single quotes, e.g. `"Coffee is good for you"`.
-* Classe names should use PascalCase, e.g. `YellowCore`, `YellowEdit`, `YellowFika`.
+* Class names should use PascalCase, e.g. `YellowCore`, `YellowEdit`, `YellowFika`.
 * Method/function names should use camelCase, e.g. `getRequestInformation`, `onLoad`.
 * Property/variable names should use camelCase, e.g. `$yellow`, `$statusCode`, `$fileName`.
 * HTML/CSS related names should use kebab-case, e.g. `yellow`, `edit-toolbar`, `fika-logo`.
@@ -17,14 +17,14 @@ You should use the following guidelines for your code:
   e.g. `// Core extension, https://github.com/annaesvensson/yellow-core`.
 * Use a single-line comment to describe classes, methods and properties,  
   e.g. `// Return request information`.
-* Download a copy of the PHP standards and burn them, it's a great symbolic gesture.
-* Keep methods relatively small, sweet and focused on one thing, if unsure do less.
 * Don't have code comments inside methods and functions.
+* Keep methods relatively small, sweet and focused on one thing, if unsure do less.
+* Download a copy of the PHP standards and burn them, it's a great symbolic gesture.
 
 You should use the following guidelines for your documentation:
 
 * Use Markdown for text formatting, no tabs.
-* Titles may contain a version number, e.g. `API for developers`, `Core 0.9.1`.
+* Titles should contain a version number, e.g. `API for developers`, `Core 0.9.1`.
 * Descriptions should be one line max, e.g. `Core functionality of your website`.
 * Help files should use a `[toc]` shortcut to make a table of contents.
 * Readme files should start with a section to explain how to install an extension.
