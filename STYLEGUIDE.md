@@ -24,11 +24,10 @@ You should use the following guidelines for your code:
 You should use the following guidelines for your documentation:
 
 * Use Markdown for text formatting, no tabs.
-* Titles should contain a version number, e.g. `API for developers`, `Core 0.9.1`.
+* Use appropriate titles, e.g. `How to make a small website`, `Troubleshooting`, `Core 0.9.1`.
 * Descriptions should be one line max, e.g. `Core functionality of your website`.
-* Help files should use a `[toc]` shortcut to make a table of contents.
-* Readme files should start with a section to explain how to install an extension.
-* Readme files should use the following order for headings, all are optional:  
+* README files should start with a section explaining how to install an extension.
+* README files should use the following order for headings, all are optional:  
   `How to...`  
   `Examples`  
   `Settings`  
@@ -42,10 +41,6 @@ You should use the following guidelines for your documentation:
   `system/extensions/yellow-system.ini` = file with system settings  
   `system/extensions/yellow-language.ini` = file with language settings  
   `system/extensions/yellow-user.ini` = file with user settings  
-* Use HTML to add a language switcher suitable for GitHub and Codeberg,  
-  e.g. `<p align="right"><a href="README.md">English</a> &nbsp; <a href="README-sv.md">Svenska</a></p>`.
-* Use HTML to add a screenshot suitable for GitHub and Codeberg,  
-  e.g. `<p align="center"><img src="SCREENSHOT.png" alt="Screenshot"></p>`.
 * Use HTML at the beginning of a line to add additional link targets,  
   e.g. `<a id="settings-page"></a>`, `<a id="settings-files"></a>`.
 * Give multiple examples for users to copy/paste, if unsure add more examples.
@@ -54,17 +49,29 @@ You should use the following guidelines for your documentation:
   
 You should use the following guidelines for your extension:
 
-* Extension names should be a singular word, no spaces, e.g. `Core`, `Edit`, `Fika`.
+* Extension names should be one word, singular, no spaces, e.g. `Core`, `Edit`, `Fika`.
 * Version numbers should begin with the release number, e.g. `0.9.1`, `0.9.2`, `0.9.3`.
 * Descriptions should be one line max, e.g. `Core functionality of your website`.
 * File names should use kebab-case, the extension name is used as prefix,  
   e.g. `fika.php`, `fika.css`, `fika.js`, `fika-library.min.js`, `fika-stack.svg`.
 * Repository names should use kebap-case, e.g. `yellow-core`, `yellow-edit`, `yellow-fika`.
-* Repository documentation files should be in Markdown format, e.g. `README.md` 
+* Repository documentation files should be in Markdown format, e.g. `README.md`.
 * Repository screenshots/previews should be in PNG image format, e.g. `SCREENSHOT.png`.
 * Repositories should have a flat folder structure, file actions are stored in file `extension.ini`.
-* Check the spelling, British English is the reference language, other languages are optional.
+* Check spelling, British English is the reference language, other languages are optional.
 * Keep extensions relatively small, sweet and focused on one thing, if unsure do less.
 * Don't have more than one extension per repository.
+
+You should know the following glossary of technical terms:
+
+* An `extension` gives you additional features, languages and themes - not "plugin".
+* A `layout` is a HTML file, it can render a complete or a partial page - not "template".
+* The `page settings` can be configured at the top of each page - not "front matter".
+* A `shortcut` is a way to extend Markdown with additional features - not "shortcode".
+* A `static generator` makes the entire website in advance, instead of waiting for the request. 
+* The `system settings` contain the settings of your website and of all installed extensions.
+* A `theme` is a CSS file, it may come with additional images, fonts, JavaScript and so on.
+* A `web editor` allows you to edit a website in a `web browser` - not "admin panel".
+* A `web server` is a computer software/hardware required to run a website.
 
 Do you have questions? [Get help](https://datenstrom.se/yellow/help/).
