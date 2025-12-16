@@ -25,7 +25,7 @@ You should use the following guidelines for your documentation:
 
 * Use Markdown for text formatting, no tabs.
 * Use appropriate titles, e.g. `How to make a small website`, `Troubleshooting`, `Core 0.9.1`.
-* Descriptions should be one line max, e.g. `Core functionality of your website`.
+* Descriptions should fit into one line, e.g. `Core functionality of your website`.
 * README files should start with a section explaining how to install an extension.
 * README files should use the following order for headings, all are optional:  
   `How to...`  
@@ -51,7 +51,7 @@ You should use the following guidelines for your extension:
 
 * Extension names should be one word, singular, no spaces, e.g. `Core`, `Edit`, `Fika`.
 * Version numbers should begin with the release number, e.g. `0.9.1`, `0.9.2`, `0.9.3`.
-* Descriptions should be one line max, e.g. `Core functionality of your website`.
+* Descriptions should be one short sentence, e.g. `Core functionality of your website`.
 * File names should use kebab-case, the extension name is used as prefix,  
   e.g. `fika.php`, `fika.css`, `fika.js`, `fika-library.min.js`, `fika-stack.svg`.
 * Repository names should use kebap-case, e.g. `yellow-core`, `yellow-edit`, `yellow-fika`.
