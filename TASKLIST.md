@@ -9,8 +9,6 @@ You can help us with open tasks for Datenstrom Yellow:
 - [ ] Added support for dynamic loading of JS/CSS files in bundler. Better page loading time.
 - [ ] Added support for web forms in Markdown. Users can create email contact forms or a feedback/survey forms.
 - [ ] Added support for Wysiwyg editor for Markdown. Users can edit websites without much knowledge.
-- [x] Improved website with more information about product changes. Users want to know what's new in one place.
-- [ ] Improved website, Swedish translation for missing help pages. Better multi language documentation.
 - [ ] Updated API, YellowPageCollection no longer derives from ArrayObject. ArrayObject interface is strange.
 - [ ] Updated API, changed getAvailable() to enumerate(). Designers want to use non-flattened themes.
 - [x] Updated API, changed content element type notice to general. Make it more intuitive.
@@ -29,6 +27,9 @@ You can help us with open tasks for Datenstrom Yellow:
 - [x] Updated Markdown extension, syntax for block elements has changed. Make it more intuitive.
 - [ ] Updated feed extension, short URL for the feed.xml. Users don't like the long URL, it's ugly. 
 - [ ] Updated sitemap extension, short URL for the sitemap.xml. Users don't like the long URL, it's ugly.
+- [x] Updated themes, CSS for coloured block elements has changed. Make it more intuitive.
+- [x] Updated website, more information about latest product changes. People want more information.
+- [ ] Updated website, Swedish translation for missing help pages. Better multi language documentation.
 - [ ] Published comment extension, no longer experimental. Due to public demand.
 - [ ] Published math extension, no longer experimental. Due to scientific demand.
 - [ ] Published maintenance extension, no longer experimental. Due to practical demand.
@@ -37,7 +38,7 @@ You can help us with open tasks for Datenstrom Yellow:
 
 ## How to improve code
 
-You can find core functionality in the [core](https://github.com/annaesvensson/yellow-core) and everythig else in [extensions](https://datenstrom.se/yellow/extensions/). Good technology is made for people. Imagine what the user wants to do and what would make their life easier. Remember to focus on people. Not on technical details and lots of features. Did you improve code? The first option is to send a pull request to the developer, it may or may not be accepted. The second option is to discuss your changes with the Datenstrom community. The third option is to make a new extension with the modified code.
+You can find core functionality in the [core](https://github.com/annaesvensson/yellow-core) and everything else in [extensions](https://datenstrom.se/yellow/extensions/). Good technology is made for people. Imagine what the user wants to do and what would make their life easier. Remember to focus on people. Not on technical details and lots of features. Did you improve code? The first option is to send a pull request to the developer, it may or may not be accepted. The second option is to discuss your changes with the Datenstrom community. The third option is to make a new extension with the modified code.
 
 ## How to improve documentation
 
