@@ -62,10 +62,11 @@ You should use the following guidelines for your extension:
 * Keep extensions relatively small, sweet and focused on one thing, if unsure do less.
 * Don't have more than one extension per repository.
 
-You should know the following glossary of technical terms:
+You should use the following technical terms:
 
 * An `extension` gives you additional features, languages and themes - not "plugin".
 * A `layout` is a HTML file, it can render a complete or a partial page - not "template".
+* A `navigation` is automatically generated from your content folders - not "menu bar".
 * The `page settings` can be configured at the top of each page - not "front matter".
 * A `shortcut` is a way to extend Markdown with additional features - not "shortcode".
 * A `static generator` makes the entire website in advance, instead of waiting for the request. 
