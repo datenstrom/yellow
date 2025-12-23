@@ -1,18 +1,10 @@
-<div align="right">
-
-[Deutsch](./README-de.md) &nbsp; [English](./README.md) &nbsp; [Svenska](./README-sv.md)
-
-</div>
+<p align="right"><a href="README-de.md">Deutsch</a> &nbsp; <a href="README.md">English</a> &nbsp; <a href="README-sv.md">Svenska</a></p>
 
 # Datenstrom Yellow 0.9
 
 Datenstrom Yellow är för människor som skapar små webbsidor. [Prova demon](https://datenstrom.se/sv/yellow/demo/).
 
-<div align="left">
-
-[![Skärmdump](./SCREENSHOT.png)](./SCREENSHOT.png)
-
-</div>
+<p align="left"><img src="SCREENSHOT.png" alt="Skärmdump"></p>
 
 ## Hur man kommer igång
 
