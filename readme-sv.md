@@ -1,5 +1,3 @@
-<p align="right"><a href="readme-de.md">Deutsch</a> &nbsp; <a href="readme.md">English</a> &nbsp; <a href="readme-sv.md">Svenska</a></p>
-
 # Datenstrom Yellow 0.9
 
 Datenstrom Yellow är för människor som skapar små webbsidor. [Prova demon](https://datenstrom.se/sv/yellow/demo/).
