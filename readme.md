@@ -14,7 +14,7 @@ Extensions give you additional features, languages and themes. The core has the 
 
 ## How to get help
 
-The help shows you how to make small websites, wikis and blogs. Here you will find instructions on how to customise your website. For developers there are descriptions of files, folders and what can be done with the API. [Get help for your website](https://datenstrom.se/yellow/help/).
+The help shows you how to make small websites, wikis and blogs. Here you will find instructions on how to customise your website in English, German and Swedish. For developers there are descriptions of files, folders and what can be done with the API. [Get help for your website](https://datenstrom.se/yellow/help/).
 
 ## Acknowledgements
 
