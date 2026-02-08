@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.9.17";
+    const VERSION = "0.9.18";
     const RELEASE = "0.9";
     public $content;        // content files
     public $media;          // media files
@@ -267,7 +267,9 @@ class YellowCore {
                 if (method_exists($value["object"], "onCommandHelp")) {
                     $this->lookup->commandHandler = $key;
                     $output = $value["object"]->onCommandHelp();
-                    $lines = array_merge($lines, is_array($output) ? $output : array($output));
+                    if (!is_null($output))  {
+                        $lines = array_merge($lines, is_array($output) ? $output : array($output));
+                    }
                 }
             }
             usort($lines, "strnatcasecmp");
@@ -701,35 +703,12 @@ class YellowSystem {
     
     // Return different value for system setting
     public function getDifferent($key) {
-        $array = array_diff($this->getAvailable($key), array($this->get($key)));
+        $array = array_diff($this->yellow->toolbox->enumerate("system", $key), array($this->get($key)));
         return reset($array);
     }
 
-    // Return available values for system setting
-    public function getAvailable($key) {
-        $values = array();
-        $valueDefault = isset($this->settingsDefaults[$key]) ? $this->settingsDefaults[$key] : "";
-        if ($key=="email") {
-            foreach ($this->yellow->user->settings as $userKey=>$userValue) {
-                array_push($values, $userKey);
-            }
-        } elseif ($key=="language") {
-            foreach ($this->yellow->language->settings as $languageKey=>$languageValue) {
-                array_push($values, $languageKey);
-            }
-        } elseif ($key=="layout") {
-            $path = $this->yellow->system->get("coreLayoutDirectory");
-            foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.html$/", true, false, false) as $entry) {
-                array_push($values, lcfirst(substru($entry, 0, -5)));
-            }
-        } elseif ($key=="theme") {
-            $path = $this->yellow->system->get("coreThemeDirectory");
-            foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.css$/", true, false, false) as $entry) {
-                array_push($values, lcfirst(substru($entry, 0, -4)));
-            }
-        }
-        return !is_array_empty($values) ? $values : array($valueDefault);
-    }
+    // TODO: Remove later, this is only for backwards compatibility
+    public function getAvailable($key) { return $this->yellow->toolbox->enumerate("system", $key); }
     
     // Return system settings
     public function getSettings($filterStart = "", $filterEnd = "") {
@@ -2927,6 +2906,37 @@ class YellowToolbox {
         }
         return $value;
     }
+    
+    // Return possible values
+    public function enumerate($action, $text) {
+        $values = array();
+        foreach ($this->yellow->extension->data as $key=>$value) {
+            if (method_exists($value["object"], "onEnumerate")) {
+                $output = $value["object"]->onEnumerate($action, $text);
+                if (!is_null($output))  {
+                    $lines = array_merge($values, is_array($output) ? $output : array($output));
+                }
+            }
+        }
+        if ($action=="system") {
+            if ($text=="email") {
+                foreach ($this->yellow->user->settings as $userKey=>$userValue) {
+                    array_push($values, $userKey);
+                }
+            } elseif ($text=="language") {
+                foreach ($this->yellow->language->settings as $languageKey=>$languageValue) {
+                    array_push($values, $languageKey);
+                }
+            } elseif ($text=="theme") {
+                $path = $this->yellow->system->get("coreThemeDirectory");
+                foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.css$/", true, false, false) as $entry) {
+                    array_push($values, substru($entry, 0, -4));
+                }
+            }
+            usort($values, "strnatcasecmp");
+        }
+        return $values;
+    }
 
     // Send email message
     public function mail($action, $headers, $message) {
@@ -3190,8 +3200,9 @@ class YellowPage {
         if (!$this->isHeader("Content-Type")) $this->setHeader("Content-Type", "text/html; charset=utf-8");
         if (!$this->isHeader("Content-Modified")) $this->setHeader("Content-Modified", $this->getModified(true));
         if (!$this->isHeader("Last-Modified")) $this->setHeader("Last-Modified", $this->getLastModified(true));
-        $fileNameTheme = $this->yellow->system->get("coreThemeDirectory").$this->yellow->lookup->normaliseName($this->get("theme")).".css";
-        if (!is_file($fileNameTheme)) {
+        $name = $this->yellow->lookup->normaliseName($this->get("theme"));
+        if (!is_file($this->yellow->system->get("coreThemeDirectory").$name.".css") &&
+            !in_array($name, $this->yellow->toolbox->enumerate("system", "theme"))) {
             $this->error(500, "Theme '".$this->get("theme")."' does not exist!");
         }
         if (!$this->yellow->language->isExisting($this->get("language"))) {

@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/annaesvensson/yellow-edit
 
 class YellowEdit {
-    const VERSION = "0.9.12";
+    const VERSION = "0.9.13";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -1253,7 +1253,7 @@ class YellowEditResponse {
                 $data["coreExtensions"][$key] = $value["class"];
             }
             $data["coreLanguages"] = array();
-            foreach ($this->yellow->system->getAvailable("language") as $language) {
+            foreach ($this->yellow->toolbox->enumerate("system", "language") as $language) {
                 $data["coreLanguages"][$language] = $this->yellow->language->getTextHtml("languageDescription", $language);
             }
             $data["editSettingsActions"] = $this->getSettingsActions();
