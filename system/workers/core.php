@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.9.18";
+    const VERSION = "0.9.19";
     const RELEASE = "0.9";
     public $content;        // content files
     public $media;          // media files
@@ -2914,7 +2914,7 @@ class YellowToolbox {
             if (method_exists($value["object"], "onEnumerate")) {
                 $output = $value["object"]->onEnumerate($action, $text);
                 if (!is_null($output))  {
-                    $lines = array_merge($values, is_array($output) ? $output : array($output));
+                    $values = array_merge($values, is_array($output) ? $output : array($output));
                 }
             }
         }
