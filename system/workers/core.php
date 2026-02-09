@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.9.19";
+    const VERSION = "0.9.20";
     const RELEASE = "0.9";
     public $content;        // content files
     public $media;          // media files
@@ -703,12 +703,12 @@ class YellowSystem {
     
     // Return different value for system setting
     public function getDifferent($key) {
-        $array = array_diff($this->yellow->toolbox->enumerate("system", $key), array($this->get($key)));
+        $array = array_diff($this->yellow->toolbox->enumerate($key), array($this->get($key)));
         return reset($array);
     }
 
     // TODO: Remove later, this is only for backwards compatibility
-    public function getAvailable($key) { return $this->yellow->toolbox->enumerate("system", $key); }
+    public function getAvailable($key) { return $this->yellow->toolbox->enumerate($key); }
     
     // Return system settings
     public function getSettings($filterStart = "", $filterEnd = "") {
@@ -2908,33 +2908,31 @@ class YellowToolbox {
     }
     
     // Return possible values
-    public function enumerate($action, $text) {
+    public function enumerate($action, $context = "") {
         $values = array();
         foreach ($this->yellow->extension->data as $key=>$value) {
             if (method_exists($value["object"], "onEnumerate")) {
-                $output = $value["object"]->onEnumerate($action, $text);
+                $output = $value["object"]->onEnumerate($action, $context);
                 if (!is_null($output))  {
                     $values = array_merge($values, is_array($output) ? $output : array($output));
                 }
             }
         }
-        if ($action=="system") {
-            if ($text=="email") {
-                foreach ($this->yellow->user->settings as $userKey=>$userValue) {
-                    array_push($values, $userKey);
-                }
-            } elseif ($text=="language") {
-                foreach ($this->yellow->language->settings as $languageKey=>$languageValue) {
-                    array_push($values, $languageKey);
-                }
-            } elseif ($text=="theme") {
-                $path = $this->yellow->system->get("coreThemeDirectory");
-                foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.css$/", true, false, false) as $entry) {
-                    array_push($values, substru($entry, 0, -4));
-                }
+        if ($action=="email") {
+            foreach ($this->yellow->user->settings as $userKey=>$userValue) {
+                array_push($values, $userKey);
             }
-            usort($values, "strnatcasecmp");
+        } elseif ($action=="language") {
+            foreach ($this->yellow->language->settings as $languageKey=>$languageValue) {
+                array_push($values, $languageKey);
+            }
+        } elseif ($action=="theme") {
+            $path = $this->yellow->system->get("coreThemeDirectory");
+            foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^.*\.css$/", true, false, false) as $entry) {
+                array_push($values, substru($entry, 0, -4));
+            }
         }
+        usort($values, "strnatcasecmp");
         return $values;
     }
 
@@ -3200,9 +3198,9 @@ class YellowPage {
         if (!$this->isHeader("Content-Type")) $this->setHeader("Content-Type", "text/html; charset=utf-8");
         if (!$this->isHeader("Content-Modified")) $this->setHeader("Content-Modified", $this->getModified(true));
         if (!$this->isHeader("Last-Modified")) $this->setHeader("Last-Modified", $this->getLastModified(true));
-        $name = $this->yellow->lookup->normaliseName($this->get("theme"));
-        if (!is_file($this->yellow->system->get("coreThemeDirectory").$name.".css") &&
-            !in_array($name, $this->yellow->toolbox->enumerate("system", "theme"))) {
+        $theme = $this->yellow->lookup->normaliseName($this->get("theme"));
+        if (!is_file($this->yellow->system->get("coreThemeDirectory").$theme.".css") &&
+            !in_array($theme, $this->yellow->toolbox->enumerate("theme"))) {
             $this->error(500, "Theme '".$this->get("theme")."' does not exist!");
         }
         if (!$this->yellow->language->isExisting($this->get("language"))) {

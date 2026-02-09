@@ -2,7 +2,7 @@
 // Install extension, https://github.com/annaesvensson/yellow-install
 
 class YellowInstall {
-    const VERSION = "0.9.7";
+    const VERSION = "0.9.8";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -538,7 +538,7 @@ class YellowInstall {
 
     // Return raw data for install page
     public function getRawDataInstall() {
-        $languages = $this->yellow->system->getAvailable("language");
+        $languages = $this->yellow->toolbox->enumerate("language");
         $language = $this->yellow->toolbox->detectBrowserLanguage($languages, $this->yellow->system->get("language"));
         $this->yellow->language->set($language);
         $rawData = "---\nTitle:".$this->yellow->language->getText("installTitle")."\nLanguage:$language\nNavigation:navigation\nHeader:none\nFooter:none\nSidebar:none\n---\n";
