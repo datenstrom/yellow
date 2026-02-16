@@ -2,7 +2,7 @@
 
 Datenstrom Yellow is for people who make small websites. [Try the demo](https://datenstrom.se/yellow/demo/).
 
-<p align="left"><img src="screenshot.png" alt="Screenshot"></p>
+<p align="left"><img src="screenshot.png" alt="Screenshot" /></p>
 
 ## How to get started
 
