@@ -2,7 +2,7 @@
 // Update extension, https://github.com/annaesvensson/yellow-update
 
 class YellowUpdate {
-    const VERSION = "0.9.8";
+    const VERSION = "0.9.9";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $extensions;             // number of extensions
@@ -251,7 +251,7 @@ class YellowUpdate {
         $statusCode = 200;
         $zip = new ZipArchive();
         if ($zip->open($path)===true) {
-            if ($this->yellow->system->get("coreDebugMode")>=2) echo "YellowUpdate::updateExtensionArchive file:$path<br/>\n";
+            if ($this->yellow->system->get("coreDebugMode")>=2) echo "YellowUpdate::updateExtensionArchive file:$path<br />\n";
             $pathBase = "";
             if (preg_match("#^(.*\/).*?$#", $zip->getNameIndex(0), $matches)) $pathBase = $matches[1];
             $fileData = $zip->getFromName($pathBase.$this->yellow->system->get("updateExtensionFile"));
@@ -329,7 +329,7 @@ class YellowUpdate {
             if ($this->yellow->system->get("coreDebugMode")>=2) {
                 $debug = "action:".($create ? "create" : "").($update ? "update" : "").($delete ? "delete" : "");
                 if (!$create && !$update && !$delete) $debug = "action:none";
-                echo "YellowUpdate::updateExtensionFile file:$fileName $debug<br/>\n";
+                echo "YellowUpdate::updateExtensionFile file:$fileName $debug<br />\n";
             }
         }
         return $statusCode;
@@ -339,7 +339,7 @@ class YellowUpdate {
     public function updatePatchPending() {
         $fileName = $this->yellow->system->get("coreWorkerDirectory")."updatepatch.bin";
         if (is_file($fileName)) {
-            if ($this->yellow->system->get("coreDebugMode")>=2) echo "YellowUpdate::updatePatchPending file:$fileName<br/>\n";
+            if ($this->yellow->system->get("coreDebugMode")>=2) echo "YellowUpdate::updatePatchPending file:$fileName<br />\n";
             if (!$this->yellow->extension->isExisting("updatepatch")) {
                 require_once($fileName);
                 $this->yellow->extension->register("updatepatch", "YellowUpdatePatch");
@@ -632,7 +632,7 @@ class YellowUpdate {
                 $this->yellow->page->error($statusCode, "Can't delete file '$fileName'!");
             }
             if ($this->yellow->system->get("coreDebugMode")>=2) {
-                echo "YellowUpdate::removeExtensionFile file:$fileName action:delete<br/>\n";
+                echo "YellowUpdate::removeExtensionFile file:$fileName action:delete<br />\n";
             }
         }
         return $statusCode;
@@ -894,10 +894,10 @@ class YellowUpdate {
             $this->yellow->page->error($statusCode, "Can't download file '$url'!");
         }
         if ($this->yellow->system->get("coreDebugMode")>=2 && !is_string_empty($redirectUrl)) {
-            echo "YellowUpdate::getExtensionFile redirected to url:$redirectUrl<br/>\n";
+            echo "YellowUpdate::getExtensionFile redirected to url:$redirectUrl<br />\n";
         }
         if ($this->yellow->system->get("coreDebugMode")>=2) {
-            echo "YellowUpdate::getExtensionFile status:$statusCode url:$url<br/>\n";
+            echo "YellowUpdate::getExtensionFile status:$statusCode url:$url<br />\n";
         }
         return array($statusCode, $fileData);
     }

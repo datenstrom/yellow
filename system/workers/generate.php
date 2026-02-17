@@ -2,7 +2,7 @@
 // Generate extension, https://github.com/annaesvensson/yellow-generate
 
 class YellowGenerate {
-    const VERSION = "0.9.7";
+    const VERSION = "0.9.8";
     public $yellow;                  // access to API
     public $files;                   // number of files
     public $errors;                  // number of errors
@@ -160,7 +160,7 @@ class YellowGenerate {
             echo "\rERROR generating location '$location', ".$this->yellow->page->getStatusCode(true)."\n";
         }
         if ($this->yellow->system->get("coreDebugMode")>=2) {
-            echo "YellowGenerate::generateStaticFile status:$statusCode location:$location<br/>\n";
+            echo "YellowGenerate::generateStaticFile status:$statusCode location:$location<br />\n";
         }
         return $statusCode;
     }
@@ -234,7 +234,7 @@ class YellowGenerate {
                 if (!isset($this->locationsWithArguments[$location])) {
                     $this->locationsWithArguments[$location] = $location;
                     if ($this->yellow->system->get("coreDebugMode")>=2) {
-                        echo "YellowGenerate::analyseStaticLocations detected location:$location<br/>\n";
+                        echo "YellowGenerate::analyseStaticLocations detected location:$location<br />\n";
                     }
                 }
             } else {
@@ -242,7 +242,7 @@ class YellowGenerate {
                 if (!isset($this->locationsWithPagination[$location])) {
                     $this->locationsWithPagination[$location] = $location;
                     if ($this->yellow->system->get("coreDebugMode")>=2) {
-                        echo "YellowGenerate::analyseStaticLocations detected location:$location<br/>\n";
+                        echo "YellowGenerate::analyseStaticLocations detected location:$location<br />\n";
                     }
                 }
             }

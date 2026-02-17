@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/annaesvensson/yellow-edit
 
 class YellowEdit {
-    const VERSION = "0.9.14";
+    const VERSION = "0.9.15";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -837,7 +837,7 @@ class YellowEdit {
             "Content-Type"=>$this->yellow->toolbox->getMimeContentType("a.html"),
             "Last-Modified"=>$this->yellow->toolbox->getHttpDateFormatted(time()));
         $statusCode = $this->yellow->sendData($page->statusCode, $page->headerData, $page->outputData);
-        if ($this->yellow->system->get("coreDebugMode")>=1) echo "YellowEdit::processRequestPreview file:$fileName<br/>\n";
+        if ($this->yellow->system->get("coreDebugMode")>=1) echo "YellowEdit::processRequestPreview file:$fileName<br />\n";
         return $statusCode;
     }
     

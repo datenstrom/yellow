@@ -2,7 +2,7 @@
 // Install extension, https://github.com/annaesvensson/yellow-install
 
 class YellowInstall {
-    const VERSION = "0.9.8";
+    const VERSION = "0.9.9";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -316,7 +316,7 @@ class YellowInstall {
     public function checkServerRequirements() {
         if ($this->yellow->system->get("coreDebugMode")>=1) {
             list($name, $version, $os) = $this->yellow->toolbox->detectServerInformation();
-            echo "YellowInstall::checkServerRequirements for $name $version, $os<br/>\n";
+            echo "YellowInstall::checkServerRequirements for $name $version, $os<br />\n";
         }
         if (!$this->checkServerComplete()) $this->yellow->exitFatalError("Datenstrom Yellow requires complete upload!");
         if (!$this->checkServerWrite()) $this->yellow->exitFatalError("Datenstrom Yellow requires write access!");
@@ -328,7 +328,7 @@ class YellowInstall {
     public function checkCommandRequirements() {
         if ($this->yellow->system->get("coreDebugMode")>=1) {
             list($name, $version, $os) = $this->yellow->toolbox->detectServerInformation();
-            echo "YellowInstall::checkCommandRequirements for $name $version, $os<br/>\n";
+            echo "YellowInstall::checkCommandRequirements for $name $version, $os<br />\n";
         }
         if (!$this->checkServerComplete()) $this->yellow->exitFatalError("Datenstrom Yellow requires complete upload!");
         if (!$this->checkServerWrite()) $this->yellow->exitFatalError("Datenstrom Yellow requires write access!");
@@ -356,7 +356,7 @@ class YellowInstall {
             if (!is_file($fileName) || filesize($fileName)==0) {
                 $complete = false;
                 if ($this->yellow->system->get("coreDebugMode")>=1) {
-                    echo "YellowInstall::checkServerComplete detected missing file:$fileName<br/>\n";
+                    echo "YellowInstall::checkServerComplete detected missing file:$fileName<br />\n";
                 }
             }
         }
@@ -394,7 +394,7 @@ class YellowInstall {
             if ($statusCode!=200) {
                 $rewrite = false;
                 if ($this->yellow->system->get("coreDebugMode")>=1 && !$rewrite) {
-                    echo "YellowInstall::checkServerRewrite detected failed url:$url<br/>\n";
+                    echo "YellowInstall::checkServerRewrite detected failed url:$url<br />\n";
                 }
             }
         }
@@ -434,10 +434,10 @@ class YellowInstall {
                     $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
                 }
                 if ($this->yellow->system->get("coreDebugMode")>=2 && !is_string_empty($redirectUrl)) {
-                    echo "YellowInstall::downloadExtensionsAvailable redirected to url:$redirectUrl<br/>\n";
+                    echo "YellowInstall::downloadExtensionsAvailable redirected to url:$redirectUrl<br />\n";
                 }
                 if ($this->yellow->system->get("coreDebugMode")>=2) {
-                    echo "YellowInstall::downloadExtensionsAvailable status:$statusCode url:$url<br/>\n";
+                    echo "YellowInstall::downloadExtensionsAvailable status:$statusCode url:$url<br />\n";
                 }
                 if ($statusCode!=200) break;
             }
@@ -543,9 +543,9 @@ class YellowInstall {
         $this->yellow->language->set($language);
         $rawData = "---\nTitle:".$this->yellow->language->getText("installTitle")."\nLanguage:$language\nNavigation:navigation\nHeader:none\nFooter:none\nSidebar:none\n---\n";
         $rawData .= "<form class=\"install-form\" action=\"".$this->yellow->page->getLocation(true)."\" method=\"post\">\n";
-        $rawData .= "<p><label for=\"author\">".$this->yellow->language->getText("editSignupName")."</label><br /><input class=\"form-control\" type=\"text\" maxlength=\"64\" name=\"author\" id=\"author\" value=\"\"></p>\n";
-        $rawData .= "<p><label for=\"email\">".$this->yellow->language->getText("editSignupEmail")."</label><br /><input class=\"form-control\" type=\"text\" maxlength=\"64\" name=\"email\" id=\"email\" value=\"\"></p>\n";
-        $rawData .= "<p><label for=\"password\">".$this->yellow->language->getText("editSignupPassword")."</label><br /><input class=\"form-control\" type=\"password\" maxlength=\"64\" name=\"password\" id=\"password\" value=\"\"></p>\n";
+        $rawData .= "<p><label for=\"author\">".$this->yellow->language->getText("editSignupName")."</label><br /><input class=\"form-control\" type=\"text\" maxlength=\"64\" name=\"author\" id=\"author\" value=\"\" /></p>\n";
+        $rawData .= "<p><label for=\"email\">".$this->yellow->language->getText("editSignupEmail")."</label><br /><input class=\"form-control\" type=\"text\" maxlength=\"64\" name=\"email\" id=\"email\" value=\"\" /></p>\n";
+        $rawData .= "<p><label for=\"password\">".$this->yellow->language->getText("editSignupPassword")."</label><br /><input class=\"form-control\" type=\"password\" maxlength=\"64\" name=\"password\" id=\"password\" value=\"\" /></p>\n";
         $rawData .= "<p>".$this->yellow->language->getText("installLanguage")."</p>\n<p>";
         foreach ($languages as $language) {
             $checked = $language==$this->yellow->language->language ? " checked=\"checked\"" : "";
