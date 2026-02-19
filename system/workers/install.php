@@ -2,7 +2,7 @@
 // Install extension, https://github.com/annaesvensson/yellow-install
 
 class YellowInstall {
-    const VERSION = "0.9.9";
+    const VERSION = "0.9.10";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -288,17 +288,18 @@ class YellowInstall {
     public function removeInstall($log = false) {
         $statusCode = 200;
         if (function_exists("opcache_reset")) opcache_reset();
+        $this->yellow->toolbox->deleteFile("license.md");
+        $fileName = $this->yellow->system->get("coreWorkerDirectory")."install.php";
+        if (!$this->yellow->toolbox->deleteFile($fileName)) {
+            $statusCode = 500;
+            $this->yellow->page->error($statusCode, "Can't delete file '$fileName'!");
+        }
         $path = $this->yellow->system->get("coreWorkerDirectory");
         foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^install-.*\.bin$/", true, false) as $entry) {
             if (!$this->yellow->toolbox->deleteFile($entry)) {
                 $statusCode = 500;
                 $this->yellow->page->error($statusCode, "Can't delete file '$entry'!");
             }
-        }
-        $fileName = $this->yellow->system->get("coreWorkerDirectory")."install.php";
-        if ($statusCode==200 && !$this->yellow->toolbox->deleteFile($fileName)) {
-            $statusCode = 500;
-            $this->yellow->page->error($statusCode, "Can't delete file '$fileName'!");
         }
         if ($statusCode==200) unset($this->yellow->extension->data["install"]);
         $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateInstalledFile");
