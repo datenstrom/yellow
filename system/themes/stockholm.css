@@ -156,6 +156,13 @@ a:hover {
     font-weight: bold;
     border-left: 3px solid var(--blockquote-accent);
 }
+.content details summary {
+    padding-left: inherit;
+    cursor: pointer;
+}
+.content details > * {
+    padding-left: 1em;
+}
 .content .important {
     margin: 1em 0;
     padding: 10px 1em;

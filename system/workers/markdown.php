@@ -2,7 +2,7 @@
 // Markdown extension, https://github.com/annaesvensson/yellow-markdown
 
 class YellowMarkdown {
-    const VERSION = "0.9.5";
+    const VERSION = "0.9.6";
     public $yellow;         // access to API
     
     // Handle initialisation
@@ -3847,9 +3847,10 @@ class YellowMarkdownParser extends MarkdownExtraParser {
             return $yellow->lookup->normaliseLocation($url, $page->getPage("main")->location);
         };
         $this->span_gamut += array("doStrikethrough" => 55);
-        $this->block_gamut += array("doGeneralBlocks" => 65);
+        $this->block_gamut += array("doCollapsibleBlocks" => 65);
+        $this->block_gamut += array("doGeneralBlocks" => 75);
         $this->document_gamut += array("doFootnotesLinks" => 55);
-        $this->escape_chars .= "~";
+        $this->escape_chars .= "~?";
         parent::__construct();
     }
 
@@ -4001,6 +4002,39 @@ class YellowMarkdownParser extends MarkdownExtraParser {
         return preg_replace_callback("/((?>^[ ]*>[ ]?.+\n(.+\n)*)+)/m", array($this, "_doBlockQuotes_callback"), $text);
     }
     
+    // Handle collapsible block elements
+    public function doCollapsibleBlocks($text) {
+        return preg_replace_callback("/((?>^[ ]*\?[ ]?.+\n(.+\n)*)+)/m", array($this, "_doCollapsibleBlocks_callback"), $text);
+    }
+    
+    // Handle collapsible block elements over multiple lines
+    public function _doCollapsibleBlocks_callback($matches) {
+        $name = $attributes = $attr = "";
+        $text = preg_replace("/^[ ]*\?[ ]?/m", "", $matches[1]);
+        if (preg_match("/^[ ]*".$this->id_class_attr_catch_re."[ ]*\n([\S\s]*)$/m", $text, $parts)) {
+            $name = $this->getBlockName("", $parts[1]);
+            $text = $parts[2];
+            $attributes = $parts[1];
+            $attr = $this->doExtraAttributes("details", $parts[1]);
+        }
+        if (!is_string_empty($text)) {
+            $output = $this->page->parseContentElement($name, $text, $attributes, "collapsible");
+            if (is_null($output)) {
+                $summary = "";
+                if (preg_match("/^[ ]*(.*?)[ ]*\n(\n*)([\S\s]*)$/m", $text, $parts) && !is_string_empty($parts[2])) {
+                    $summary = $parts[1];
+                    $text = $parts[3];
+                }
+                $output = "<details$attr>\n";
+                if (!is_string_empty($summary)) $output .= "<summary>".$this->runSpanGamut($summary)."</summary>\n";
+                $output .= $this->runBlockGamut($text)."\n</details>";
+            }
+        } else {
+            $output = "<details$attr></details>";
+        }
+        return "\n".$this->hashBlock($output)."\n\n";
+    }
+    
     // Handle general block elements
     public function doGeneralBlocks($text) {
         return preg_replace_callback("/((?>^[ ]*!(?!\[)[ ]?.+\n(.+\n)*)+)/m", array($this, "_doGeneralBlocks_callback"), $text);
@@ -4048,7 +4082,7 @@ class YellowMarkdownParser extends MarkdownExtraParser {
 		return $text;
     }
                                       
-    // Return suitable name for code block or general block element
+    // Return suitable name for block element
     public function getBlockName($language, $attributes) {
         if (!is_string_empty($language)) {
             $name = ltrim($language, ".");
