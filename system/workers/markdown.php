@@ -2,7 +2,7 @@
 // Markdown extension, https://github.com/annaesvensson/yellow-markdown
 
 class YellowMarkdown {
-    const VERSION = "0.9.6";
+    const VERSION = "0.9.7";
     public $yellow;         // access to API
     
     // Handle initialisation
@@ -4021,9 +4021,9 @@ class YellowMarkdownParser extends MarkdownExtraParser {
             $output = $this->page->parseContentElement($name, $text, $attributes, "collapsible");
             if (is_null($output)) {
                 $summary = "";
-                if (preg_match("/^[ ]*(.*?)[ ]*\n(\n*)([\S\s]*)$/m", $text, $parts) && !is_string_empty($parts[2])) {
+                if (preg_match("/^(.*?)\n\n(.*)$/s", $text, $parts)) {
                     $summary = $parts[1];
-                    $text = $parts[3];
+                    $text = $parts[2];
                 }
                 $output = "<details$attr>\n";
                 if (!is_string_empty($summary)) $output .= "<summary>".$this->runSpanGamut($summary)."</summary>\n";
