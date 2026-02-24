@@ -2,7 +2,7 @@
 // Markdown extension, https://github.com/annaesvensson/yellow-markdown
 
 class YellowMarkdown {
-    const VERSION = "0.9.7";
+    const VERSION = "0.9.8";
     public $yellow;         // access to API
     
     // Handle initialisation
@@ -4051,10 +4051,8 @@ class YellowMarkdownParser extends MarkdownExtraParser {
             $attr = $this->doExtraAttributes("div", $parts[1]);
         }
         if (!is_string_empty($text)) {
-            $output = $this->page->parseContentElement($name, "[--general--]", $attributes, "general");
-            if (!is_null($output) && preg_match("/^(.+)(\[--general--\])(.+)$/s", $output, $parts)) {
-                $output = $parts[1].$this->runBlockGamut($text).$parts[3];
-            } else {
+            $output = $this->page->parseContentElement($name, $text, $attributes, "general");
+            if (is_null($output)) {
                 $output = "<div$attr>\n".$this->runBlockGamut($text)."\n</div>";
             }
         } else {
