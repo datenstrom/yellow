@@ -157,11 +157,11 @@ a:hover {
     border-left: 3px solid var(--blockquote-accent);
 }
 .content details summary {
-    margin-left: inherit;
+    margin: inherit;
     cursor: pointer;
 }
 .content details > * {
-    margin-left: 1em;
+    margin: 1em 0 1em 1em;
 }
 .content .important {
     margin: 1em 0;
