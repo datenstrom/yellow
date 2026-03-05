@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/annaesvensson/yellow-edit
 
 class YellowEdit {
-    const VERSION = "0.9.15";
+    const VERSION = "0.9.16";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -13,7 +13,6 @@ class YellowEdit {
         $this->yellow = $yellow;
         $this->response = new YellowEditResponse($yellow);
         $this->merge = new YellowEditMerge($yellow);
-        $this->yellow->system->setDefault("editSiteEmail", "noreply");
         $this->yellow->system->setDefault("editLocation", "/edit/");
         $this->yellow->system->setDefault("editUploadNewLocation", "/media/@group/@filename");
         $this->yellow->system->setDefault("editUploadExtensions", ".gif, .jpeg, .jpg, .mp3, .mp4, .ogg, .pdf, .png, .svg, .zip");
@@ -1607,7 +1606,7 @@ class YellowEditResponse {
         $message = preg_replace("/@username/i", $userName, $message);
         $message = preg_replace("/@userlanguage/i", $userLanguage, $message);
         $sitename = $this->yellow->system->get("sitename");
-        $siteEmail = $this->yellow->system->get("editSiteEmail");
+        $siteEmail = $this->yellow->system->get("from");
         $subject = $this->yellow->language->getText("{$prefix}Subject", $userLanguage);
         $footer = $this->yellow->language->getText("editMailFooter", $userLanguage);
         $footer = str_replace("\\n", "\r\n", $footer);
