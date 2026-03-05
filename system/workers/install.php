@@ -322,7 +322,7 @@ class YellowInstall {
         if (!$this->checkServerComplete()) $this->yellow->exitFatalError("Datenstrom Yellow requires complete upload!");
         if (!$this->checkServerWrite()) $this->yellow->exitFatalError("Datenstrom Yellow requires write access!");
         if (!$this->checkServerHtaccess()) $this->yellow->exitFatalError("Datenstrom Yellow requires htaccess file!");
-        if (!$this->checkServerRewrite()) $this->yellow->exitFatalError("Datenstrom Yellow requires rewrite support!");
+        if (!$this->checkServerRewrite()) $this->yellow->exitFatalError("Datenstrom Yellow requires rewrite rules!");
     }
     
     // Check command line requirements
@@ -376,7 +376,7 @@ class YellowInstall {
         return strtoloweru($name)!="apache" || is_file(".htaccess");
     }
     
-    // Check web server rewrite support
+    // Check web server rewrite rules
     public function checkServerRewrite() {
         $rewrite = true;
         if (!$this->isServerBuiltin()) {
