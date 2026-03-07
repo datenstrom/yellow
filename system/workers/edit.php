@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/annaesvensson/yellow-edit
 
 class YellowEdit {
-    const VERSION = "0.9.16";
+    const VERSION = "0.9.17";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -382,7 +382,7 @@ class YellowEdit {
         }
         if ($this->response->status=="ok") {
             $this->response->status = $this->response->sendMail($scheme, $address, $base, $email, "confirm") ? "next" : "error";
-            if ($this->response->status=="error") $this->yellow->page->error(500, "Can't send email on this server!");
+            if ($this->response->status=="error") $this->yellow->page->error(500, "Can't send email message!");
         }
         $statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
         return $statusCode;
@@ -402,7 +402,7 @@ class YellowEdit {
         }
         if ($this->response->status=="ok") {
             $this->response->status = $this->response->sendMail($scheme, $address, $base, $email, "approve") ? "done" : "error";
-            if ($this->response->status=="error") $this->yellow->page->error(500, "Can't send email on this server!");
+            if ($this->response->status=="error") $this->yellow->page->error(500, "Can't send email message!");
         }
         $statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
         return $statusCode;
@@ -424,7 +424,7 @@ class YellowEdit {
         }
         if ($this->response->status=="ok") {
             $this->response->status = $this->response->sendMail($scheme, $address, $base, $email, "welcome") ? "done" : "error";
-            if ($this->response->status=="error") $this->yellow->page->error(500, "Can't send email on this server!");
+            if ($this->response->status=="error") $this->yellow->page->error(500, "Can't send email message!");
         }
         $statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
         return $statusCode;
@@ -439,7 +439,7 @@ class YellowEdit {
         if ($this->response->status=="ok" && !$this->yellow->user->isExisting($email)) $this->response->status = "next";
         if ($this->response->status=="ok") {
             $this->response->status = $this->response->sendMail($scheme, $address, $base, $email, "recover") ? "next" : "error";
-            if ($this->response->status=="error") $this->yellow->page->error(500, "Can't send email on this server!");
+            if ($this->response->status=="error") $this->yellow->page->error(500, "Can't send email message!");
         }
         $statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
         return $statusCode;
@@ -504,7 +504,7 @@ class YellowEdit {
         }
         if ($this->response->status=="ok") {
             $this->response->status = $this->response->sendMail($scheme, $address, $base, $emailSource, "change") ? "done" : "error";
-            if ($this->response->status=="error") $this->yellow->page->error(500, "Can't send email on this server!");
+            if ($this->response->status=="error") $this->yellow->page->error(500, "Can't send email message!");
         }
         $statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
         return $statusCode;
@@ -555,7 +555,7 @@ class YellowEdit {
         if ($this->response->status=="ok") $this->response->status = $this->getUserAccount($this->response->action, $email, "");
         if ($this->response->status=="ok") {
             $this->response->status = $this->response->sendMail($scheme, $address, $base, $email, "remove") ? "next" : "error";
-            if ($this->response->status=="error") $this->yellow->page->error(500, "Can't send email on this server!");
+            if ($this->response->status=="error") $this->yellow->page->error(500, "Can't send email message!");
         }
         $statusCode = $this->yellow->processRequest($scheme, $address, $base, $location, $fileName, false);
         return $statusCode;
@@ -577,7 +577,7 @@ class YellowEdit {
         }
         if ($this->response->status=="ok") {
             $this->response->status = $this->response->sendMail($scheme, $address, $base, $email, "goodbye") ? "ok" : "error";
-            if ($this->response->status=="error") $this->yellow->page->error(500, "Can't send email on this server!");
+            if ($this->response->status=="error") $this->yellow->page->error(500, "Can't send email message!");
         }
         if ($this->response->status=="ok") {
             $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
@@ -636,7 +636,7 @@ class YellowEdit {
             if ($this->response->status=="ok") {
                 $action = $email!=$emailSource ? "verify" : "change";
                 $this->response->status = $this->response->sendMail($scheme, $address, $base, $email, $action) ? "next" : "error";
-                if ($this->response->status=="error") $this->yellow->page->error(500, "Can't send email on this server!");
+                if ($this->response->status=="error") $this->yellow->page->error(500, "Can't send email message!");
             }
         } else {
             if ($this->response->status=="ok") {
@@ -943,7 +943,7 @@ class YellowEdit {
                     }
                     if ($status=="ok" && $statusBeforeProtection=="active") {
                         $status = $this->response->sendMail($scheme, $address, $base, $email, "reactivate") ? "done" : "error";
-                        if ($status=="error") $this->yellow->page->error(500, "Can't send email on this server!");
+                        if ($status=="error") $this->yellow->page->error(500, "Can't send email message!");
                     }
                 }
             }

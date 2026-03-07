@@ -2,7 +2,7 @@
 // Install extension, https://github.com/annaesvensson/yellow-install
 
 class YellowInstall {
-    const VERSION = "0.9.10";
+    const VERSION = "0.9.11";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -519,11 +519,13 @@ class YellowInstall {
     public function getSystemSettings($skipInstallation) {
         $settings = array();
         foreach ($_REQUEST as $key=>$value) {
-            if (!$this->yellow->system->isExisting($key)) continue;
+            if (!$this->yellow->system->isExisting($key) || is_string_empty($value)) continue;
             if ($key=="password" || $key=="status") continue;
             $settings[$key] = trim($value);
         }
         if ($this->yellow->system->get("sitename")=="Datenstrom Yellow") $settings["sitename"] = $this->yellow->toolbox->detectServerSitename();
+        if ($this->yellow->system->get("email")=="webmaster" && !isset($settings["email"])) $settings["email"] = $this->getEmailWithDomain("webmaster");
+        if ($this->yellow->system->get("from")=="noreply" && !isset($settings["from"])) $settings["from"] = $this->getEmailWithDomain("noreply");
         if ($this->yellow->system->get("generateStaticUrl")=="auto" && getenv("URL")!==false) $settings["generateStaticUrl"] = getenv("URL");
         if ($this->yellow->system->get("generateStaticUrl")=="auto" && $skipInstallation) $settings["generateStaticUrl"] = "http://localhost:8000/";
         if ($this->yellow->system->get("coreTimezone")=="UTC") $settings["coreTimezone"] = $this->yellow->toolbox->detectServerTimezone();
@@ -535,6 +537,18 @@ class YellowInstall {
         }
         $settings["updateCurrentRelease"] = YellowCore::RELEASE;
         return $settings;
+    }
+    
+    // Return full email address with domain name, if possible
+    public function getEmailWithDomain($email) {
+        $serverName = $this->yellow->toolbox->getServer("SERVER_NAME");
+        if (strposu($email, "@")===false && preg_match("#^(www\.)?(.+)\.(.+?)$#", $serverName, $matches)) {
+            $tld = strtoloweru($matches[3]);
+            if (!is_numeric($tld) && !in_array($tld, array("example", "invalid", "localhost", "test"))) {
+                $email = $email."@".strtoloweru($matches[2].".".$matches[3]);
+            }
+        }
+        return $email;
     }
 
     // Return raw data for install page
