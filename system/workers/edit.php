@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/annaesvensson/yellow-edit
 
 class YellowEdit {
-    const VERSION = "0.9.17";
+    const VERSION = "0.9.18";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -301,7 +301,8 @@ class YellowEdit {
                 $statusCode = $this->yellow->sendStatus(301, $location);
             } else {
                 $statusCode = 404;
-                if ($this->response->isUserAccess("create", $location)) $statusCode = 434;
+                if ($this->response->isUserAccess("create", $location) && $this->response->isCreateLocation($location))
+                    $statusCode = 434;
                 if ($this->response->isUserAccess("restore", $location) && $this->response->isDeletedLocation($location)) {
                     $statusCode = 435;
                 }
@@ -1813,6 +1814,11 @@ class YellowEditResponse {
         return !is_string_empty($pathDeleted) && $this->yellow->lookup->isContentFile($fileNameRestored) &&
             $this->yellow->toolbox->renameDirectory($pathDeleted, dirname($fileNameRestored), true) &&
             $this->yellow->toolbox->writeFile($fileNameRestored, $rawDataRestored);
+    }
+    
+    // Check if location can be created
+    public function isCreateLocation($location) {
+        return !is_string_empty($this->yellow->lookup->findFileFromContentLocation($location));
     }
     
     // Check if location has been deleted
