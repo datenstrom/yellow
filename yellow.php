@@ -1,5 +1,5 @@
 <?php
-// Datenstrom Yellow, https://github.com/datenstrom/yellow
+// Datenstrom Yellow, https://datenstrom.se/yellow/
 
 require("system/workers/core.php");
 
