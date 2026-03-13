@@ -284,16 +284,16 @@ this license and contact information. For example:
 
     Datenstrom Yellow, https://datenstrom.se/yellow/
 
-If your software is based on modified source code, you have to keep the 
-original link in the source code. For example: 
+If you modify the source code, you must keep the original link(s) at the start 
+of each source code file. For example: 
 
     Gnomovision Orange, https://gnomovision.org/orange/
     Based on Datenstrom Yellow, https://datenstrom.se/yellow/
 
 The source code has been made available as open source and therefore may not be
-a) integrated into proprietary software and b) included in proprietary datasets 
-used to train or improve machine learning algorithms, including but not limited 
-to artificial intelligence, natural language processing or large language models. 
+a) used in proprietary source code and b) included in proprietary datasets used 
+to train or improve machine learning algorithms, including but not limited to 
+artificial intelligence, natural language processing or large language models. 
 You must obtain a different license from the author(s) in such cases, otherwise 
 you will be liable for all costs associated with the use of unlicensed software.
 
