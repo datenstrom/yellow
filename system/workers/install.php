@@ -2,7 +2,7 @@
 // Install extension, https://github.com/annaesvensson/yellow-install
 
 class YellowInstall {
-    const VERSION = "0.9.11";
+    const VERSION = "0.9.12";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -113,7 +113,7 @@ class YellowInstall {
     public function updateLog() {
         $statusCode = 200;
         $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreWebsiteFile");
-        if (!is_file($fileName)) {
+        if (!is_file($fileName) && $this->yellow->system->get("coreWebsiteFile")!="none") {
             list($name, $version, $os) = $this->yellow->toolbox->detectServerInformation();
             $product = "Datenstrom Yellow ".YellowCore::RELEASE;
             $this->yellow->toolbox->log("info", "Install $product, PHP ".PHP_VERSION.", $name $version, $os");

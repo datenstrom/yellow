@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.9.23";
+    const VERSION = "0.9.24";
     const RELEASE = "0.9";
     public $content;        // content files
     public $media;          // media files
@@ -2974,7 +2974,7 @@ class YellowToolbox {
                 if ($statusCode!=0) break;
             }
         }
-        if ($statusCode==0) {
+        if ($statusCode==0 && $this->yellow->system->get("coreWebsiteFile")!="none") {
             $line = date("Y-m-d H:i:s")." ".trim($action)." ".trim($message)."\n";
             $this->appendFile($this->yellow->system->get("coreServerInstallDirectory").
                 $this->yellow->system->get("coreExtensionDirectory").
@@ -3197,7 +3197,6 @@ class YellowPage {
         $this->parsePageLayout($this->get("layout"));
         if (!$this->isCacheable()) $this->setHeader("Cache-Control", "no-cache, no-store");
         if (!$this->isHeader("Content-Type")) $this->setHeader("Content-Type", "text/html; charset=utf-8");
-        if (!$this->isHeader("Content-Modified")) $this->setHeader("Content-Modified", $this->getModified(true));
         if (!$this->isHeader("Last-Modified")) $this->setHeader("Last-Modified", $this->getLastModified(true));
         $theme = $this->yellow->lookup->normaliseName($this->get("theme"));
         if (!is_file($this->yellow->system->get("coreThemeDirectory").$theme.".css") &&
