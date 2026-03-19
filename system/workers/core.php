@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.9.24";
+    const VERSION = "0.9.25";
     const RELEASE = "0.9";
     public $content;        // content files
     public $media;          // media files
@@ -146,7 +146,11 @@ class YellowCore {
             if (!is_readable($fileName)) $this->page->error(404);
         }
         if ($this->system->get("coreDebugMode")>=1 && ($this->lookup->isContentFile($fileName) || $this->page->isError())) {
+            $layout = $this->page->get("layout");
+            $theme = $this->page->get("theme");
             echo "YellowCore::processRequest file:$fileName<br />\n";
+            echo "YellowCore::processRequest layout:$layout theme:$theme<br />\n";
+
         }
         return $statusCode;
     }
@@ -156,7 +160,12 @@ class YellowCore {
         ob_clean();
         $statusCode = $this->sendPage($this->page->scheme, $this->page->address, $this->page->base,
             $this->page->location, $this->page->fileName, false, false);
-        if ($this->system->get("coreDebugMode")>=1) echo "YellowCore::processRequestError file:".$this->page->fileName."<br />\n";
+        if ($this->system->get("coreDebugMode")>=1) {
+            $layout = $this->page->get("layout");
+            $theme = $this->page->get("theme");
+            echo "YellowCore::processRequestError file:".$this->page->fileName."<br />\n";
+            echo "YellowCore::processRequestError layout:$layout theme:$theme<br />\n";
+        }
         return $statusCode;
     }
     
@@ -199,11 +208,6 @@ class YellowCore {
             foreach ($this->page->headerData as $key=>$value) {
                 echo "YellowCore::sendPage $key: $value<br />\n";
             }
-            $language = $this->page->get("language");
-            $layout = $this->page->get("layout");
-            $theme = $this->page->get("theme");
-            $parser = $this->page->get("parser");
-            echo "YellowCore::sendPage language:$language layout:$layout theme:$theme parser:$parser<br />\n";
         }
         return $statusCode;
     }
@@ -1148,7 +1152,7 @@ class YellowLookup {
             $rootLocations["root/"] = "$pathBase";
         }
         if ($this->yellow->system->get("coreDebugMode")>=3) {
-            foreach ($rootLocations as $key=>$key) {
+            foreach ($rootLocations as $key=>$value) {
                 echo "YellowLookup::findContentRootLocations $key -> $value<br />\n";
             }
         }
@@ -3166,8 +3170,8 @@ class YellowPage {
                 $description = $this->yellow->toolbox->createTextDescription($this->parserData, 150);
                 $this->set("description", !is_string_empty($description) ? $description : $this->get("title"));
             }
-            if ($this->yellow->system->get("coreDebugMode")>=3) {
-                echo "YellowPage::parseContent location:".$this->location."<br />\n";
+            if ($this->yellow->system->get("coreDebugMode")>=2) {
+                echo "YellowPage::parseContent file:".$this->fileName." parser:".$this->get("parser")."<br />\n";
             }
         }
     }
