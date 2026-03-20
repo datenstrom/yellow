@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "0.9.25";
+    const VERSION = "0.9.26";
     const RELEASE = "0.9";
     public $content;        // content files
     public $media;          // media files
@@ -145,13 +145,6 @@ class YellowCore {
             }
             if (!is_readable($fileName)) $this->page->error(404);
         }
-        if ($this->system->get("coreDebugMode")>=1 && ($this->lookup->isContentFile($fileName) || $this->page->isError())) {
-            $layout = $this->page->get("layout");
-            $theme = $this->page->get("theme");
-            echo "YellowCore::processRequest file:$fileName<br />\n";
-            echo "YellowCore::processRequest layout:$layout theme:$theme<br />\n";
-
-        }
         return $statusCode;
     }
     
@@ -160,12 +153,6 @@ class YellowCore {
         ob_clean();
         $statusCode = $this->sendPage($this->page->scheme, $this->page->address, $this->page->base,
             $this->page->location, $this->page->fileName, false, false);
-        if ($this->system->get("coreDebugMode")>=1) {
-            $layout = $this->page->get("layout");
-            $theme = $this->page->get("theme");
-            echo "YellowCore::processRequestError file:".$this->page->fileName."<br />\n";
-            echo "YellowCore::processRequestError layout:$layout theme:$theme<br />\n";
-        }
         return $statusCode;
     }
     
@@ -193,8 +180,8 @@ class YellowCore {
     }
     
     // Send page response
-    public function sendPage($scheme, $address, $base, $location, $fileName, $cacheable, $showSource) {
-        $rawData = $showSource ? $this->toolbox->readFile($fileName) : $this->page->getRawDataError();
+    public function sendPage($scheme, $address, $base, $location, $fileName, $cacheable, $regular) {
+        $rawData = $regular ? $this->toolbox->readFile($fileName) : $this->page->getRawDataError();
         $statusCode = max($this->page->statusCode, 200);
         $errorMessage = $this->page->errorMessage;
         $this->page = new YellowPage($this);
@@ -208,6 +195,11 @@ class YellowCore {
             foreach ($this->page->headerData as $key=>$value) {
                 echo "YellowCore::sendPage $key: $value<br />\n";
             }
+            $fileNameResponse = $regular ? $this->page->fileName : $this->page->getFileNameError();
+            $layout = $this->page->get("layout");
+            $theme = $this->page->get("theme");
+            echo "YellowCore::sendPage file:$fileNameResponse<br />\n";
+            echo "YellowCore::sendPage layout:$layout theme:$theme<br />\n";
         }
         return $statusCode;
     }
@@ -3497,9 +3489,7 @@ class YellowPage {
     // Return raw data for error page
     public function getRawDataError() {
         $statusCode = $this->statusCode;
-        $sharedLocation = $this->yellow->content->getHomeLocation($this->location)."shared/";
-        $fileNameError = $this->yellow->lookup->findFileFromContentLocation($sharedLocation, true).$this->yellow->system->get("coreContentErrorFile");
-        $fileNameError = str_replace("(.*)", $statusCode, $fileNameError);
+        $fileNameError = $this->getFileNameError();
         $languageError = $this->yellow->lookup->findContentLanguage($this->fileName, $this->yellow->system->get("language"));
         if (is_file($fileNameError)) {
             $rawData = $this->yellow->toolbox->readFile($fileNameError);
@@ -3511,6 +3501,13 @@ class YellowPage {
             $rawData .= "Layout:error\n---\n".$this->errorMessage;
         }
         return $rawData;
+    }
+    
+    // Return file name for error page
+    public function getFileNameError() {
+        $sharedLocation = $this->yellow->content->getHomeLocation($this->location)."shared/";
+        $fileNameError = $this->yellow->lookup->findFileFromContentLocation($sharedLocation, true).$this->yellow->system->get("coreContentErrorFile");
+        return str_replace("(.*)", $this->statusCode, $fileNameError);
     }
     
     // Return page status code, number or HTTP format
