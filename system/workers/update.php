@@ -2,7 +2,7 @@
 // Update extension, https://github.com/annaesvensson/yellow-update
 
 class YellowUpdate {
-    const VERSION = "0.9.10";
+    const VERSION = "0.9.11";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $extensions;             // number of extensions
@@ -10,10 +10,10 @@ class YellowUpdate {
     // Handle initialisation
     public function onLoad($yellow) {
         $this->yellow = $yellow;
-        $this->yellow->system->setDefault("updateCurrentRelease", "none");
-        $this->yellow->system->setDefault("updateAvailableUrl", "auto");
-        $this->yellow->system->setDefault("updateAvailableFile", "update-available.ini");
+        $this->yellow->system->setDefault("updateInstalledRelease", "none");
         $this->yellow->system->setDefault("updateInstalledFile", "update-installed.ini");
+        $this->yellow->system->setDefault("updateMaintainedFile", "update-maintained.ini");
+        $this->yellow->system->setDefault("updateMaintainedeUrl", "auto");
         $this->yellow->system->setDefault("updateExtensionFile", "extension.ini");
         $this->yellow->system->setDefault("updateEventPending", "none");
         $this->yellow->system->setDefault("updateEventDaily", "0");
@@ -72,16 +72,16 @@ class YellowUpdate {
     public function onParseContentElement($page, $name, $text, $attributes, $type) {
         $output = null;
         if ($name=="about" && $type=="inline") {
-            list($dummy, $settingsCurrent) = $this->getExtensionSettings(true);
+            list($dummy, $settingsInstalled) = $this->getExtensionSettings(true);
             $output = "Datenstrom Yellow ".YellowCore::RELEASE."<br />\n";
-            foreach ($settingsCurrent as $key=>$value) {
+            foreach ($settingsInstalled as $key=>$value) {
                 $output .= ucfirst($key)." ".$value->get("version")."<br />\n";
             }
         }
         return $output;
     }
     
-    // Process command to show current version
+    // Process command to show installed version
     public function processCommandAbout($command, $text) {
         $statusCode = 200;
         $extensions = $this->getExtensionsFromText($text);
@@ -96,8 +96,8 @@ class YellowUpdate {
             if ($statusCode>=400) echo "ERROR checking extensions: ".$this->yellow->page->errorMessage."\n";
         } else {
             echo "Datenstrom Yellow ".YellowCore::RELEASE."\n";
-            list($statusCode, $settingsCurrent) = $this->getExtensionSettings(true);
-            foreach ($settingsCurrent as $key=>$value) {
+            list($statusCode, $settingsInstalled) = $this->getExtensionSettings(true);
+            foreach ($settingsInstalled as $key=>$value) {
                 echo ucfirst($key)." ".$value->get("version")."\n";
             }
         }
@@ -136,8 +136,8 @@ class YellowUpdate {
             echo "Yellow $command: Website ".($statusCode!=200 ? "not " : "")."updated";
             echo ", $this->extensions extension".($this->extensions!=1 ? "s" : "")." uninstalled\n";
         } else {
-            list($statusCode, $settingsCurrent) = $this->getExtensionSettings(true);
-            foreach ($settingsCurrent as $key=>$value) {
+            list($statusCode, $settingsInstalled) = $this->getExtensionSettings(true);
+            foreach ($settingsInstalled as $key=>$value) {
                 echo ucfirst($key)." - ".$this->getExtensionDescription($key, $value)."\n";
             }
             if ($statusCode!=200) echo "ERROR checking extensions: ".$this->yellow->page->errorMessage."\n";
@@ -360,10 +360,10 @@ class YellowUpdate {
 
     // Update pending events
     public function updateEventPending() {
-        if ($this->yellow->system->get("updateCurrentRelease")!="none") {
-            if ($this->yellow->system->get("updateCurrentRelease")!=YellowCore::RELEASE) {
+        if ($this->yellow->system->get("updateInstalledRelease")!="none") {
+            if ($this->yellow->system->get("updateInstalledRelease")!=YellowCore::RELEASE) {
                 $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
-                if (!$this->yellow->system->save($fileName, array("updateCurrentRelease" => YellowCore::RELEASE))) {
+                if (!$this->yellow->system->save($fileName, array("updateInstalledRelease" => YellowCore::RELEASE))) {
                     $this->yellow->toolbox->log("error", "Can't write file '$fileName'!");
                 } else {
                     list($name, $version, $os) = $this->yellow->toolbox->detectServerInformation();
@@ -423,17 +423,17 @@ class YellowUpdate {
         $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateInstalledFile");
         $fileData = $fileDataNew = $this->yellow->toolbox->readFile($fileName);
         if ($action=="install" || $action=="update") {
-            $settingsCurrent = $this->yellow->toolbox->getTextSettings($fileData, "extension");
-            $settingsCurrent[$extension] = new YellowArray();
+            $settingsInstalled = $this->yellow->toolbox->getTextSettings($fileData, "extension");
+            $settingsInstalled[$extension] = new YellowArray();
             $block = $this->yellow->toolbox->getTextSettings($text, "");
-            foreach ($block as $key=>$value) $settingsCurrent[$extension][$key] = $value;
-            $settingsCurrent->uksort("strnatcasecmp");
+            foreach ($block as $key=>$value) $settingsInstalled[$extension][$key] = $value;
+            $settingsInstalled->uksort("strnatcasecmp");
             $fileDataNew = "";
             foreach ($this->yellow->toolbox->getTextLines($fileData) as $line) {
                 if (preg_match("/^\#/", $line)) $fileDataNew = $line;
                 break;
             }
-            foreach ($settingsCurrent as $extension=>$block) {
+            foreach ($settingsInstalled as $extension=>$block) {
                 if (!is_string_empty($fileDataNew)) $fileDataNew .= "\n";
                 foreach ($block as $key=>$value) {
                     $fileDataNew .= (strposu($key, "/") ? $key : ucfirst($key)).": $value\n";
@@ -646,17 +646,17 @@ class YellowUpdate {
     // Return extension about information
     public function getExtensionAboutInformation($extensions) {
         $settings = array();
-        list($statusCode, $settingsCurrent) = $this->getExtensionSettings(true);
-        $settingsCurrent["Datenstrom Yellow"] = new YellowArray();
-        $settingsCurrent["Datenstrom Yellow"]["version"] = YellowCore::RELEASE;
-        $settingsCurrent["Datenstrom Yellow"]["description"] = "Datenstrom Yellow is for people who make small websites.";
-        $settingsCurrent["Datenstrom Yellow"]["documentationUrl"] = "https://datenstrom.se/yellow/";
+        list($statusCode, $settingsInstalled) = $this->getExtensionSettings(true);
+        $settingsInstalled["Datenstrom Yellow"] = new YellowArray();
+        $settingsInstalled["Datenstrom Yellow"]["version"] = YellowCore::RELEASE;
+        $settingsInstalled["Datenstrom Yellow"]["description"] = "Datenstrom Yellow is for people who make small websites.";
+        $settingsInstalled["Datenstrom Yellow"]["documentationUrl"] = "https://datenstrom.se/yellow/";
         foreach ($extensions as $extension) {
             $found = false;
             if (strtoloweru($extension)=="yellow") $extension = "Datenstrom Yellow";
-            foreach ($settingsCurrent as $key=>$value) {
+            foreach ($settingsInstalled as $key=>$value) {
                 if (strtoloweru($key)==strtoloweru($extension)) {
-                    $settings[$key] = $settingsCurrent[$key];
+                    $settings[$key] = $settingsInstalled[$key];
                     $found = true;
                     break;
                 }
@@ -672,14 +672,14 @@ class YellowUpdate {
     // Return extension install information
     public function getExtensionInstallInformation($extensions) {
         $settings = array();
-        list($statusCodeCurrent, $settingsCurrent) = $this->getExtensionSettings(true);
+        list($statusCodeInstalled, $settingsInstalled) = $this->getExtensionSettings(true);
         list($statusCodeAvailable, $settingsAvailable) = $this->getExtensionSettings(false);
-        $statusCode = max($statusCodeCurrent, $statusCodeAvailable);
+        $statusCode = max($statusCodeInstalled, $statusCodeAvailable);
         foreach ($extensions as $extension) {
             $found = false;
             foreach ($settingsAvailable as $key=>$value) {
                 if (strtoloweru($key)==strtoloweru($extension)) {
-                    if (!$settingsCurrent->isExisting($key)) $settings[$key] = $settingsAvailable[$key];
+                    if (!$settingsInstalled->isExisting($key)) $settings[$key] = $settingsAvailable[$key];
                     $found = true;
                     break;
                 }
@@ -695,12 +695,12 @@ class YellowUpdate {
     // Return extension about information
     public function getExtensionUninstallInformation($extensions, $extensionsProtected = "") {
         $settings = array();
-        list($statusCode, $settingsCurrent) = $this->getExtensionSettings(true);
+        list($statusCode, $settingsInstalled) = $this->getExtensionSettings(true);
         foreach ($extensions as $extension) {
             $found = false;
-            foreach ($settingsCurrent as $key=>$value) {
+            foreach ($settingsInstalled as $key=>$value) {
                 if (strtoloweru($key)==strtoloweru($extension)) {
-                    $settings[$key] = $settingsCurrent[$key];
+                    $settings[$key] = $settingsInstalled[$key];
                     $found = true;
                     break;
                 }
@@ -720,15 +720,15 @@ class YellowUpdate {
     // Return extension update information
     public function getExtensionUpdateInformation($extensions) {
         $settings = array();
-        list($statusCodeCurrent, $settingsCurrent) = $this->getExtensionSettings(true);
+        list($statusCodeInstalled, $settingsInstalled) = $this->getExtensionSettings(true);
         list($statusCodeAvailable, $settingsAvailable) = $this->getExtensionSettings(false);
-        $statusCode = max($statusCodeCurrent, $statusCodeAvailable);
+        $statusCode = max($statusCodeInstalled, $statusCodeAvailable);
         if (in_array("all", $extensions)) {
-            foreach ($settingsCurrent as $key=>$value) {
+            foreach ($settingsInstalled as $key=>$value) {
                 if ($settingsAvailable->isExisting($key)) {
-                    $versionCurrent = $settingsCurrent[$key]->get("version");
+                    $versionInstalled = $settingsInstalled[$key]->get("version");
                     $versionAvailable = $settingsAvailable[$key]->get("version");
-                    if (strnatcasecmp($versionCurrent, $versionAvailable)<0) {
+                    if (strnatcasecmp($versionInstalled, $versionAvailable)<0) {
                         $settings[$key] = $settingsAvailable[$key];
                     }
                 }
@@ -736,11 +736,11 @@ class YellowUpdate {
         } else {
             foreach ($extensions as $extension) {
                 $found = false;
-                foreach ($settingsCurrent as $key=>$value) {
+                foreach ($settingsInstalled as $key=>$value) {
                     if (strtoloweru($key)==strtoloweru($extension) && $settingsAvailable->isExisting($key)) {
-                        $versionCurrent = $settingsCurrent[$key]->get("version");
+                        $versionInstalled = $settingsInstalled[$key]->get("version");
                         $versionAvailable = $settingsAvailable[$key]->get("version");
-                        if (strnatcasecmp($versionCurrent, $versionAvailable)<0) {
+                        if (strnatcasecmp($versionInstalled, $versionAvailable)<0) {
                             $settings[$key] = $settingsAvailable[$key];
                         }
                         $found = true;
@@ -757,12 +757,12 @@ class YellowUpdate {
     }
 
     // Return extension settings
-    public function getExtensionSettings($current) {
+    public function getExtensionSettings($installed) {
         $statusCode = 200;
         $settings = array();
-        if ($current) {
-            $fileNameCurrent = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateInstalledFile");
-            $fileData = $this->yellow->toolbox->readFile($fileNameCurrent);
+        if ($installed) {
+            $fileNameInstalled = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateInstalledFile");
+            $fileData = $this->yellow->toolbox->readFile($fileNameInstalled);
             $settings = $this->yellow->toolbox->getTextSettings($fileData, "extension");
             foreach ($settings->getArrayCopy() as $key=>$value) {
                 if (!$this->yellow->extension->isExisting($key)) unset($settings[$key]);
@@ -773,18 +773,18 @@ class YellowUpdate {
                 $settings[$key]["version"] = $value["version"];
             }
         } else {
-            $fileNameAvailable = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateAvailableFile");
-            $expire = $this->yellow->toolbox->getFileModified($fileNameAvailable) + 60*10;
+            $fileNameMaintained = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateMaintainedFile");
+            $expire = $this->yellow->toolbox->getFileModified($fileNameMaintained) + 60*10;
             if ($expire<=time()) {
-                $url = $this->yellow->system->get("updateAvailableUrl");
-                if ($url=="auto") $url = "https://raw.githubusercontent.com/datenstrom/yellow/main/system/extensions/update-available.ini";
+                $url = $this->yellow->system->get("updateMaintainedeUrl");
+                if ($url=="auto") $url = "https://raw.githubusercontent.com/datenstrom/yellow/main/system/extensions/update-maintained.ini";
                 list($statusCode, $fileData) = $this->getExtensionFile($url);
-                if ($statusCode==200 && !$this->yellow->toolbox->writeFile($fileNameAvailable, $fileData)) {
+                if ($statusCode==200 && !$this->yellow->toolbox->writeFile($fileNameMaintained, $fileData)) {
                     $statusCode = 500;
-                    $this->yellow->page->error($statusCode, "Can't write file '$fileNameAvailable'!");
+                    $this->yellow->page->error($statusCode, "Can't write file '$fileNameMaintained'!");
                 }
             }
-            $fileData = $this->yellow->toolbox->readFile($fileNameAvailable);
+            $fileData = $this->yellow->toolbox->readFile($fileNameMaintained);
             $settings = $this->yellow->toolbox->getTextSettings($fileData, "extension");
         }
         $settings->uksort("strnatcasecmp");
