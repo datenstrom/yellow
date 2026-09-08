@@ -1,3 +1,4 @@
 .gitattributes export-ignore
 readme.md export-ignore
 screenshot.png export-ignore
+update-available.ini export-ignore
