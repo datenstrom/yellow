@@ -2,7 +2,7 @@
 // Install extension, https://github.com/annaesvensson/yellow-install
 
 class YellowInstall {
-    const VERSION = "0.9.12";
+    const VERSION = "0.9.13";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -25,7 +25,7 @@ class YellowInstall {
     public function processRequestInstall($scheme, $address, $base, $location, $fileName) {
         $statusCode = 0;
         if ($this->yellow->lookup->isContentFile($fileName) || is_string_empty($fileName)) {
-            if ($this->yellow->system->get("updateCurrentRelease")=="none") {
+            if ($this->yellow->system->get("updateInstalledRelease")=="none") {
                 $this->checkServerRequirements();
                 $author = trim(preg_replace("/[^\pL\d\-\. ]/u", "-", $this->yellow->page->getRequest("author")));
                 $email = trim($this->yellow->page->getRequest("email"));
@@ -69,7 +69,7 @@ class YellowInstall {
     // Process command to install website
     public function processCommandInstall($command, $text) {
         $statusCode = 0;
-        if ($this->yellow->system->get("updateCurrentRelease")=="none") {
+        if ($this->yellow->system->get("updateInstalledRelease")=="none") {
             $this->checkCommandRequirements();
             list($installation, $option) = $this->yellow->toolbox->getTextArguments($text);
             if (is_string_empty($command)) {
@@ -179,10 +179,10 @@ class YellowInstall {
             if (!is_string_empty($option)) {
                 if ($option=="medium" || $option=="large") {
                     $path = $this->yellow->system->get("coreExtensionDirectory");
-                    $fileData = $this->yellow->toolbox->readFile($path.$this->yellow->system->get("updateAvailableFile"));
+                    $fileData = $this->yellow->toolbox->readFile($path.$this->yellow->system->get("updateMaintainedFile"));
                     $settings = $this->yellow->toolbox->getTextSettings($fileData, "extension");
-                    $extensions = $this->getAvailableExtensionsRequired($settings, $option);
-                    $statusCode = $this->downloadExtensionsAvailable($settings, $extensions);
+                    $extensions = $this->getInstallExtensionsRequired($settings, $option);
+                    $statusCode = $this->downloadExtensionsRequired($settings, $extensions);
                     $path = $this->yellow->system->get("coreWorkerDirectory");
                     foreach ($this->yellow->toolbox->getDirectoryEntries($path, "/^install-.*\.bin$/", true, false) as $entry) {
                         if (basename($entry)=="install-language.bin") continue;
@@ -321,7 +321,6 @@ class YellowInstall {
         }
         if (!$this->checkServerComplete()) $this->yellow->exitFatalError("Datenstrom Yellow requires complete upload!");
         if (!$this->checkServerWrite()) $this->yellow->exitFatalError("Datenstrom Yellow requires write access!");
-        if (!$this->checkServerHtaccess()) $this->yellow->exitFatalError("Datenstrom Yellow requires htaccess file!");
         if (!$this->checkServerRewrite()) $this->yellow->exitFatalError("Datenstrom Yellow requires rewrite rules!");
     }
     
@@ -353,6 +352,10 @@ class YellowInstall {
                 }
             }
         }
+        list($name) = $this->yellow->toolbox->detectServerInformation();
+        if (strtoloweru($name)=="apache" || strtoloweru($name)=="litespeed") {
+            array_push($fileNames, ".htaccess");
+        }
         foreach ($fileNames as $fileName) {
             if (!is_file($fileName) || filesize($fileName)==0) {
                 $complete = false;
@@ -368,12 +371,6 @@ class YellowInstall {
     public function checkServerWrite() {
         $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreSystemFile");
         return $this->yellow->system->save($fileName, array());
-    }
-    
-    // Check web server htaccess file
-    public function checkServerHtaccess() {
-        list($name) = $this->yellow->toolbox->detectServerInformation();
-        return strtoloweru($name)!="apache" || is_file(".htaccess");
     }
     
     // Check web server rewrite rules
@@ -402,8 +399,8 @@ class YellowInstall {
         return $rewrite;
     }
     
-    // Download available extension files
-    public function downloadExtensionsAvailable($settings, $extensions) {
+    // Download required extension files
+    public function downloadExtensionsRequired($settings, $extensions) {
         $statusCode = 200;
         if ($this->yellow->extension->isExisting("update")) {
             $path = $this->yellow->system->get("coreWorkerDirectory");
@@ -411,7 +408,7 @@ class YellowInstall {
             $extensionsTotal = count($extensions);
             $curlHandle = curl_init();
             foreach ($extensions as $extension) {
-                echo "\rDownloading available extensions ".$this->getProgressPercent(++$extensionsNow, $extensionsTotal, 5, 95)."%... ";
+                echo "\rDownloading extensions files ".$this->getProgressPercent(++$extensionsNow, $extensionsTotal, 5, 95)."%... ";
                 $fileName = $path."install-".$this->yellow->lookup->normaliseName($extension, true, false, true).".bin";
                 if (is_file($fileName)) continue;
                 $url = $settings[$extension]->get("downloadUrl");
@@ -435,21 +432,21 @@ class YellowInstall {
                     $this->yellow->page->error($statusCode, "Can't write file '$fileName'!");
                 }
                 if ($this->yellow->system->get("coreDebugMode")>=2 && !is_string_empty($redirectUrl)) {
-                    echo "YellowInstall::downloadExtensionsAvailable redirected to url:$redirectUrl<br />\n";
+                    echo "YellowInstall::downloadExtensionsRequired redirected to url:$redirectUrl<br />\n";
                 }
                 if ($this->yellow->system->get("coreDebugMode")>=2) {
-                    echo "YellowInstall::downloadExtensionsAvailable status:$statusCode url:$url<br />\n";
+                    echo "YellowInstall::downloadExtensionsRequired status:$statusCode url:$url<br />\n";
                 }
                 if ($statusCode!=200) break;
             }
             if (PHP_VERSION_ID<80000) curl_close($curlHandle);
-            echo "\rDownloading available extensions 100%... done\n";
+            echo "\rDownloading extensions files 100%... done\n";
         }
         return $statusCode;
     }
     
-    // Return available extensions required
-    public function getAvailableExtensionsRequired($settings, $option) {
+    // Return install extensions required
+    public function getInstallExtensionsRequired($settings, $option) {
         $extensions = array();
         if ($option=="medium") {
             $text = "help highlight search toc";
@@ -535,7 +532,7 @@ class YellowInstall {
             $themeStandard = ",".$this->yellow->system->get("theme")."/install";
             $settings["updateEventPending"] = $this->yellow->system->get("updateEventPending").$themeStandard;
         }
-        $settings["updateCurrentRelease"] = YellowCore::RELEASE;
+        $settings["updateInstalledRelease"] = YellowCore::RELEASE;
         return $settings;
     }
     
