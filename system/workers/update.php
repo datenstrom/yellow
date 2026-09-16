@@ -2,7 +2,7 @@
 // Update extension, https://github.com/annaesvensson/yellow-update
 
 class YellowUpdate {
-    const VERSION = "0.9.11";
+    const VERSION = "0.9.12";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $extensions;             // number of extensions
@@ -11,8 +11,8 @@ class YellowUpdate {
     public function onLoad($yellow) {
         $this->yellow = $yellow;
         $this->yellow->system->setDefault("updateInstalledRelease", "none");
-        $this->yellow->system->setDefault("updateInstalledFile", "update-installed.ini");
-        $this->yellow->system->setDefault("updateMaintainedFile", "update-maintained.ini");
+        $this->yellow->system->setDefault("updateInstalledFile", "yellow-update-installed.ini");
+        $this->yellow->system->setDefault("updateMaintainedFile", "yellow-update-maintained.ini");
         $this->yellow->system->setDefault("updateMaintainedeUrl", "auto");
         $this->yellow->system->setDefault("updateExtensionFile", "extension.ini");
         $this->yellow->system->setDefault("updateEventPending", "none");
@@ -777,7 +777,7 @@ class YellowUpdate {
             $expire = $this->yellow->toolbox->getFileModified($fileNameMaintained) + 60*10;
             if ($expire<=time()) {
                 $url = $this->yellow->system->get("updateMaintainedeUrl");
-                if ($url=="auto") $url = "https://raw.githubusercontent.com/datenstrom/yellow/main/system/extensions/update-maintained.ini";
+                if ($url=="auto") $url = "https://datenstrom.se/media/downloads/yellow-update-maintained.ini";
                 list($statusCode, $fileData) = $this->getExtensionFile($url);
                 if ($statusCode==200 && !$this->yellow->toolbox->writeFile($fileNameMaintained, $fileData)) {
                     $statusCode = 500;
