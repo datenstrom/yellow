@@ -2,7 +2,7 @@
 // Install extension, https://github.com/annaesvensson/yellow-install
 
 class YellowInstall {
-    const VERSION = "0.9.13";
+    const VERSION = "0.9.14";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -178,8 +178,8 @@ class YellowInstall {
         if ($this->yellow->extension->isExisting("update")) {
             if (!is_string_empty($option)) {
                 if ($option=="medium" || $option=="large") {
-                    $path = $this->yellow->system->get("coreExtensionDirectory");
-                    $fileData = $this->yellow->toolbox->readFile($path.$this->yellow->system->get("updateMaintainedFile"));
+                    $fileNameMaintained = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateMaintainedFile");
+                    $fileData = $this->yellow->toolbox->readFile($fileNameMaintained);
                     $settings = $this->yellow->toolbox->getTextSettings($fileData, "extension");
                     $extensions = $this->getInstallExtensionsRequired($settings, $option);
                     $statusCode = $this->downloadExtensionsRequired($settings, $extensions);
@@ -337,10 +337,11 @@ class YellowInstall {
     // Check web server complete upload
     public function checkServerComplete() {
         $complete = true;
-        $fileName = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateInstalledFile");
-        $fileData = $this->yellow->toolbox->readFile($fileName);
+        $fileNameInstalled = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateInstalledFile");
+        $fileNameMaintained = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateMaintainedFile");
+        $fileData = $this->yellow->toolbox->readFile($fileNameInstalled);
         $settings = $this->yellow->toolbox->getTextSettings($fileData, "extension");
-        $fileNames = array($fileName);
+        $fileNames = array($fileNameInstalled, $fileNameMaintained);
         foreach ($settings as $extension=>$block) {
             foreach ($block as $key=>$value) {
                 if (strposu($key, "/")) {
@@ -493,8 +494,8 @@ class YellowInstall {
     
     // Return extensions installed
     public function getExtensionsCount() {
-        $fileNameCurrent = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateInstalledFile");
-        $fileData = $this->yellow->toolbox->readFile($fileNameCurrent);
+        $fileNameInstalled = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateInstalledFile");
+        $fileData = $this->yellow->toolbox->readFile($fileNameInstalled);
         $settings = $this->yellow->toolbox->getTextSettings($fileData, "extension");
         return count($settings);
     }
