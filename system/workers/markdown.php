@@ -2,7 +2,7 @@
 // Markdown extension, https://github.com/annaesvensson/yellow-markdown
 
 class YellowMarkdown {
-    const VERSION = "0.9.8";
+    const VERSION = "0.9.9";
     public $yellow;         // access to API
     
     // Handle initialisation
@@ -3832,7 +3832,7 @@ class MarkdownExtraParser extends MarkdownParser {
 	}
 }
 
-// Markdown parser, Copyright Datenstrom, License GPLv2
+// Markdown parser, Copyright Datenstrom and contributors, License EUPLv1.2-only
 
 class YellowMarkdownParser extends MarkdownExtraParser {
     public $yellow;             // access to API
