@@ -278,8 +278,6 @@ Code from exclusive appropriation.
 All other changes or additions to this Appendix require the production of a new
 EUPL version.
 
-End of license terms.
-
 ## How to apply the EUPL to this software
 
 At the start of each source code file is a link to a website where the licence 
