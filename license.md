@@ -287,16 +287,16 @@ can be found. For example:
 
     Datenstrom Yellow, https://datenstrom.se/yellow/
 
-If you modify a source code file, you must always keep the original link(s) 
-at the start of the file. For example: 
+If you modify source code files, you must keep the original links and licenses. 
+For example: 
 
     Coffeepress Black, https://git-hosting-platform/coffeepress/black/
     Based on Datenstrom Yellow, https://datenstrom.se/yellow/
 
-The source code of this software is licensed under the EUPL version 1.2 only and 
-without the compatibility clause mentioned above, unless stated otherwise. The 
-source code of this software has been made available as open source and therefore 
-must not be used a) in proprietary source code and b) in proprietary language 
-models, unless stated otherwise.
+The source code of this software is licensed under the EUPL version 1.2 — only 
+under this version — and without the compatibility clause mentioned above, unless 
+stated otherwise. The source code of this software has been made available as 
+open source and therefore must not be used a) in proprietary source code and b) 
+in proprietary language models, unless stated otherwise.
 
 Do you have questions? [Get help](https://datenstrom.se/yellow/help/).
