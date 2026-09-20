@@ -10,11 +10,11 @@ Download one file, unzip it and copy everything to your web server. Your website
 
 ## How to get extensions 
 
-Extensions give you additional features, languages and themes. The core has the core functionality of your website. Everything else is up to you. There is an image gallery, contact form for emails, search feature, comment feature and much more. [Get extensions for your website](https://datenstrom.se/yellow/extensions/).
+Extensions give you additional features, languages and themes. The core has the core functionality of your website. Everything else is up to you. There is a contact form for sending emails, a search feature, a comment feature and much more. [Get extensions for your website](https://datenstrom.se/yellow/extensions/).
 
 ## How to get help
 
-The help shows you how to make small websites, wikis and blogs. Here you will find instructions on how to customise your website using settings, extensions, HTML and CSS. For developers and designers there is information on what can be done with the API. [Get help for your website](https://datenstrom.se/yellow/help/).
+The help shows you how to make small websites, wikis and blogs. Here you will find instructions on how to customise your website using extensions, system settings, HTML and CSS. For developers and designers there is information on what can be done with the API. [Get help for your website](https://datenstrom.se/yellow/help/).
 
 ## Acknowledgements
 
