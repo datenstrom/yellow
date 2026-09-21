@@ -2,7 +2,7 @@
 // Update extension, https://github.com/annaesvensson/yellow-update
 
 class YellowUpdate {
-    const VERSION = "0.9.12";
+    const VERSION = "0.9.13";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $extensions;             // number of extensions
@@ -523,7 +523,6 @@ class YellowUpdate {
                                 $settings["language"] = $language;
                                 $settings["languageLocale"] = "n/a";
                                 $settings["languageDescription"] = "n/a";
-                                $settings["languageTranslator"] = "Unknown";
                                 foreach ($this->yellow->language->settingsDefaults as $key=>$value) {
                                     $require = preg_match("/^([a-z]*)[A-Z]+/", $key, $tokens) ? $tokens[1] : "core";
                                     if ($require=="language") $require = "core";
@@ -863,14 +862,14 @@ class YellowUpdate {
         return array($fileNameSource, $fileNameDestination);
     }
     
-    // Return extension description including responsible developer/designer/translator
+    // Return extension description including responsible developer/designer
     public function getExtensionDescription($key, $value) {
         $description = $responsible = "";
         if ($value->isExisting("description")) $description = $value->get("description");
         if ($value->isExisting("developer")) $responsible = "Developed by ".$value["developer"].".";
         if ($value->isExisting("designer")) $responsible = "Designed by ".$value["designer"].".";
-        if ($value->isExisting("translator")) $responsible = "Translated by ".$value["translator"].".";
         if (is_string_empty($description)) $description = "No description available.";
+        if (is_string_empty($responsible)) $responsible = "Developer is not known.";
         return "$description $responsible";
     }
     
