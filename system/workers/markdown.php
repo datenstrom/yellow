@@ -2,7 +2,7 @@
 // Markdown extension, https://github.com/annaesvensson/yellow-markdown
 
 class YellowMarkdown {
-    const VERSION = "0.9.9";
+    const VERSION = "0.9.10";
     public $yellow;         // access to API
     
     // Handle initialisation
@@ -3995,6 +3995,18 @@ class YellowMarkdownParser extends MarkdownExtraParser {
             }
         }
         return "<li$attr>".$item."</li>\n";
+    }
+    
+    // Handle tables, remove empty table headers
+    public function _doTable_callback($matches) {
+        $output = parent::_doTable_callback($matches);
+        $tableHeaderText = preg_replace("/[| ]/", "", $matches[1]);
+        if (is_string_empty($tableHeaderText)) {
+            $text = $this->unhash($output);
+            $text = str_replace("<thead>\n<tr>\n  <th></th>\n  <th></th>\n</tr>\n</thead>\n", "", $text);
+            $output = $this->hashBlock($text)."\n";
+        }
+        return $output;
     }
     
     // Handle blockquotes, CommonMark compatible
