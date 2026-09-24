@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/annaesvensson/yellow-edit
 
 class YellowEdit {
-    const VERSION = "0.9.18";
+    const VERSION = "0.9.19";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -1097,6 +1097,9 @@ class YellowEditResponse {
         } else {
             $page->fileName = $this->getPageNewFile($page->location);
         }
+        if (is_string_empty($fileName)) {
+            $page->error(500, "Page at this location is not possible!");
+        }
         if (!$this->isUserAccess("create", $page->location)) {
             $page->error(500, "Page '".$page->get("title")."' is restricted!");
         }
@@ -1124,7 +1127,12 @@ class YellowEditResponse {
                 $page->error(500, "Page '".$page->get("title")."' is not possible!");
             }
         }
-        if (is_string_empty($page->rawData)) $page->error(500, "Page has been modified by someone else!");
+        if (is_string_empty($fileName)) {
+            $page->error(500, "Page at this location is not possible!");
+        }
+        if (is_string_empty($page->rawData)) {
+            $page->error(500, "Page has been modified by someone else!");
+        }
         if (!$this->isUserAccess("edit", $page->location) ||
             !$this->isUserAccess("edit", $pageSource->location)) {
             $page->error(500, "Page '".$page->get("title")."' is restricted!");
