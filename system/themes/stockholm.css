@@ -106,20 +106,19 @@ a:hover {
 .content table {
     border-spacing: 0;
     border-collapse: collapse;
+    width: 100%;
 }
 .content th:not([align]) {
     text-align: left;
 }
-.content th,
-.content td {
-    padding: 0.3em;
+.content th, .content td {
+    padding: 0.5em;
     padding-left: 2em;
 }
-.content th:first-child,
-.content td:first-child {
-    padding: 0.3em;
+.content th:first-child, .content td:first-child {
+    padding: 0em;
 }
-.content th {
+.content th, .content td {
     border-bottom: 1px solid var(--separator);
 }
 .content code,
@@ -156,12 +155,29 @@ a:hover {
     font-weight: bold;
     border-left: 3px solid var(--blockquote-accent);
 }
+.content details {
+    border-bottom: 1px solid var(--separator);
+}
 .content details summary {
-    margin: inherit;
+    padding: 0.5em;
+    padding-left: 0;
+    font-weight: inherit;
+    list-style: none;
+    position: relative;
+    outline: none;
     cursor: pointer;
 }
-.content details > * {
-    margin: 1em 0 1em 1em;
+.content details summary::after {
+    content: "＋";
+    font-weight: normal;
+    position: absolute;
+    right: 0.1em;
+}
+.content details[open] summary::after {
+    content: "－";
+}
+.content summary::-webkit-details-marker {
+    display: none;
 }
 .content .important {
     margin: 1em 0;
@@ -199,6 +215,21 @@ a:hover {
     padding: 0;
     list-style: none;
     column-width: 19em;
+}
+.content .wikiblock {
+    margin: 1em 0;
+    padding: 0em 1em;
+    border: 1px solid var(--separator);
+    border-radius: 4px;
+}
+.content .wikiblock ul {
+    padding: 0;
+    list-style: none;
+}
+.content .wikiblock summary {
+    padding: 0.7em;
+    padding-left: 0;
+    font-weight: bold;
 }
 .content .previousnext .previous {
     margin-right: 1em;
