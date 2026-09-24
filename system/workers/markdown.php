@@ -2,7 +2,7 @@
 // Markdown extension, https://github.com/annaesvensson/yellow-markdown
 
 class YellowMarkdown {
-    const VERSION = "0.9.10";
+    const VERSION = "0.9.11";
     public $yellow;         // access to API
     
     // Handle initialisation
@@ -4003,7 +4003,7 @@ class YellowMarkdownParser extends MarkdownExtraParser {
         $tableHeaderText = preg_replace("/[| ]/", "", $matches[1]);
         if (is_string_empty($tableHeaderText)) {
             $text = $this->unhash($output);
-            $text = str_replace("<thead>\n<tr>\n  <th></th>\n  <th></th>\n</tr>\n</thead>\n", "", $text);
+            $text = preg_replace("/<thead>(.*?)<\/thead>\n/s", "", $text);
             $output = $this->hashBlock($text)."\n";
         }
         return $output;
