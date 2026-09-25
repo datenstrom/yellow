@@ -2,7 +2,7 @@
 // Generate extension, https://github.com/annaesvensson/yellow-generate
 
 class YellowGenerate {
-    const VERSION = "0.9.8";
+    const VERSION = "1.0.1";
     public $yellow;                  // access to API
     public $files;                   // number of files
     public $errors;                  // number of errors

@@ -2,7 +2,7 @@
 // Markdown extension, https://github.com/annaesvensson/yellow-markdown
 
 class YellowMarkdown {
-    const VERSION = "0.9.11";
+    const VERSION = "1.0.1";
     public $yellow;         // access to API
     
     // Handle initialisation
