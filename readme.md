@@ -1,4 +1,4 @@
-# Datenstrom Yellow 0.9
+# Datenstrom Yellow 1.0
 
 Datenstrom Yellow is for people who make small websites. [Try the demo](https://datenstrom.se/yellow/demo/).
 
