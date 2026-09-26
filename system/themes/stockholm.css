@@ -131,7 +131,7 @@ a:hover {
     margin: 0;
     background-color: var(--code-bg);
     color: var(--code);
-    border-radius: 3px;
+    border-radius: 4px;
 }
 .content pre > code {
     padding: 0;
@@ -147,7 +147,7 @@ a:hover {
     line-height: 1.45;
     background-color: var(--code-bg);
     color: var(--code);
-    border-radius: 3px;
+    border-radius: 4px;
 }
 .content blockquote {
     margin-left: 0;
@@ -169,6 +169,7 @@ a:hover {
 }
 .content details summary::after {
     content: "＋";
+    color: var(--border);
     font-weight: normal;
     position: absolute;
     right: 0.1em;
@@ -218,8 +219,9 @@ a:hover {
 }
 .content .wikiblock {
     margin: 1em 0;
-    padding: 0em 1em;
-    border: 1px solid var(--separator);
+    padding: 0.5em 1em;
+    background-color: var(--code-bg);
+    border: none;
     border-radius: 4px;
 }
 .content .wikiblock ul {
@@ -227,8 +229,7 @@ a:hover {
     list-style: none;
 }
 .content .wikiblock summary {
-    padding: 0.7em;
-    padding-left: 0;
+    padding: 0.4em 0;
     font-weight: bold;
 }
 .content .previousnext .previous {
