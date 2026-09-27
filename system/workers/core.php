@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "1.0.1";
+    const VERSION = "1.0.2";
     const RELEASE = "1.0";
     public $content;        // content files
     public $media;          // media files
@@ -1994,7 +1994,7 @@ class YellowToolbox {
             "gif" => "image/gif",
             "html" => "text/html; charset=utf-8",
             "ico" => "image/x-icon",
-            "js" => "application/javascript",
+            "js" => "text/javascript",
             "json" => "application/json",
             "jpeg" => "image/jpeg",
             "jpg" => "image/jpeg",
@@ -3345,12 +3345,12 @@ class YellowPage {
             $fileNameTheme = $this->yellow->system->get("coreThemeDirectory").$this->yellow->lookup->normaliseName($this->get("theme")).".css";
             if (is_file($fileNameTheme)) {
                 $fileLocation = $assetLocation.$this->yellow->lookup->normaliseName($this->get("theme")).".css";
-                $output .= "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"$fileLocation\" />\n";
+                $output .= "<link rel=\"stylesheet\" href=\"$fileLocation\" />\n";
             }
             $fileNameScript = $this->yellow->system->get("coreThemeDirectory").$this->yellow->lookup->normaliseName($this->get("theme")).".js";
             if (is_file($fileNameScript)) {
                 $fileLocation = $assetLocation.$this->yellow->lookup->normaliseName($this->get("theme")).".js";
-                $output .= "<script type=\"text/javascript\" src=\"$fileLocation\"></script>\n";
+                $output .= "<script src=\"$fileLocation\"></script>\n";
             }
             $fileNameFavicon = $this->yellow->system->get("coreThemeDirectory").$this->yellow->lookup->normaliseName($this->get("theme")).".png";
             if (is_file($fileNameFavicon)) {

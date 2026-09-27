@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/annaesvensson/yellow-edit
 
 class YellowEdit {
-    const VERSION = "1.0.1";
+    const VERSION = "1.0.2";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -117,9 +117,9 @@ class YellowEdit {
         $output = null;
         if ($this->editable && $name=="header") {
             $assetLocation = $this->yellow->system->get("coreServerBase").$this->yellow->system->get("coreAssetLocation");
-            $output = "<link rel=\"stylesheet\" type=\"text/css\" media=\"all\" href=\"{$assetLocation}edit.css\" />\n";
-            $output .= "<script type=\"text/javascript\" src=\"{$assetLocation}edit.js\"></script>\n";
-            $output .= "<script type=\"text/javascript\">\n";
+            $output = "<link rel=\"stylesheet\" href=\"{$assetLocation}edit.css\" />\n";
+            $output .= "<script src=\"{$assetLocation}edit.js\"></script>\n";
+            $output .= "<script>\n";
             $output .= "// <![CDATA[\n";
             $output .= "yellow.page = ".json_encode($this->response->getPageData($page)).";\n";
             $output .= "yellow.system = ".json_encode($this->response->getSystemData()).";\n";
