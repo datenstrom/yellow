@@ -2,7 +2,7 @@
 // Install extension, https://github.com/annaesvensson/yellow-install
 
 class YellowInstall {
-    const VERSION = "1.0.1";
+    const VERSION = "1.0.2";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -319,7 +319,7 @@ class YellowInstall {
             list($name, $version, $os) = $this->yellow->toolbox->detectServerInformation();
             echo "YellowInstall::checkServerRequirements for $name $version, $os<br />\n";
         }
-        if (!$this->checkServerComplete()) $this->yellow->exitFatalError("Datenstrom Yellow requires complete upload!");
+        if (!$this->checkServerComplete()) $this->yellow->exitFatalError("Datenstrom Yellow requires complete installation!");
         if (!$this->checkServerWrite()) $this->yellow->exitFatalError("Datenstrom Yellow requires write access!");
         if (!$this->checkServerRewrite()) $this->yellow->exitFatalError("Datenstrom Yellow requires rewrite rules!");
     }
@@ -330,11 +330,11 @@ class YellowInstall {
             list($name, $version, $os) = $this->yellow->toolbox->detectServerInformation();
             echo "YellowInstall::checkCommandRequirements for $name $version, $os<br />\n";
         }
-        if (!$this->checkServerComplete()) $this->yellow->exitFatalError("Datenstrom Yellow requires complete upload!");
+        if (!$this->checkServerComplete()) $this->yellow->exitFatalError("Datenstrom Yellow requires complete installation!");
         if (!$this->checkServerWrite()) $this->yellow->exitFatalError("Datenstrom Yellow requires write access!");
     }
     
-    // Check web server complete upload
+    // Check web server complete installation
     public function checkServerComplete() {
         $complete = true;
         $fileNameInstalled = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("updateInstalledFile");
