@@ -3437,7 +3437,7 @@ class YellowPage {
         return $absoluteLocation ? $this->base.$location : $location;
     }
     
-    // TODO: remove later, only for backwards compatibility
+    // TODO: Remove later, this is only for backwards compatibility
     public function getBase($multiLanguage = false) {
         return $multiLanguage ? rtrim($this->base.$this->yellow->content->getHomeLocation($this->location), "/") :  $this->base;
     }
