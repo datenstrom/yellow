@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "1.0.2";
+    const VERSION = "1.0.3";
     const RELEASE = "1.0";
     public $content;        // content files
     public $media;          // media files
@@ -3426,16 +3426,22 @@ class YellowPage {
         return "$scheme://$address$location";
     }
     
-    // Return page base
-    public function getBase($multiLanguage = false) {
-        return $multiLanguage ? rtrim($this->base.$this->yellow->content->getHomeLocation($this->location), "/") :  $this->base;
-    }
-    
     // Return page location
     public function getLocation($absoluteLocation = false) {
         return $absoluteLocation ? $this->base.$this->location : $this->location;
     }
     
+    // Return home page location
+    public function getHomeLocation($absoluteLocation = false) {
+        $location = $this->yellow->content->getHomeLocation($this->location);
+        return $absoluteLocation ? $this->base.$location : $location;
+    }
+    
+    // TODO: remove later, only for backwards compatibility
+    public function getBase($multiLanguage = false) {
+        return $multiLanguage ? rtrim($this->base.$this->yellow->content->getHomeLocation($this->location), "/") :  $this->base;
+    }
+
     // Set page request argument
     public function setRequest($key, $value) {
         $_REQUEST[$key] = $value;
