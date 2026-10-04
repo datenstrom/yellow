@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "1.0.4";
+    const VERSION = "1.0.5";
     const RELEASE = "1.0";
     public $content;        // content files
     public $media;          // media files
@@ -1976,7 +1976,7 @@ class YellowToolbox {
             case 430:   $text = "Login failed"; break;
             case 434:   $text = "Can create"; break;
             case 435:   $text = "Can restore"; break;
-            case 450:   $text = "Update error"; break;
+            case 443:   $text = "Bad bot"; break;
             case 500:   $text = "Server error"; break;
             case 503:   $text = "Service unavailable"; break;
             default:    $text = "Error $statusCode";
@@ -2934,15 +2934,15 @@ class YellowToolbox {
     }
 
     // Validate input data
-    public function validate($action, $status, $data) {
-        $statusExtension = null;
+    public function validate($action, $data) {
+        $status = null;
         foreach ($this->yellow->extension->data as $key=>$value) {
             if (method_exists($value["object"], "onValidate")) {
-                $statusExtension = $value["object"]->onValidate($action, $status, $data);
-                if (!is_null($statusExtension)) break;
+                $status = $value["object"]->onValidate($action, $data);
+                if (!is_null($status)) break;
             }
         }
-        return !is_null($statusExtension) ? $statusExtension : $status;
+        return !is_null($status) ? $status : "ok";
     }
     
     // Send email message

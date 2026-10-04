@@ -2,7 +2,7 @@
 // Update extension, https://github.com/annaesvensson/yellow-update
 
 class YellowUpdate {
-    const VERSION = "1.0.1";
+    const VERSION = "1.0.2";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $extensions;             // number of extensions
@@ -884,11 +884,7 @@ class YellowUpdate {
         $statusCode = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);
         $redirectUrl = ($statusCode>=300 && $statusCode<=399) ? curl_getinfo($curlHandle, CURLINFO_REDIRECT_URL) : "";
         if (PHP_VERSION_ID<80000) curl_close($curlHandle);
-        if ($statusCode==0) {
-            $statusCode = 450;
-            $this->yellow->page->error($statusCode, "Can't connect to the update server!");
-        }
-        if ($statusCode!=450 && $statusCode!=200) {
+        if ($statusCode!=200) {
             $statusCode = 500;
             $this->yellow->page->error($statusCode, "Can't download file '$url'!");
         }
