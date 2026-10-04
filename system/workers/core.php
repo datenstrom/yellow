@@ -1976,7 +1976,7 @@ class YellowToolbox {
             case 430:   $text = "Login failed"; break;
             case 434:   $text = "Can create"; break;
             case 435:   $text = "Can restore"; break;
-            case 443:   $text = "Bad bot"; break;
+            case 444:   $text = "Bad bot"; break;
             case 500:   $text = "Server error"; break;
             case 503:   $text = "Service unavailable"; break;
             default:    $text = "Error $statusCode";
