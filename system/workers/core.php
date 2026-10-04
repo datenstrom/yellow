@@ -2933,7 +2933,7 @@ class YellowToolbox {
         return $values;
     }
 
-    // Validate input
+    // Validate input data
     public function validate($action, $status, $data) {
         $statusExtension = null;
         foreach ($this->yellow->extension->data as $key=>$value) {
