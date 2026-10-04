@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "1.0.3";
+    const VERSION = "1.0.4";
     const RELEASE = "1.0";
     public $content;        // content files
     public $media;          // media files
@@ -2933,6 +2933,18 @@ class YellowToolbox {
         return $values;
     }
 
+    // Validate input
+    public function validate($action, $status, $data) {
+        $statusExtension = null;
+        foreach ($this->yellow->extension->data as $key=>$value) {
+            if (method_exists($value["object"], "onValidate")) {
+                $statusExtension = $value["object"]->onValidate($action, $status, $data);
+                if (!is_null($statusExtension)) break;
+            }
+        }
+        return !is_null($statusExtension) ? $statusExtension : $status;
+    }
+    
     // Send email message
     public function mail($action, $headers, $message) {
         $statusCode = 0;
