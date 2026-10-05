@@ -3556,7 +3556,7 @@ class YellowPage {
     public function error($statusCode, $errorMessage = "") {
         if ($statusCode>=400 && is_string_empty($this->errorMessage)) {
             $this->statusCode = $statusCode;
-            $this->errorMessage = is_string_empty($errorMessage) ? "Page error!" : $errorMessage;
+            $this->errorMessage = is_string_empty($errorMessage) ? "HTTP status code $statusCode" : $errorMessage;
         }
     }
     
