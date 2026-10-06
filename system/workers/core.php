@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "1.0.5";
+    const VERSION = "1.0.6";
     const RELEASE = "1.0";
     public $content;        // content files
     public $media;          // media files
@@ -1485,6 +1485,7 @@ class YellowLookup {
             $keysMixedEncoding = array("To", "From", "Reply-To", "Cc", "Bcc");
             foreach ($input as $key=>$value) {
                 $key = ucwords(preg_replace("/[^a-zA-Z\-]/u", "-", $key), "-");
+                if (preg_match("/[\r\n]/", $value)) $value = "error-invalid-value";
                 if (in_array($key, $keysMixedEncoding)) {
                     $text = "$key: ";
                     foreach (preg_split("/\s*,\s*/", $value) as $email) {
