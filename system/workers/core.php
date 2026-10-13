@@ -2969,8 +2969,7 @@ class YellowToolbox {
                 if ($key=="Subject") { $subject .= $fragment; continue; }
                 $remaining .= $line."\r\n";
             }
-            $statusCode = 200;
-            //### $statusCode = mail($to, $subject, $message, $remaining) ? 200 : 500;
+            $statusCode = mail($to, $subject, $message, $remaining) ? 200 : 500;
         }
         return $statusCode==200;
     }
