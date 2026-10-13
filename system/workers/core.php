@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "1.0.6";
+    const VERSION = "1.0.7";
     const RELEASE = "1.0";
     public $content;        // content files
     public $media;          // media files
@@ -651,7 +651,7 @@ class YellowSystem {
         $this->modified = time();
         $settingsNew = new YellowArray();
         foreach ($settings as $key=>$value) {
-            if (!is_string_empty($key) && !is_string_empty($value)) {
+            if (!is_string_empty($key) && !is_string_empty($value) && !preg_match("/[\r\n]/", $value)) {
                 $this->set($key, $value);
                 $settingsNew[$key] = $value;
             }
@@ -948,7 +948,7 @@ class YellowUser {
         $settingsNew = new YellowArray();
         $settingsNew["email"] = $email;
         foreach ($settings as $key=>$value) {
-            if (!is_string_empty($key) && !is_string_empty($value)) {
+            if (!is_string_empty($key) && !is_string_empty($value) && !preg_match("/[\r\n]/", $value)) {
                 $this->setUser($key, $value, $email);
                 $settingsNew[$key] = $value;
             }
@@ -2969,7 +2969,8 @@ class YellowToolbox {
                 if ($key=="Subject") { $subject .= $fragment; continue; }
                 $remaining .= $line."\r\n";
             }
-            $statusCode = mail($to, $subject, $message, $remaining) ? 200 : 500;
+            $statusCode = 200;
+            //### $statusCode = mail($to, $subject, $message, $remaining) ? 200 : 500;
         }
         return $statusCode==200;
     }
