@@ -2,7 +2,7 @@
 // Update extension, https://github.com/annaesvensson/yellow-update
 
 class YellowUpdate {
-    const VERSION = "1.0.2";
+    const VERSION = "1.0.3";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $extensions;             // number of extensions
@@ -66,19 +66,6 @@ class YellowUpdate {
     // Handle command help
     public function onCommandHelp() {
         return array("about [extension]", "install [extension]", "uninstall [extension]", "update [extension]");
-    }
-    
-    // Handle page content element
-    public function onParseContentElement($page, $name, $text, $attributes, $type) {
-        $output = null;
-        if ($name=="about" && $type=="inline") {
-            list($dummy, $settingsInstalled) = $this->getExtensionSettings(true);
-            $output = "Datenstrom Yellow ".YellowCore::RELEASE."<br />\n";
-            foreach ($settingsInstalled as $key=>$value) {
-                $output .= ucfirst($key)." ".$value->get("version")."<br />\n";
-            }
-        }
-        return $output;
     }
     
     // Process command to show installed version
