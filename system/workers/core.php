@@ -2,7 +2,7 @@
 // Core extension, https://github.com/annaesvensson/yellow-core
 
 class YellowCore {
-    const VERSION = "1.0.7";
+    const VERSION = "1.0.8";
     const RELEASE = "1.0";
     public $content;        // content files
     public $media;          // media files
@@ -1485,7 +1485,7 @@ class YellowLookup {
             $keysMixedEncoding = array("To", "From", "Reply-To", "Cc", "Bcc");
             foreach ($input as $key=>$value) {
                 $key = ucwords(preg_replace("/[^a-zA-Z\-]/u", "-", $key), "-");
-                if (preg_match("/[\r\n]/", $value)) $value = "error-invalid-value";
+                if (preg_match("/[\r\n]/", $value)) $value = "error-input-data";
                 if (in_array($key, $keysMixedEncoding)) {
                     $text = "$key: ";
                     foreach (preg_split("/\s*,\s*/", $value) as $email) {
@@ -1510,6 +1510,21 @@ class YellowLookup {
                 }
                 $output .= $text;
             }
+        }
+        return $output;
+    }
+    
+    // Normalise input from request argument
+    public function normaliseInput($input, $type = "text") {
+        $output = "";
+        if ($type=="text") {
+            if (preg_match("/[\r\n]/", $input)) $input = "error-input-data";
+            $output = trim($input);
+        } elseif ($type=="name") {
+            if (preg_match("/[\r\n]/", $input)) $input = "error-input-data";
+            $output = trim(preg_replace("/[^\pL\d\-\. ]/u", "-", $input));
+        } elseif ($type=="textarea") {
+            $output = trim($input);
         }
         return $output;
     }
@@ -2436,7 +2451,7 @@ class YellowToolbox {
     public function createTextDescription($text, $lengthMax = 0, $removeHtml = true, $endMarker = "", $endMarkerText = "") {
         $output = "";
         $elementsBlock = array("blockquote", "br", "div", "h1", "h2", "h3", "h4", "h5", "h6", "hr", "li", "ol", "p", "pre", "ul");
-        $elementsVoid = array("area", "br", "col", "embed", "hr", "img", "input", "param", "source", "wbr");
+        $elementsVoid = array("area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr");
         if ($lengthMax==0) $lengthMax = strlenu($text);
         if ($removeHtml) {
             $hiddenLevel = 0;
