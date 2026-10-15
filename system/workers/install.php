@@ -2,7 +2,7 @@
 // Install extension, https://github.com/annaesvensson/yellow-install
 
 class YellowInstall {
-    const VERSION = "1.0.2";
+    const VERSION = "1.0.3";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -27,12 +27,12 @@ class YellowInstall {
         if ($this->yellow->lookup->isContentFile($fileName) || is_string_empty($fileName)) {
             if ($this->yellow->system->get("updateInstalledRelease")=="none") {
                 $this->checkServerRequirements();
-                $author = trim(preg_replace("/[^\pL\d\-\. ]/u", "-", $this->yellow->page->getRequest("author")));
-                $email = trim($this->yellow->page->getRequest("email"));
-                $password = trim($this->yellow->page->getRequest("password"));
-                $language = trim($this->yellow->page->getRequest("language"));
-                $extension = trim($this->yellow->page->getRequest("extension"));
-                $status = trim($this->yellow->page->getRequest("status"));
+                $author = $this->yellow->lookup->normaliseInput($this->yellow->page->getRequest("author"), "name");
+                $email = $this->yellow->lookup->normaliseInput($this->yellow->page->getRequest("email"));
+                $password = $this->yellow->lookup->normaliseInput($this->yellow->page->getRequest("password"));
+                $language = $this->yellow->lookup->normaliseInput($this->yellow->page->getRequest("language"));
+                $extension = $this->yellow->lookup->normaliseInput($this->yellow->page->getRequest("extension"));
+                $status = $this->yellow->lookup->normaliseInput($this->yellow->page->getRequest("status"));
                 $statusCode = $this->updateLog();
                 $statusCode = max($statusCode, $this->updateLanguages("small"));
                 $errorMessage = $this->yellow->page->errorMessage;

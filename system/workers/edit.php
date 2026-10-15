@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/annaesvensson/yellow-edit
 
 class YellowEdit {
-    const VERSION = "1.0.2";
+    const VERSION = "1.0.3";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -161,7 +161,7 @@ class YellowEdit {
         $status = "ok";
         list($option, $email, $password) = $this->yellow->toolbox->getTextArguments($text);
         if (is_string_empty($email) || is_string_empty($password)) $status = $this->response->status = "incomplete";
-        if ($status=="ok") $status = $this->getUserAccount("add", $email, $password);
+        if ($status=="ok") $status = $this->getUserAccountStatus("add", $email, $password);
         if ($status=="ok" && $this->isUserAccountTaken($email)) $status = "taken";
         switch ($status) {
             case "incomplete":  echo "ERROR updating settings: Please enter email and password!\n"; break;
@@ -205,7 +205,7 @@ class YellowEdit {
         $status = "ok";
         list($option, $email, $password) = $this->yellow->toolbox->getTextArguments($text);
         if (is_string_empty($email)) $status = $this->response->status = "invalid";
-        if ($status=="ok") $status = $this->getUserAccount("change", $email, $password);
+        if ($status=="ok") $status = $this->getUserAccountStatus("change", $email, $password);
         if ($status=="ok" && !$this->yellow->user->isExisting($email)) $status = "unknown";
         switch ($status) {
             case "invalid": echo "ERROR updating settings: Please enter a valid email!\n"; break;
@@ -232,7 +232,7 @@ class YellowEdit {
         $status = "ok";
         list($option, $email) = $this->yellow->toolbox->getTextArguments($text);
         if (is_string_empty($email)) $status = $this->response->status = "invalid";
-        if ($status=="ok") $status = $this->getUserAccount("remove", $email, "");
+        if ($status=="ok") $status = $this->getUserAccountStatus("remove", $email, "");
         if ($status=="ok" && !$this->yellow->user->isExisting($email)) $status = "unknown";
         switch ($status) {
             case "invalid": echo "ERROR updating settings: Please enter a valid email!\n"; break;
@@ -355,7 +355,7 @@ class YellowEdit {
         $password = trim($this->yellow->page->getRequest("password"));
         $consent = trim($this->yellow->page->getRequest("consent"));
         if (is_string_empty($name) || is_string_empty($email) || is_string_empty($password) || is_string_empty($consent)) $this->response->status = "incomplete";
-        if ($this->response->status=="ok") $this->response->status = $this->getUserAccount($this->response->action, $email, $password);
+        if ($this->response->status=="ok") $this->response->status = $this->getUserAccountStatus($this->response->action, $email, $password);
         if ($this->response->status=="ok" && $this->response->isLoginRestriction()) $this->response->status = "next";
         if ($this->response->status=="ok" && $this->isUserAccountTaken($email)) $this->response->status = "next";
         if ($this->response->status=="ok") {
@@ -455,7 +455,7 @@ class YellowEdit {
         $this->response->status = $this->getUserStatus($email, $this->yellow->page->getRequest("action"));
         if ($this->response->status=="ok") {
             if (is_string_empty($password)) $this->response->status = "password";
-            if ($this->response->status=="ok") $this->response->status = $this->getUserAccount($this->response->action, $email, $password);
+            if ($this->response->status=="ok") $this->response->status = $this->getUserAccountStatus($this->response->action, $email, $password);
             if ($this->response->status=="ok") {
                 $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
                 $settings = array("hash" => $this->response->createHash($password), "failed" => "0", "modified" => date("Y-m-d H:i:s", time()));
@@ -553,7 +553,7 @@ class YellowEdit {
         $email = $this->response->userEmail;
         if (is_string_empty($name)) $this->response->status = "none";
         if ($this->response->status=="ok" && $name!=$this->yellow->user->getUser("name", $email)) $this->response->status = "mismatch";
-        if ($this->response->status=="ok") $this->response->status = $this->getUserAccount($this->response->action, $email, "");
+        if ($this->response->status=="ok") $this->response->status = $this->getUserAccountStatus($this->response->action, $email, "");
         if ($this->response->status=="ok") {
             $this->response->status = $this->response->sendMail($scheme, $address, $base, $email, "remove") ? "next" : "error";
             if ($this->response->status=="error") $this->yellow->page->error(500, "Can't send email message!");
@@ -602,9 +602,10 @@ class YellowEdit {
         $password = trim($this->yellow->page->getRequest("password"));
         $name = trim(preg_replace("/[^\pL\d\-\. ]/u", "-", $this->yellow->page->getRequest("name")));
         $language = trim($this->yellow->page->getRequest("language"));
+        $language = $this->getAvailableLanguage($language);
         if ($email!=$emailSource || !is_string_empty($password)) {
             if (is_string_empty($email)) $this->response->status = "invalid";
-            if ($this->response->status=="ok") $this->response->status = $this->getUserAccount($this->response->action, $email, $password);
+            if ($this->response->status=="ok") $this->response->status = $this->getUserAccountStatus($this->response->action, $email, $password);
             if ($this->response->status=="ok" && $email!=$emailSource && $this->isUserAccountTaken($email)) $this->response->status = "taken";
             if ($this->response->status=="ok" && $email!=$emailSource) {
                 $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
@@ -916,7 +917,7 @@ class YellowEdit {
             $language = $this->yellow->page->getRequest("language");
             if ($this->response->checkActionToken($actionToken, $email, $action, $expire)) {
                 $ok = true;
-                $this->response->language = $this->getActionLanguage($language);
+                $this->response->language = $this->getAvailableLanguage($language);
             } else {
                 $this->response->userFailedError = "action";
                 $this->response->userFailedEmail = $email;
@@ -973,21 +974,17 @@ class YellowEdit {
         return $this->yellow->user->getUser("status", $email)==$statusExpected ? "ok" : "done";
     }
 
-    // Return user account changes
-    public function getUserAccount($action, $email, $password) {
-        $status = null;
-        foreach ($this->yellow->extension->data as $key=>$value) {
-            if (method_exists($value["object"], "onEditUserAccount")) {
-                $status = $value["object"]->onEditUserAccount($action, $email, $password);
-                if (!is_null($status)) break;
-            }
-        }
-        if (is_null($status)) {
-            $status = "ok";
-            if (!is_string_empty($password) && strlenu($password)<$this->yellow->system->get("editUserPasswordMinLength")) $status = "short";
-            if (!is_string_empty($password) && $password==$email) $status = "weak";
-            if (!is_string_empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)) $status = "invalid";
-        }
+    // Return user account status
+    public function getUserAccountStatus($action, $email, $password) {
+        $status = "ok";
+        if (!is_string_empty($password) && strlenu($password)<$this->yellow->system->get("editUserPasswordMinLength")) $status = "short";
+        if (!is_string_empty($password) && $password==$email) $status = "weak";
+        if (!is_string_empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)) $status = "invalid";
+        $data = array(
+            "action" => $action,
+            "email" => $email,
+            "password" => $password);
+        if ($status=="ok") $status = $this->yellow->toolbox->validate("edit", $data);
         return $status;
     }
     
@@ -998,8 +995,8 @@ class YellowEdit {
         return $language;
     }
 
-    // Return action language
-    public function getActionLanguage($language) {
+    // Return available language
+    public function getAvailableLanguage($language) {
         if (!$this->yellow->language->isExisting($language)) $language = $this->yellow->system->get("language");
         return $language;
     }
