@@ -362,6 +362,11 @@ yellow.edit = {
                     yellow.toolbox.setVisible(document.getElementById("yellow-pane-login-signup"), false);
                 }
                 break;
+            case "yellow-pane-signup":
+                if (paneInit && paneStatus=="none" && !yellow.system.editUserSignup) {
+                    document.getElementById("yellow-pane-signup-status").innerHTML = this.getText("SignupStatusClosed");
+                }
+                break;
             case "yellow-pane-quit":
                 if (paneStatus=="none") {
                     document.getElementById("yellow-pane-quit-status").innerHTML = this.getText("QuitStatusNone");

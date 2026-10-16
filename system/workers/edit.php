@@ -2,7 +2,7 @@
 // Edit extension, https://github.com/annaesvensson/yellow-edit
 
 class YellowEdit {
-    const VERSION = "1.0.3";
+    const VERSION = "1.0.4";
     public $yellow;         // access to API
     public $response;       // web response
     public $merge;          // text merge
@@ -25,6 +25,7 @@ class YellowEdit {
         $this->yellow->system->setDefault("editUserHashCost", "10");
         $this->yellow->system->setDefault("editUserAccess", "create, edit, delete, restore, upload");
         $this->yellow->system->setDefault("editUserHome", "/");
+        $this->yellow->system->setDefault("editUserDailyLimit", "100");
         $this->yellow->system->setDefault("editLoginRestriction", "0");
         $this->yellow->system->setDefault("editLoginSessionTimeout", "2592000");
         $this->yellow->system->setDefault("editBruteForceProtection", "25");
@@ -50,6 +51,10 @@ class YellowEdit {
             $fileDataNew = rtrim($fileDataNew)."\n";
             if ($fileData!=$fileDataNew && !$this->yellow->toolbox->writeFile($fileNameUser, $fileDataNew)) {
                 $this->yellow->toolbox->log("error", "Can't write file '$fileNameUser'!");
+            }
+            $fileNameDaily = $this->yellow->system->get("coreWorkerDirectory")."edit-user-daily.ini";
+            if (is_file($fileNameDaily) && !$this->yellow->toolbox->deleteFile($fileNameDaily)) {
+                $this->yellow->toolbox->log("error", "Can't delete file '$fileNameDaily'!");
             }
         }
     }
@@ -349,12 +354,12 @@ class YellowEdit {
     // Process request for user signup
     public function processRequestSignup($scheme, $address, $base, $location, $fileName) {
         $this->response->action = "signup";
-        $this->response->status = "ok";
-        $name = trim(preg_replace("/[^\pL\d\-\. ]/u", "-", $this->yellow->page->getRequest("name")));
-        $email = trim($this->yellow->page->getRequest("email"));
-        $password = trim($this->yellow->page->getRequest("password"));
-        $consent = trim($this->yellow->page->getRequest("consent"));
-        if (is_string_empty($name) || is_string_empty($email) || is_string_empty($password) || is_string_empty($consent)) $this->response->status = "incomplete";
+        $this->response->status = $this->response->isUserSignup() ? "ok" : "closed";
+        $name = $this->yellow->lookup->normaliseInput($this->yellow->page->getRequest("name"), "name");
+        $email = $this->yellow->lookup->normaliseInput($this->yellow->page->getRequest("email"));
+        $password = $this->yellow->lookup->normaliseInput($this->yellow->page->getRequest("password"));
+        $consent = $this->yellow->lookup->normaliseInput($this->yellow->page->getRequest("consent"));
+        if ($this->response->status=="ok" && (is_string_empty($name) || is_string_empty($email) || is_string_empty($password) || is_string_empty($consent))) $this->response->status = "incomplete";
         if ($this->response->status=="ok") $this->response->status = $this->getUserAccountStatus($this->response->action, $email, $password);
         if ($this->response->status=="ok" && $this->response->isLoginRestriction()) $this->response->status = "next";
         if ($this->response->status=="ok" && $this->isUserAccountTaken($email)) $this->response->status = "next";
@@ -382,6 +387,12 @@ class YellowEdit {
             if ($this->response->status=="error") $this->yellow->page->error(500, "Hash algorithm '$algorithm' not supported!");
         }
         if ($this->response->status=="ok") {
+            $line = date("Y-m-d H:i:s")." info Add unconfirmed user account for $name <$email>\n";
+            $fileNameDaily = $this->yellow->system->get("coreWorkerDirectory")."edit-user-daily.ini";
+            $this->response->status = $this->yellow->toolbox->appendFile($fileNameDaily, $line) ? "ok" : "error:";
+            if ($this->response->status=="error") $this->yellow->page->error(500, "Can't write file '$fileNameDaily'!");
+        }
+        if ($this->response->status=="ok") {
             $this->response->status = $this->response->sendMail($scheme, $address, $base, $email, "confirm") ? "next" : "error";
             if ($this->response->status=="error") $this->yellow->page->error(500, "Can't send email message!");
         }
@@ -393,7 +404,7 @@ class YellowEdit {
     public function processRequestConfirm($scheme, $address, $base, $location, $fileName) {
         $this->response->action = "confirm";
         $this->response->status = "ok";
-        $email = $this->yellow->page->getRequest("email");
+        $email = $this->yellow->lookup->normaliseInput($this->yellow->page->getRequest("email"));
         $this->response->status = $this->getUserStatus($email, $this->yellow->page->getRequest("action"));
         if ($this->response->status=="ok") {
             $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
@@ -413,7 +424,7 @@ class YellowEdit {
     public function processRequestApprove($scheme, $address, $base, $location, $fileName) {
         $this->response->action = "approve";
         $this->response->status = "ok";
-        $email = $this->yellow->page->getRequest("email");
+        $email = $this->yellow->lookup->normaliseInput($this->yellow->page->getRequest("email"));
         $this->response->status = $this->getUserStatus($email, $this->yellow->page->getRequest("action"));
         if ($this->response->status=="ok") {
             $name = $this->yellow->user->getUser("name", $email);
@@ -435,7 +446,7 @@ class YellowEdit {
     public function processRequestForgot($scheme, $address, $base, $location, $fileName) {
         $this->response->action = "forgot";
         $this->response->status = "ok";
-        $email = trim($this->yellow->page->getRequest("email"));
+        $email = $this->yellow->lookup->normaliseInput($this->yellow->page->getRequest("email"));
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $this->response->status = "invalid";
         if ($this->response->status=="ok" && !$this->yellow->user->isExisting($email)) $this->response->status = "next";
         if ($this->response->status=="ok") {
@@ -450,8 +461,8 @@ class YellowEdit {
     public function processRequestRecover($scheme, $address, $base, $location, $fileName) {
         $this->response->action = "recover";
         $this->response->status = "ok";
-        $email = trim($this->yellow->page->getRequest("email"));
-        $password = trim($this->yellow->page->getRequest("password"));
+        $email = $this->yellow->lookup->normaliseInput($this->yellow->page->getRequest("email"));
+        $password = $this->yellow->lookup->normaliseInput($this->yellow->page->getRequest("password"));
         $this->response->status = $this->getUserStatus($email, $this->yellow->page->getRequest("action"));
         if ($this->response->status=="ok") {
             if (is_string_empty($password)) $this->response->status = "password";
@@ -475,7 +486,7 @@ class YellowEdit {
     public function processRequestReactivate($scheme, $address, $base, $location, $fileName) {
         $this->response->action = "reactivate";
         $this->response->status = "ok";
-        $email = $this->yellow->page->getRequest("email");
+        $email = $this->yellow->lookup->normaliseInput($this->yellow->page->getRequest("email"));
         $this->response->status = $this->getUserStatus($email, $this->yellow->page->getRequest("action"));
         if ($this->response->status=="ok") {
             $fileNameUser = $this->yellow->system->get("coreExtensionDirectory").$this->yellow->system->get("coreUserFile");
@@ -491,7 +502,7 @@ class YellowEdit {
     public function processRequestVerify($scheme, $address, $base, $location, $fileName) {
         $this->response->action = "verify";
         $this->response->status = "ok";
-        $email = $emailSource = $this->yellow->page->getRequest("email");
+        $email = $emailSource = $this->yellow->lookup->normaliseInput($this->yellow->page->getRequest("email"));
         $this->response->status = $this->getUserStatus($email, $this->yellow->page->getRequest("action"));
         if ($this->response->status=="ok") {
             $emailSource = $this->yellow->user->getUser("pending", $email);
@@ -515,7 +526,7 @@ class YellowEdit {
     public function processRequestChange($scheme, $address, $base, $location, $fileName) {
         $this->response->action = "change";
         $this->response->status = "ok";
-        $email = $emailSource = trim($this->yellow->page->getRequest("email"));
+        $email = $emailSource = $this->yellow->lookup->normaliseInput($this->yellow->page->getRequest("email"));
         $this->response->status = $this->getUserStatus($email, $this->yellow->page->getRequest("action"));
         if ($this->response->status=="ok") {
             list($email, $hash) = $this->yellow->toolbox->getTextList($this->yellow->user->getUser("pending", $email), ":", 2);
@@ -549,7 +560,7 @@ class YellowEdit {
     public function processRequestQuit($scheme, $address, $base, $location, $fileName) {
         $this->response->action = "quit";
         $this->response->status = "ok";
-        $name = trim($this->yellow->page->getRequest("name"));
+        $name = $this->yellow->lookup->normaliseInput($this->yellow->page->getRequest("name"));
         $email = $this->response->userEmail;
         if (is_string_empty($name)) $this->response->status = "none";
         if ($this->response->status=="ok" && $name!=$this->yellow->user->getUser("name", $email)) $this->response->status = "mismatch";
@@ -566,7 +577,7 @@ class YellowEdit {
     public function processRequestRemove($scheme, $address, $base, $location, $fileName) {
         $this->response->action = "remove";
         $this->response->status = "ok";
-        $email = $this->yellow->page->getRequest("email");
+        $email = $this->yellow->lookup->normaliseInput($this->yellow->page->getRequest("email"));
         $this->response->status = $this->getUserStatus($email, $this->yellow->page->getRequest("action"));
         if ($this->response->status=="ok") {
             $name = $this->yellow->user->getUser("name", $email);
@@ -597,11 +608,11 @@ class YellowEdit {
     public function processRequestAccount($scheme, $address, $base, $location, $fileName) {
         $this->response->action = "account";
         $this->response->status = "ok";
-        $email = trim($this->yellow->page->getRequest("email"));
+        $email = $this->yellow->lookup->normaliseInput($this->yellow->page->getRequest("email"));
         $emailSource = $this->response->userEmail;
-        $password = trim($this->yellow->page->getRequest("password"));
-        $name = trim(preg_replace("/[^\pL\d\-\. ]/u", "-", $this->yellow->page->getRequest("name")));
-        $language = trim($this->yellow->page->getRequest("language"));
+        $password = $this->yellow->lookup->normaliseInput($this->yellow->page->getRequest("password"));
+        $name = $this->yellow->lookup->normaliseInput($this->yellow->page->getRequest("name"), "name");
+        $language = $this->yellow->lookup->normaliseInput($this->yellow->page->getRequest("language"));
         $language = $this->getAvailableLanguage($language);
         if ($email!=$emailSource || !is_string_empty($password)) {
             if (is_string_empty($email)) $this->response->status = "invalid";
@@ -663,9 +674,9 @@ class YellowEdit {
         if ($this->response->isUserAccess("configure")) {
             $this->response->action = "configure";
             $this->response->status = "ok";
-            $sitename = trim($this->yellow->page->getRequest("sitename"));
-            $author = trim($this->yellow->page->getRequest("author"));
-            $email = trim($this->yellow->page->getRequest("email"));
+            $sitename = $this->yellow->lookup->normaliseInput($this->yellow->page->getRequest("sitename"));
+            $author = $this->yellow->lookup->normaliseInput($this->yellow->page->getRequest("author"));
+            $email = $this->yellow->lookup->normaliseInput($this->yellow->page->getRequest("email"));
             if ($email!=$this->yellow->system->get("email")) {
                 if (is_string_empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) $this->response->status = "invalid";
             }
@@ -875,8 +886,8 @@ class YellowEdit {
         $csrfToken = $this->yellow->toolbox->getCookie("yellowcsrftoken");
         if (is_string_empty($action) || $this->isRequestSameSite("POST", $scheme, $address)) {
             if ($action=="login") {
-                $email = $this->yellow->page->getRequest("email");
-                $password = $this->yellow->page->getRequest("password");
+                $email = $this->yellow->lookup->normaliseInput($this->yellow->page->getRequest("email"));
+                $password = $this->yellow->lookup->normaliseInput($this->yellow->page->getRequest("password"));
                 if ($this->response->checkAuthLogin($email, $password)) {
                     $this->response->createCookies($scheme, $address, $base, $email);
                     $this->response->userEmail = $email;
@@ -959,7 +970,7 @@ class YellowEdit {
             }
         }
     }
-    
+
     // Return user status changes
     public function getUserStatus($email, $action) {
         switch ($action) {
@@ -1277,6 +1288,7 @@ class YellowEditResponse {
             $data["editLoginEmail"] = $this->yellow->page->get("editLoginEmail");
             $data["editLoginPassword"] = $this->yellow->page->get("editLoginPassword");
             $data["editLoginRestriction"] = intval($this->isLoginRestriction());
+            $data["editUserSignup"] = intval($this->isUserSignup());
         }
         return $data;
     }
@@ -1868,6 +1880,18 @@ class YellowEditResponse {
         $userHome = $this->yellow->user->getUser("home", $this->userEmail);
         $tokens = preg_split("/\s*,\s*/", $this->yellow->user->getUser("access", $this->userEmail));
         return in_array($action, $tokens) && (is_string_empty($location) || substru($location, 0, strlenu($userHome))==$userHome);
+    }
+    
+    // Check if user signup possible
+    public function isUserSignup() {
+        $ok = true;
+        if ($this->yellow->system->get("editUserDailyLimit")!=0) {
+            $fileNameDaily = $this->yellow->system->get("coreWorkerDirectory")."edit-user-daily.ini";
+            $fileData = $this->yellow->toolbox->readFile($fileNameDaily);
+            $lines = $this->yellow->toolbox->getTextLines($fileData);
+            if (count($lines)>=$this->yellow->system->get("editUserDailyLimit")) $ok = false;
+        }
+        return $ok;
     }
 }
     
