@@ -2,7 +2,7 @@
 // Install extension, https://github.com/annaesvensson/yellow-install
 
 class YellowInstall {
-    const VERSION = "1.0.3";
+    const VERSION = "1.0.4";
     const PRIORITY = "1";
     public $yellow;                 // access to API
     
@@ -148,7 +148,7 @@ class YellowInstall {
             $zip->close();
         } else {
             $statusCode = 500;
-            $this->yellow->page->error($statusCode, "Can't open file '$path'!");
+            $this->yellow->page->error($statusCode, "Can't read file '$path', file format not detected!");
         }
         return $statusCode;
     }
@@ -420,11 +420,7 @@ class YellowInstall {
                 $fileData = curl_exec($curlHandle);
                 $statusCode = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);
                 $redirectUrl = ($statusCode>=300 && $statusCode<=399) ? curl_getinfo($curlHandle, CURLINFO_REDIRECT_URL) : "";
-                if ($statusCode==0) {
-                    $statusCode = 450;
-                    $this->yellow->page->error($statusCode, "Can't connect to the update server!");
-                }
-                if ($statusCode!=450 && $statusCode!=200) {
+                if ($statusCode!=200) {
                     $statusCode = 500;
                     $this->yellow->page->error($statusCode, "Can't download file '$url'!");
                 }

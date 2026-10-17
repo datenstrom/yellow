@@ -2,7 +2,7 @@
 // Update extension, https://github.com/annaesvensson/yellow-update
 
 class YellowUpdate {
-    const VERSION = "1.0.3";
+    const VERSION = "1.0.4";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $extensions;             // number of extensions
@@ -243,8 +243,8 @@ class YellowUpdate {
             if (preg_match("#^(.*\/).*?$#", $zip->getNameIndex(0), $matches)) $pathBase = $matches[1];
             $fileData = $zip->getFromName($pathBase.$this->yellow->system->get("updateExtensionFile"));
             $settings = $this->yellow->toolbox->getTextSettings($fileData, "");
-            list($extension, $version, $newModified, $oldModified) = $this->getExtensionInformation($settings);
-            if (!is_string_empty($extension) && !is_string_empty($version)) {
+            if ($this->verifyExtensionSettings($zip, $pathBase, $settings)) {
+                list($extension, $version, $newModified, $oldModified) = $this->getExtensionInformation($settings);
                 $statusCode = max($statusCode, $this->updateExtensionSettings($extension, $action, $fileData));
                 $paths = $this->getExtensionDirectories($zip, $pathBase);
                 foreach ($this->getExtensionFileNames($settings) as $fileName) {
@@ -271,12 +271,12 @@ class YellowUpdate {
                 ++$this->extensions;
             } else {
                 $statusCode = 500;
-                $this->yellow->page->error($statusCode, "Can't detect file '$path'!");
+                $this->yellow->page->error($statusCode, "Can't read file '$path', extension settings are incorrect!");
             }
             $zip->close();
         } else {
             $statusCode = 500;
-            $this->yellow->page->error($statusCode, "Can't open file '$path'!");
+            $this->yellow->page->error($statusCode, "Can't read file '$path', file format not detected!");
         }
         return $statusCode;
     }
@@ -623,7 +623,13 @@ class YellowUpdate {
         }
         return $statusCode;
     }
-
+    
+    // Verify that extension settings are correct
+    public function verifyExtensionSettings($zip, $pathBase, $settings) {
+        list($extension, $version) = $this->getExtensionInformation($settings);
+        return !is_string_empty($extension) && !is_string_empty($version);
+    }
+    
     // Return extensions from text, space separated
     public function getExtensionsFromText($text) {
         return array_unique(array_filter($this->yellow->toolbox->getTextArguments($text), "strlen"));
