@@ -2,7 +2,7 @@
 // Update extension, https://github.com/annaesvensson/yellow-update
 
 class YellowUpdate {
-    const VERSION = "1.0.4";
+    const VERSION = "1.0.5";
     const PRIORITY = "2";
     public $yellow;                 // access to API
     public $extensions;             // number of extensions
@@ -271,7 +271,7 @@ class YellowUpdate {
                 ++$this->extensions;
             } else {
                 $statusCode = 500;
-                $this->yellow->page->error($statusCode, "Can't read file '$path', extension settings are incorrect!");
+                $this->yellow->page->error($statusCode, "Can't read file '$path', version number not compatible!");
             }
             $zip->close();
         } else {
