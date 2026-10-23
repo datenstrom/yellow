@@ -1,6 +1,6 @@
 # Datenstrom Yellow 1.0
 
-Datenstrom Yellow is for people who make small websites. [Try the demo](https://datenstrom.se/yellow/demo/).
+Datenstrom Yellow is for people who make small websites.
 
 <p align="left"><img src="screenshot.png" alt="Screenshot" /></p>
 
